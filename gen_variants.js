@@ -4124,5 +4124,429 @@ out('kleingo.html', apply(ALGO, [
     ...STONE_SPEC,
 ], 'kleingo'));
 
+// ============================================================
+// ==== 第7バッチ: 追加10派生 ====
+// ============================================================
+
+// 73. ZOMBEGO (ゾンビ碁) — 取られた石は徘徊する中立ゾンビになる
+out('zombego.html', apply(ALGO, [
+    ...rb('ZOMBEGO', 'ゾンビ碁', 'zombego'),
+    [ONE, RV_ALGO, rv([
+        'ゾンビルール: 取られた石は中立の「ゾンビ」(壁ブロック) になり、毎手ランダムに隣の空点へ徘徊する。',
+        'ゾンビは置けず呼吸点にも地にもならない。徘徊で開いたり塞いだりする盤面が生まれる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + ゾンビルール<br>
+            ※取られた石は中立ゾンビになり毎手ランダム徘徊する`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        let zombies = []; // ゾンビの盤面インデックス一覧`],
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            zombies = [];`],
+    [ONE, CAPTURE_BLOCK,
+`            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                // ゾンビ: 取られたマスは中立ゾンビ(壁)になる
+                captured.forEach(idx => { board[idx] = 3; zombies.push(idx); });
+                captures[player] += captured.length;
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;
+            // ゾンビ徘徊: 各ゾンビがランダムな空点へ1マス移動
+            zombies = zombies.filter(zi => board[zi] === 3);
+            zombies.forEach((zi, k) => {
+                const cand = getNeighbors(zi).filter(i => board[i] === 0);
+                if (!cand.length) return;
+                const ni = cand[(Math.random() * cand.length) | 0];
+                board[ni] = 3; board[zi] = 0; zombies[k] = ni;
+            });`],
+    // undo/保存/同期
+    [ONE, `                prevBoard,
+                lastMove,
+                currentPieceType,`,
+`                prevBoard,
+                lastMove,
+                zombies: [...zombies],
+                currentPieceType,`],
+    [ONE, `            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;`,
+`            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;
+            zombies = snap.zombies ? [...snap.zombies] : zombies;`],
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    zombies: [...zombies],
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            zombies = Array.isArray(s.zombies) ? [...s.zombies] : [];`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                zombies,
+                pieceMode,`],
+    [ONE, `            lastMove = data.lastMove || null;`,
+`            lastMove = data.lastMove || null;
+            if (Array.isArray(data.zombies)) zombies = [...data.zombies];`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'zombego'));
+
+// 74. RELAYGO (追撃碁) — 相手の直前の着手の近くにしか置けない
+out('relaygo.html', apply(ALGO, [
+    ...rb('RELAYGO', '追撃碁', 'relaygo'),
+    [ONE, RV_ALGO, rv([
+        '追撃ルール: 相手の直前の着手からマンハッタン距離4以内にしか置けない。',
+        '戦線が相手の着手を追いかける形で進む。序盤1手目のみ自由配置。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 追撃ルール<br>
+            ※相手の直前着手から距離4以内のみ配置可`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 追撃ルール: 相手の直前着手から距離4以内
+            if (lastMove && lastMove.player !== player) {
+                const ok = cells.some(p => lastMove.cells.some(lp =>
+                    Math.abs(lp.x - p.x) + Math.abs(lp.y - p.y) <= 4));
+                if (!ok) return false;
+            }`],
+    ...STONE_SPEC,
+], 'relaygo'));
+
+// 75. SUMGO (実子碁) — 地+生き石の合算得点 (中国式風)
+out('sumgo.html', apply(ALGO, [
+    ...rb('SUMGO', '実子碁', 'sumgo'),
+    [ONE, RV_ALGO, rv([
+        '実子ルール: 得点 = 地 + 盤上の生き石 + アゲハマ (+白はコミ)。中国式の子地皆数に近い。',
+        '石を置くこと自体が得点なので地の詰め合いより勢力拡大が重要。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 実子得点<br>
+            ※得点=地+盤上の石数+アゲハマ (中国式風)`],
+    [ONE, `            const blackTotal = territory.black + captures[1];
+            const whiteTotal = territory.white + captures[2] + komi;`,
+`            const blackStones = board.filter(v => v === 1).length;
+            const whiteStones = board.filter(v => v === 2).length;
+            const blackTotal = territory.black + blackStones + captures[1];
+            const whiteTotal = territory.white + whiteStones + captures[2] + komi;`],
+    [ONE, `<div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>`,
+`<div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>
+                    <div class="flex justify-between"><span>黒の生き石:</span> <strong>\${blackStones}</strong></div>`],
+    [ONE, `<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
+`<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
+                    <div class="flex justify-between"><span>白の生き石:</span> <strong>\${whiteStones}</strong></div>`],
+    ...STONE_SPEC,
+], 'sumgo'));
+
+// 76. FUELGO (燃料碁) — 遠くに置くほど燃料を消費
+out('fuelgo.html', apply(ALGO, [
+    ...rb('FUELGO', '燃料碁', 'fuelgo'),
+    [ONE, RV_ALGO, rv([
+        '燃料ルール: 各プレイヤーは燃料を25持つ。着手は最寄りの自石までのマンハッタン距離分の燃料を消費。',
+        '燃料不足の手は打てない (自石隣接なら0消費)。燃料切れ後は自石隣接のみ。盤上に自石が無ければ消費0。',
+        '手番表示の後ろの数値が残燃料。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 燃料ルール<br>
+            ※着手は自石までの距離分の燃料を消費 (初期25)。切れると隣接のみ`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        let fuel = { 1: 25, 2: 25 }; // 燃料ルール
+        function fuelCost(player, cells) {
+            // 着手セル自身は距離0の自石として数えない
+            const placed = new Set(cells.map(p => p.y * BOARD_SIZE + p.x));
+            let best = Infinity, has = false;
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== player || placed.has(i)) continue;
+                has = true;
+                const bx = i % BOARD_SIZE, by = (i / BOARD_SIZE) | 0;
+                cells.forEach(p => {
+                    best = Math.min(best, Math.abs(p.x - bx) + Math.abs(p.y - by));
+                });
+            }
+            return has ? best : 0;
+        }`],
+    [ONE, RESET_HELD,
+`${RESET_HELD}
+            fuel = { 1: 25, 2: 25 };`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 燃料ルール: 距離分の燃料が足りなければ置けない
+            if (fuelCost(player, cells) > fuel[player]) return false;`],
+    [ONE, PIECES_PUSH,
+`            fuel[player] -= fuelCost(player, move.cells);
+
+${PIECES_PUSH}`],
+    [ONE, TURN_LINE,
+`            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + ' ⛽' + fuel[turn];`],
+    // undo/保存/同期
+    [ONE, `                prevBoard,
+                lastMove,
+                currentPieceType,`,
+`                prevBoard,
+                lastMove,
+                fuel: { ...fuel },
+                currentPieceType,`],
+    [ONE, `            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;`,
+`            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;
+            if (snap.fuel) fuel = { ...snap.fuel };`],
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    fuel: { ...fuel },
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            if (s.fuel) fuel = { ...s.fuel };`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                fuel: { ...fuel },
+                pieceMode,`],
+    [ONE, `            lastMove = data.lastMove || null;`,
+`            lastMove = data.lastMove || null;
+            if (data.fuel) fuel = { ...data.fuel };`],
+    ...STONE_SPEC,
+], 'fuelgo'));
+
+// 77. STRIPEGO (縞碁) — 奇数行は壁のストライプ盤
+out('stripego.html', apply(ALGO, [
+    ...rb('STRIPEGO', '縞碁', 'stripego'),
+    [ONE, RV_ALGO, rv([
+        '縞盤ルール: 奇数行は全て壁 (使用不能)。石は偶数行のレーン上でのみ戦う。',
+        '上下の呼吸点が無いため、各レーンは事実上1次元の取り合い。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 縞盤<br>
+            ※奇数行は壁。偶数行のレーン上でのみ戦う`],
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            // 縞盤: 奇数行を壁にする
+            for (let y = 1; y < BOARD_SIZE; y += 2)
+                for (let x = 0; x < BOARD_SIZE; x++) board[y * BOARD_SIZE + x] = 3;`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'stripego'));
+
+// 78. DRIFTGO (漂流碁) — 8手ごとに全石がランダム方向に1マス流される
+out('driftgo.html', apply(ALGO, [
+    ...rb('DRIFTGO', '漂流碁', 'driftgo'),
+    [ONE, RV_ALGO, rv([
+        '漂流ルール: 合計8手ごとに盤上の全石がランダムな方向 (上下左右) に1マス流される。',
+        '行き先が塞がっている石は動かない。陣形が不定期に流される混沌碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 漂流ルール<br>
+            ※8手ごとに全石がランダム方向へ1マス流される`],
+    [ONE, `        function endGameByScore() {`,
+`        // 漂流: 全石を1マスランダム方向へ (衝突は移動しない)
+        function applyDrift() {
+            const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+            const [dx, dy] = dirs[(Math.random() * 4) | 0];
+            const n = BOARD_SIZE;
+            const order = [];
+            for (let i = 0; i < n * n; i++)
+                order.push({ i, key: (i % n) * dx + ((i / n) | 0) * dy });
+            order.sort((a, b) => b.key - a.key); // 進行方向の先頭から処理
+            const moved = {};
+            order.forEach(({ i }) => {
+                if (board[i] !== 1 && board[i] !== 2) return;
+                const x = i % n, y = (i / n) | 0, nx = x + dx, ny = y + dy;
+                if (nx < 0 || nx >= n || ny < 0 || ny >= n) return;
+                const ni = ny * n + nx;
+                if (board[ni] === 0) { board[ni] = board[i]; board[i] = 0; moved[i] = ni; }
+            });
+            pieces.forEach(pc => {
+                pc.cells = pc.cells.map(p => {
+                    const i = p.y * BOARD_SIZE + p.x;
+                    return moved[i] === undefined ? p
+                        : { x: moved[i] % BOARD_SIZE, y: (moved[i] / BOARD_SIZE) | 0 };
+                });
+            });
+            if (lastMove) lastMove = { player: lastMove.player, cells: lastMove.cells.map(p => {
+                const i = p.y * BOARD_SIZE + p.x;
+                return moved[i] === undefined ? p
+                    : { x: moved[i] % BOARD_SIZE, y: (moved[i] / BOARD_SIZE) | 0 };
+            }) };
+            cleanUpPieces();
+        }
+
+        function endGameByScore() {`],
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;
+            // 漂流: 8手ごとに全石が流れる
+            if (history.length % 8 === 0) applyDrift();`],
+    ...STONE_SPEC,
+], 'driftgo'));
+
+// 79. LASTGO (終着碁) — 最後に石を置いた側が勝つ
+out('lastgo.html', apply(ALGO, [
+    ...rb('LASTGO', '終着碁', 'lastgo'),
+    [ONE, RV_ALGO, rv([
+        '終着ルール: 双方パスで終局したとき、地の数ではなく「最後に石を置いた側」が勝つ (正常形の終局)。',
+        '置ききれる場所を残す側が有利 — 序盤から終盤の手数まで読む碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 終着ルール<br>
+            ※終局時「最後に石を置いた側」の勝ち (地は数えない)`],
+    [ONE, `        function endGameByScore() {
+            gameOver = true;
+            const territory = calculateTerritory();`,
+WIN_BY_RULE_FN + `
+        function endGameByScore() {
+            gameOver = true;
+            // 終着ルール: 最後に石を置いた側が勝ち
+            if (lastMove) {
+                winByRule(lastMove.player, '終着', \`\${lastMove.player === 1 ? '黒' : '白'}が最後の着手をしました\`);
+                return;
+            }
+            const territory = calculateTerritory();`],
+    ...STONE_SPEC,
+], 'lastgo'));
+
+// 80. EYEGO (眼碁) — 最初に眼 (完全囲み空領域) を作った側が勝つ
+out('eyego.html', apply(ALGO, [
+    ...rb('EYEGO', '眼碁', 'eyego'),
+    [ONE, RV_ALGO, rv([
+        '眼ルール: 自分の石だけで完全に囲まれた小さな空領域 (眼・6点以内) を最初に作った側が即勝利。',
+        '相手は侵入して囲みを壊せる。取り・地集計も通常通り有効。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 眼ルール<br>
+            ※自分の石だけで囲まれた小領域 (6点以内) を最初に作った側が即勝利`],
+    [ONE, `        function endGameByScore() {`,
+`        // 眼判定: 全近傍が自分の石の小さな空領域(6点以内)があれば勝利
+        function checkEyeWin(player) {
+            const seen = new Set();
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== 0 || seen.has(i)) continue;
+                const q = [i]; seen.add(i);
+                let onlyP = true, size = 0;
+                while (q.length) {
+                    const cur = q.pop(); size++;
+                    getNeighbors(cur).forEach(n => {
+                        if (board[n] === 0 && !seen.has(n)) { seen.add(n); q.push(n); }
+                        else if (board[n] !== 0 && board[n] !== player) onlyP = false;
+                    });
+                }
+                if (onlyP && size <= 6) return true;
+            }
+            return false;
+        }
+` + WIN_BY_RULE_FN + `
+        function endGameByScore() {`],
+    [ONE, CAPTURE_BLOCK,
+`${CAPTURE_BLOCK}
+
+            // 眼勝利判定
+            if (checkEyeWin(player)) {
+                winByRule(player, '眼', \`\${player === 1 ? '黒' : '白'}が眼を完成させました\`);
+                return;
+            }`],
+    ...STONE_SPEC,
+], 'eyego'));
+
+// 81. BRAWLGO (乱闘碁) — 周囲3マス以上を敵で囲んだ石は個別に取れる
+out('brawlgo.html', apply(ALGO, [
+    ...rb('BRAWLGO', '乱闘碁', 'brawlgo'),
+    [ONE, RV_ALGO, rv([
+        '乱闘ルール: 通常の取りに加え、周囲の3方向以上が敵石の石は個別に取られる (連の呼吸点不要)。',
+        '密集地帯では個別撃破が起きる乱戦碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 乱闘ルール<br>
+            ※周囲3方向以上が敵石の石は単独でも取られる`],
+    [ONE, CAPTURE_BLOCK,
+`            let captured = getCapturedStones(board, opponent);
+            // 乱闘: 周囲3方向以上が自分の石の敵石も取る
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== opponent || captured.includes(i)) continue;
+                if (getNeighbors(i).filter(n => board[n] === player).length >= 3) captured.push(i);
+            }
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                captures[player] += captured.length;
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    ...STONE_SPEC,
+], 'brawlgo'));
+
+// 82. CHAINGO (連鎖爆発碁) — 取った空点に隣接する敵連も連鎖で取れる
+out('chaingo.html', apply(ALGO, [
+    ...rb('CHAINGO', '連鎖爆発碁', 'chaingo'),
+    [ONE, RV_ALGO, rv([
+        '連鎖爆発ルール: 敵連を取ると、空いたマスの周囲8方向 (斜め含む) にある敵石も連鎖して取られる。',
+        '斜めの接触が爆発を伝える高火力碁。取り合いがドミノ式に広がる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 連鎖爆発ルール<br>
+            ※取った空点の8方向にある敵石も連鎖して取られる`],
+    [ONE, `        function endGameByScore() {`,
+`        // 8方向近傍 (連鎖爆発用)
+        function nbrs8(i) {
+            const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
+            const out8 = [...getNeighbors(i)];
+            [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([dx, dy]) => {
+                const nx = x + dx, ny = y + dy;
+                if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE)
+                    out8.push(ny * BOARD_SIZE + nx);
+            });
+            return out8;
+        }
+
+        function endGameByScore() {`],
+    [ONE, CAPTURE_BLOCK,
+`            // 連鎖爆発: 呼吸点0の敵連を取り、空いたマスの8方向の敵石も再帰的に取る
+            const captured = [];
+            const done = new Set();
+            const queue = [...getCapturedStones(board, opponent)];
+            while (queue.length) {
+                const cur = queue.shift();
+                if (done.has(cur) || board[cur] !== opponent) continue;
+                done.add(cur); captured.push(cur);
+                nbrs8(cur).forEach(n => {
+                    if (board[n] === opponent && !done.has(n)) queue.push(n);
+                });
+            }
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                captures[player] += captured.length;
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    ...STONE_SPEC,
+], 'chaingo'));
+
 console.log(failures === 0 ? 'ALL OK' : `${failures} replacements MISSING`);
 process.exitCode = failures ? 1 : 0;

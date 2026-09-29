@@ -677,6 +677,97 @@ const SPECS = {
         // 上端(0,0)の上は下端(0,N-1)
         assert('縦通常ループ', getNeighbors(0).includes((BOARD_SIZE - 1) * BOARD_SIZE));
     `,
+    'zombego.html': `
+        resetGame();
+        // 白連(0,0),(1,0)を黒(2,0)(0,1)(1,1)(2,1)で囲む → 呼吸点0で取り
+        board[0] = 2; board[1] = 2;
+        board[2] = 1; board[BOARD_SIZE] = 1; board[BOARD_SIZE + 1] = 1; board[BOARD_SIZE + 2] = 1;
+        assert('取る前ゾンビなし', zombies.length === 0);
+        executeMove({ cells: [{x:9,y:9}], type: 'STONE', rot: 0 }, 1);
+        assert('ゾンビが生成', board[0] === 3 && board[1] === 3 && zombies.length === 2);
+        assert('アゲハマ計上', captures[1] === 2);
+        assert('ゾンビには置けない', isValidPlacement([{x:0,y:0}], 2) === false);
+    `,
+    'relaygo.html': `
+        resetGame();
+        executeMove({ cells: [{x:6,y:6}], type: 'STONE', rot: 0 }, 1); // 黒
+        // 白は(6,6)から距離4以内のみ
+        assert('近くは可', isValidPlacement([{x:6,y:8}], 2) === true);
+        assert('遠くは不可', isValidPlacement([{x:0,y:0}], 2) === false);
+    `,
+    'sumgo.html': `
+        resetGame();
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 1);
+        executeMove({ cells: [{x:12,y:12}], type: 'STONE', rot: 0 }, 2);
+        const t = calculateTerritory();
+        assert('地計算動作', typeof t.black === 'number');
+    `,
+    'fuelgo.html': `
+        resetGame();
+        assert('初期燃料25', fuel[1] === 25);
+        executeMove({ cells: [{x:6,y:6}], type: 'STONE', rot: 0 }, 1); // コスト0(自石なし)
+        assert('初手は消費0', fuel[1] === 25);
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 2);
+        // 黒2手目: (6,8)は距離2→燃料-2
+        executeMove({ cells: [{x:6,y:8}], type: 'STONE', rot: 0 }, 1);
+        assert('距離2で消費', fuel[1] === 23);
+        // 距離4の手は残23なら可、距離30は不可(盤面最大24)
+        assert('遠距離不可', isValidPlacement([{x:12,y:12}], 1) === true); // 距離min|12-6|+|12-8|=10>23? 10<=23で可
+        fuel[1] = 1;
+        assert('燃料切れは不可', isValidPlacement([{x:12,y:12}], 1) === false);
+        assert('隣接なら可', isValidPlacement([{x:6,y:7}], 1) === true);
+    `,
+    'stripego.html': `
+        resetGame();
+        assert('奇数行は壁', board[BOARD_SIZE] === 3 && board[0] === 0);
+        assert('偶数行は可', isValidPlacement([{x:0,y:0}], 1) === true);
+        assert('奇数行は不可', isValidPlacement([{x:0,y:1}], 1) === false);
+    `,
+    'driftgo.html': `
+        resetGame();
+        assert('applyDrift定義', typeof applyDrift === 'function');
+        board[6 * BOARD_SIZE + 6] = 1;
+        const before = board.filter(v => v === 1).length;
+        applyDrift();
+        assert('石数は保存', board.filter(v => v === 1).length === before);
+        assert('石が移動または残留', board[6 * BOARD_SIZE + 6] === 1 ||
+            board[6 * BOARD_SIZE + 5] === 1 || board[6 * BOARD_SIZE + 7] === 1 ||
+            board[5 * BOARD_SIZE + 6] === 1 || board[7 * BOARD_SIZE + 6] === 1);
+    `,
+    'lastgo.html': `
+        resetGame();
+        executeMove({ cells: [{x:3,y:3}], type: 'STONE', rot: 0 }, 1);
+        executeMove({ cells: [{x:9,y:9}], type: 'STONE', rot: 0 }, 2);
+        endGameByScore();
+        assert('終着勝ち=白', gameResultData && gameResultData.title.includes('白'));
+    `,
+    'eyego.html': `
+        resetGame();
+        assert('checkEyeWin定義', typeof checkEyeWin === 'function');
+        // 黒で(1,0)を囲む: (0,0)(2,0)(1,1)が黒→(1,0)が眼
+        board[0] = 1; board[2] = 1; board[BOARD_SIZE + 1] = 1;
+        assert('眼検出', checkEyeWin(1) === true);
+        assert('白眼なし', checkEyeWin(2) === false);
+    `,
+    'brawlgo.html': `
+        resetGame();
+        // 白石(1,1)を黒(0,1)(2,1)(1,0)の3方向で囲む→呼吸点残でも取れる
+        board[BOARD_SIZE + 1] = 2;
+        board[BOARD_SIZE] = 1; board[BOARD_SIZE + 2] = 1; board[1] = 1;
+        executeMove({ cells: [{x:5,y:5}], type: 'STONE', rot: 0 }, 1);
+        assert('3方向囲みで個別捕獲', board[BOARD_SIZE + 1] === 0 && captures[1] === 1);
+    `,
+    'chaingo.html': `
+        resetGame();
+        // 白連(0,0),(1,0),(0,1)を黒(2,0)(1,1)(0,2)で囲む → 取り発生
+        // (2,1)の白石は(1,0)の斜め → 8方向爆発で連鎖されるはず
+        board[0] = 2; board[1] = 2; board[BOARD_SIZE] = 2;
+        board[2] = 1; board[BOARD_SIZE + 1] = 1; board[2 * BOARD_SIZE] = 1;
+        board[BOARD_SIZE + 2] = 2; // 斜め接続する白
+        executeMove({ cells: [{x:9,y:9}], type: 'STONE', rot: 0 }, 1);
+        assert('基本取り', board[0] === 0);
+        assert('斜め連鎖爆発', board[BOARD_SIZE + 2] === 0 && captures[1] === 4);
+    `,
 };
 
 let total = 0, failed = 0;

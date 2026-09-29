@@ -174,6 +174,16 @@
             { file: 'hydrago.html', name: 'HYDRAGO',  jp: 'ヒドラ碁',     desc: '取られた石は隣の空点にランダム復活', kind: 'hydra' },
             { file: 'ghostgo.html', name: 'GHOSTGO',  jp: '幽霊碁',       desc: '取られたマスは幽霊となり6手間塞がる', kind: 'ghost' },
             { file: 'kleingo.html', name: 'KLEINGO',  jp: 'クライン碁',   desc: 'クライン瓶: 横反転+縦ループの両軸トポロジー', kind: 'klein' },
+            { file: 'zombego.html', name: 'ZOMBEGO',  jp: 'ゾンビ碁',     desc: '取られた石は徘徊する中立ゾンビ壁になる', kind: 'zombie' },
+            { file: 'relaygo.html', name: 'RELAYGO',  jp: '追撃碁',       desc: '相手の直前着手から距離4以内にしか置けない', kind: 'relay' },
+            { file: 'sumgo.html',   name: 'SUMGO',    jp: '実子碁',       desc: '得点=地+生き石+アゲハマの中国式風', kind: 'sum' },
+            { file: 'fuelgo.html',  name: 'FUELGO',   jp: '燃料碁',       desc: '遠くに置くほど燃料を消費。切れると隣接のみ', kind: 'fuel' },
+            { file: 'stripego.html', name: 'STRIPEGO', jp: '縞碁',        desc: '奇数行は壁。偶数行のレーン上のみで戦う', kind: 'stripe' },
+            { file: 'driftgo.html', name: 'DRIFTGO',  jp: '漂流碁',       desc: '8手ごとに全石がランダム方向へ1マス流れる', kind: 'drift' },
+            { file: 'lastgo.html',  name: 'LASTGO',   jp: '終着碁',       desc: '終局時に最後に石を置いた側が勝つ', kind: 'last' },
+            { file: 'eyego.html',   name: 'EYEGO',    jp: '眼碁',         desc: '最初に眼を作った側が即勝利', kind: 'eye' },
+            { file: 'brawlgo.html', name: 'BRAWLGO',  jp: '乱闘碁',       desc: '周囲3方向以上が敵の石は個別に取れる', kind: 'brawl' },
+            { file: 'chaingo.html', name: 'CHAINGO',  jp: '連鎖爆発碁',   desc: '取った空点の8方向の敵石も連鎖爆発', kind: 'chain' },
         ];
 
         const grid = document.getElementById('gameGrid');
@@ -662,6 +672,70 @@
                     c.beginPath(); c.arc(at(3.5,3).x, at(3.5,3).y, cell*0.8, -Math.PI*0.5, Math.PI*0.5); c.stroke();
                     c.beginPath(); c.moveTo(at(2.5,2.1).x, at(2.5,2.1).y); c.lineTo(at(3.5,3.9).x, at(3.5,3.9).y); c.stroke();
                     dot(4.6,4.4,P1,P1S);
+                    break;
+                case 'zombie': // ゾンビ (壁ブロック+石)
+                    c.fillStyle = 'rgba(100,110,130,0.75)'; c.strokeStyle = 'rgba(60,68,84,0.9)'; c.lineWidth = 1.5;
+                    c.beginPath(); c.roundRect(at(2,2).x, at(2,2).y, cell, cell, cell*0.2); c.fill(); c.stroke();
+                    c.beginPath(); c.roundRect(at(3.4,3.4).x, at(3.4,3.4).y, cell, cell, cell*0.2); c.fill(); c.stroke();
+                    dot(3.8,2.4,P1,P1S);
+                    break;
+                case 'relay': // 追撃 (矢印が石を追う)
+                    dot(2,4.4,P2,P2S); dot(3.6,2.6,P1,P1S);
+                    c.strokeStyle = P1; c.lineWidth = 1.8; c.lineCap = 'round';
+                    c.beginPath(); c.moveTo(at(2.5,3.9).x, at(2.5,3.9).y); c.lineTo(at(3.3,3.1).x, at(3.3,3.1).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(2.9,3.1).x, at(2.9,3.1).y); c.lineTo(at(3.4,3).x, at(3.4,3).y); c.lineTo(at(3.4,3.5).x, at(3.4,3.5).y); c.stroke();
+                    break;
+                case 'sum': // 実子 (石に+)
+                    dot(2.4,3,P1,P1S); dot(3.6,3,P1,P1S);
+                    c.fillStyle = P1S; c.font = `bold ${cell*0.7}px sans-serif`;
+                    c.fillText('+', at(3,1.8).x, at(3,1.8).y); c.fillText('+', at(3,4.6).x, at(3,4.6).y);
+                    break;
+                case 'fuel': // 燃料 (メーター)
+                    c.strokeStyle = P1S; c.lineWidth = 2;
+                    c.beginPath(); c.arc(at(3,3.4).x, at(3,3.4).y, cell*1.1, Math.PI, 0); c.stroke();
+                    c.strokeStyle = '#dc2626';
+                    c.beginPath(); c.moveTo(at(3,3.4).x, at(3,3.4).y); c.lineTo(at(3.8,2.6).x, at(3.8,2.6).y); c.stroke();
+                    dot(3,3.4,P1,P1S,R*0.5);
+                    break;
+                case 'stripe': // 縞 (交互線)
+                    c.fillStyle = 'rgba(100,110,130,0.45)';
+                    c.fillRect(at(0.4,1.4).x, at(0.4,1.4).y, cell*5.2, cell*0.7);
+                    c.fillRect(at(0.4,2.9).x, at(0.4,2.9).y, cell*5.2, cell*0.7);
+                    c.fillRect(at(0.4,4.4).x, at(0.4,4.4).y, cell*5.2, cell*0.7);
+                    dot(3,2.5,P1,P1S);
+                    break;
+                case 'drift': // 漂流 (石+流れ矢印)
+                    dot(2.4,2.4,P1,P1S); dot(3.6,3.6,P2,P2S);
+                    c.strokeStyle = '#0284c7'; c.lineWidth = 1.8;
+                    c.beginPath(); c.moveTo(at(4,1.4).x, at(4,1.4).y); c.lineTo(at(5,1.4).x, at(5,1.4).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(4.7,1.1).x, at(4.7,1.1).y); c.lineTo(at(5.1,1.4).x, at(5.1,1.4).y); c.lineTo(at(4.7,1.7).x, at(4.7,1.7).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(1.4,4.6).x, at(1.4,4.6).y); c.lineTo(at(0.6,4.6).x, at(0.6,4.6).y); c.stroke();
+                    break;
+                case 'last': // 終着 (旗)
+                    dot(2,4.4,P1,P1S);
+                    c.strokeStyle = P1S; c.lineWidth = 2;
+                    c.beginPath(); c.moveTo(at(3.6,4.6).x, at(3.6,4.6).y); c.lineTo(at(3.6,1.6).x, at(3.6,1.6).y); c.stroke();
+                    c.fillStyle = '#dc2626';
+                    c.beginPath(); c.moveTo(at(3.6,1.7).x, at(3.6,1.7).y); c.lineTo(at(4.8,2.2).x, at(4.8,2.2).y); c.lineTo(at(3.6,2.8).x, at(3.6,2.8).y); c.fill();
+                    break;
+                case 'eye': // 眼 (囲まれた点)
+                    dot(1.8,2.4,P1,P1S); dot(3,1.8,P1,P1S); dot(4.2,2.4,P1,P1S);
+                    dot(1.8,3.6,P1,P1S); dot(3,4.2,P1,P1S); dot(4.2,3.6,P1,P1S);
+                    c.strokeStyle = P2S; c.lineWidth = 1.8; c.setLineDash([3,3]);
+                    c.beginPath(); c.arc(at(3,3).x, at(3,3).y, cell*0.35, 0, Math.PI*2); c.stroke();
+                    c.setLineDash([]);
+                    break;
+                case 'brawl': // 乱闘 (三方向矢印)
+                    dot(3,3,P2,P2S); dot(1.6,3,P1,P1S); dot(4.4,3,P1,P1S); dot(3,1.6,P1,P1S);
+                    c.strokeStyle = '#dc2626'; c.lineWidth = 2;
+                    c.beginPath(); c.moveTo(at(3,4.4).x, at(3,4.4).y); c.lineTo(at(3,3.8).x, at(3,3.8).y); c.stroke();
+                    break;
+                case 'chain': // 連鎖爆発 (斜め伝播)
+                    dot(1.8,1.8,P2,P2S); dot(3,3,P2,P2S); dot(4.2,4.2,P2,P2S);
+                    c.strokeStyle = '#dc2626'; c.lineWidth = 1.8;
+                    c.beginPath(); c.moveTo(at(2.2,2.2).x, at(2.2,2.2).y); c.lineTo(at(2.7,2.7).x, at(2.7,2.7).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(3.4,3.4).x, at(3.4,3.4).y); c.lineTo(at(3.9,3.9).x, at(3.9,3.9).y); c.stroke();
+                    dot(4.6,1.6,P1,P1S);
                     break;
             }
         }

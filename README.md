@@ -55,6 +55,9 @@
 | FOURGO `fourgo.html` | 四方重力 (手番ごとに重力方向が回転) |
 | TWILIGHTGO `twilightgo.html` | 黄昏碁 (昼=自由、夜=自石隣接のみ) |
 | REGGO `reggo.html` | 上限碁 (自連は最大3石) |
+| STRIPEGO `stripego.html` | 縞碁 (奇数行は壁、偶数レーンのみ) |
+| RELAYGO `relaygo.html` | 追撃碁 (相手の直前着手から距離4以内) |
+| FUELGO `fuelgo.html` | 燃料碁 (着手は自石までの距離分の燃料を消費) |
 
 ### 手順・勝敗系
 
@@ -85,6 +88,11 @@
 | SIPHONGO `siphongo.html` | 吸収碁 (取った敵連が自色に変わる) |
 | MONOGO `monogo.html` | 単石碁 (2連以上は不死、単石のみ取れる) |
 | PUSHCHAINGO `pushchaingo.html` | 連鎖押し碁 (押した敵石がさらに押す) |
+| CHAINGO `chaingo.html` | 連鎖爆発碁 (取った空点の8方向の敵石も連鎖) |
+| BRAWLGO `brawlgo.html` | 乱闘碁 (3方向以上敵に囲まれた石は個別に取れる) |
+| EYEGO `eyego.html` | 眼碁 (最初に眼を作った側が即勝利) |
+| LASTGO `lastgo.html` | 終着碁 (最後に石を置いた側が勝つ) |
+| SUMGO `sumgo.html` | 実子碁 (得点=地+生き石+アゲハマ) |
 
 ### 自動変化系
 
@@ -100,6 +108,8 @@
 | THUNDERGO `thundergo.html` | 雷碁 (10手ごとに雷がランダムな連を破壊) |
 | HYDRAGO `hydrago.html` | ヒドラ碁 (取られた石が隣の空点に復活) |
 | GHOSTGO `ghostgo.html` | 幽霊碁 (取られたマスは幽霊として6手間塞がる) |
+| ZOMBEGO `zombego.html` | ゾンビ碁 (取られた石は徘徊する中立壁) |
+| DRIFTGO `driftgo.html` | 漂流碁 (8手ごとに全石がランダムに流れる) |
 
 ## 共通機能
 
