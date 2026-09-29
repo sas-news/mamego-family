@@ -503,6 +503,87 @@ const SPECS = {
         assert('自連が消滅', board[0] === 0);
         assert('相手のアゲハマになる', captures[2] === 1);
     `,
+    'stargo.html': `
+        resetGame();
+        assert('碁ホシ1種', PIECE_TYPES.length === 1 && PIECE_TYPES[0] === 'PLUS');
+        assert('PIECE_SIZE=5', PIECE_SIZE === 5);
+        executeMove({ cells: [{x:1,y:0},{x:0,y:1},{x:1,y:1},{x:2,y:1},{x:1,y:2}], type: 'PLUS', rot: 0 }, 1);
+        assert('十字配置', board[BOARD_SIZE+1] === 1 && board[0+1] === 1);
+    `,
+    'biggo.html': `
+        resetGame();
+        assert('碁オオ1種', PIECE_TYPES.length === 1 && PIECE_TYPES[0] === 'BIG');
+        assert('PIECE_SIZE=9', PIECE_SIZE === 9);
+        const cells9 = [];
+        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) cells9.push({x, y});
+        executeMove({ cells: cells9, type: 'BIG', rot: 0 }, 1);
+        assert('3x3配置', board[0] === 1 && board[2 * BOARD_SIZE + 2] === 1);
+    `,
+    'connectgo.html': `
+        resetGame();
+        assert('checkConnectWin定義', typeof checkConnectWin === 'function');
+        // 黒が上下辺を縦に連結
+        for (let y = 0; y < BOARD_SIZE; y++) board[y * BOARD_SIZE + 4] = 1;
+        assert('黒の上下連結で勝利', checkConnectWin(1) === true);
+        assert('白は未連結', checkConnectWin(2) === false);
+    `,
+    'centgo.html': `
+        resetGame();
+        assert('centRadius定義', typeof centRadius === 'function');
+        assert('初期半径2', centRadius() === 2);
+        const cc = Math.floor(BOARD_SIZE / 2);
+        assert('中心は可', isValidPlacement([{x:cc,y:cc}], 1) === true);
+        assert('隅は不可', isValidPlacement([{x:0,y:0}], 1) === false);
+    `,
+    'switchgo.html': `
+        resetGame();
+        assert('applySwitch定義', typeof applySwitch === 'function');
+        board[0] = 1; board[1] = 2;
+        applySwitch();
+        assert('色が反転', board[0] === 2 && board[1] === 1);
+    `,
+    'thundergo.html': `
+        resetGame();
+        assert('applyThunder定義', typeof applyThunder === 'function');
+        board[0] = 1;
+        applyThunder();
+        assert('雷で連が消滅', board[0] === 0);
+    `,
+    'cylindgo.html': `
+        resetGame();
+        // 左端(0,y)の左隣は右端(N-1,y)
+        const cy = 3 * BOARD_SIZE;
+        assert('円筒近傍', getNeighbors(cy).includes(cy + BOARD_SIZE - 1));
+        // 上端はループしない
+        assert('上端は通常', !getNeighbors(0).includes(BOARD_SIZE * (BOARD_SIZE - 1)));
+    `,
+    'moebiusgo.html': `
+        resetGame();
+        // 左端(0,y)の左隣は右端(N-1, N-1-y) — 上下反転
+        const my = 2 * BOARD_SIZE; // (0,2)
+        const expected = (BOARD_SIZE - 1 - 2) * BOARD_SIZE + BOARD_SIZE - 1; // (N-1, N-3)
+        assert('メビウス近傍', getNeighbors(my).includes(expected));
+    `,
+    'quartergo.html': `
+        resetGame();
+        assert('allowedQuadrant定義', typeof allowedQuadrant === 'function');
+        assert('初期象限0(左上)', allowedQuadrant() === 0);
+        const qm = Math.floor(BOARD_SIZE / 2);
+        assert('左上のみ可', isValidPlacement([{x:1,y:1}], 1) === true);
+        assert('右下は不可', isValidPlacement([{x:BOARD_SIZE-2,y:BOARD_SIZE-2}], 1) === false);
+    `,
+    'escapego.html': `
+        resetGame();
+        // 辺に接する連は不死: 角の白石を囲んでも取られない
+        board[0] = 2; board[1] = 1; board[BOARD_SIZE] = 1;
+        assert('辺の連は取られない', getCapturedStones(board, 2).length === 0);
+        // 中央の石は通常通り取られる
+        board[0] = 0; board[1] = 0; board[BOARD_SIZE] = 0;
+        const ci = 5 * BOARD_SIZE + 5;
+        board[ci] = 2; board[ci-1] = 1; board[ci+1] = 1;
+        board[ci - BOARD_SIZE] = 1; board[ci + BOARD_SIZE] = 1;
+        assert('中央は通常通り', getCapturedStones(board, 2).length === 1);
+    `,
 };
 
 let total = 0, failed = 0;

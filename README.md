@@ -23,6 +23,8 @@
 | MAMEGO `mamego.html` | 原作の碁豆 (ドミノ2連) を通常囲碁エンジンで再実装 |
 | TRIOGO `triogo.html` | 碁リオ=トリオミノ2種 (直鎖I・曲がりL、3連結) |
 | QUADGO `quadgo.html` | 碁カク=2×2ブロックのみ |
+| STARGO `stargo.html` | 碁ホシ=十字形5連結のみ |
+| BIGGO `biggo.html` | 碁オオ=3×3ブロック9連結 |
 
 ### 盤面・配置ルール系 (通常碁石 + 特殊ルール)
 
@@ -44,6 +46,10 @@
 | HALFGO `halfgo.html` | 陣地碁 (黒=左半分/白=右半分、中央列共通) |
 | SPARSEGO `sparsego.html` | 離散碁 (いかなる石の隣にも置けない) |
 | DARKGO `darkgo.html` | 暗闇碁 (自石近傍しか見えないフォグ) |
+| CYLINDGO `cylindgo.html` | 円筒盤 (左右端のみループ) |
+| MOEBIUSGO `moebiusgo.html` | メビウス帯盤 (左右端が上下反転で接続) |
+| QUARTERGO `quartergo.html` | 象限碁 (手番ごとに許可象限が回転) |
+| CENTGO `centgo.html` | 中心碁 (中心からの円内のみ配置可、半径は手数で拡大) |
 
 ### 手順・勝敗系
 
@@ -69,6 +75,8 @@
 | FIRSTGO `firstgo.html` | 一撃ルール (最初の取りで即勝利) |
 | TREASUREGO `treasurego.html` | 宝碁 (星マス◆を囲むと+5点) |
 | SELFGO `selfgo.html` | 自爆碁 (自殺手が合法、自連は相手のアゲハマ) |
+| CONNECTGO `connectgo.html` | 連絡碁 (黒=上下辺/白=左右辺の連結で即勝利) |
+| ESCAPEGO `escapego.html` | 脱出碁 (辺に接する連は不死) |
 
 ### 自動変化系
 
@@ -80,6 +88,8 @@
 | MOLEGO `molego.html` | 着手ごとに石がランダムに隣へ移動 |
 | LAVAGO `lavago.html` | 溶岩碁 (8手ごとに外周が沈む) |
 | ORBITGO `orbitgo.html` | 周回碁 (着手ごとに外周が1マス回転) |
+| SWITCHGO `switchgo.html` | 転換碁 (12手ごとに全石の色が反転) |
+| THUNDERGO `thundergo.html` | 雷碁 (10手ごとに雷がランダムな連を破壊) |
 
 ## 共通機能
 

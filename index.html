@@ -154,6 +154,16 @@
             { file: 'darkgo.html',  name: 'DARKGO',   jp: '暗闇碁',       desc: '自分の石の近くしか見えないフォグ・オブ・ウォー', kind: 'dark' },
             { file: 'orbitgo.html', name: 'ORBITGO',  jp: '周回碁',       desc: '着手ごとに外周リングの石が1マスずつ時計回りに移動', kind: 'orbit' },
             { file: 'selfgo.html',  name: 'SELFGO',   jp: '自爆碁',       desc: '自殺手が合法。自連が消えて相手のアゲハマに', kind: 'self' },
+            { file: 'stargo.html',  name: 'STARGO',   jp: '星碁',         desc: '碁ホシ=十字形5連結のみ。四方に腕を伸ばす', kind: 'star' },
+            { file: 'biggo.html',   name: 'BIGGO',    jp: '巨大碁',       desc: '碁オオ=3×3ブロック9連結。窒息領域<9の高速碁', kind: 'big' },
+            { file: 'connectgo.html', name: 'CONNECTGO', jp: '連絡碁',    desc: '黒は上下辺、白は左右辺を連結すれば即勝利', kind: 'connect' },
+            { file: 'centgo.html',  name: 'CENTGO',   jp: '中心碁',       desc: '中心からの円内のみ配置可。6手ごとに半径拡大', kind: 'cent' },
+            { file: 'switchgo.html',name: 'SWITCHGO', jp: '転換碁',       desc: '12手ごとに盤上の全石の色が反転', kind: 'switch' },
+            { file: 'thundergo.html', name: 'THUNDERGO', jp: '雷碁',      desc: '10手ごとに雷がランダムな連を破壊', kind: 'thunder' },
+            { file: 'cylindgo.html',name: 'CYLINDGO', jp: '円筒碁',       desc: '左右の端がループして繋がる円筒盤', kind: 'cyl' },
+            { file: 'moebiusgo.html', name: 'MOEBIUSGO', jp: 'メビウス碁', desc: '左端↔右端が上下反転して繋がるメビウス帯', kind: 'moebius' },
+            { file: 'quartergo.html', name: 'QUARTERGO', jp: '象限碁',    desc: '着手はその手番の象限のみ。手番ごとに回転', kind: 'quarter' },
+            { file: 'escapego.html', name: 'ESCAPEGO', jp: '脱出碁',      desc: '辺に接する連は不死。辺への接続が死活を決める', kind: 'escape' },
         ];
 
         const grid = document.getElementById('gameGrid');
@@ -524,6 +534,62 @@
                     c.strokeStyle = '#dc2626'; c.lineWidth = 2; c.lineCap = 'round';
                     c.beginPath(); c.moveTo(at(2.2,2.6).x, at(2.2,2.6).y); c.lineTo(at(3,3.4).x, at(3,3.4).y); c.stroke();
                     c.beginPath(); c.moveTo(at(3,2.6).x, at(3,2.6).y); c.lineTo(at(2.2,3.4).x, at(2.2,3.4).y); c.stroke();
+                    break;
+                case 'star': // 十字形
+                    [[3,1.8],[1.8,3],[3,3],[4.2,3],[3,4.2]].forEach(([x,y]) => dot(x, y, P1, P1S));
+                    dot(4.6,1.4,P2,P2S);
+                    break;
+                case 'big': // 3x3
+                    [[1.8,1.8],[3,1.8],[4.2,1.8],[1.8,3],[3,3],[4.2,3],[1.8,4.2],[3,4.2],[4.2,4.2]]
+                        .forEach(([x,y]) => dot(x, y, P1, P1S, R*0.7));
+                    break;
+                case 'connect': // 辺連結
+                    c.strokeStyle = P1; c.lineWidth = 2;
+                    c.beginPath(); c.moveTo(at(3,1).x, at(3,1).y); c.lineTo(at(3,5).x, at(3,5).y); c.stroke();
+                    dot(3,1,P1,P1S); dot(3,3,P1,P1S); dot(3,5,P1,P1S);
+                    break;
+                case 'cent': // 中心から拡大
+                    c.strokeStyle = 'rgba(37,99,235,0.6)'; c.lineWidth = 1.8; c.setLineDash([4,3]);
+                    c.beginPath(); c.arc(at(3,3).x, at(3,3).y, cell*1.4, 0, Math.PI*2); c.stroke();
+                    c.setLineDash([]);
+                    dot(3,3,P1,P1S); dot(4.4,1.8,P2,P2S,R,0.35);
+                    break;
+                case 'switch': // 色反転
+                    dot(2,3,P1,P1S); dot(4,3,P2,P2S);
+                    c.strokeStyle = P1S; c.lineWidth = 1.8;
+                    c.beginPath(); c.arc(at(3,3).x, at(3,3).y, cell*1.5, -Math.PI*0.4, Math.PI*0.6); c.stroke();
+                    break;
+                case 'thunder': // 雷
+                    c.fillStyle = '#eab308';
+                    c.beginPath();
+                    c.moveTo(at(3.4,1).x, at(3.4,1).y); c.lineTo(at(2.5,3.2).x, at(2.5,3.2).y);
+                    c.lineTo(at(3.1,3.2).x, at(3.1,3.2).y); c.lineTo(at(2.5,5).x, at(2.5,5).y);
+                    c.lineTo(at(3.8,2.7).x, at(3.8,2.7).y); c.lineTo(at(3.1,2.7).x, at(3.1,2.7).y);
+                    c.closePath(); c.fill();
+                    dot(4.4,4,P2,P2S,R,0.6);
+                    break;
+                case 'cyl': // 円筒
+                    dot(1.4,3,P1,P1S); dot(4.6,3,P1,P1S);
+                    c.strokeStyle = P1S; c.lineWidth = 1.8; c.setLineDash([3,3]);
+                    c.beginPath(); c.moveTo(at(0.9,3).x, at(0.9,3).y);
+                    c.quadraticCurveTo(at(3,1.2).x, at(3,1.2).y, at(5.1,3).x, at(5.1,3).y); c.stroke();
+                    c.setLineDash([]);
+                    break;
+                case 'moebius': // メビウス (∞)
+                    c.strokeStyle = P1S; c.lineWidth = 2;
+                    c.beginPath(); c.arc(at(2.3,3).x, at(2.3,3).y, cell*0.9, 0, Math.PI*2); c.stroke();
+                    c.beginPath(); c.arc(at(3.7,3).x, at(3.7,3).y, cell*0.9, 0, Math.PI*2); c.stroke();
+                    dot(3,3,P1,P1S);
+                    break;
+                case 'quarter': // 象限
+                    c.fillStyle = 'rgba(37,99,235,0.25)';
+                    c.fillRect(at(1,1).x, at(1,1).y, cell*2, cell*2);
+                    dot(2,2,P1,P1S); dot(4,4,P2,P2S);
+                    break;
+                case 'escape': // 脱出 (辺までの線)
+                    c.strokeStyle = P1; c.lineWidth = 2;
+                    c.beginPath(); c.moveTo(at(3,4.4).x, at(3,4.4).y); c.lineTo(at(3,1.4).x, at(3,1.4).y); c.stroke();
+                    dot(3,4.4,P1,P1S); dot(3,1.4,P1,P1S); dot(3.9,3,P2,P2S);
                     break;
             }
         }

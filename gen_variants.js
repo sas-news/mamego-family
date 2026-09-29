@@ -3423,5 +3423,342 @@ out('selfgo.html', apply(ALGO, [
     ...STONE_SPEC,
 ], 'selfgo'));
 
+// ============================================================
+// ==== 第5バッチ: 追加10派生 ====
+// ============================================================
+
+// 53. STARGO (星碁) — 碁ホシ=プラス形5連結のみ
+const STAR_MOLS = `        // 碁ホシ: 十字(プラス)形5連結の碁石
+        const MOLECULES = {
+            PLUS: { name: '碁ホシ', iupac: '十字5', formula: '5連結', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2]] }
+        };`;
+out('stargo.html', apply(ALGO, [
+    ...rb('STARGO', '星碁', 'stargo'),
+    [ONE, RV_ALGO, rv([
+        'このゲームで使う碁ホシは十字(プラス)形5連結のみ。回転しても同じ形。',
+        '四方向に腕を伸ばす形は接触点多く、攻防が激しい。',
+    ])],
+    [ONE, INFO_ALGO,
+`            十字形「碁ホシ」を配置し合う変則囲碁<br>
+            PC: クリックで配置 / スマホ: 1タップ目プレビュー、2タップ目確定`],
+    [ONE, MOLECULES_ALGO, STAR_MOLS],
+    [ONE, OCNT_ALGO, '// 碁ホシ: 十字は回転不変 = 1パターン'],
+    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'PLUS';`],
+    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'PLUS'`],
+    [ONE, '登場アルカン', '登場碁ホシ'],
+    [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
+`碁ホシは十字形5連結のみ。四方向すべてに腕が伸びます。`],
+    ...SIZE_91319,
+    [ALL, '碁カン', '碁ホシ'],
+    [ALL, '全7種1巡', '補充なし'],
+], 'stargo'));
+
+// 54. BIGGO (巨大碁) — 碁オオ=3×3ブロック9連結
+const BIG_MOLS = `        // 碁オオ: 3x3ブロック9連結の巨大碁石
+        const MOLECULES = {
+            BIG: { name: '碁オオ', iupac: '正方形9', formula: '9連結', atoms: [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]] }
+        };`;
+out('biggo.html', apply(ALGO, [
+    ...rb('BIGGO', '巨大碁', 'biggo'),
+    [ONE, RV_ALGO, rv([
+        'このゲームで使う碁オオは3×3ブロック (9連結) のみ。',
+        '窒息領域は9マス未満 — 小さな囲みは全て死に領域。盤面はすぐ埋まる超高速碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            3×3ブロック「碁オオ」を配置し合う変則囲碁<br>
+            PC: クリックで配置 / スマホ: 1タップ目プレビュー、2タップ目確定`],
+    [ONE, MOLECULES_ALGO, BIG_MOLS],
+    [ONE, OCNT_ALGO, '// 碁オオ: 正方形は回転不変 = 1パターン'],
+    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'BIG';`],
+    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'BIG'`],
+    [ONE, '登場アルカン', '登場碁オオ'],
+    [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
+`碁オオは3×3の正方形のみ (9連結)。9マス未満の空領域は全て窒息領域です。`],
+    ...SIZE_91319,
+    [ALL, '碁カン', '碁オオ'],
+    [ALL, '全7種1巡', '補充なし'],
+], 'biggo'));
+
+// 55. CONNECTGO (連絡碁) — 辺を繋いだら勝ち (Hex的勝利条件)
+out('connectgo.html', apply(ALGO, [
+    ...rb('CONNECTGO', '連絡碁', 'connectgo'),
+    [ONE, RV_ALGO, rv([
+        '連絡ルール: 黒は上辺と下辺、白は左辺と右辺を自分の石で連結すれば即勝利 (Hex型)。',
+        '連結には通常の「連」(近傍共有)を使う。取り・地集計も通常通り有効。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 連絡ルール<br>
+            ※黒は上下辺、白は左右辺を石で連結すれば即勝利`],
+    [ONE, `        function endGameByScore() {`,
+`        // 連絡勝利判定: 黒=上下辺、白=左右辺を同色連結
+        function checkConnectWin(player) {
+            const n = BOARD_SIZE;
+            const isB = player === 1;
+            const starts = [];
+            const targets = new Set();
+            for (let i = 0; i < n; i++) {
+                const a = isB ? i : i * n;
+                const b = isB ? (n - 1) * n + i : i * n + (n - 1);
+                if (board[a] === player) starts.push(a);
+                targets.add(b);
+            }
+            const seen = new Set(starts);
+            const q = [...starts];
+            while (q.length) {
+                const cur = q.pop();
+                if (targets.has(cur)) return true;
+                getNeighbors(cur).forEach(nb => {
+                    if (!seen.has(nb) && board[nb] === player) { seen.add(nb); q.push(nb); }
+                });
+            }
+            return false;
+        }
+` + WIN_BY_RULE_FN + `
+        function endGameByScore() {`],
+    [ONE, CAPTURE_BLOCK,
+`${CAPTURE_BLOCK}
+
+            // 連絡勝利判定
+            if (checkConnectWin(player)) {
+                winByRule(player, '連絡', player === 1 ? '黒が上辺と下辺を連結しました' : '白が左辺と右辺を連結しました');
+                return;
+            }`],
+    ...STONE_SPEC,
+], 'connectgo'));
+
+// 56. CENTGO (中心碁) — 使用可能領域が中心から広がる
+out('centgo.html', apply(ALGO, [
+    ...rb('CENTGO', '中心碁', 'centgo'),
+    [ONE, RV_ALGO, rv([
+        '中心ルール: 着手できるのは中心からの半径 (2 + 総手数÷6) 以内の点のみ。',
+        '盤が埋まるにつれ使える領域が外側へ広がる。6手ごとに半径+1。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 中心ルール<br>
+            ※中心からの円内のみ配置可。6手ごとに半径が広がる`],
+    [ONE, `        function endGameByScore() {`,
+`        // 中心ルール: 許可半径は総手数とともに拡大
+        function centRadius() {
+            return Math.min((BOARD_SIZE - 1) / 2, 2 + Math.floor(history.length / 6));
+        }
+
+        function endGameByScore() {`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 中心ルール: 許可半径内のみ
+            {
+                const cc = (BOARD_SIZE - 1) / 2;
+                const rr = centRadius();
+                if (cells.some(p => {
+                    const dx = p.x - cc, dy = p.y - cc;
+                    return dx * dx + dy * dy > rr * rr + 0.01;
+                })) return false;
+            }`],
+    // 許可領域の円を描画
+    [ONE, `            // 星 (天元・星の点)`,
+`            // 中心ルール: 現在の許可領域 (円)
+            {
+                const cc = (BOARD_SIZE - 1) / 2;
+                ctx.strokeStyle = 'rgba(37, 99, 235, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 4]);
+                ctx.beginPath();
+                ctx.arc(padding + cc * cellSize, padding + cc * cellSize, (centRadius() + 0.5) * cellSize, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // 星 (天元・星の点)`],
+    ...STONE_SPEC,
+], 'centgo'));
+
+// 57. SWITCHGO (転換碁) — 12手ごとに全石の色が反転
+out('switchgo.html', apply(ALGO, [
+    ...rb('SWITCHGO', '転換碁', 'switchgo'),
+    [ONE, RV_ALGO, rv([
+        '転換ルール: 合計12手ごとに盤上の全ての石の色が反転する (黒⇔白)。',
+        '節目直前の配置で形成した形が相手のものになる — 反転を意識した布石が肝心。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 転換ルール<br>
+            ※12手ごとに盤上の全石の色が黒⇔白に反転`],
+    [ONE, `        function endGameByScore() {`,
+`        // 転換: 全石の色反転 + ピース所有色も入れ替え
+        function applySwitch() {
+            board = board.map(v => v === 1 ? 2 : v === 2 ? 1 : v);
+            pieces.forEach(pc => { pc.player = pc.player === 1 ? 2 : 1; });
+            deadStones = new Set([...deadStones]); // 死に石表示は維持
+            soundManager.playCapture();
+        }
+
+        function endGameByScore() {`],
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;
+            // 転換: 12手ごとに全石が反転
+            if (history.length % 12 === 0) applySwitch();`],
+    ...STONE_SPEC,
+], 'switchgo'));
+
+// 58. THUNDERGO (雷碁) — 10手ごとに雷がランダムな連を破壊
+out('thundergo.html', apply(ALGO, [
+    ...rb('THUNDERGO', '雷碁', 'thundergo'),
+    [ONE, RV_ALGO, rv([
+        '雷ルール: 合計10手ごとにランダムな石連が雷に打たれて消滅する (アゲハマにはならない)。',
+        '大きな連も一撃で消えることがある — 盤面の運要素が大きい祭り碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 雷ルール<br>
+            ※10手ごとにランダムな連が雷で消滅 (アゲハマにならない)`],
+    [ONE, `        function endGameByScore() {`,
+`        // 雷: ランダムな連を1つ消滅させる
+        function applyThunder() {
+            const occupied = [];
+            board.forEach((v, i) => { if (v === 1 || v === 2) occupied.push(i); });
+            if (!occupied.length) return;
+            const start = occupied[(Math.random() * occupied.length) | 0];
+            const group = getConnectedGroup(start, board[start]);
+            group.forEach(i => { board[i] = 0; });
+            cleanUpPieces();
+            soundManager.playCapture();
+        }
+
+        function endGameByScore() {`],
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;
+            // 雷: 10手ごとにランダムな連が消滅
+            if (history.length % 10 === 0) applyThunder();`],
+    ...STONE_SPEC,
+], 'thundergo'));
+
+// 59. CYLINDGO (円筒碁) — 左右の端のみ繋がる
+out('cylindgo.html', apply(ALGO, [
+    ...rb('CYLINDGO', '円筒碁', 'cylindgo'),
+    [ONE, RV_ALGO, rv([
+        '円筒ルール: 盤の左端と右端が繋がっている (上下は繋がらない)。',
+        '端の概念が左右だけ消え、横に回り込んだ取りが成立する。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 円筒ルール<br>
+            ※左右の端がループして繋がる (上下端は通常通り)`],
+    [ONE, NBRS_GRID,
+`        function getNeighbors(idx) {
+            const x = idx % BOARD_SIZE;
+            const y = Math.floor(idx / BOARD_SIZE);
+            const neighbors = [];
+
+            // 左右はループ (円筒)、上下は通常
+            if (x > 0) neighbors.push(idx - 1);
+            else neighbors.push(y * BOARD_SIZE + BOARD_SIZE - 1);
+            if (x < BOARD_SIZE - 1) neighbors.push(idx + 1);
+            else neighbors.push(y * BOARD_SIZE);
+            if (y > 0) neighbors.push(idx - BOARD_SIZE);
+            if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
+
+            return neighbors;
+        }`],
+    ...STONE_SPEC,
+], 'cylindgo'));
+
+// 60. MOEBIUSGO (メビウス碁) — 左右端が上下反転して繋がる
+out('moebiusgo.html', apply(ALGO, [
+    ...rb('MOEBIUSGO', 'メビウス碁', 'moebiusgo'),
+    [ONE, RV_ALGO, rv([
+        'メビウスルール: 左端から出ると右端に、上下が反転して出てくる (メビウス帯)。',
+        'ねじれたトポロジーで連・取りの読みが大きく変わる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + メビウス帯<br>
+            ※左端↔右端が上下反転して繋がる (上下端は通常通り)`],
+    [ONE, NBRS_GRID,
+`        function getNeighbors(idx) {
+            const x = idx % BOARD_SIZE;
+            const y = Math.floor(idx / BOARD_SIZE);
+            const neighbors = [];
+
+            // 左右はメビウス帯: 反対端の上下反転位置に繋がる
+            if (x > 0) neighbors.push(idx - 1);
+            else neighbors.push((BOARD_SIZE - 1 - y) * BOARD_SIZE + BOARD_SIZE - 1);
+            if (x < BOARD_SIZE - 1) neighbors.push(idx + 1);
+            else neighbors.push((BOARD_SIZE - 1 - y) * BOARD_SIZE);
+            if (y > 0) neighbors.push(idx - BOARD_SIZE);
+            if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
+
+            return neighbors;
+        }`],
+    ...STONE_SPEC,
+], 'moebiusgo'));
+
+// 61. QUARTERGO (象限碁) — 手番ごとに使用可能象限が回転
+out('quartergo.html', apply(ALGO, [
+    ...rb('QUARTERGO', '象限碁', 'quartergo'),
+    [ONE, RV_ALGO, rv([
+        '象限ルール: 盤を4象限 (左上/右上/左下/右下) に分け、着手はその手番の象限内のみ。',
+        '手番ごとに象限が時計回りに切り替わる (盤面の光っている区画が使用可能)。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 象限ルール<br>
+            ※着手はその手番の象限のみ。手番ごとに許可象限が回転`],
+    [ONE, `        function endGameByScore() {`,
+`        // 象限: 現在許可されている象限 (0=左上,1=右上,2=左下,3=右下)
+        function allowedQuadrant() {
+            return history.length % 4;
+        }
+        function quadIndex(x, y) {
+            const mid = BOARD_SIZE / 2;
+            return (x >= mid ? 1 : 0) + (y >= mid ? 2 : 0);
+        }
+
+        function endGameByScore() {`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 象限ルール: 全セルが許可象限内
+            if (cells.some(p => quadIndex(p.x, p.y) !== allowedQuadrant())) return false;`],
+    // 許可象限を薄くハイライト
+    [ONE, `            // 星 (天元・星の点)`,
+`            // 象限ルール: 許可象限のハイライト
+            {
+                const mid = BOARD_SIZE / 2;
+                const aq = allowedQuadrant();
+                const qx = (aq & 1) ? mid : 0;
+                const qy = (aq & 2) ? mid : 0;
+                ctx.fillStyle = 'rgba(37, 99, 235, 0.10)';
+                ctx.fillRect(padding + (qx - 0.5) * cellSize, padding + (qy - 0.5) * cellSize,
+                    mid * cellSize, mid * cellSize);
+            }
+
+            // 星 (天元・星の点)`],
+    ...STONE_SPEC,
+], 'quartergo'));
+
+// 62. ESCAPEGO (脱出碁) — 辺に接する連は不死
+out('escapego.html', apply(ALGO, [
+    ...rb('ESCAPEGO', '脱出碁', 'escapego'),
+    [ONE, RV_ALGO, rv([
+        '脱出ルール: 盤の辺 (最外周) に接している連は不死 — 呼吸点が0でも取られない。',
+        '辺まで伸ばした連は安全。ただし辺に届く前の石は通常通り取られる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 脱出ルール<br>
+            ※辺に接する連は不死。辺への接続が死活を左右する`],
+    [ONE, `                    if (!hasLiberty) {
+                        captured.push(...group);
+                    }`,
+`                    // 脱出ルール: 辺に接する連は取られない
+                    const onEdge = group.some(i => {
+                        const gx = i % BOARD_SIZE, gy = (i / BOARD_SIZE) | 0;
+                        return gx === 0 || gy === 0 || gx === BOARD_SIZE - 1 || gy === BOARD_SIZE - 1;
+                    });
+                    if (!hasLiberty && !onEdge) {
+                        captured.push(...group);
+                    }`],
+    ...STONE_SPEC,
+], 'escapego'));
+
 console.log(failures === 0 ? 'ALL OK' : `${failures} replacements MISSING`);
 process.exitCode = failures ? 1 : 0;
