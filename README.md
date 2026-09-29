@@ -1,16 +1,16 @@
-# 変則碁シリーズ (TETOGO family)
+# 変則碁シリーズ (MAMEGO family)
 
 碁のルール (連・呼吸点・取り・コウ・地集計) に「つながったピース」を持ち込んだ
 ブラウザゲーム集。[MAMEGO](https://github.com/cerevisiae-fii/mamego) の派生。
 
-**Play:** https://sas-news.github.io/tetogo/
+**Play:** https://sas-news.github.io/mamego-family/
 
 ## ゲーム一覧
 
 | ゲーム | 内容 |
 |---|---|
-| **TETOGO** `tetogo.html` | テトロミノ碁。7種テトロミノ・回転・ホールド・NEXTキュー |
-| **ALGO** `algo.html` | アルカン碁。球棒モデルの炭化水素分子「碁カン」+ 碁カン図鑑 |
+| TETOGO `tetogo.html` | テトロミノ碁。7種テトロミノ・回転・ホールド・NEXTキュー |
+| ALGO `algo.html` | アルカン碁。球棒モデルの炭化水素分子「碁カン」+ 碁カン図鑑 |
 | PENGO `pengo.html` | ペントミノ12種、窒息領域 < 5 |
 | TORUSGO `torusgo.html` | トーラス盤 (上下左右の端が繋がる) |
 | DECAYGO `decaygo.html` | 碁石に寿命 (8手で崩壊) |

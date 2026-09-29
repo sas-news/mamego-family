@@ -20,61 +20,12 @@
             <p class="text-sm opacity-70">碁のルールに「つながったピース」を持ち込んだ派生ゲーム一覧</p>
         </header>
 
-        <!-- メインゲーム -->
-        <div class="w-full flex flex-col gap-4">
-
-            <!-- TETOGO -->
-            <a href="tetogo.html" class="group w-full bg-white/80 hover:bg-white rounded-2xl border border-[#cbb07a] shadow-sm hover:shadow-md transition-all p-4 sm:p-5 flex items-center gap-4">
-                <canvas id="iconTetogo" width="96" height="96" class="shrink-0 rounded-xl bg-[#e4bb70]"></canvas>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2">
-                        <h2 class="text-xl font-extrabold tracking-wide">TETOGO</h2>
-                        <span class="text-xs font-bold opacity-60">テトリス碁</span>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#3e2211] text-[#f4e4bc] font-bold">メイン</span>
-                    </div>
-                    <p class="text-xs sm:text-sm opacity-75 mt-1 leading-relaxed">
-                        テトロミノ「碁テト」(I/O/T/L/J/S/Z) を交互に配置。<br>
-                        囲んで取る・囲んで地を作る、テトリス×囲碁。
-                    </p>
-                    <div class="mt-2 flex gap-1.5 text-[10px] font-bold opacity-60">
-                        <span class="px-2 py-0.5 rounded-full border border-current/30">9・13・19路</span>
-                        <span class="px-2 py-0.5 rounded-full border border-current/30">窒息領域 < 4</span>
-                    </div>
-                </div>
-                <span class="text-2xl opacity-30 group-hover:opacity-70 group-hover:translate-x-1 transition-all">▶</span>
-            </a>
-
-            <!-- ALGO -->
-            <a href="algo.html" class="group w-full bg-white/80 hover:bg-white rounded-2xl border border-[#cbb07a] shadow-sm hover:shadow-md transition-all p-4 sm:p-5 flex items-center gap-4">
-                <canvas id="iconAlgo" width="96" height="96" class="shrink-0 rounded-xl bg-[#e4bb70]"></canvas>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2">
-                        <h2 class="text-xl font-extrabold tracking-wide">ALGO</h2>
-                        <span class="text-xs font-bold opacity-60">アルカン碁</span>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#3e2211] text-[#f4e4bc] font-bold">メイン</span>
-                    </div>
-                    <p class="text-xs sm:text-sm opacity-75 mt-1 leading-relaxed">
-                        アルカン分子「碁カン」(C₄〜C₆) を交互に配置。<br>
-                        球棒モデルの分子が碁盤の上で結合する。
-                    </p>
-                    <div class="mt-2 flex gap-1.5 text-[10px] font-bold opacity-60">
-                        <span class="px-2 py-0.5 rounded-full border border-current/30">13・19・25路</span>
-                        <span class="px-2 py-0.5 rounded-full border border-current/30">窒息領域 < 4</span>
-                    </div>
-                </div>
-                <span class="text-2xl opacity-30 group-hover:opacity-70 group-hover:translate-x-1 transition-all">▶</span>
-            </a>
-        </div>
-
-        <!-- バリエーション -->
-        <div class="w-full flex flex-col gap-2.5">
-            <h3 class="text-xs font-bold tracking-widest opacity-60 text-center">— 派生バリエーション —</h3>
-            <div id="variantGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
-        </div>
+        <!-- 全ゲーム一覧 -->
+        <div id="gameGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
 
         <!-- MAMEGO (原作) -->
-        <a href="https://github.com/cerevisiae-fii/mamego" class="group w-full bg-white/60 hover:bg-white/90 rounded-2xl border border-dashed border-[#cbb07a] transition-all p-4 sm:p-5 flex items-center gap-4">
-            <canvas id="iconMamego" width="96" height="96" class="shrink-0 rounded-xl bg-[#e8c88b]"></canvas>
+        <a href="https://github.com/cerevisiae-fii/mamego" class="group w-full bg-white/60 hover:bg-white/90 rounded-2xl border border-dashed border-[#cbb07a] transition-all p-4 flex items-center gap-4">
+            <canvas id="iconMamego" width="96" height="96" class="shrink-0 rounded-xl bg-[#e8c88b] w-14 h-14"></canvas>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2">
                     <h2 class="text-xl font-extrabold tracking-wide opacity-80">MAMEGO</h2>
@@ -146,68 +97,26 @@
             });
         }
 
-        // ---- 角丸正方形テトロミノ (TETOGO アイコン) ----
-        {
-            const c = document.getElementById('iconTetogo').getContext('2d');
-            const W = 96, cell = gridLines(c, W, 6);
-            const block = (gx, gy, fill, stroke) => {
-                const s = cell * 0.88, r = s * 0.18;
-                const x = cell + gx * cell - s / 2, y = cell + gy * cell - s / 2;
-                c.fillStyle = fill; c.strokeStyle = stroke; c.lineWidth = 1.5;
-                c.beginPath();
-                if (c.roundRect) c.roundRect(x, y, s, s, r); else c.rect(x, y, s, s);
-                c.fill(); c.stroke();
-            };
-            [[0,0],[1,0],[2,0],[1,1]].forEach(([x,y]) => block(0.6+x, 0.8+y, P1, P1S));
-            [[0,0],[0,1],[0,2],[1,2]].forEach(([x,y]) => block(3.6+x, 2.4+y, P2, P2S));
-        }
-
-        // ---- ALGO アイコン ----
-        {
-            const c = document.getElementById('iconAlgo').getContext('2d');
-            const W = 96, cell = gridLines(c, W, 6);
-            const mk = (atoms) => atoms.map(([x, y]) => ({
-                gx: x, gy: y, cell, x: cell + x * cell, y: cell + y * cell
-            }));
-            drawMolecule(c, mk([[1,1],[2,1],[2,2],[3,2],[3,3],[2,0]]), P1, P1S, cell * 0.42);
-            drawMolecule(c, mk([[4,0],[4,1],[5,1],[5,2]]), P2, P2S, cell * 0.42);
-        }
-
-        // ---- ドミノ碁豆 (MAMEGO アイコン) ----
-        {
-            const c = document.getElementById('iconMamego').getContext('2d');
-            const W = 96, cell = gridLines(c, W, 6);
-            const R = cell * 0.44;
-            const stone = (gx, gy, fill, stroke) => {
-                const cx = cell + gx * cell, cy = cell + gy * cell;
-                const g = c.createRadialGradient(cx - R * 0.3, cy - R * 0.35, R * 0.1, cx, cy, R);
-                g.addColorStop(0, shade(fill, 0.4)); g.addColorStop(1, fill);
-                c.fillStyle = g; c.strokeStyle = stroke; c.lineWidth = 1.5;
-                c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.fill(); c.stroke();
-            };
-            stone(1.5, 1.5, P1, P1S); stone(2.5, 1.5, P1, P1S);
-            stone(4.5, 3.0, P1, P1S); stone(4.5, 4.0, P1, P1S);
-            stone(2.0, 4.5, P2, P2S); stone(3.0, 4.5, P2, P2S);
-        }
-
-        // ---- バリエーションカード ----
-        const VARIANTS = [
-            { id: 'pengo',    file: 'pengo.html',    name: 'PENGO',    jp: 'ペン碁',       desc: 'ペントミノ12種 (5マス)。窒息領域は5マス未満', kind: 'pento' },
-            { id: 'torusgo',  file: 'torusgo.html',  name: 'TORUSGO',  jp: 'トーラス碁',   desc: '上下左右の端が繋がる。隅も辺もない盤面', kind: 'torus' },
-            { id: 'decaygo',  file: 'decaygo.html',  name: 'DECAYGO',  jp: 'ディケイ碁',   desc: '碁石に寿命。打ってから一定手数で崩壊', kind: 'decay' },
-            { id: 'lifego',   file: 'lifego.html',   name: 'LIFEGO',   jp: 'ライフ碁',     desc: '着手ごとに盤面全体がライフゲーム1世代進化', kind: 'life' },
-            { id: 'rushgo',   file: 'rushgo.html',   name: 'RUSHGO',   jp: 'ラッシュ碁',   desc: '1手ごとの制限時間。時間切れは自動パス', kind: 'rush' },
-            { id: 'cyclogo',  file: 'cyclogo.html',  name: 'CYCLOGO',  jp: 'シクロ碁',     desc: 'シクロアルカン「碁クロ」。環を含む分子ピース', kind: 'cyclo' },
-            { id: 'alkenego', file: 'alkenego.html', name: 'ALKENEGO', jp: 'アルケン碁',   desc: '剛直な二重・三重結合。回転できない碁ケン', kind: 'alkene' },
-            { id: 'polygo',   file: 'polygo.html',   name: 'POLYGO',   jp: 'ポリマー碁',   desc: '毎手自分で4連の鎖を描く。自由な形のポリマー', kind: 'poly' },
-            { id: '3dgo',     file: '3dgo.html',     name: '3DGO',     jp: '立体碁',       desc: '3層盤面。上下の層も連・呼吸点になる', kind: 'd3' },
-            { id: 'asymgo',   file: 'asymgo.html',   name: 'ASYMGO',   jp: '非対称碁',     desc: '黒=安定形 (I/O/T)、白=変形 (L/J/S/Z)', kind: 'asym' },
-            { id: 'draftgo',  file: 'draftgo.html',  name: 'DRAFTGO',  jp: 'ドラフト碁',   desc: '対局前にピースを交互ドラフト。獲得3種のみ出現', kind: 'draft' },
-            { id: 'graphgo',  file: 'graphgo.html',  name: 'GRAPHGO',  jp: 'グラフ碁',     desc: '盤面そのものが分子グラフ。結合(辺)だけが道', kind: 'graph' },
+        // ---- ゲーム一覧 ----
+        const GAMES = [
+            { file: 'tetogo.html',  name: 'TETOGO',   jp: 'テトリス碁',   desc: 'テトロミノ「碁テト」7種 (I/O/T/L/J/S/Z)。回転・ホールド・NEXT', kind: 'tetromino' },
+            { file: 'algo.html',    name: 'ALGO',     jp: 'アルカン碁',   desc: 'アルカン分子「碁カン」(C₄〜C₆)。球棒モデル+碁カン図鑑', kind: 'alkane' },
+            { file: 'pengo.html',   name: 'PENGO',    jp: 'ペン碁',       desc: 'ペントミノ12種 (5マス)。窒息領域は5マス未満', kind: 'pento' },
+            { file: 'torusgo.html', name: 'TORUSGO',  jp: 'トーラス碁',   desc: '上下左右の端が繋がる。隅も辺もない盤面', kind: 'torus' },
+            { file: 'decaygo.html', name: 'DECAYGO',  jp: 'ディケイ碁',   desc: '碁石に寿命。打ってから一定手数で崩壊', kind: 'decay' },
+            { file: 'lifego.html',  name: 'LIFEGO',   jp: 'ライフ碁',     desc: '着手ごとに盤面全体がライフゲーム1世代進化', kind: 'life' },
+            { file: 'rushgo.html',  name: 'RUSHGO',   jp: 'ラッシュ碁',   desc: '1手ごとの制限時間。時間切れは自動パス', kind: 'rush' },
+            { file: 'cyclogo.html', name: 'CYCLOGO',  jp: 'シクロ碁',     desc: 'シクロアルカン「碁クロ」。環を含む分子ピース', kind: 'cyclo' },
+            { file: 'alkenego.html',name: 'ALKENEGO', jp: 'アルケン碁',   desc: '剛直な二重・三重結合。回転できない碁ケン', kind: 'alkene' },
+            { file: 'polygo.html',  name: 'POLYGO',   jp: 'ポリマー碁',   desc: '毎手自分で4連の鎖を描く。自由な形のポリマー', kind: 'poly' },
+            { file: '3dgo.html',    name: '3DGO',     jp: '立体碁',       desc: '3層盤面。上下の層も連・呼吸点になる', kind: 'd3' },
+            { file: 'asymgo.html',  name: 'ASYMGO',   jp: '非対称碁',     desc: '黒=安定形 (I/O/T)、白=変形 (L/J/S/Z)', kind: 'asym' },
+            { file: 'draftgo.html', name: 'DRAFTGO',  jp: 'ドラフト碁',   desc: '対局前にピースを交互ドラフト。獲得3種のみ出現', kind: 'draft' },
+            { file: 'graphgo.html', name: 'GRAPHGO',  jp: 'グラフ碁',     desc: '盤面そのものが分子グラフ。結合(辺)だけが道', kind: 'graph' },
         ];
 
-        const grid = document.getElementById('variantGrid');
-        VARIANTS.forEach(v => {
+        const grid = document.getElementById('gameGrid');
+        GAMES.forEach(v => {
             const a = document.createElement('a');
             a.href = v.file;
             a.className = 'group bg-white/70 hover:bg-white rounded-xl border border-[#cbb07a] transition-all p-3 flex items-center gap-3 hover:shadow-sm';
@@ -227,11 +136,14 @@
             arrow.textContent = '▶';
             a.appendChild(cv); a.appendChild(body); a.appendChild(arrow);
             grid.appendChild(a);
-            drawVariantIcon(cv.getContext('2d'), v.kind);
+            drawIcon(cv.getContext('2d'), v.kind, 56);
         });
 
-        function drawVariantIcon(c, kind) {
-            const W = 56, cell = gridLines(c, W, 6);
+        // ---- ドミノ碁豆 (MAMEGO アイコン) ----
+        drawIcon(document.getElementById('iconMamego').getContext('2d'), 'mame', 96);
+
+        function drawIcon(c, kind, W) {
+            const cell = gridLines(c, W, 6);
             const R = cell * 0.42;
             const at = (gx, gy) => ({ x: cell + gx * cell, y: cell + gy * cell });
             const dot = (gx, gy, fill, stroke, r = R, alpha = 1) => {
@@ -255,8 +167,25 @@
                 if (c.roundRect) c.roundRect(p.x - s/2, p.y - s/2, s, s, s*0.18); else c.rect(p.x - s/2, p.y - s/2, s, s);
                 c.fill(); c.stroke();
             };
+            const mol = (atoms, fill, stroke) => {
+                const pts = atoms.map(([x, y]) => ({ gx: x, gy: y, cell, x: cell + x * cell, y: cell + y * cell }));
+                drawMolecule(c, pts, fill, stroke, cell * 0.42);
+            };
 
             switch (kind) {
+                case 'tetromino': // Tテトロミノ + Lテトロミノ
+                    [[0,0],[1,0],[2,0],[1,1]].forEach(([x,y]) => blk(0.6+x, 0.8+y, P1, P1S));
+                    [[0,0],[0,1],[0,2],[1,2]].forEach(([x,y]) => blk(3.6+x, 2.4+y, P2, P2S));
+                    break;
+                case 'alkane': // 分子2つ
+                    mol([[1,1],[2,1],[2,2],[3,2],[3,3],[2,0]], P1, P1S);
+                    mol([[4,0],[4,1],[5,1],[5,2]], P2, P2S);
+                    break;
+                case 'mame': // ドミノ碁豆
+                    dot(1.5,1.5,P1,P1S,cell*0.44); dot(2.5,1.5,P1,P1S,cell*0.44);
+                    dot(4.5,3.0,P1,P1S,cell*0.44); dot(4.5,4.0,P1,P1S,cell*0.44);
+                    dot(2.0,4.5,P2,P2S,cell*0.44); dot(3.0,4.5,P2,P2S,cell*0.44);
+                    break;
                 case 'pento': // Wペントミノ
                     [[1,1],[1,2],[2,2],[2,3],[3,3]].forEach(([x,y]) => blk(x, y, P1, P1S));
                     blk(4,4,P2,P2S); blk(5,4,P2,P2S); blk(5,5,P2,P2S); blk(6,5,P2,P2S);
