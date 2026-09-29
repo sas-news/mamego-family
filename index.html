@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>変則碁シリーズ - ゲーム一覧</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[#f4e4bc] text-[#3e2211] flex flex-col items-center p-4 sm:p-8 select-none">
+
+    <div class="w-full max-w-2xl flex flex-col items-center gap-6">
+
+        <header class="text-center flex flex-col gap-1 pt-2">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-wider">変則碁シリーズ</h1>
+            <p class="text-sm opacity-70">碁のルールに「つながったピース」を持ち込んだ派生ゲーム一覧</p>
+        </header>
+
+        <!-- メインゲーム -->
+        <div class="w-full flex flex-col gap-4">
+
+            <!-- TETOGO -->
+            <a href="tetogo.html" class="group w-full bg-white/80 hover:bg-white rounded-2xl border border-[#cbb07a] shadow-sm hover:shadow-md transition-all p-4 sm:p-5 flex items-center gap-4">
+                <canvas id="iconTetogo" width="96" height="96" class="shrink-0 rounded-xl bg-[#e4bb70]"></canvas>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-xl font-extrabold tracking-wide">TETOGO</h2>
+                        <span class="text-xs font-bold opacity-60">テトリス碁</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#3e2211] text-[#f4e4bc] font-bold">メイン</span>
+                    </div>
+                    <p class="text-xs sm:text-sm opacity-75 mt-1 leading-relaxed">
+                        テトロミノ「碁テト」(I/O/T/L/J/S/Z) を交互に配置。<br>
+                        囲んで取る・囲んで地を作る、テトリス×囲碁。
+                    </p>
+                    <div class="mt-2 flex gap-1.5 text-[10px] font-bold opacity-60">
+                        <span class="px-2 py-0.5 rounded-full border border-current/30">9・13・19路</span>
+                        <span class="px-2 py-0.5 rounded-full border border-current/30">窒息領域 < 4</span>
+                    </div>
+                </div>
+                <span class="text-2xl opacity-30 group-hover:opacity-70 group-hover:translate-x-1 transition-all">▶</span>
+            </a>
+
+            <!-- ALGO -->
+            <a href="algo.html" class="group w-full bg-white/80 hover:bg-white rounded-2xl border border-[#cbb07a] shadow-sm hover:shadow-md transition-all p-4 sm:p-5 flex items-center gap-4">
+                <canvas id="iconAlgo" width="96" height="96" class="shrink-0 rounded-xl bg-[#e4bb70]"></canvas>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-xl font-extrabold tracking-wide">ALGO</h2>
+                        <span class="text-xs font-bold opacity-60">アルカン碁</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#3e2211] text-[#f4e4bc] font-bold">メイン</span>
+                    </div>
+                    <p class="text-xs sm:text-sm opacity-75 mt-1 leading-relaxed">
+                        アルカン分子「碁カン」(C₄〜C₆) を交互に配置。<br>
+                        球棒モデルの分子が碁盤の上で結合する。
+                    </p>
+                    <div class="mt-2 flex gap-1.5 text-[10px] font-bold opacity-60">
+                        <span class="px-2 py-0.5 rounded-full border border-current/30">13・19・25路</span>
+                        <span class="px-2 py-0.5 rounded-full border border-current/30">窒息領域 < 4</span>
+                    </div>
+                </div>
+                <span class="text-2xl opacity-30 group-hover:opacity-70 group-hover:translate-x-1 transition-all">▶</span>
+            </a>
+        </div>
+
+        <!-- バリエーション -->
+        <div class="w-full flex flex-col gap-2.5">
+            <h3 class="text-xs font-bold tracking-widest opacity-60 text-center">— 派生バリエーション —</h3>
+            <div id="variantGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+        </div>
+
+        <!-- MAMEGO (原作) -->
+        <a href="https://github.com/cerevisiae-fii/mamego" class="group w-full bg-white/60 hover:bg-white/90 rounded-2xl border border-dashed border-[#cbb07a] transition-all p-4 sm:p-5 flex items-center gap-4">
+            <canvas id="iconMamego" width="96" height="96" class="shrink-0 rounded-xl bg-[#e8c88b]"></canvas>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-xl font-extrabold tracking-wide opacity-80">MAMEGO</h2>
+                    <span class="text-xs font-bold opacity-60">マメ碁</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#3e2211] text-[#f4e4bc] font-bold">原作</span>
+                </div>
+                <p class="text-xs sm:text-sm opacity-75 mt-1 leading-relaxed">
+                    1×2 の「碁豆」を配置するオリジナル (このシリーズの元ネタ)。<br>
+                    GitHub リポジトリへ移動します。
+                </p>
+            </div>
+            <span class="text-2xl opacity-30 group-hover:opacity-70 group-hover:translate-x-1 transition-all">↗</span>
+        </a>
+
+        <footer class="text-[11px] opacity-50 text-center leading-relaxed pt-2 pb-4">
+            共通ルール: 連で呼吸点を確保 / 囲まれると取り / コウ・自殺手禁止 / パス×2で終局→地集計+コミ<br>
+            ローカル・AI・オンライン対戦対応
+        </footer>
+    </div>
+
+    <script>
+        // ---- 共通描画 ----
+        const P1 = '#1c1917', P1S = '#000000';
+        const P2 = '#fef3c7', P2S = '#78350f';
+
+        function gridLines(c, w, n) {
+            const m = w / (n + 1);
+            c.strokeStyle = 'rgba(62,34,17,0.35)';
+            c.lineWidth = 1;
+            for (let i = 1; i <= n; i++) {
+                c.beginPath(); c.moveTo(m * i, m); c.lineTo(m * i, w - m); c.stroke();
+                c.beginPath(); c.moveTo(m, m * i); c.lineTo(w - m, m * i); c.stroke();
+            }
+            return m;
+        }
+
+        function shade(hex, amt) {
+            const n = parseInt(hex.slice(1), 16);
+            const f = (v) => Math.round(v + ((amt > 0 ? 255 : 0) - v) * Math.abs(amt));
+            return `rgb(${f(n >> 16 & 255)},${f(n >> 8 & 255)},${f(n & 255)})`;
+        }
+
+        // 球棒モデル分子を任意の中心座標群で描画
+        function drawMolecule(c, points, color, stroke, R) {
+            const set = new Set(points.map(p => p.gx + ',' + p.gy));
+            c.strokeStyle = shade(color, -0.15);
+            c.lineWidth = R * 0.72;
+            c.lineCap = 'round';
+            c.beginPath();
+            points.forEach(p => {
+                [[1, 0], [0, 1]].forEach(([dx, dy]) => {
+                    if (set.has((p.gx + dx) + ',' + (p.gy + dy))) {
+                        c.moveTo(p.x, p.y);
+                        c.lineTo(p.x + dx * p.cell, p.y + dy * p.cell);
+                    }
+                });
+            });
+            c.stroke();
+            points.forEach(p => {
+                const g = c.createRadialGradient(p.x - R * 0.38, p.y - R * 0.42, R * 0.08, p.x, p.y, R);
+                g.addColorStop(0, shade(color, 0.55));
+                g.addColorStop(0.65, color);
+                g.addColorStop(1, shade(color, -0.25));
+                c.fillStyle = g;
+                c.beginPath(); c.arc(p.x, p.y, R, 0, Math.PI * 2); c.fill();
+                c.strokeStyle = stroke; c.lineWidth = 1; c.stroke();
+                c.fillStyle = 'rgba(255,255,255,0.45)';
+                c.beginPath(); c.arc(p.x - R * 0.34, p.y - R * 0.38, R * 0.17, 0, Math.PI * 2); c.fill();
+            });
+        }
+
+        // ---- 角丸正方形テトロミノ (TETOGO アイコン) ----
+        {
+            const c = document.getElementById('iconTetogo').getContext('2d');
+            const W = 96, cell = gridLines(c, W, 6);
+            const block = (gx, gy, fill, stroke) => {
+                const s = cell * 0.88, r = s * 0.18;
+                const x = cell + gx * cell - s / 2, y = cell + gy * cell - s / 2;
+                c.fillStyle = fill; c.strokeStyle = stroke; c.lineWidth = 1.5;
+                c.beginPath();
+                if (c.roundRect) c.roundRect(x, y, s, s, r); else c.rect(x, y, s, s);
+                c.fill(); c.stroke();
+            };
+            [[0,0],[1,0],[2,0],[1,1]].forEach(([x,y]) => block(0.6+x, 0.8+y, P1, P1S));
+            [[0,0],[0,1],[0,2],[1,2]].forEach(([x,y]) => block(3.6+x, 2.4+y, P2, P2S));
+        }
+
+        // ---- ALGO アイコン ----
+        {
+            const c = document.getElementById('iconAlgo').getContext('2d');
+            const W = 96, cell = gridLines(c, W, 6);
+            const mk = (atoms) => atoms.map(([x, y]) => ({
+                gx: x, gy: y, cell, x: cell + x * cell, y: cell + y * cell
+            }));
+            drawMolecule(c, mk([[1,1],[2,1],[2,2],[3,2],[3,3],[2,0]]), P1, P1S, cell * 0.42);
+            drawMolecule(c, mk([[4,0],[4,1],[5,1],[5,2]]), P2, P2S, cell * 0.42);
+        }
+
+        // ---- ドミノ碁豆 (MAMEGO アイコン) ----
+        {
+            const c = document.getElementById('iconMamego').getContext('2d');
+            const W = 96, cell = gridLines(c, W, 6);
+            const R = cell * 0.44;
+            const stone = (gx, gy, fill, stroke) => {
+                const cx = cell + gx * cell, cy = cell + gy * cell;
+                const g = c.createRadialGradient(cx - R * 0.3, cy - R * 0.35, R * 0.1, cx, cy, R);
+                g.addColorStop(0, shade(fill, 0.4)); g.addColorStop(1, fill);
+                c.fillStyle = g; c.strokeStyle = stroke; c.lineWidth = 1.5;
+                c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.fill(); c.stroke();
+            };
+            stone(1.5, 1.5, P1, P1S); stone(2.5, 1.5, P1, P1S);
+            stone(4.5, 3.0, P1, P1S); stone(4.5, 4.0, P1, P1S);
+            stone(2.0, 4.5, P2, P2S); stone(3.0, 4.5, P2, P2S);
+        }
+
+        // ---- バリエーションカード ----
+        const VARIANTS = [
+            { id: 'pengo',    file: 'pengo.html',    name: 'PENGO',    jp: 'ペン碁',       desc: 'ペントミノ12種 (5マス)。窒息領域は5マス未満', kind: 'pento' },
+            { id: 'torusgo',  file: 'torusgo.html',  name: 'TORUSGO',  jp: 'トーラス碁',   desc: '上下左右の端が繋がる。隅も辺もない盤面', kind: 'torus' },
+            { id: 'decaygo',  file: 'decaygo.html',  name: 'DECAYGO',  jp: 'ディケイ碁',   desc: '碁石に寿命。打ってから一定手数で崩壊', kind: 'decay' },
+            { id: 'lifego',   file: 'lifego.html',   name: 'LIFEGO',   jp: 'ライフ碁',     desc: '着手ごとに盤面全体がライフゲーム1世代進化', kind: 'life' },
+            { id: 'rushgo',   file: 'rushgo.html',   name: 'RUSHGO',   jp: 'ラッシュ碁',   desc: '1手ごとの制限時間。時間切れは自動パス', kind: 'rush' },
+            { id: 'cyclogo',  file: 'cyclogo.html',  name: 'CYCLOGO',  jp: 'シクロ碁',     desc: 'シクロアルカン「碁クロ」。環を含む分子ピース', kind: 'cyclo' },
+            { id: 'alkenego', file: 'alkenego.html', name: 'ALKENEGO', jp: 'アルケン碁',   desc: '剛直な二重・三重結合。回転できない碁ケン', kind: 'alkene' },
+            { id: 'polygo',   file: 'polygo.html',   name: 'POLYGO',   jp: 'ポリマー碁',   desc: '毎手自分で4連の鎖を描く。自由な形のポリマー', kind: 'poly' },
+            { id: '3dgo',     file: '3dgo.html',     name: '3DGO',     jp: '立体碁',       desc: '3層盤面。上下の層も連・呼吸点になる', kind: 'd3' },
+            { id: 'asymgo',   file: 'asymgo.html',   name: 'ASYMGO',   jp: '非対称碁',     desc: '黒=安定形 (I/O/T)、白=変形 (L/J/S/Z)', kind: 'asym' },
+            { id: 'draftgo',  file: 'draftgo.html',  name: 'DRAFTGO',  jp: 'ドラフト碁',   desc: '対局前にピースを交互ドラフト。獲得3種のみ出現', kind: 'draft' },
+            { id: 'graphgo',  file: 'graphgo.html',  name: 'GRAPHGO',  jp: 'グラフ碁',     desc: '盤面そのものが分子グラフ。結合(辺)だけが道', kind: 'graph' },
+        ];
+
+        const grid = document.getElementById('variantGrid');
+        VARIANTS.forEach(v => {
+            const a = document.createElement('a');
+            a.href = v.file;
+            a.className = 'group bg-white/70 hover:bg-white rounded-xl border border-[#cbb07a] transition-all p-3 flex items-center gap-3 hover:shadow-sm';
+            const cv = document.createElement('canvas');
+            cv.width = 56; cv.height = 56;
+            cv.className = 'shrink-0 rounded-lg bg-[#e4bb70]';
+            const body = document.createElement('div');
+            body.className = 'flex-1 min-w-0';
+            body.innerHTML = `
+                <div class="flex items-baseline gap-1.5">
+                    <span class="font-extrabold tracking-wide text-sm">${v.name}</span>
+                    <span class="text-[10px] font-bold opacity-60">${v.jp}</span>
+                </div>
+                <p class="text-[11px] opacity-70 mt-0.5 leading-snug">${v.desc}</p>`;
+            const arrow = document.createElement('span');
+            arrow.className = 'text-lg opacity-25 group-hover:opacity-70 transition-all';
+            arrow.textContent = '▶';
+            a.appendChild(cv); a.appendChild(body); a.appendChild(arrow);
+            grid.appendChild(a);
+            drawVariantIcon(cv.getContext('2d'), v.kind);
+        });
+
+        function drawVariantIcon(c, kind) {
+            const W = 56, cell = gridLines(c, W, 6);
+            const R = cell * 0.42;
+            const at = (gx, gy) => ({ x: cell + gx * cell, y: cell + gy * cell });
+            const dot = (gx, gy, fill, stroke, r = R, alpha = 1) => {
+                const p = at(gx, gy);
+                c.save(); c.globalAlpha = alpha;
+                const g = c.createRadialGradient(p.x - r * 0.3, p.y - r * 0.35, r * 0.1, p.x, p.y, r);
+                g.addColorStop(0, shade(fill, 0.4)); g.addColorStop(1, fill);
+                c.fillStyle = g; c.strokeStyle = stroke; c.lineWidth = 1.2;
+                c.beginPath(); c.arc(p.x, p.y, r, 0, Math.PI * 2); c.fill(); c.stroke();
+                c.restore();
+            };
+            const bond = (x1, y1, x2, y2, w = 4) => {
+                const p = at(x1, y1), q = at(x2, y2);
+                c.strokeStyle = 'rgba(40,24,14,0.6)'; c.lineWidth = w; c.lineCap = 'round';
+                c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(q.x, q.y); c.stroke();
+            };
+            const blk = (gx, gy, fill, stroke) => {
+                const s = cell * 0.86, p = at(gx, gy);
+                c.fillStyle = fill; c.strokeStyle = stroke; c.lineWidth = 1.2;
+                c.beginPath();
+                if (c.roundRect) c.roundRect(p.x - s/2, p.y - s/2, s, s, s*0.18); else c.rect(p.x - s/2, p.y - s/2, s, s);
+                c.fill(); c.stroke();
+            };
+
+            switch (kind) {
+                case 'pento': // Wペントミノ
+                    [[1,1],[1,2],[2,2],[2,3],[3,3]].forEach(([x,y]) => blk(x, y, P1, P1S));
+                    blk(4,4,P2,P2S); blk(5,4,P2,P2S); blk(5,5,P2,P2S); blk(6,5,P2,P2S);
+                    break;
+                case 'torus': // 端ループ矢印
+                    [[2,2],[3,2],[2,3],[3,3]].forEach(([x,y]) => dot(x, y, P1, P1S));
+                    c.strokeStyle = P2S; c.lineWidth = 2; c.lineCap = 'round';
+                    [[1.2,1.2,4.8,1.2],[4.8,4.8,1.2,4.8]].forEach(([a,b,d,e]) => {
+                        c.beginPath(); c.moveTo(cell+a*cell, cell+b*cell); c.lineTo(cell+d*cell, cell+e*cell); c.stroke();
+                    });
+                    break;
+                case 'decay': // 薄くなる石
+                    dot(1.5,2,P1,P1S); dot(2.8,2,P1,P1S,R,0.55); dot(4.1,2,P1,P1S,R,0.22);
+                    bond(4.6,4.2,5.6,4.2,3); dot(5.6,4.2,P2,P2S);
+                    break;
+                case 'life': // グライダー
+                    [[2,1],[3,2],[1,3],[2,3],[3,3]].forEach(([x,y]) => dot(x, y, P1, P1S));
+                    break;
+                case 'rush': // ストップウォッチ
+                    c.strokeStyle = P1; c.lineWidth = 2.5;
+                    c.beginPath(); c.arc(at(3,3.2).x, at(3,3.2).y, cell*1.5, 0, Math.PI*2); c.stroke();
+                    c.beginPath(); c.moveTo(at(3,3.2).x, at(3,3.2).y); c.lineTo(at(3,2).x, at(3,2).y); c.stroke();
+                    c.fillRect(cell*2.6, cell*0.7, cell*0.8, cell*0.35);
+                    break;
+                case 'cyclo': // シクロヘキサン環
+                    bond(2,2,3,2); bond(3,2,4,2); bond(4,2,4,3); bond(4,3,3,3); bond(3,3,2,3); bond(2,3,2,2);
+                    [[2,2],[3,2],[4,2],[4,3],[3,3],[2,3]].forEach(([x,y]) => dot(x, y, P1, P1S));
+                    break;
+                case 'alkene': // 二重結合 (平行2本線)
+                    [[2.2,2.4],[3.8,2.4]].forEach(([x,y]) => dot(x, y, P1, P1S));
+                    c.strokeStyle = 'rgba(40,24,14,0.7)'; c.lineWidth = 1.8; c.lineCap = 'round';
+                    [-0.12,0.12].forEach(o => {
+                        c.beginPath(); c.moveTo(at(2.2,2.4+o).x, at(2.2,2.4+o).y); c.lineTo(at(3.8,2.4+o).x, at(3.8,2.4+o).y); c.stroke();
+                    });
+                    bond(3.8,2.4,4.8,3.4,3); dot(4.8,3.4,P1,P1S);
+                    break;
+                case 'poly': // くねった鎖
+                    [[1.5,4],[2,3],[3,3.4],[3.8,2.6],[4.6,2.8]].forEach((p,i,arr) => {
+                        if (i) bond(arr[i-1][0], arr[i-1][1], p[0], p[1], 3);
+                        dot(p[0], p[1], P1, P1S);
+                    });
+                    break;
+                case 'd3': // 3層
+                    for (let i = 0; i < 3; i++) {
+                        const o = 1.6 + i * 0.9;
+                        c.strokeStyle = i === 1 ? P1 : 'rgba(40,24,14,0.4)';
+                        c.lineWidth = i === 1 ? 2 : 1.2;
+                        c.strokeRect(cell*o, cell*o, cell*2.8, cell*2.8);
+                    }
+                    dot(3.4,3.4,P2,P2S);
+                    break;
+                case 'asym': // 半々
+                    [[1.6,1.6],[2.6,1.6],[2.1,2.6]].forEach(([x,y]) => dot(x, y, P1, P1S));
+                    [[4.4,3.4],[3.4,4.4],[4.4,4.4],[5.4,3.4]].forEach(([x,y]) => dot(x, y, P2, P2S));
+                    c.strokeStyle = 'rgba(62,34,17,0.5)'; c.lineWidth = 1.5;
+                    c.setLineDash([3,3]); c.beginPath();
+                    c.moveTo(W*0.15, W*0.85); c.lineTo(W*0.85, W*0.15); c.stroke(); c.setLineDash([]);
+                    break;
+                case 'draft': // ピック (指)
+                    dot(2,2,P1,P1S); dot(2,3.6,P2,P2S); dot(4,2,P2,P2S); dot(4,3.6,P1,P1S);
+                    c.strokeStyle = P2S; c.lineWidth = 2;
+                    c.beginPath(); c.arc(at(4,2).x, at(4,2).y, cell*0.7, 0, Math.PI*2); c.stroke();
+                    break;
+                case 'graph': // 分子グラフ
+                    [[1.6,1.6,3,1.6],[3,1.6,4.4,2.6],[3,1.6,3,3.2],[3,3.2,1.8,4],[3,3.2,4.2,4.4],[1.8,4,1.6,1.6]].forEach(([a,b,d,e]) => bond(a,b,d,e,2.5));
+                    [[1.6,1.6],[3,1.6],[4.4,2.6],[3,3.2],[1.8,4],[4.2,4.4]].forEach(([x,y]) => dot(x, y, P1, P1S, cell*0.3));
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>
