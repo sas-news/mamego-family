@@ -3043,5 +3043,385 @@ out('reapgo.html', apply(ALGO, [
     ...STONE_SPEC,
 ], 'reapgo'));
 
+// ============================================================
+// ==== 第4バッチ: 追加10派生 ====
+// ============================================================
+
+// 43. QUADGO (四方碁) — 碁カク=2×2ブロックのみ
+const QUAD_MOLS = `        // 碁カク: 2x2ブロックの方形碁石
+        const MOLECULES = {
+            QUAD: { name: '碁カク', iupac: '正方形4', formula: '4連結', atoms: [[0,0],[1,0],[0,1],[1,1]] }
+        };`;
+out('quadgo.html', apply(ALGO, [
+    ...rb('QUADGO', '四方碁', 'quadgo'),
+    [ONE, RV_ALGO, rv([
+        'このゲームで使う碁カクは2×2の正方形ブロックのみ。回転しても同じ形。',
+        '大きな塊は呼吸点を多く持つが、置ける場所は限られる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            2×2ブロック「碁カク」を配置し合う変則囲碁<br>
+            PC: クリックで配置 / スマホ: 1タップ目プレビュー、2タップ目確定`],
+    [ONE, MOLECULES_ALGO, QUAD_MOLS],
+    [ONE, OCNT_ALGO, '// 碁カク: 正方形は回転不変 = 1パターン'],
+    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'QUAD';`],
+    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'QUAD'`],
+    [ONE, '登場アルカン', '登場碁カク'],
+    [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
+`碁カクは2×2の正方形のみ。回転しても形は変わりません。`],
+    ...SIZE_91319,
+    [ALL, '碁カン', '碁カク'],
+    [ALL, '全7種1巡', '補充なし'],
+], 'quadgo'));
+
+// 44. CIRCLEGO (円盤碁) — 円形盤面
+out('circlego.html', apply(ALGO, [
+    ...rb('CIRCLEGO', '円盤碁', 'circlego'),
+    [ONE, RV_ALGO, rv([
+        '盤面は円形 — 中心から半径 (N-1)/2 より外のマスは壁 (使用不能)。',
+        '「隅」が存在しない盤面で戦う囲碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 円形盤<br>
+            ※円の外側は壁。壁は置けず呼吸点にも地にもならない`],
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            // 円形盤: 半径より外を壁にする
+            const crad = (BOARD_SIZE - 1) / 2;
+            for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                const ddx = x - crad, ddy = y - crad;
+                if (ddx * ddx + ddy * ddy > crad * crad + 0.5) board[y * BOARD_SIZE + x] = 3;
+            }`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'circlego'));
+
+// 45. LAVAGO (溶岩碁) — 8手ごとに外周の空点が溶岩に沈む
+out('lavago.html', apply(ALGO, [
+    ...rb('LAVAGO', '溶岩碁', 'lavago'),
+    [ONE, RV_ALGO, rv([
+        '溶岩ルール: 合計8手ごとに盤の最外周リングが溶岩に沈む (空マスが壁になる)。',
+        '石は残るが呼吸点を失い、呼吸点0になった連は溶岩に飲まれて相手のアゲハマになる。',
+        '盤面は内側へ徐々に狭くなる。全周が沈み切ったらその時点で地集計に入る。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 溶岩ルール<br>
+            ※8手ごとに外周の空マスが溶岩 (壁) に沈む。盤面はどんどん狭くなる`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        let lavaDepth = 0;      // 溶岩の浸食深度 (何リング目まで沈んだか)
+        const LAVA_EVERY = 8;   // この手数ごとに外周リングが溶岩化`],
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            lavaDepth = 0;`],
+    [ONE, `        function endGameByScore() {`,
+`        // 溶岩: 外周リングの空マスを壁にし、呼吸点を失った連を溶かす
+        function applyLava() {
+            const n = BOARD_SIZE;
+            if (lavaDepth >= Math.ceil(n / 2)) { endGameByScore(); return; }
+            const d = lavaDepth++;
+            let changed = false;
+            for (let y = d; y < n - d; y++) for (let x = d; x < n - d; x++) {
+                if (x !== d && x !== n - 1 - d && y !== d && y !== n - 1 - d) continue;
+                const i = y * n + x;
+                if (board[i] === 0) { board[i] = 3; changed = true; }
+            }
+            // 溶岩で呼吸点0になった連は消滅 (相手のアゲハマ)
+            [1, 2].forEach(pl => {
+                const dead = getCapturedStones(board, pl);
+                dead.forEach(i => { board[i] = 0; });
+                if (dead.length) captures[pl === 1 ? 2 : 1] += dead.length;
+            });
+            cleanUpPieces();
+            if (lavaDepth >= Math.ceil(n / 2)) endGameByScore();
+        }
+
+        function endGameByScore() {`],
+    // undo用: スナップショットにも溶岩深度を保存・復元
+    [ONE, `                prevBoard,
+                lastMove,
+                currentPieceType,`,
+`                prevBoard,
+                lastMove,
+                lavaDepth,
+                currentPieceType,`],
+    [ONE, `            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;`,
+`            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;
+            lavaDepth = snap.lavaDepth || 0;`],
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;
+            // 溶岩: LAVA_EVERY手ごとに外周が沈む
+            if (history.length % LAVA_EVERY === 0) applyLava();`],
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    lavaDepth,
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            lavaDepth = s.lavaDepth || 0;
+            if (s.boardSize === BOARD_SIZE && board.every(v => v !== 3)) {
+                // セーブからの復元時に溶岩壁を再構成 (壁は盤面に含まれるので素通し)
+            }`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                lavaDepth,
+                pieceMode,`],
+    [ONE, `            lastMove = data.lastMove || null;`,
+`            lastMove = data.lastMove || null;
+            lavaDepth = data.lavaDepth || 0;`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'lavago'));
+
+// 46. HALFGO (陣地碁) — 黒は左半分、白は右半分のみ
+out('halfgo.html', apply(ALGO, [
+    ...rb('HALFGO', '陣地碁', 'halfgo'),
+    [ONE, RV_ALGO, rv([
+        '陣地ルール: 黒は盤の左半分、白は右半分にしか置けない。中央列は両者共通。',
+        '敵の陣地には侵入できない — 境界線上の攻防と自陣の囲い合いが勝負。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 陣地ルール<br>
+            ※黒は左半分、白は右半分のみ配置可 (中央列は共通)`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 陣地ルール: 黒は左半分、白は右半分のみ (中央列は共通)
+            const hmid = Math.floor(BOARD_SIZE / 2);
+            if (cells.some(p => player === 1 ? p.x > hmid : p.x < hmid)) return false;`],
+    ...STONE_SPEC,
+], 'halfgo'));
+
+// 47. SPARSEGO (離散碁) — いかなる石の隣にも置けない
+out('sparsego.html', apply(ALGO, [
+    ...rb('SPARSEGO', '離散碁', 'sparsego'),
+    [ONE, RV_ALGO, rv([
+        '離散ルール: いかなる石 (敵味方問わず) に隣接する空点には置けない。',
+        '全ての石は孤立し、取り合いは発生しない。地の囲い合いのみの静かな碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 離散ルール<br>
+            ※どの石にも隣接する点には置けない (全石が孤立)`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 離散ルール: いかなる石の隣にも置けない
+            if (cells.some(p =>
+                getNeighbors(p.y * BOARD_SIZE + p.x).some(n => board[n] === 1 || board[n] === 2))) return false;`],
+    ...STONE_SPEC,
+], 'sparsego'));
+
+// 48. FIRSTGO (一撃碁) — 最初の取りで即勝利
+out('firstgo.html', apply(ALGO, [
+    ...rb('FIRSTGO', '一撃碁', 'firstgo'),
+    [ONE, RV_ALGO, rv([
+        '一撃ルール: 最初に敵石を1個でも取った側がその場で勝利する。',
+        '通常の終局 (パス2連続→地集計+コミ) も有効だが、実際は最初の取り合いで決まることが多い。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 一撃ルール<br>
+            ※最初に敵石を取った側が即勝利`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        const WIN_CAPTURES = 1; // 一撃ルール: 最初の取りで即勝利`],
+    [ONE, CAPTURE_BLOCK,
+`            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                captures[player] += captured.length;
+                if (captures[player] >= WIN_CAPTURES) {
+                    winByRule(player, '一撃', \`\${player === 1 ? '黒' : '白'}が最初の取りを決めました\`);
+                    return;
+                }
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    [ONE, `        function endGameByScore() {`, WIN_BY_RULE_FN + `
+        function endGameByScore() {`],
+    ...STONE_SPEC,
+], 'firstgo'));
+
+// 49. TREASUREGO (宝碁) — 星のマスを囲むと+5点
+out('treasurego.html', apply(ALGO, [
+    ...rb('TREASUREGO', '宝碁', 'treasurego'),
+    [ONE, RV_ALGO, rv([
+        '宝ルール: 星のマス (◆印) は宝物。終局時、宝マスの全近傍が自分の石で囲まれていれば1箇所につき+5点。',
+        '宝マスそのものは普通の空点として使える (置くとその宝は消える)。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 宝ルール<br>
+            ※星マス (◆) を全方向囲むと終局時+5点/箇所`],
+    // 宝マス描画 (星の直後)
+    [ONE, `            // 星 (天元・星の点)
+            const starPoints = getStarPoints(BOARD_SIZE);`,
+`            // 星 (天元・星の点)
+            const starPoints = getStarPoints(BOARD_SIZE);
+            // 宝マス (◆) = 星の位置
+            ctx.fillStyle = 'rgba(202, 138, 4, 0.95)';
+            starPoints.forEach(tp => {
+                const tx = tp.x, ty = tp.y;
+                if (board[ty * BOARD_SIZE + tx] !== 0) return;
+                const bx = padding + tx * cellSize;
+                const by = padding + ty * cellSize;
+                const ds = cellSize * 0.2;
+                ctx.beginPath();
+                ctx.moveTo(bx, by - ds); ctx.lineTo(bx + ds, by);
+                ctx.lineTo(bx, by + ds); ctx.lineTo(bx - ds, by);
+                ctx.closePath(); ctx.fill();
+            });`],
+    [ONE, `            const blackTotal = territory.black + captures[1];
+            const whiteTotal = territory.white + captures[2] + komi;`,
+`            // 宝ボーナス: 宝マスの全近傍を囲んだ側に1箇所5点
+            const TREASURE_BONUS = 5;
+            let blackTreasure = 0, whiteTreasure = 0;
+            getStarPoints(BOARD_SIZE).forEach(tp => {
+                const nb = getNeighbors(tp.y * BOARD_SIZE + tp.x).map(i => board[i]);
+                if (nb.length > 0 && nb.every(v => v === 1)) blackTreasure++;
+                if (nb.length > 0 && nb.every(v => v === 2)) whiteTreasure++;
+            });
+            const blackTotal = territory.black + captures[1] + blackTreasure * TREASURE_BONUS;
+            const whiteTotal = territory.white + captures[2] + komi + whiteTreasure * TREASURE_BONUS;`],
+    [ONE, `<div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>`,
+`<div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>
+                    <div class="flex justify-between"><span>黒の宝:</span> <strong>+\${blackTreasure * TREASURE_BONUS}</strong></div>`],
+    [ONE, `<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
+`<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
+                    <div class="flex justify-between"><span>白の宝:</span> <strong>+\${whiteTreasure * TREASURE_BONUS}</strong></div>`],
+    ...STONE_SPEC,
+], 'treasurego'));
+
+// 50. DARKGO (暗闇碁) — 自石の近く以外は敵石が見えない
+out('darkgo.html', apply(ALGO, [
+    ...rb('DARKGO', '暗闇碁', 'darkgo'),
+    [ONE, RV_ALGO, rv([
+        '暗闇ルール: 自分の石からマンハッタン距離3以内の範囲しか見えない。',
+        '視野外の敵石は表示されない (配置判定や取り自体は通常通り働く)。',
+        'ローカル対戦では手番側の視点、AI/オンラインでは自分の視点で描画。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 暗闇ルール<br>
+            ※自分の石の近くしか見えない。敵石は霧の中`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        const FOG_RANGE = 3; // 暗闇ルール: 自石からの視界距離 (マンハッタン)`],
+    [ONE, `        function drawBoardElements(padding, cellSize) {`,
+`        // 暗闇: 視点となるプレイヤー色 (ローカル=手番側、AI/オンライン=自分)
+        function fogViewer() {
+            if (gameMode === 'online') return myOnlineRole || 1;
+            if (gameMode === 'ai') return aiPlayer === 2 ? 1 : 2;
+            return turn;
+        }
+        function isFogVisible(idx) {
+            const v = fogViewer();
+            const x = idx % BOARD_SIZE, y = (idx / BOARD_SIZE) | 0;
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== v) continue;
+                if (Math.abs((i % BOARD_SIZE) - x) + Math.abs(((i / BOARD_SIZE) | 0) - y) <= FOG_RANGE) return true;
+            }
+            return false;
+        }
+
+        function drawBoardElements(padding, cellSize) {`],
+    [ONE, `                const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);`,
+`                const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player)
+                    .filter(p => pc.player === fogViewer() || isFogVisible(p.y * BOARD_SIZE + p.x));`],
+    [ONE, FALLBACK_SKIP,
+`                    if (val === 0 || covered.has(idx)) continue;
+                    if ((val === 1 || val === 2) && val !== fogViewer() && !isFogVisible(idx)) continue;`],
+    [ONE, `            const alive = lastMove.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === lastMove.player);`,
+`            const alive = lastMove.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === lastMove.player)
+                .filter(p => lastMove.player === fogViewer() || isFogVisible(p.y * BOARD_SIZE + p.x));`],
+    ...STONE_SPEC,
+], 'darkgo'));
+
+// 51. ORBITGO (周回碁) — 着手ごとに外周リングが1マス回転
+out('orbitgo.html', apply(ALGO, [
+    ...rb('ORBITGO', '周回碁', 'orbitgo'),
+    [ONE, RV_ALGO, rv([
+        '周回ルール: 着手ごとに盤の最外周リング上の石が1マスずつ時計回りに移動する。',
+        '外周に置いた石はぐるぐる回り続ける。連が裂かれることもある。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 周回ルール<br>
+            ※着手ごとに外周リング上の石が1マス時計回りに移動`],
+    [ONE, `        function endGameByScore() {`,
+`        // 周回: 外周リングの座標列 (時計回り順)
+        function ringPositions() {
+            const n = BOARD_SIZE;
+            const pos = [];
+            for (let x = 0; x < n; x++) pos.push([x, 0]);
+            for (let y = 1; y < n; y++) pos.push([n - 1, y]);
+            for (let x = n - 2; x >= 0; x--) pos.push([x, n - 1]);
+            for (let y = n - 2; y >= 1; y--) pos.push([0, y]);
+            return pos;
+        }
+        // 着手ごとに外周リングを1マス時計回りに移動
+        function applyOrbit() {
+            const idxs = ringPositions().map(([x, y]) => y * BOARD_SIZE + x);
+            const vals = idxs.map(i => board[i]);
+            vals.unshift(vals.pop());
+            idxs.forEach((i, k) => { board[i] = vals[k]; });
+            const mapIdx = {};
+            idxs.forEach((i, k) => { mapIdx[i] = idxs[(k + 1) % idxs.length]; });
+            const shift = p => {
+                const i = p.y * BOARD_SIZE + p.x;
+                if (!(i in mapIdx)) return p;
+                const ni = mapIdx[i];
+                return { x: ni % BOARD_SIZE, y: (ni / BOARD_SIZE) | 0 };
+            };
+            pieces.forEach(pc => { pc.cells = pc.cells.map(shift); });
+            if (lastMove) lastMove = { player: lastMove.player, cells: lastMove.cells.map(shift) };
+        }
+
+        function endGameByScore() {`],
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;
+            // 周回: 外周リングが1マス進む
+            applyOrbit();`],
+    ...STONE_SPEC,
+], 'orbitgo'));
+
+// 52. SELFGO (自爆碁) — 自殺手が合法 (自連が消えて相手のアゲハマ)
+out('selfgo.html', apply(ALGO, [
+    ...rb('SELFGO', '自爆碁', 'selfgo'),
+    [ONE, RV_ALGO, rv([
+        '自爆ルール: 自殺手が合法。着手の結果、呼吸点0になった自分の連は消滅し相手のアゲハマになる。',
+        '敵の連を取る判定は通常通り先に行われる。捨て石の極致 — わざと自爆して局面を作り変えられる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 自爆ルール<br>
+            ※自殺手が合法。呼吸点0の自連は消えて相手のアゲハマになる`],
+    [ONE, `            // 自殺手チェック: この手で自分の石(連)が窒息するなら禁止
+            if (getCapturedStones(after, player).length > 0) return false;`,
+`            // 自爆ルール: 自殺手も合法 (自連は消滅して相手のアゲハマになる)`],
+    [ONE, CAPTURE_BLOCK,
+`${CAPTURE_BLOCK}
+
+            // 自爆: 着手の結果、呼吸点0になった自連も消滅 (相手のアゲハマ)
+            const selfDead = getCapturedStones(board, player);
+            if (selfDead.length > 0) {
+                selfDead.forEach(idx => board[idx] = 0);
+                captures[opponent] += selfDead.length;
+                soundManager.playCapture();
+                cleanUpPieces();
+            }`],
+    ...STONE_SPEC,
+], 'selfgo'));
+
 console.log(failures === 0 ? 'ALL OK' : `${failures} replacements MISSING`);
 process.exitCode = failures ? 1 : 0;

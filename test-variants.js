@@ -422,6 +422,87 @@ const SPECS = {
         assert('白石は消えた', board[0] === 0);
         assert('アゲハマ計上', captures[1] === 1);
     `,
+    'quadgo.html': `
+        resetGame();
+        assert('碁カク1種', PIECE_TYPES.length === 1 && PIECE_TYPES[0] === 'QUAD');
+        assert('PIECE_SIZE=4', PIECE_SIZE === 4);
+        executeMove({ cells: [{x:0,y:0},{x:1,y:0},{x:0,y:1},{x:1,y:1}], type: 'QUAD', rot: 0 }, 1);
+        assert('2x2配置', board[0] === 1 && board[1] === 1 && board[BOARD_SIZE] === 1);
+    `,
+    'circlego.html': `
+        resetGame();
+        const cc = Math.floor(BOARD_SIZE / 2);
+        assert('隅は壁', board[0] === 3);
+        assert('辺中央は空', board[cc] === 0);
+        assert('中心は空', board[cc * BOARD_SIZE + cc] === 0);
+        assert('隅に置けない', isValidPlacement([{x:0,y:0}], 1) === false);
+    `,
+    'lavago.html': `
+        resetGame();
+        assert('溶岩関数', typeof applyLava === 'function');
+        assert('初期深度0', lavaDepth === 0);
+        applyLava();
+        assert('深度1へ', lavaDepth === 1);
+        assert('外周空点が壁化', board[0] === 3 && board[BOARD_SIZE - 1] === 3);
+    `,
+    'halfgo.html': `
+        resetGame();
+        const hm = Math.floor(BOARD_SIZE / 2);
+        assert('黒は右半分不可', isValidPlacement([{x:hm+1,y:0}], 1) === false);
+        assert('黒は左半分可', isValidPlacement([{x:0,y:0}], 1) === true);
+        assert('白は左半分不可', isValidPlacement([{x:0,y:0}], 2) === false);
+        assert('白は右半分可', isValidPlacement([{x:BOARD_SIZE-1,y:0}], 2) === true);
+        assert('中央列は共通(黒)', isValidPlacement([{x:hm,y:0}], 1) === true);
+        assert('中央列は共通(白)', isValidPlacement([{x:hm,y:0}], 2) === true);
+    `,
+    'sparsego.html': `
+        resetGame();
+        executeMove({ cells: [{x:5,y:5}], type: 'STONE', rot: 0 }, 1);
+        assert('敵石の隣も不可', isValidPlacement([{x:6,y:5}], 2) === false);
+        assert('離れた点は可', isValidPlacement([{x:0,y:0}], 2) === true);
+    `,
+    'firstgo.html': `
+        resetGame();
+        executeMove({ cells: [{x:1,y:0}], type: 'STONE', rot: 0 }, 1);
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 2);
+        executeMove({ cells: [{x:0,y:1}], type: 'STONE', rot: 0 }, 1);
+        assert('最初の取りで即終了', gameOver === true);
+        assert('黒の一撃勝利', gameResultData.title.indexOf('黒') >= 0);
+    `,
+    'treasurego.html': `
+        resetGame();
+        const star = getStarPoints(BOARD_SIZE)[0];
+        getNeighbors(star.y * BOARD_SIZE + star.x).forEach(i => {
+            board[i] = 1;
+        });
+        assert('宝ボーナス計算に到達', typeof endGameByScore === 'function');
+        endGameByScore();
+        assert('宝行が出力', gameResultData.details.indexOf('宝') >= 0);
+    `,
+    'darkgo.html': `
+        resetGame();
+        assert('fogViewer定義', typeof fogViewer === 'function');
+        assert('isFogVisible定義', typeof isFogVisible === 'function');
+        board[1 * BOARD_SIZE + 1] = 1; // 黒石 (turn=1 の視点で判定)
+        assert('自石近傍は見える', isFogVisible(1 * BOARD_SIZE + 2) === true);
+        assert('遠方は見えない', isFogVisible(BOARD_SIZE * BOARD_SIZE - 1) === false);
+    `,
+    'orbitgo.html': `
+        resetGame();
+        assert('applyOrbit定義', typeof applyOrbit === 'function');
+        board[0] = 1; // 左上隅に石
+        applyOrbit();
+        assert('外周が1マス移動', board[1] === 1 && board[0] === 0);
+    `,
+    'selfgo.html': `
+        resetGame();
+        // 白が(1,0),(0,1)を占有 → 黒が(0,0)に置くと自殺手 (通常碁なら禁止)
+        board[1] = 2; board[BOARD_SIZE] = 2;
+        assert('自殺手が合法', isValidPlacement([{x:0,y:0}], 1) === true);
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 1);
+        assert('自連が消滅', board[0] === 0);
+        assert('相手のアゲハマになる', captures[2] === 1);
+    `,
 };
 
 let total = 0, failed = 0;

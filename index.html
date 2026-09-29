@@ -144,6 +144,16 @@
             { file: 'wormgo.html',  name: 'WORMGO',   jp: '転送碁',       desc: 'ワームホールペア (◎) 同士が遠隔近傍として繋がる', kind: 'worm' },
             { file: 'gravego.html', name: 'GRAVEGO',  jp: '墓標碁',       desc: '取られたマスは空点に戻らず墓標(壁)になる', kind: 'grave' },
             { file: 'reapgo.html',  name: 'REAPGO',   jp: '連取碁',       desc: '敵石を取るともう1手打てる。連鎖可', kind: 'reap' },
+            { file: 'quadgo.html',  name: 'QUADGO',   jp: '四方碁',       desc: '碁カク=2×2ブロックのみ。大きいが置き場が限られる', kind: 'quad' },
+            { file: 'circlego.html',name: 'CIRCLEGO', jp: '円盤碁',       desc: '隅のない円形盤面', kind: 'circle' },
+            { file: 'lavago.html',  name: 'LAVAGO',   jp: '溶岩碁',       desc: '8手ごとに外周が溶岩に沈む。盤面はどんどん狭く', kind: 'lava' },
+            { file: 'halfgo.html',  name: 'HALFGO',   jp: '陣地碁',       desc: '黒は左半分、白は右半分のみ。中央列は共通', kind: 'half' },
+            { file: 'sparsego.html',name: 'SPARSEGO', jp: '離散碁',       desc: 'どの石の隣にも置けない。全石孤立の静かな碁', kind: 'sparse' },
+            { file: 'firstgo.html', name: 'FIRSTGO',  jp: '一撃碁',       desc: '最初に敵石を1個取った側が即勝利', kind: 'first' },
+            { file: 'treasurego.html', name: 'TREASUREGO', jp: '宝碁',    desc: '星マス (◆) を全方向囲むと終局時+5点', kind: 'treasure' },
+            { file: 'darkgo.html',  name: 'DARKGO',   jp: '暗闇碁',       desc: '自分の石の近くしか見えないフォグ・オブ・ウォー', kind: 'dark' },
+            { file: 'orbitgo.html', name: 'ORBITGO',  jp: '周回碁',       desc: '着手ごとに外周リングの石が1マスずつ時計回りに移動', kind: 'orbit' },
+            { file: 'selfgo.html',  name: 'SELFGO',   jp: '自爆碁',       desc: '自殺手が合法。自連が消えて相手のアゲハマに', kind: 'self' },
         ];
 
         const grid = document.getElementById('gameGrid');
@@ -456,6 +466,64 @@
                         c.lineTo(at(x+1.15*d,y).x, at(x+1.15*d,y).y);
                         c.lineTo(at(x+0.7*d,y+0.25).x, at(x+0.7*d,y+0.25).y); c.stroke();
                     });
+                    break;
+                case 'quad': // 2x2ブロック
+                    [[2.2,2.2],[3.4,2.2],[2.2,3.4],[3.4,3.4]].forEach(([x,y]) => dot(x, y, P1, P1S));
+                    dot(4.4,4.4,P2,P2S);
+                    break;
+                case 'circle': // 円形盤
+                    c.strokeStyle = P1S; c.lineWidth = 2;
+                    c.beginPath(); c.arc(at(3,3).x, at(3,3).y, cell*2.2, 0, Math.PI*2); c.stroke();
+                    dot(3,3,P1,P1S); dot(2.2,3.6,P2,P2S);
+                    break;
+                case 'lava': // 溶岩 (外周が炎色)
+                    c.strokeStyle = '#dc2626'; c.lineWidth = 3;
+                    c.strokeRect(at(1,1).x, at(1,1).y, cell*4, cell*4);
+                    dot(3,3,P1,P1S); dot(3.8,2.4,P2,P2S);
+                    break;
+                case 'half': // 陣地分割
+                    c.strokeStyle = P1S; c.lineWidth = 2; c.setLineDash([4,3]);
+                    c.beginPath(); c.moveTo(at(3,1).x, at(3,1).y); c.lineTo(at(3,5).x, at(3,5).y); c.stroke();
+                    c.setLineDash([]);
+                    dot(1.8,2,P1,P1S); dot(2.2,4,P1,P1S); dot(4,2.6,P2,P2S); dot(4.4,4.4,P2,P2S);
+                    break;
+                case 'sparse': // 離散
+                    dot(1.6,1.6,P1,P1S); dot(4.4,1.6,P2,P2S); dot(1.6,4.4,P2,P2S); dot(4.4,4.4,P1,P1S);
+                    break;
+                case 'first': // 一撃
+                    dot(3,3,P1,P1S);
+                    c.strokeStyle = '#dc2626'; c.lineWidth = 2.4; c.lineCap = 'round';
+                    c.beginPath(); c.moveTo(at(1.8,1.8).x, at(1.8,1.8).y); c.lineTo(at(4.2,4.2).x, at(4.2,4.2).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(4.2,1.8).x, at(4.2,1.8).y); c.lineTo(at(1.8,4.2).x, at(1.8,4.2).y); c.stroke();
+                    break;
+                case 'treasure': // 宝◆
+                    c.fillStyle = '#ca8a04';
+                    [[3,2],[1.8,3.8],[4.2,3.8]].forEach(([x,y]) => {
+                        const bx = at(x,y).x, by = at(x,y).y, ds = cell*0.3;
+                        c.beginPath(); c.moveTo(bx, by-ds); c.lineTo(bx+ds, by);
+                        c.lineTo(bx, by+ds); c.lineTo(bx-ds, by); c.closePath(); c.fill();
+                    });
+                    dot(3,4.4,P1,P1S);
+                    break;
+                case 'dark': // 暗闇 (中心だけ明るい)
+                    const dg = c.createRadialGradient(at(3,3).x, at(3,3).y, cell*0.5, at(3,3).x, at(3,3).y, cell*2.6);
+                    dg.addColorStop(0, 'rgba(0,0,0,0)'); dg.addColorStop(1, 'rgba(0,0,0,0.85)');
+                    dot(3,3,P1,P1S); dot(2.4,3.4,P1,P1S);
+                    c.fillStyle = dg; c.fillRect(0, 0, c.canvas.width, c.canvas.height);
+                    break;
+                case 'orbit': // 周回リング
+                    c.strokeStyle = P1S; c.lineWidth = 1.8; c.setLineDash([4,4]);
+                    c.strokeRect(at(1.4,1.4).x, at(1.4,1.4).y, cell*3.2, cell*3.2);
+                    c.setLineDash([]);
+                    dot(1.8,1.8,P1,P1S); dot(4.4,1.8,P2,P2S); dot(4.4,4.4,P1,P1S);
+                    c.fillStyle = P1S; c.font = `bold ${cell*0.7}px sans-serif`;
+                    c.fillText('↻', at(3,3).x, at(3,3).y + cell*0.25);
+                    break;
+                case 'self': // 自爆
+                    dot(2.6,3,P1,P1S); dot(3.8,3,P2,P2S);
+                    c.strokeStyle = '#dc2626'; c.lineWidth = 2; c.lineCap = 'round';
+                    c.beginPath(); c.moveTo(at(2.2,2.6).x, at(2.2,2.6).y); c.lineTo(at(3,3.4).x, at(3,3.4).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(3,2.6).x, at(3,2.6).y); c.lineTo(at(2.2,3.4).x, at(2.2,3.4).y); c.stroke();
                     break;
             }
         }

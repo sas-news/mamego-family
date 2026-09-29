@@ -22,6 +22,7 @@
 | DRAFTGO `draftgo.html` | 対局前に碁カンを交互ドラフト |
 | MAMEGO `mamego.html` | 原作の碁豆 (ドミノ2連) を通常囲碁エンジンで再実装 |
 | TRIOGO `triogo.html` | 碁リオ=トリオミノ2種 (直鎖I・曲がりL、3連結) |
+| QUADGO `quadgo.html` | 碁カク=2×2ブロックのみ |
 
 ### 盤面・配置ルール系 (通常碁石 + 特殊ルール)
 
@@ -39,6 +40,10 @@
 | RINGO `ringo.html` | 環状盤 (中央3×3が壁) |
 | CROSSGO `crossgo.html` | 十字盤 (四隅が壁で削れる) |
 | WORMGO `wormgo.html` | ワームホールペア (◎) が遠隔近傍を作る |
+| CIRCLEGO `circlego.html` | 円盤碁 (隅のない円形盤面) |
+| HALFGO `halfgo.html` | 陣地碁 (黒=左半分/白=右半分、中央列共通) |
+| SPARSEGO `sparsego.html` | 離散碁 (いかなる石の隣にも置けない) |
+| DARKGO `darkgo.html` | 暗闇碁 (自石近傍しか見えないフォグ) |
 
 ### 手順・勝敗系
 
@@ -61,6 +66,9 @@
 | FUSEGO `fusego.html` | 融合ルール (隣接敵石が中立ブロックに中和) |
 | GRAVEGO `gravego.html` | 墓標ルール (取られたマスは壁になり盤面が狭まる) |
 | REAPGO `reapgo.html` | 連取ルール (取ったらもう1手、連鎖可) |
+| FIRSTGO `firstgo.html` | 一撃ルール (最初の取りで即勝利) |
+| TREASUREGO `treasurego.html` | 宝碁 (星マス◆を囲むと+5点) |
+| SELFGO `selfgo.html` | 自爆碁 (自殺手が合法、自連は相手のアゲハマ) |
 
 ### 自動変化系
 
@@ -70,6 +78,8 @@
 | LIFEGO `lifego.html` | 着手ごとに盤面がライフゲーム1世代進化 |
 | GROWGO `growgo.html` | 着手ごとに石が隣の空点へ増殖 |
 | MOLEGO `molego.html` | 着手ごとに石がランダムに隣へ移動 |
+| LAVAGO `lavago.html` | 溶岩碁 (8手ごとに外周が沈む) |
+| ORBITGO `orbitgo.html` | 周回碁 (着手ごとに外周が1マス回転) |
 
 ## 共通機能
 
