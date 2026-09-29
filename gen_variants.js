@@ -2317,5 +2317,395 @@ let draft = apply(ALGO, [
 ], 'draftgo');
 out('draftgo.html', draft);
 
+// ============================================================
+// ==== 第2バッチ: 追加10派生 (すべて通常碁石 + 特殊ルール) ====
+// ============================================================
+
+// 23. REVERSEGO (反転碁) — ハサミで敵石が自分の色に寝返る
+out('reversego.html', apply(ALGO, [
+    ...rb('REVERSEGO', '反転碁', 'reversego'),
+    [ONE, RV_ALGO, rv([
+        '反転ルール: 着手後、自分の石で上下か左右に一直線に挟まれた敵石は取られず、自分の色に寝返る。',
+        '通常の取り (呼吸点0の連) も同時に有効。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 反転ルール<br>
+            ※敵石を上下/左右に挟むと取らずに自分の色へ寝返る`],
+    [ONE, `            // ネクストモードでは次のピースを供給`,
+`            // 反転ルール: 上下または左右に挟まれた敵石は取らず自分の色に寝返る
+            {
+                const flipped = [];
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== opponent) continue;
+                    const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
+                    const l = sx > 0 ? board[i - 1] : -1;
+                    const r = sx < BOARD_SIZE - 1 ? board[i + 1] : -1;
+                    const u = sy > 0 ? board[i - BOARD_SIZE] : -1;
+                    const d = sy < BOARD_SIZE - 1 ? board[i + BOARD_SIZE] : -1;
+                    if ((l === player && r === player) || (u === player && d === player)) flipped.push(i);
+                }
+                if (flipped.length > 0) {
+                    flipped.forEach(i => { board[i] = player; });
+                    soundManager.playCapture();
+                    cleanUpPieces();
+                }
+            }
+
+            // ネクストモードでは次のピースを供給`],
+    ...STONE_SPEC,
+], 'reversego'));
+
+// 24. PUSHGO (押し碁) — 着手で隣接する敵石を1マス押す
+out('pushgo.html', apply(ALGO, [
+    ...rb('PUSHGO', '押し碁', 'pushgo'),
+    [ONE, RV_ALGO, rv([
+        '押しルール: 置いた石に隣接する敵石は、その方向へ1マス押される。',
+        '押し先が盤外または占有されている場合は押せない。押された後の取り判定は通常通り行われる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 押しルール<br>
+            ※置いた石に隣接する敵石は1マス押される (押し先が空の場合のみ)`],
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            // 押しルール: 置いた石に隣接する敵石を遠方へ1マス押す
+            {
+                const opp2 = player === 1 ? 2 : 1;
+                move.cells.forEach(p => {
+                    const pi = p.y * BOARD_SIZE + p.x;
+                    getNeighbors(pi).forEach(ni => {
+                        if (board[ni] !== opp2) return;
+                        const nx = ni % BOARD_SIZE, ny = Math.floor(ni / BOARD_SIZE);
+                        const tx = nx + (nx - p.x), ty = ny + (ny - p.y);
+                        if (tx < 0 || tx >= BOARD_SIZE || ty < 0 || ty >= BOARD_SIZE) return;
+                        const ti = ty * BOARD_SIZE + tx;
+                        if (board[ti] !== 0) return;
+                        board[ti] = opp2; board[ni] = 0;
+                    });
+                });
+                cleanUpPieces();
+            }`],
+    ...STONE_SPEC,
+], 'pushgo'));
+
+// 25. ATTRACTGO (吸引碁) — 直線2マス先の敵石を引き寄せる
+out('attractgo.html', apply(ALGO, [
+    ...rb('ATTRACTGO', '吸引碁', 'attractgo'),
+    [ONE, RV_ALGO, rv([
+        '吸引ルール: 置いた石の直線2マス先にいる敵石は、間のマスが空いていれば1マス引き寄せられる。',
+        '引き寄せられた後の取り判定は通常通り行われる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 吸引ルール<br>
+            ※置いた石は直線2マス先の敵石を1マス引き寄せる`],
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            // 吸引ルール: 置いた石の直線2マス先にいる敵石を1マス引き寄せる
+            {
+                const opp2 = player === 1 ? 2 : 1;
+                move.cells.forEach(p => {
+                    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+                        const ax = p.x + dx, ay = p.y + dy;
+                        const bx = p.x + dx * 2, by = p.y + dy * 2;
+                        if (bx < 0 || bx >= BOARD_SIZE || by < 0 || by >= BOARD_SIZE) return;
+                        if (ax < 0 || ax >= BOARD_SIZE || ay < 0 || ay >= BOARD_SIZE) return;
+                        const ai = ay * BOARD_SIZE + ax, bi = by * BOARD_SIZE + bx;
+                        if (board[bi] === opp2 && board[ai] === 0) {
+                            board[ai] = opp2; board[bi] = 0;
+                        }
+                    });
+                });
+                cleanUpPieces();
+            }`],
+    ...STONE_SPEC,
+], 'attractgo'));
+
+// 26. TURNGO (回転碁) — 着手ごとに盤面が90°回転
+out('turngo.html', apply(ALGO, [
+    ...rb('TURNGO', '回転碁', 'turngo'),
+    [ONE, RV_ALGO, rv([
+        '回転ルール: 着手のたびに盤面全体が90°時計回りに回転する (石もすべて回転)。',
+        '取り・呼吸点は回転後の盤面で判定される。コウ判定の盤面も回転に追従する。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 回転ルール<br>
+            ※着手のたびに盤面全体が90°時計回りに回転する`],
+    [ONE, `            // ネクストモードでは次のピースを供給`,
+`            // 回転ルール: 着手ごとに盤面全体を90°時計回りに回転
+            {
+                const nb = new Array(board.length).fill(0);
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++)
+                    nb[x * BOARD_SIZE + (BOARD_SIZE - 1 - y)] = board[y * BOARD_SIZE + x];
+                board = nb;
+                const rotP = p => ({ x: BOARD_SIZE - 1 - p.y, y: p.x });
+                pieces.forEach(pc => { pc.cells = pc.cells.map(rotP); });
+                if (lastMove) lastMove.cells = lastMove.cells.map(rotP);
+                if (prevBoard) {
+                    const pb = new Array(prevBoard.length).fill(0);
+                    for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++)
+                        pb[x * BOARD_SIZE + (BOARD_SIZE - 1 - y)] = prevBoard[y * BOARD_SIZE + x];
+                    prevBoard = pb;
+                }
+            }
+
+            // ネクストモードでは次のピースを供給`],
+    ...STONE_SPEC,
+], 'turngo'));
+
+// NOGO/LIMITGO 共通: 合法手スキャン + 手詰み即敗北
+const ANY_VALID_FN = `
+        // 合法手スキャン: 手番側に1つでも置ける点があれば true
+        function anyValidMove(player) {
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== 0) continue;
+                const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                if (isValidPlacement([{ x, y }], player)) return true;
+            }
+            return false;
+        }
+`;
+const STALEMATE_CHECK = `            // 詰み判定: 手番側に合法手がなければ敗北
+            if (gamePhase === 'playing' && !gameOver && !anyValidMove(turn)) {
+                winByRule(turn === 1 ? 2 : 1, '手詰み', '合法手がありません');
+            }
+`;
+
+// 27. NOGO (禁取碁) — 取る手は禁止、詰んだら負け
+out('nogo.html', apply(ALGO, [
+    ...rb('NOGO', '禁取碁', 'nogo'),
+    [ONE, RV_ALGO, rv([
+        '禁取ルール: 相手の石を取る手 (着手の結果相手の連の呼吸点が0になる手) は置けない。',
+        '自殺手も禁止。盤が埋まり合法手がなくなった側が敗北する (パス2連続の地集計も有効)。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 禁取ルール<br>
+            ※相手石を取る手は置けない。合法手がなくなった側が負け`],
+    // 禁取: 取れる手は禁止
+    [ONE, `            const captured = getCapturedStones(tempBoard, opponent);`,
+`            const captured = getCapturedStones(tempBoard, opponent);
+            if (captured.length > 0) return false; // 禁取: 相手石を取る手は置けない`],
+    [ONE, `        function isValidPlacement(cells, player) {`, ANY_VALID_FN + `
+        function isValidPlacement(cells, player) {`],
+    [ONE, `        function updateUI() {`, `        function updateUI() {
+${STALEMATE_CHECK}`],
+    [ONE, `        function endGameByScore() {`, WIN_BY_RULE_FN + `
+        function endGameByScore() {`],
+    ...STONE_SPEC,
+], 'nogo'));
+
+// 28. LIMITGO (詰み碁) — 合法手がなくなった側が即負け
+out('limitgo.html', apply(ALGO, [
+    ...rb('LIMITGO', '詰み碁', 'limitgo'),
+    [ONE, RV_ALGO, rv([
+        '詰みルール: 合法手が1つもなくなった手番側はその場で敗北する。',
+        '通常の取り・自殺禁止・地集計もすべて有効。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 詰みルール<br>
+            ※置ける場所がなくなった側が即負け`],
+    [ONE, `        function isValidPlacement(cells, player) {`, ANY_VALID_FN + `
+        function isValidPlacement(cells, player) {`],
+    [ONE, `        function updateUI() {`, `        function updateUI() {
+${STALEMATE_CHECK}`],
+    [ONE, `        function endGameByScore() {`, WIN_BY_RULE_FN + `
+        function endGameByScore() {`],
+    ...STONE_SPEC,
+], 'limitgo'));
+
+// 29. GROWGO (増殖碁) — 着手ごとに石が空点へ増殖する
+out('growgo.html', apply(ALGO, [
+    ...rb('GROWGO', '増殖碁', 'growgo'),
+    [ONE, RV_ALGO, rv([
+        '増殖ルール: 着手ごとに、石に隣接する空点のうち約30%へ同じ色の石が増殖する。',
+        '増殖で呼吸点を失った連は両色とも除去される。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 増殖ルール<br>
+            ※着手ごとに石が隣の空点へランダムに増殖する`],
+    [ONE, `        let history = []; // 1手戻る用: 各着手前のスナップショットのスタック`,
+`        let history = []; // 1手戻る用: 各着手前のスナップショットのスタック
+        const GROW_RATE = 0.30; // 増殖ルール: 空点ごとの増殖確率
+        function applyGrowth() {
+            const cand = [];
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== 0) continue;
+                const adj = getNeighbors(i).filter(n => board[n] !== 0);
+                if (adj.length) cand.push([i, adj]);
+            }
+            for (let i = cand.length - 1; i > 0; i--) {
+                const j = (Math.random() * (i + 1)) | 0;
+                [cand[i], cand[j]] = [cand[j], cand[i]];
+            }
+            const used = new Set();
+            cand.forEach(([i, adj]) => {
+                if (used.has(i) || Math.random() > GROW_RATE) return;
+                const s = adj[(Math.random() * adj.length) | 0];
+                board[i] = board[s]; used.add(i);
+            });
+            // 増殖で呼吸点を失った連を除去
+            [1, 2].forEach(pl => getCapturedStones(board, pl).forEach(i => { board[i] = 0; }));
+            cleanUpPieces();
+        }`],
+    [ONE, `            // ネクストモードでは次のピースを供給`,
+`            // 増殖処理
+            applyGrowth();
+
+            // ネクストモードでは次のピースを供給`],
+    ...STONE_SPEC,
+], 'growgo'));
+
+// 30. MOLEGO (もぐら碁) — 石がランダムに隣へ移動する
+out('molego.html', apply(ALGO, [
+    ...rb('MOLEGO', 'もぐら碁', 'molego'),
+    [ONE, RV_ALGO, rv([
+        'もぐらルール: 着手ごとに盤上の各碁石が約18%の確率で隣の空点へ移動する。',
+        '移動はランダム。移動で空いた点・新しい接続は通常ルールどおり機能する。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + もぐらルール<br>
+            ※着手ごとに各碁石がランダムに隣の空点へ移動することがある`],
+    [ONE, `        let history = []; // 1手戻る用: 各着手前のスナップショットのスタック`,
+`        let history = []; // 1手戻る用: 各着手前のスナップショットのスタック
+        const MOL_RATE = 0.18; // もぐらルール: 各碁石の移動確率
+        function applyMole() {
+            const order = [];
+            for (let i = 0; i < board.length; i++) if (board[i] !== 0) order.push(i);
+            for (let i = order.length - 1; i > 0; i--) {
+                const j = (Math.random() * (i + 1)) | 0;
+                [order[i], order[j]] = [order[j], order[i]];
+            }
+            order.forEach(i => {
+                if (board[i] === 0 || Math.random() > MOL_RATE) return;
+                const empty = getNeighbors(i).filter(n => board[n] === 0);
+                if (!empty.length) return;
+                const dst = empty[(Math.random() * empty.length) | 0];
+                board[dst] = board[i]; board[i] = 0;
+            });
+            cleanUpPieces();
+        }`],
+    [ONE, `            // ネクストモードでは次のピースを供給`,
+`            // もぐら処理: 各碁石が確率で隣へ移動
+            applyMole();
+
+            // ネクストモードでは次のピースを供給`],
+    ...STONE_SPEC,
+], 'molego'));
+
+// 31. BLASTGO (爆撃碁) — 隣接する敵石の連を無条件破壊
+out('blastgo.html', apply(ALGO, [
+    ...rb('BLASTGO', '爆撃碁', 'blastgo'),
+    [ONE, RV_ALGO, rv([
+        '爆撃ルール: 置いた石に隣接する敵石の「連」は呼吸点に関係なくすべて破壊・取られる。',
+        '通常の取り判定も有効。爆撃で取った石もアゲハマに数えられる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 爆撃ルール<br>
+            ※置いた石に隣接する敵石の連をすべて破壊する`],
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            // 爆撃ルール: 置いた石に隣接する敵の連を呼吸点に関係なく破壊
+            {
+                const opp2 = player === 1 ? 2 : 1;
+                const blasted = new Set();
+                move.cells.forEach(p => {
+                    getNeighbors(p.y * BOARD_SIZE + p.x).forEach(n => {
+                        if (board[n] === opp2) {
+                            getConnectedGroup(n, opp2).forEach(i => blasted.add(i));
+                        }
+                    });
+                });
+                if (blasted.size > 0) {
+                    blasted.forEach(i => { board[i] = 0; });
+                    captures[player] += blasted.size;
+                    soundManager.playCapture();
+                    cleanUpPieces();
+                }
+            }`],
+    ...STONE_SPEC,
+], 'blastgo'));
+
+// 32. HANDIGO (置碁) — ハンデ置碁 (2〜9子の事前配置)
+out('handigo.html', apply(ALGO, [
+    ...rb('HANDIGO', '置碁', 'handigo'),
+    [ONE, RV_ALGO, rv([
+        '置碁: 対局開始時に黒石をハンデ数だけ事前配置する (設定で なし/2/4/6/9 子)。',
+        '置碁ありの場合はコミは0.5目になる (実質ハンデなし互先=コミ6.5)。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 置碁ハンデ<br>
+            ※設定で黒石を事前配置 (2〜9子)。置碁時はコミ0.5目`],
+    // 設定に置碁セクション
+    [ONE, `            <!-- 2. 対戦モード -->`,
+`            <!-- 置碁 -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-bold uppercase tracking-wider text-neutral-500">置碁 (ハンデ)</label>
+                <div class="grid grid-cols-5 gap-2">
+                    <button data-handi="0" class="btn-handi py-2 rounded-lg border border-neutral-300 font-bold text-xs hover:bg-neutral-100 transition-all">なし</button>
+                    <button data-handi="2" class="btn-handi py-2 rounded-lg border border-neutral-300 font-bold text-xs hover:bg-neutral-100 transition-all">2子</button>
+                    <button data-handi="4" class="btn-handi py-2 rounded-lg border border-neutral-300 font-bold text-xs hover:bg-neutral-100 transition-all">4子</button>
+                    <button data-handi="6" class="btn-handi py-2 rounded-lg border border-neutral-300 font-bold text-xs hover:bg-neutral-100 transition-all">6子</button>
+                    <button data-handi="9" class="btn-handi py-2 rounded-lg border border-neutral-300 font-bold text-xs hover:bg-neutral-100 transition-all">9子</button>
+                </div>
+            </div>
+
+            <!-- 2. 対戦モード -->`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        let handicap = 0; // 置碁のハンデ数 (0=互先)
+
+        // 置碁位置 (標準的な置き順: 対角隅→辺→天元)
+        function getHandicapPoints(n) {
+            const low = n > 9 ? 3 : 2;
+            const mid = (n - 1) / 2, hi = n - 1 - low;
+            return [[low, hi], [hi, low], [hi, hi], [low, low],
+                    [low, mid], [hi, mid], [mid, low], [mid, hi], [mid, mid]];
+        }`],
+    [ONE, `            pieces = [];
+            turn = 1;`,
+`            pieces = [];
+            // 置碁: ハンデ数だけ黒石を事前配置
+            if (handicap > 0) {
+                getHandicapPoints(BOARD_SIZE).slice(0, handicap).forEach(([hx, hy], k) => {
+                    board[hy * BOARD_SIZE + hx] = 1;
+                    pieces.push({ id: Date.now() + k, player: 1, type: 'STONE', rot: 0, cells: [{ x: hx, y: hy }] });
+                });
+            }
+            komi = handicap > 0 ? 0.5 : 6.5;
+            turn = 1;`],
+    [ONE, `                    holdUsed,
+                    gameMode,`,
+`                    holdUsed,
+                    handicap,
+                    gameMode,`],
+    [ONE, `            holdUsed = !!s.holdUsed;`,
+`            holdUsed = !!s.holdUsed;
+            handicap = Number.isInteger(s.handicap) ? s.handicap : 0;`],
+    [ONE, `            document.querySelectorAll('.btn-mode').forEach(b => {
+                const active = b.dataset.mode === gameMode;`,
+`            document.querySelectorAll('.btn-handi').forEach(b => {
+                const active = parseInt(b.dataset.handi) === handicap;
+                b.classList.toggle('bg-neutral-900', active);
+                b.classList.toggle('text-white', active);
+            });
+            document.querySelectorAll('.btn-mode').forEach(b => {
+                const active = b.dataset.mode === gameMode;`],
+    [ONE, `        // モード選択ボタン`,
+`        // 置碁ボタン
+        document.querySelectorAll('.btn-handi').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                soundManager.playClick();
+                document.querySelectorAll('.btn-handi').forEach(b => b.classList.remove('bg-neutral-900', 'text-white'));
+                e.target.classList.add('bg-neutral-900', 'text-white');
+                handicap = parseInt(e.target.dataset.handi);
+                saveState();
+            });
+        });
+
+        // モード選択ボタン`],
+    ...STONE_SPEC,
+], 'handigo'));
+
 console.log(failures === 0 ? 'ALL OK' : `${failures} replacements MISSING`);
 process.exitCode = failures ? 1 : 0;

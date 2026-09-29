@@ -150,7 +150,7 @@ const SPECS = {
         executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 1);
         executeMove({ cells: [{x:9,y:9}], type: 'STONE', rot: 0 }, 2);
         executeMove({ cells: [{x:0,y:2}], type: 'STONE', rot: 0 }, 1);
-        assert('ハサミで白石捕獲', board[1] === 0);
+        assert('ハサミで白石捕獲', board[BOARD_SIZE] === 0);
     `,
     'decaygo.html': `
         assert('DECAY_LIMIT定義', typeof DECAY_LIMIT === 'number' && DECAY_LIMIT > 0);
@@ -266,6 +266,84 @@ const SPECS = {
         assert('6ピックでドラフト終了', draftState === null);
         assert('各3種獲得', PLAYER_PIECES[1].length === 3 && PLAYER_PIECES[2].length === 3);
         assert('黒番で対局開始', turn === 1 && PLAYER_PIECES[1].includes(currentPieceType));
+    `,
+    // ---- 第2バッチ ----
+    'reversego.html': `
+        resetGame();
+        executeMove({ cells: [{x:0,y:1}], type: 'STONE', rot: 0 }, 2);
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 1);
+        executeMove({ cells: [{x:9,y:9}], type: 'STONE', rot: 0 }, 2);
+        executeMove({ cells: [{x:0,y:2}], type: 'STONE', rot: 0 }, 1);
+        assert('ハサミで寝返り(取られない)', board[BOARD_SIZE] === 1);
+        assert('アゲハマにはならない', captures[1] === 0);
+    `,
+    'pushgo.html': `
+        resetGame();
+        executeMove({ cells: [{x:0,y:2}], type: 'STONE', rot: 0 }, 2);
+        executeMove({ cells: [{x:0,y:1}], type: 'STONE', rot: 0 }, 1);
+        assert('敵石が1マス押される', board[3 * BOARD_SIZE + 0] === 2 && board[2 * BOARD_SIZE + 0] === 0);
+    `,
+    'attractgo.html': `
+        resetGame();
+        executeMove({ cells: [{x:0,y:3}], type: 'STONE', rot: 0 }, 2);
+        executeMove({ cells: [{x:0,y:1}], type: 'STONE', rot: 0 }, 1);
+        assert('2マス先の敵石が引き寄せ', board[2 * BOARD_SIZE + 0] === 2 && board[3 * BOARD_SIZE + 0] === 0);
+    `,
+    'turngo.html': `
+        resetGame();
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 1);
+        const N = BOARD_SIZE;
+        assert('盤面90°回転', board[0 * N + (N - 1)] === 1); // (0,0) -> (N-1,0)
+    `,
+    'nogo.html': `
+        resetGame();
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 2);
+        executeMove({ cells: [{x:1,y:0}], type: 'STONE', rot: 0 }, 1);
+        assert('取る手は禁止', isValidPlacement([{x:0,y:1}], 1) === false);
+        assert('anyValidMove定義', typeof anyValidMove === 'function');
+        assert('空盤なら合法手あり', anyValidMove(1) === true);
+    `,
+    'limitgo.html': `
+        resetGame();
+        assert('anyValidMove定義', typeof anyValidMove === 'function');
+        board.fill(1);
+        assert('満杯なら合法手なし', anyValidMove(2) === false);
+        board.fill(0);
+        assert('空盤は合法手あり', anyValidMove(1) === true);
+    `,
+    'growgo.html': `
+        assert('applyGrowth定義', typeof applyGrowth === 'function');
+        assert('GROW_RATE定義', typeof GROW_RATE === 'number');
+        resetGame();
+        executeMove({ cells: [{x:5,y:5}], type: 'STONE', rot: 0 }, 1);
+        assert('盤面に石が存在', board.some(v => v !== 0));
+    `,
+    'molego.html': `
+        assert('applyMole定義', typeof applyMole === 'function');
+        assert('MOL_RATE定義', typeof MOL_RATE === 'number');
+        resetGame();
+        executeMove({ cells: [{x:5,y:5}], type: 'STONE', rot: 0 }, 1);
+        assert('盤面に石が存在', board.some(v => v !== 0));
+    `,
+    'blastgo.html': `
+        resetGame();
+        executeMove({ cells: [{x:1,y:0}], type: 'STONE', rot: 0 }, 2);
+        executeMove({ cells: [{x:9,y:9}], type: 'STONE', rot: 0 }, 2);
+        assert('白2石は連結', board[1] === 2 && board[9 * BOARD_SIZE + 9] === 2);
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 1);
+        assert('隣接敵連を破壊', board[1] === 0 && captures[1] >= 1);
+    `,
+    'handigo.html': `
+        assert('handicap変数', typeof handicap !== 'undefined');
+        handicap = 4;
+        resetGame();
+        const stones = board.filter(v => v === 1).length;
+        assert('4子置碁', stones === 4);
+        assert('コミ0.5', komi === 0.5);
+        handicap = 0;
+        resetGame();
+        assert('互先は石なし', board.every(v => v === 0));
+        assert('互先コミ6.5', komi === 6.5);
     `,
 };
 

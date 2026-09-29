@@ -42,6 +42,14 @@
 | KINGGO `kinggo.html` | 初手が王(♛)。王を取られると即負け |
 | MAXGO `maxgo.html` | 先取ルール (10石先取で即勝利) |
 | SANDGO `sandgo.html` | ハサミ取り (上下/左右に挟んだ敵石を捕獲) |
+| REVERSEGO `reversego.html` | ハサミで敵石が自分の色に寝返る |
+| PUSHGO `pushgo.html` | 置いた石が隣接する敵石を1マス押す |
+| ATTRACTGO `attractgo.html` | 置いた石が直線2マス先の敵石を引き寄せる |
+| TURNGO `turngo.html` | 着手ごとに盤面が90°回転 |
+| NOGO `nogo.html` | 取る手は禁止。合法手なしで敗北 |
+| LIMITGO `limitgo.html` | 置ける場所がなくなった側が即負け |
+| BLASTGO `blastgo.html` | 隣接する敵石の連を無条件破壊 |
+| HANDIGO `handigo.html` | 置碁ハンデ (2〜9子、コミ0.5目) |
 | RUSHGO `rushgo.html` | 1手あたり制限時間、時間切れ=自動パス |
 
 ### 自動変化系
@@ -50,6 +58,8 @@
 |---|---|
 | DECAYGO `decaygo.html` | 碁石に寿命 (8手で崩壊) |
 | LIFEGO `lifego.html` | 着手ごとに盤面がライフゲーム1世代進化 |
+| GROWGO `growgo.html` | 着手ごとに石が隣の空点へ増殖 |
+| MOLEGO `molego.html` | 着手ごとに石がランダムに隣へ移動 |
 
 ## 共通機能
 
