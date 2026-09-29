@@ -98,20 +98,31 @@
         }
 
         // ---- ゲーム一覧 ----
+        // すべて「通常の囲碁」の拡張・派生形 (ベースは標準ルール)
         const GAMES = [
+            { file: 'normgo.html',  name: 'GO',       jp: '通常碁',       desc: '標準的な囲碁そのもの。他の派生のベース', kind: 'stone' },
             { file: 'tetogo.html',  name: 'TETOGO',   jp: 'テトリス碁',   desc: 'テトロミノ「碁テト」7種 (I/O/T/L/J/S/Z)。回転・ホールド・NEXT', kind: 'tetromino' },
             { file: 'algo.html',    name: 'ALGO',     jp: 'アルカン碁',   desc: 'アルカン分子「碁カン」(C₄〜C₆)。球棒モデル+碁カン図鑑', kind: 'alkane' },
             { file: 'pengo.html',   name: 'PENGO',    jp: 'ペン碁',       desc: 'ペントミノ12種 (5マス)。窒息領域は5マス未満', kind: 'pento' },
-            { file: 'torusgo.html', name: 'TORUSGO',  jp: 'トーラス碁',   desc: '上下左右の端が繋がる。隅も辺もない盤面', kind: 'torus' },
-            { file: 'decaygo.html', name: 'DECAYGO',  jp: 'ディケイ碁',   desc: '碁石に寿命。打ってから一定手数で崩壊', kind: 'decay' },
-            { file: 'lifego.html',  name: 'LIFEGO',   jp: 'ライフ碁',     desc: '着手ごとに盤面全体がライフゲーム1世代進化', kind: 'life' },
-            { file: 'rushgo.html',  name: 'RUSHGO',   jp: 'ラッシュ碁',   desc: '1手ごとの制限時間。時間切れは自動パス', kind: 'rush' },
             { file: 'cyclogo.html', name: 'CYCLOGO',  jp: 'シクロ碁',     desc: 'シクロアルカン「碁クロ」。環を含む分子ピース', kind: 'cyclo' },
             { file: 'alkenego.html',name: 'ALKENEGO', jp: 'アルケン碁',   desc: '剛直な二重・三重結合。回転できない碁ケン', kind: 'alkene' },
-            { file: 'polygo.html',  name: 'POLYGO',   jp: 'ポリマー碁',   desc: '毎手自分で4連の鎖を描く。自由な形のポリマー', kind: 'poly' },
+            { file: 'polygo.html',  name: 'POLYGO',   jp: 'ポリ碁',       desc: '毎手自分で4連の鎖を描く。自由な形のポリマー', kind: 'poly' },
+            { file: 'torusgo.html', name: 'TORUSGO',  jp: 'トーラス碁',   desc: '上下左右の端が繋がる。隅も辺もない盤面', kind: 'torus' },
+            { file: 'diago.html',   name: 'DIAGO',    jp: '斜め碁',       desc: '近傍は8方向。斜めの連も繋がる強結合ルール', kind: 'diag' },
+            { file: 'wallgo.html',  name: 'WALLGO',   jp: '迷路碁',       desc: 'ランダムな壁マス。置けない・呼吸点にもならない', kind: 'wall' },
+            { file: 'gravgo.html',  name: 'GRAVGO',   jp: '重力碁',       desc: '石は最下段か石の直上のみ。下から積み上げる碁', kind: 'grav' },
+            { file: 'spawngo.html', name: 'SPAWNGO',  jp: '繁殖碁',       desc: '自分の石に隣接する空点にしか置けない', kind: 'spawn' },
+            { file: 'mirrgo.html',  name: 'MIRRGO',   jp: '対称碁',       desc: '着手が縦中央線で鏡映され両側に置かれる', kind: 'mirror' },
+            { file: 'twicego.html', name: 'TWICEGO',  jp: '二手碁',       desc: '各手番で2石ずつ置く。途中パスで残り放棄', kind: 'twice' },
+            { file: 'kinggo.html',  name: 'KINGGO',   jp: '王碁',         desc: '最初に置いた石が王。王を取られると即負け', kind: 'king' },
+            { file: 'maxgo.html',   name: 'MAXGO',    jp: '先取碁',       desc: '先に10石取った側が即勝利。地勝負も有効', kind: 'max' },
+            { file: 'sandgo.html',  name: 'SANDGO',   jp: 'ハサミ碁',     desc: '敵石を上下/左右に挟むと呼吸点に関係なく取れる', kind: 'sand' },
+            { file: 'decaygo.html', name: 'DECAYGO',  jp: '崩壊碁',       desc: '碁石に寿命。打ってから8手で崩壊・消滅', kind: 'decay' },
+            { file: 'lifego.html',  name: 'LIFEGO',   jp: '生命碁',       desc: '着手ごとに盤面全体がライフゲーム1世代進化', kind: 'life' },
+            { file: 'rushgo.html',  name: 'RUSHGO',   jp: 'スピード碁',   desc: '1手ごとの制限時間。時間切れは自動パス', kind: 'rush' },
             { file: '3dgo.html',    name: '3DGO',     jp: '立体碁',       desc: '3層盤面。上下の層も連・呼吸点になる', kind: 'd3' },
-            { file: 'asymgo.html',  name: 'ASYMGO',   jp: '非対称碁',     desc: '黒=安定形 (I/O/T)、白=変形 (L/J/S/Z)', kind: 'asym' },
-            { file: 'draftgo.html', name: 'DRAFTGO',  jp: 'ドラフト碁',   desc: '対局前にピースを交互ドラフト。獲得3種のみ出現', kind: 'draft' },
+            { file: 'asymgo.html',  name: 'ASYMGO',   jp: '非対称碁',     desc: '黒=直鎖アルカン、白=分枝アルカン', kind: 'asym' },
+            { file: 'draftgo.html', name: 'DRAFTGO',  jp: 'ドラフト碁',   desc: '対局前に碁カンを交互ドラフト。獲得3種のみ出現', kind: 'draft' },
             { file: 'graphgo.html', name: 'GRAPHGO',  jp: 'グラフ碁',     desc: '盤面そのものが分子グラフ。結合(辺)だけが道', kind: 'graph' },
         ];
 
@@ -252,6 +263,62 @@
                 case 'graph': // 分子グラフ
                     [[1.6,1.6,3,1.6],[3,1.6,4.4,2.6],[3,1.6,3,3.2],[3,3.2,1.8,4],[3,3.2,4.2,4.4],[1.8,4,1.6,1.6]].forEach(([a,b,d,e]) => bond(a,b,d,e,2.5));
                     [[1.6,1.6],[3,1.6],[4.4,2.6],[3,3.2],[1.8,4],[4.2,4.4]].forEach(([x,y]) => dot(x, y, P1, P1S, cell*0.3));
+                    break;
+                case 'stone': // 通常の碁石2つ
+                    dot(2.4,2.4,P1,P1S); dot(3.8,3.8,P2,P2S);
+                    break;
+                case 'diag': // 斜めに繋がる石
+                    [[1.6,1.6],[2.6,2.6],[3.6,3.6]].forEach(([x,y]) => dot(x, y, P1, P1S));
+                    dot(4.6,4.6,P2,P2S);
+                    c.strokeStyle = P1S; c.lineWidth = 1.5; c.setLineDash([4,3]);
+                    c.beginPath(); c.moveTo(at(1.6,1.6).x, at(1.6,1.6).y); c.lineTo(at(3.6,3.6).x, at(3.6,3.6).y); c.stroke();
+                    c.setLineDash([]);
+                    break;
+                case 'wall': // 石+壁
+                    dot(2,2,P1,P1S); dot(4.4,4.4,P2,P2S);
+                    [[3.2,1.6],[3.2,2.6],[2.4,4.4],[3.4,3.4]].forEach(([x,y]) => {
+                        const p = at(x,y), s = cell*0.5;
+                        c.fillStyle = 'rgba(70,50,30,0.85)';
+                        c.fillRect(p.x-s/2, p.y-s/2, s, s);
+                        c.strokeStyle = 'rgba(30,20,10,0.9)'; c.lineWidth = 1.2;
+                        c.strokeRect(p.x-s/2, p.y-s/2, s, s);
+                    });
+                    break;
+                case 'grav': // 下に積まれる石
+                    [[1.4,5],[2.4,5],[3.4,5],[4.4,5],[2.4,4],[3.4,4],[2.9,3]].forEach(([x,y]) => dot(x, y, P1, P1S));
+                    dot(5.4,4,P2,P2S);
+                    break;
+                case 'spawn': // 増殖する石
+                    [[3,3],[2,3],[3,2],[4,3],[3,4]].forEach(([x,y]) => dot(x, y, P1, P1S));
+                    [[1.2,3],[3,1.2],[4.8,3],[3,4.8]].forEach(([x,y]) => dot(x, y, P1, P1S, R*0.7, 0.5));
+                    break;
+                case 'mirror': // 鏡像
+                    dot(2.2,3,P1,P1S); dot(3.8,3,P1,P1S);
+                    c.strokeStyle = 'rgba(62,34,17,0.6)'; c.lineWidth = 1.6; c.setLineDash([5,4]);
+                    c.beginPath(); c.moveTo(at(3,0.8).x, at(3,0.8).y); c.lineTo(at(3,5.2).x, at(3,5.2).y); c.stroke();
+                    c.setLineDash([]);
+                    break;
+                case 'twice': // ×2石
+                    dot(2.2,3,P1,P1S); dot(3.6,3,P1,P1S);
+                    c.fillStyle = P1; c.font = `bold ${cell*0.9}px sans-serif`; c.textAlign = 'center';
+                    c.fillText('×2', at(4.8,4.6).x, at(4.8,4.6).y + cell*0.3);
+                    break;
+                case 'king': // 王石
+                    dot(3,3,P1,P1S,cell*0.48);
+                    c.fillStyle = '#fbbf24'; c.strokeStyle = 'rgba(0,0,0,0.6)'; c.lineWidth = 1;
+                    c.font = `bold ${cell*1.1}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+                    c.strokeText('♛', at(3,3).x, at(3,3).y + cell*0.08);
+                    c.fillText('♛', at(3,3).x, at(3,3).y + cell*0.08);
+                    break;
+                case 'max': // アゲハマ先取
+                    [[1.8,4.6],[2.8,4.6],[3.8,4.6]].forEach(([x,y]) => dot(x, y, P2, P2S, R*0.8, 0.85));
+                    dot(4.6,2,P1,P1S);
+                    c.fillStyle = P1; c.font = `bold ${cell*0.8}px sans-serif`; c.textAlign = 'center';
+                    c.fillText('10先取', at(3,1).x, at(3,1).y);
+                    break;
+                case 'sand': // ハサミ
+                    dot(1.8,3,P1,P1S); dot(4.2,3,P1,P1S); dot(3,3,P2,P2S);
+                    bond(1.8,3,3,3,2); bond(3,3,4.2,3,2);
                     break;
             }
         }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GRAPHGO - グラフ碁</title>
+    <title>TWICEGO - 二手碁</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -38,7 +38,7 @@
         <!-- ヘッダー: タイトル & 設定歯車ボタン -->
         <header class="w-full flex items-center justify-between pt-1">
             <button id="btnOpenRules" title="ルール" class="w-9 h-9 flex items-center justify-center rounded-full border border-current/25 hover:bg-black/5 active:scale-95 transition-all text-base font-extrabold">?</button>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-wider text-center">GRAPHGO <span class="text-sm font-bold opacity-60">グラフ碁</span></h1>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-wider text-center">TWICEGO <span class="text-sm font-bold opacity-60">二手碁</span></h1>
             <button id="btnOpenSettings" title="設定" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5 active:scale-95 transition-all">
                 <svg class="w-6 h-6 current-color" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -157,8 +157,8 @@
 
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
-            通常の囲碁 + 分子グラフ盤<br>
-            ※呼吸点・連は結合(辺)のみ。格子の隣接でも辺がなければつながらない
+            通常の囲碁 + 二手ルール<br>
+            ※各手番で2石置く (途中パスで残りを放棄)
         </p>
     </div>
 
@@ -501,8 +501,8 @@
             '双方が連続でパスすると終局。地の中の死に石を確認し、地の数 + アゲハマ数 (+白はコミ6.5目) で勝敗を決める。',
         ];
         const RULES_VARIANT = [
-            '盤面はランダムな分子グラフ: 全格子辺から約28%を連結を保ちながら除去して生成。',
-            '連・呼吸点・取り・地の判定はすべてグラフの辺 (結合線) だけを辿る。辺のない隣接はつながらない。',
+            '二手碁: 各手番で2石ずつ置く (同じ色が2連続で着手する)。',
+            '途中でパスすれば残りの着手を放棄して手番が渡る。手番表示の「n手目/2」で残りを確認できる。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -557,13 +557,12 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        let ADJ = []; // グラフ隣接リスト (盤面=分子グラフ: 頂点=炭素, 辺=結合)
-        let graphRemoved = []; // 除去された辺のインデックス (保存・同期用)
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
         let komi = 6.5;
         let consecutivePasses = 0;
+        let turnPlacements = 0; // この手番で置いた石数 (2で手番交代)
         let gameOver = false;
         let gameResultData = null;
         let gamePhase = 'playing'; // 'playing' | 'dead_stone_selection' | 'ended'
@@ -588,7 +587,7 @@
         let history = []; // 1手戻る用: 各着手前のスナップショットのスタック
 
         // オンライン対戦 (PeerJS / WebRTC) 関連
-        const ROOM_ID_PREFIX = 'graphgo-';
+        const ROOM_ID_PREFIX = 'twicego-';
         let peer = null;         // PeerJS Peerインスタンス
         let conn = null;         // PeerJS DataConnection (相手との接続)
         let onlineRoomId = null; // 表示用の5桁ルームコード
@@ -600,7 +599,7 @@
         // リロードで対局状態が消えないよう保存する。
         // sessionStorage はタブごとに独立なので、複数タブで別々の対局を進行できる。
         // ==========================================
-        const STORAGE_KEY = 'graphgo-save-v1';
+        const STORAGE_KEY = 'twicego-save-v1';
 
         function saveState() {
             try {
@@ -618,7 +617,6 @@
                     deadStones: [...deadStones],
                     prevBoard,
                     lastMove,
-                    graphRemoved,
                     history,
                     pieceMode,
                     currentPieceType,
@@ -626,6 +624,7 @@
                     pieceQueue,
                     heldPieces,
                     holdUsed,
+                    turnPlacements,
                     gameMode,
                     aiPlayer,
                     myOnlineRole,
@@ -658,8 +657,6 @@
             deadStones = new Set(s.deadStones || []);
             prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
             lastMove = s.lastMove || null;
-            graphRemoved = Array.isArray(s.graphRemoved) ? s.graphRemoved : [];
-            rebuildADJ(new Set(graphRemoved));
             history = Array.isArray(s.history) ? s.history : [];
             pieceMode = ['free', 'next'].includes(s.pieceMode) ? s.pieceMode : 'next';
             currentPieceType = PIECE_TYPES.includes(s.currentPieceType) ? s.currentPieceType : 'STONE';
@@ -672,6 +669,7 @@
                     2: PIECE_TYPES.includes(s.heldPieces[2]) ? s.heldPieces[2] : null }
                 : { 1: null, 2: null };
             holdUsed = !!s.holdUsed;
+            turnPlacements = Number.isInteger(s.turnPlacements) ? s.turnPlacements : 0;
             gameMode = ['local', 'ai', 'online'].includes(s.gameMode) ? s.gameMode : 'local';
             aiPlayer = s.aiPlayer === 1 ? 1 : 2;
             myOnlineRole = s.myOnlineRole || null;
@@ -893,34 +891,42 @@
             ctx.fillRect(0, 0, width, width);
             ctx.restore();
 
-            // 分子グラフ盤: 辺=結合線、頂点=炭素球
+            // 格子線
             ctx.strokeStyle = currentTheme.lineColor;
-            ctx.lineWidth = Math.max(1.5, cellSize * 0.055);
-            for (let a = 0; a < ADJ.length; a++) {
-                const ax = a % BOARD_SIZE, ay = Math.floor(a / BOARD_SIZE);
-                for (const b of ADJ[a]) {
-                    if (b < a) continue;
-                    const bx = b % BOARD_SIZE, by = Math.floor(b / BOARD_SIZE);
-                    ctx.beginPath();
-                    ctx.moveTo(padding + ax * cellSize, padding + ay * cellSize);
-                    ctx.lineTo(padding + bx * cellSize, padding + by * cellSize);
-                    ctx.stroke();
-                }
-            }
-            // 外枠強調
-            ctx.strokeStyle = currentTheme.lineColor;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(padding, padding, width - padding * 2, width - padding * 2);
+            ctx.lineWidth = Math.max(1, cellSize * 0.028);
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                const pos = padding + i * cellSize;
+                ctx.beginPath();
+                ctx.moveTo(pos, padding);
+                ctx.lineTo(pos, width - padding);
+                ctx.stroke();
 
-            // 炭素ノード (頂点)
-            for (let y = 0; y < BOARD_SIZE; y++) {
-                for (let x = 0; x < BOARD_SIZE; x++) {
-                    ctx.beginPath();
-                    ctx.arc(padding + x * cellSize, padding + y * cellSize, cellSize * 0.09, 0, Math.PI * 2);
-                    ctx.fillStyle = currentTheme.starColor;
-                    ctx.fill();
-                }
+                ctx.beginPath();
+                ctx.moveTo(padding, pos);
+                ctx.lineTo(width - padding, pos);
+                ctx.stroke();
             }
+
+            // 外枠強調 (二重線で碁盤らしく)
+            ctx.strokeStyle = currentTheme.lineColor;
+            ctx.lineWidth = Math.max(1.6, cellSize * 0.055);
+            ctx.strokeRect(padding, padding, width - padding * 2, width - padding * 2);
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.35;
+            ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
+            ctx.globalAlpha = 1;
+
+            // 星 (天元・星の点)
+            const starPoints = getStarPoints(BOARD_SIZE);
+            ctx.fillStyle = currentTheme.starColor;
+            const starR = Math.max(2.5, cellSize * 0.10);
+            starPoints.forEach(pt => {
+                const cx = padding + pt.x * cellSize;
+                const cy = padding + pt.y * cellSize;
+                ctx.beginPath();
+                ctx.arc(cx, cy, starR, 0, Math.PI * 2);
+                ctx.fill();
+            });
 
             // 窒息領域 (分子が入れない最小サイズ未満の空領域) を薄い中間色で表示
             drawDeadSpacePoints(padding, cellSize);
@@ -1419,7 +1425,7 @@
         }
 
         // ==========================================
-        // 8. 囲碁 & GRAPHGO ルール判定アルゴリズム
+        // 8. 囲碁 & TWICEGO ルール判定アルゴリズム
         // ==========================================
         // 【窒息領域ルール】
         // 連結した空領域が最小分子サイズ (PIECE_SIZE=4) マス未満の場合、その領域には
@@ -1492,7 +1498,8 @@
                 currentPieceType,
                 pieceQueue: [...pieceQueue],
                 heldPieces: { ...heldPieces },
-                holdUsed
+                holdUsed,
+                turnPlacements
             });
 
             prevBoard = [...board]; // コウ判定用に着手前の盤面を保存
@@ -1527,7 +1534,11 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            turn = opponent;
+            turnPlacements++;
+            if (turnPlacements >= 2) {
+                turnPlacements = 0;
+                turn = opponent; // 2石置き切りで手番交代
+            }
             updateUI();
 
             // オンライン同期
@@ -1609,55 +1620,17 @@
             return liberties;
         }
 
-        // グラフ盤: 近傍=辺で結ばれた頂点のみ
-        function getNeighbors(idx) { return ADJ[idx] || []; }
-        function hasEdge(a, b) { return ADJ[a] && ADJ[a].includes(b); }
+        function getNeighbors(idx) {
+            const x = idx % BOARD_SIZE;
+            const y = Math.floor(idx / BOARD_SIZE);
+            const neighbors = [];
 
-        function gridEdges() {
-            const all = [];
-            for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                const i = y * BOARD_SIZE + x;
-                if (x < BOARD_SIZE - 1) all.push([i, i + 1]);
-                if (y < BOARD_SIZE - 1) all.push([i, i + BOARD_SIZE]);
-            }
-            return all;
-        }
+            if (x > 0) neighbors.push(idx - 1);
+            if (x < BOARD_SIZE - 1) neighbors.push(idx + 1);
+            if (y > 0) neighbors.push(idx - BOARD_SIZE);
+            if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
 
-        function rebuildADJ(removedSet) {
-            const n = BOARD_SIZE * BOARD_SIZE;
-            ADJ = Array.from({ length: n }, () => []);
-            gridEdges().forEach(([a, b], i) => {
-                if (removedSet.has(i)) return;
-                ADJ[a].push(b); ADJ[b].push(a);
-            });
-        }
-
-        // 全格子辺から約28%をランダム除去 (連結性は維持) → 分子骨格状の盤面
-        function buildGraph() {
-            const n = BOARD_SIZE * BOARD_SIZE;
-            const all = gridEdges();
-            const removed = new Set();
-            const target = Math.floor(all.length * 0.28);
-            const order = [...all.keys()];
-            for (let i = order.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [order[i], order[j]] = [order[j], order[i]];
-            }
-            const connected = (rem) => {
-                const adj = Array.from({ length: n }, () => []);
-                all.forEach(([a, b], i) => { if (!rem.has(i)) { adj[a].push(b); adj[b].push(a); } });
-                const seen = new Set([0]); const q = [0];
-                while (q.length) { const c = q.pop(); for (const m of adj[c]) if (!seen.has(m)) { seen.add(m); q.push(m); } }
-                return seen.size === n;
-            };
-            let count = 0;
-            for (const i of order) {
-                if (count >= target) break;
-                removed.add(i);
-                if (!connected(removed)) removed.delete(i); else count++;
-            }
-            graphRemoved = [...removed];
-            rebuildADJ(removed);
+            return neighbors;
         }
 
         // ==========================================
@@ -1799,6 +1772,7 @@
             if (snap.pieceQueue) pieceQueue = snap.pieceQueue;
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
             holdUsed = !!snap.holdUsed;
+            turnPlacements = snap.turnPlacements || 0;
             previewPos = null;
             updateUI();
 
@@ -1833,6 +1807,7 @@
 
             prevBoard = null; // パスでコウ制限は解除
             consecutivePasses++;
+            turnPlacements = 0;
             if (consecutivePasses >= 2) {
                 startDeadStoneSelectionPhase();
                 if (gameMode === 'online' && onlineRoomId) {
@@ -2164,10 +2139,6 @@
                 pendingBoardSize = BOARD_SIZE;
                 resizeCanvas();
             }
-            if (Array.isArray(data.graphRemoved)) {
-                graphRemoved = data.graphRemoved;
-                rebuildADJ(new Set(graphRemoved));
-            }
             board = data.board;
             pieces = data.pieces || [];
             turn = data.turn;
@@ -2183,6 +2154,7 @@
             if (data.pieceQueue) pieceQueue = data.pieceQueue;
             if (data.heldPieces) heldPieces = { ...data.heldPieces };
             holdUsed = !!data.holdUsed;
+            turnPlacements = data.turnPlacements || 0;
             previewPos = null;
 
             if (gamePhase === 'dead_stone_selection') {
@@ -2216,12 +2188,12 @@
                 gamePhase,
                 prevBoard,
                 lastMove,
-                graphRemoved,
                 pieceMode,
                 currentPieceType,
                 pieceQueue,
                 heldPieces,
                 holdUsed,
+                turnPlacements,
                 deadStones: [...deadStones],
                 history
             });
@@ -2431,7 +2403,7 @@
         // 13. 状態更新 & ゲーム初期化
         // ==========================================
         function updateUI() {
-            turnIndicator.textContent = turn === 1 ? '黒 (1P)' : '白 (2P)';
+            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + ` · ${turnPlacements + 1}手目/2`;
             blackCapturesEl.textContent = captures[1];
             whiteCapturesEl.textContent = captures[2];
 
@@ -2447,7 +2419,6 @@
         function resetGame() {
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            buildGraph();
             pieces = [];
             turn = 1;
             captures = { 1: 0, 2: 0 };

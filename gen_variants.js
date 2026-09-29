@@ -1,15 +1,18 @@
 // 変則碁バリアント一括生成スクリプト
-// tetogo.html / algo.html をテンプレートに、各ゲームの差分を文字列置換で適用する。
+// algo.html (碁盤+通常碁石の見た目のエンジン) をテンプレートに、
+// 各ゲーム = 「通常囲碁 + 特殊ルール」として文字列置換で差分を適用する。
 // 使い方: node gen_variants.js   (失敗した置換はログに出る)
 const fs = require('fs');
 const path = require('path');
-const TETOGO = fs.readFileSync(path.join(__dirname, 'tetogo.html'), 'utf8').replace(/\r\n/g, '\n');
 const ALGO = fs.readFileSync(path.join(__dirname, 'algo.html'), 'utf8').replace(/\r\n/g, '\n');
 
 let failures = 0;
 function apply(src, spec, name) {
     let s = src;
-    spec.forEach(([mode, oldS, newS]) => {
+    spec.forEach(([mode, oldS0, newS0]) => {
+        // このファイル自体がCRLFで保存されても壊れないよう、パターン側もLF正規化する
+        const oldS = oldS0.replace(/\r\n/g, '\n');
+        const newS = newS0.replace(/\r\n/g, '\n');
         if (!s.includes(oldS)) {
             console.log(`  [${name}] MISSING: ${JSON.stringify(oldS.slice(0, 90))}`);
             failures++;
@@ -26,60 +29,19 @@ function out(name, html) {
 }
 
 // ============================================================
-// 1. PENGO (ペン碁) — ペントミノ12種、窒息領域<5
+// アンカー文字列 (algo.html 内の正確なテキスト)
 // ============================================================
-const PENTO_DEFS = `        // 12種のペントミノ。碁石5つが連結した形で、碁盤の交点を占有する。
-        const PIECE_SIZE = 5;
-        const PIECE_DEFS = {
-            F: [[1,0],[2,0],[0,1],[1,1],[1,2]],
-            I: [[0,0],[1,0],[2,0],[3,0],[4,0]],
-            L: [[0,0],[0,1],[0,2],[0,3],[1,3]],
-            P: [[0,0],[1,0],[0,1],[1,1],[0,2]],
-            N: [[1,0],[1,1],[0,2],[1,2],[0,3]],
-            T: [[0,0],[1,0],[2,0],[1,1],[1,2]],
-            U: [[0,0],[2,0],[0,1],[1,1],[2,1]],
-            V: [[0,0],[0,1],[0,2],[1,2],[2,2]],
-            W: [[0,0],[0,1],[1,1],[1,2],[2,2]],
-            X: [[1,0],[0,1],[1,1],[2,1],[1,2]],
-            Y: [[1,0],[0,1],[1,1],[1,2],[1,3]],
-            Z: [[0,0],[1,0],[1,1],[1,2],[2,2]]
+const MOLECULES_ALGO = `        const MOLECULES = {
+            BUTANE:         { name: 'ブタン',            iupac: 'n-ブタン',             formula: 'C₄H₁₀', atoms: [[0,0],[1,0],[1,1],[2,1]] },
+            ISOBUTANE:      { name: 'イソブタン',         iupac: '2-メチルプロパン',     formula: 'C₄H₁₀', atoms: [[1,0],[0,1],[1,1],[2,1]] },
+            PENTANE:        { name: 'ペンタン',           iupac: 'n-ペンタン',           formula: 'C₅H₁₂', atoms: [[0,0],[1,0],[2,0],[3,0],[4,0]] },
+            ISOPENTANE:     { name: 'イソペンタン',       iupac: '2-メチルブタン',       formula: 'C₅H₁₂', atoms: [[0,0],[1,0],[2,0],[3,0],[1,1]] },
+            NEOPENTANE:     { name: 'ネオペンタン',       iupac: '2,2-ジメチルプロパン', formula: 'C₅H₁₂', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2]] },
+            HEXANE:         { name: 'ヘキサン',           iupac: 'n-ヘキサン',           formula: 'C₆H₁₄', atoms: [[0,0],[1,0],[1,1],[2,1],[2,2],[3,2]] },
+            NEOHEXANE:      { name: 'ネオヘキサン',       iupac: '2,2-ジメチルブタン',   formula: 'C₆H₁₄', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2],[1,3]] }
         };`;
-
-out('pengo.html', apply(TETOGO, [
-    [ONE, '<title>TETOGO - テトリス碁</title>', '<title>PENGO - ペン碁</title>'],
-    [ONE, '>TETOGO <span class="text-sm font-bold opacity-60">テトリス碁</span>', '>PENGO <span class="text-sm font-bold opacity-60">ペン碁</span>'],
-    [ONE, '// 3. テトロミノ (ピース) 定義', '// 3. ペントミノ (ピース) 定義'],
-    [ONE, `        // 7種のテトロミノ。碁石4つが連結した形で、碁盤の交点を占有する。
-        const PIECE_SIZE = 4;
-        const PIECE_DEFS = {
-            I: [[0,0],[1,0],[2,0],[3,0]],
-            O: [[0,0],[1,0],[0,1],[1,1]],
-            T: [[0,0],[1,0],[2,0],[1,1]],
-            L: [[0,0],[1,0],[0,1],[0,2]],
-            J: [[1,0],[1,1],[0,2],[1,2]],
-            S: [[1,0],[2,0],[0,1],[1,1]],
-            Z: [[0,0],[1,0],[1,1],[2,1]]
-        };`, PENTO_DEFS],
-    [ONE, '// I:2 / O:1 / T:4 / L:4 / J:4 / S:2 / Z:2 = 計19パターン', '// 回転のみ (鏡像なし): F4/I2/L4/P4/N4/T4/U4/V4/W4/X1/Y4/Z4 = 計45パターン'],
-    [ONE, '// 7種1巡バッグ', '// 12種1巡バッグ'],
-    [ONE, `'next' (7種1巡ランダム)`, `'next' (12種1巡ランダム)`],
-    [ALL, '7種1巡', '12種1巡'],
-    [ONE, `ROOM_ID_PREFIX = 'tetogo-'`, `ROOM_ID_PREFIX = 'pengo-'`],
-    [ONE, `STORAGE_KEY = 'tetogo-save-v1'`, `STORAGE_KEY = 'pengo-save-v1'`],
-    [ONE, '// 8. 囲碁 & TETOGO ルール判定アルゴリズム', '// 8. 囲碁 & PENGO ルール判定アルゴリズム'],
-    [ONE, `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)`,
-          `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)<br>
-            ※ペントミノ12種 (5マス) を置く碁。窒息領域は5マス未満`],
-], 'pengo'));
-
-// ============================================================
-// 2. TORUSGO (トーラス碁) — 辺がループする碁盤
-// ============================================================
-out('torusgo.html', apply(TETOGO, [
-    [ONE, '<title>TETOGO - テトリス碁</title>', '<title>TORUSGO - トーラス碁</title>'],
-    [ONE, '>TETOGO <span class="text-sm font-bold opacity-60">テトリス碁</span>', '>TORUSGO <span class="text-sm font-bold opacity-60">トーラス碁</span>'],
-    [ONE, '// 8. 囲碁 & TETOGO ルール判定アルゴリズム', '// 8. 囲碁 & TORUSGO ルール判定アルゴリズム'],
-    [ONE, `        function getNeighbors(idx) {
+const OCNT_ALGO = '// ブタン:2 / イソブタン:4 / ペンタン:2 / イソペンタン:4 / ネオペンタン:1 / ヘキサン:2 / ネオヘキサン:4 = 計19パターン';
+const NBRS_GRID = `        function getNeighbors(idx) {
             const x = idx % BOARD_SIZE;
             const y = Math.floor(idx / BOARD_SIZE);
             const neighbors = [];
@@ -90,7 +52,565 @@ out('torusgo.html', apply(TETOGO, [
             if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
 
             return neighbors;
+        }`;
+const VALID_BOUNDS = `            for (const p of cells) {
+                if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
+                if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
+            }`;
+const INFO_ALGO = `            アルカン分子「碁カン」を配置し合う変則囲碁<br>
+            PC: クリックで配置 / 回転=Rキー・右クリック・ホイール / ホールド=Hキー<br>
+            スマホ: 1タップ目プレビュー、2タップ目確定 (回転・ホールドはボタン)`;
+const TRAY_DIV = `        <div id="pieceTray" class="w-full flex items-center gap-3 p-3 rounded-xl border transition-colors">`;
+const SUPPLY_SEC = `            <!-- 3. ピース配給モード -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-bold uppercase tracking-wider text-neutral-500">碁カン供給</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button data-pmode="free" class="btn-pmode py-2 rounded-lg border border-neutral-300 font-bold text-xs sm:text-sm hover:bg-neutral-100 transition-all">自由選択</button>
+                    <button data-pmode="next" class="btn-pmode py-2 rounded-lg border border-neutral-300 font-bold text-xs sm:text-sm hover:bg-neutral-100 transition-all">ネクスト (全7種1巡)</button>
+                </div>
+            </div>`;
+const CATALOG_ROW = `            <!-- 6. 碁カン図鑑 -->
+            <div class="flex items-center justify-between pt-1">
+                <span class="text-sm font-bold text-neutral-700">登場アルカン</span>
+                <button id="btnOpenCatalog" class="px-3 py-1.5 text-xs font-bold rounded-full border border-neutral-300 bg-neutral-100 hover:bg-neutral-200 transition-all">
+                    碁カン図鑑を開く
+                </button>
+            </div>`;
+const SIZE_BTNS = `                    <button data-size="13" class="btn-size py-2 rounded-lg border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-all">13路盤</button>
+                    <button data-size="19" class="btn-size py-2 rounded-lg border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-all">19路盤</button>
+                    <button data-size="25" class="btn-size py-2 rounded-lg border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-all">25路盤</button>`;
+const STARS_ALGO = `        function getStarPoints(size) {
+            if (size === 13) {
+                return [{x:3,y:3}, {x:9,y:3}, {x:6,y:6}, {x:3,y:9}, {x:9,y:9}];
+            } else if (size === 19) {
+                return [
+                    {x:3,y:3}, {x:9,y:3}, {x:15,y:3},
+                    {x:3,y:9}, {x:9,y:9}, {x:15,y:9},
+                    {x:3,y:15}, {x:9,y:15}, {x:15,y:15}
+                ];
+            } else if (size === 25) {
+                return [
+                    {x:4,y:4}, {x:12,y:4}, {x:20,y:4},
+                    {x:4,y:12}, {x:12,y:12}, {x:20,y:12},
+                    {x:4,y:20}, {x:12,y:20}, {x:20,y:20}
+                ];
+            }
+            return [];
+        }`;
+const RCM_ALGO = `        const RULES_COMMON = [
+            '黒 (先手) と白が交互に着手。自分の手番では盤上に碁カンを1個配置するか、パスを選ぶ。',
+            '碁カン内で隣接する原子同士は結合しており、つながった石は1つの「連」として呼吸を共有する。',
+            '連に隣接する空点は「呼吸点」。呼吸点が0になった連は取られ、相手のアゲハマになる。',
+            '自殺手禁止: 着手の結果、自分の連の呼吸点が0になる場所には置けない (相手の連を取れる場合を除く)。',
+            'コウ禁止: 相手の直前の着手前と同一の盤面を再現する手は打てない。',
+            \`窒息領域: \${PIECE_SIZE}マス未満の連結した空領域にはどの碁カンも入らないため、呼吸点にも地にもならない。\`,
+            '双方が連続でパスすると終局。地の中の死に石を確認し、地の数 + アゲハマ数 (+白はコミ6.5目) で勝敗を決める。',
+        ];`;
+const RV_ALGO = `        const RULES_VARIANT = [
+            'このゲームで使う碁カンはアルカン分子7種 (炭素数4〜6)。形・大きさが異なる。',
+            '供給モード: 「自由選択」は毎手好きな碁カンを選べる。「ネクスト」は全種1巡のランダム供給。',
+            'ホールド: ネクストモード時、現在の碁カンを1回だけ取っておける (各手番1回まで)。',
+        ];`;
+const RC_ALGO = `        const RULES_CONTROLS = [
+            '配置: 盤上をクリック/タップ。回転 = Rキー・右クリック・ホイール・「回転」ボタン。',
+            'ホールド = Hキーまたは「ホールド」ボタン (ネクストモードのみ)。',
+            'スマホ: 1タップ目=プレビュー表示、2タップ目=確定。',
+        ];`;
+const PIECES_PUSH = `            pieces.push({
+                id: Date.now() + Math.random(),
+                player: player,
+                type: move.type,
+                rot: move.rot,
+                cells: move.cells
+            });`;
+const CAPTURE_BLOCK = `            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                captures[player] += captured.length;
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`;
+const TURN_FLIP = `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;`;
+const FALLBACK_SKIP = `                    if (val === 0 || covered.has(idx)) continue;`;
+const TOGGLE_GUARD = `            const color = board[startIdx];
+            if (color === 0) return;`;
+const BOARD_DECL = `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白`;
+const RESET_BOARD = `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);`;
+const RESET_HELD = `            heldPieces = { 1: null, 2: null };`;
+const PASS_INC = `            prevBoard = null; // パスでコウ制限は解除
+            consecutivePasses++;`;
+const SNAP_PUSH = `                heldPieces: { ...heldPieces },
+                holdUsed
+            });`;
+const SNAP_POP = `            holdUsed = !!snap.holdUsed;`;
+const LOAD_HOLD = `            holdUsed = !!s.holdUsed;`;
+const SAVE_TAIL = `                    heldPieces,
+                    holdUsed,
+                    gameMode,`;
+const ONLINE_SEND = `                heldPieces,
+                holdUsed,
+                deadStones: [...deadStones],`;
+const ONLINE_RECV = `            holdUsed = !!data.holdUsed;`;
+const TURN_LINE = `            turnIndicator.textContent = turn === 1 ? '黒 (1P)' : '白 (2P)';`;
+const UI_TAIL = `            btnUndo.disabled = !canUndo();
+            updatePieceTrayUI();
+            render();
+        }`;
+const NEXTBOX_HTML = `                <div id="nextBox" class="hidden items-center gap-2.5">
+                    <canvas id="nextPieceCanvas" width="46" height="46"></canvas>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold tracking-widest">NEXT</span>
+                        <span class="text-[10px] opacity-60 leading-tight">全7種1巡<br>ランダム</span>
+                    </div>
+                </div>`;
+const GRID_RENDER = `            // 格子線
+            ctx.strokeStyle = currentTheme.lineColor;
+            ctx.lineWidth = Math.max(1, cellSize * 0.028);
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                const pos = padding + i * cellSize;
+                ctx.beginPath();
+                ctx.moveTo(pos, padding);
+                ctx.lineTo(pos, width - padding);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(padding, pos);
+                ctx.lineTo(width - padding, pos);
+                ctx.stroke();
+            }
+
+            // 外枠強調 (二重線で碁盤らしく)
+            ctx.strokeStyle = currentTheme.lineColor;
+            ctx.lineWidth = Math.max(1.6, cellSize * 0.055);
+            ctx.strokeRect(padding, padding, width - padding * 2, width - padding * 2);
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.35;
+            ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
+            ctx.globalAlpha = 1;
+
+            // 星 (天元・星の点)
+            const starPoints = getStarPoints(BOARD_SIZE);
+            ctx.fillStyle = currentTheme.starColor;
+            const starR = Math.max(2.5, cellSize * 0.10);
+            starPoints.forEach(pt => {
+                const cx = padding + pt.x * cellSize;
+                const cy = padding + pt.y * cellSize;
+                ctx.beginPath();
+                ctx.arc(cx, cy, starR, 0, Math.PI * 2);
+                ctx.fill();
+            });`;
+const AI_EVAL = `        function evaluateBestAiMove() {
+            const candidates = [];
+            // 自由モードは全ピース、ネクストモードは現在ピースのみ
+            const types = pieceMode === 'next' ? [currentPieceType] : PIECE_TYPES;
+
+            types.forEach(type => {
+                ORIENTATIONS[type].forEach((shape, rot) => {
+                    const w = Math.max(...shape.map(c => c[0])) + 1;
+                    const h = Math.max(...shape.map(c => c[1])) + 1;
+                    for (let ty = 0; ty + h <= BOARD_SIZE; ty++) {
+                        for (let tx = 0; tx + w <= BOARD_SIZE; tx++) {
+                            const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy }));
+                            if (isValidPlacement(cells, turn)) {
+                                const score = rateMove(cells, turn);
+                                candidates.push({ cells, type, rot, score });
+                            }
+                        }
+                    }
+                });
+            });
+
+            if (candidates.length === 0) return null;
+
+            // スコア降順ソート
+            candidates.sort((a, b) => b.score - a.score);
+            return candidates[0];
+        }`;
+const TRAY_UI_ALGO = `        function updatePieceTrayUI() {
+            const list = ORIENTATIONS[currentPieceType];
+            if (!list) return;
+            currentRot = currentRot % list.length;
+            drawMiniPiece(currentPieceCanvas, currentPieceType, currentRot);
+            currentPieceLabel.textContent = \`\${MOLECULES[currentPieceType].name} \${MOLECULES[currentPieceType].formula}\`;
+
+            if (pieceMode === 'free') {
+                paletteBox.classList.remove('hidden');
+                nextBox.classList.add('hidden');
+                nextBox.classList.remove('flex');
+                trayModeLabel.textContent = '碁カン選択 (自由モード)';
+                PIECE_TYPES.forEach(t => {
+                    const c = paletteCanvases[t];
+                    if (c) drawMiniPiece(c, t, 0, turn);
+                    const btn = c && c.parentElement;
+                    if (btn) btn.style.outline = (t === currentPieceType) ? '2px solid currentColor' : 'none';
+                });
+            } else {
+                paletteBox.classList.add('hidden');
+                nextBox.classList.remove('hidden');
+                nextBox.classList.add('flex');
+                trayModeLabel.textContent = \`NEXT (全\${PIECE_TYPES.length}種1巡モード)\`;
+                // NEXTピースは次の手番(相手)の色で描く
+                if (pieceQueue[0]) drawMiniPiece(nextPieceCanvas, pieceQueue[0], 0, turn === 1 ? 2 : 1);
+            }
+
+            // ホールド欄はネクストモードのみ (自由選択では不要)
+            holdBox.classList.toggle('hidden', pieceMode !== 'next');
+            if (pieceMode === 'next') {
+                const hc = holdPieceCanvas.getContext('2d');
+                hc.clearRect(0, 0, holdPieceCanvas.width, holdPieceCanvas.height);
+                if (heldPieces[turn]) drawMiniPiece(holdPieceCanvas, heldPieces[turn], 0, turn);
+                holdPieceCanvas.style.opacity = (holdUsed && heldPieces[turn]) ? 0.35 : 1;
+                btnHold.disabled = holdUsed || gameOver || gamePhase !== 'playing' || !isMyTurn();
+            }
+        }`;
+const HOLD_ROTATE_FNS = `        // ホールド: 現在ピースを自分のホールド枠に保存して次を供給 (初回)
+        // か保持ピースと交換 (2回目以降)。1手につき1回まで (着手するまで再ホールド不可)。
+        function holdPiece() {
+            if (pieceMode !== 'next' || holdUsed || gameOver
+                || gamePhase !== 'playing' || !isMyTurn()) return;
+            soundManager.playClick();
+            if (heldPieces[turn] === null) {
+                heldPieces[turn] = currentPieceType;
+                currentPieceType = drawNextPiece();
+            } else {
+                [heldPieces[turn], currentPieceType] = [currentPieceType, heldPieces[turn]];
+            }
+            currentRot = 0;
+            holdUsed = true;
+            updatePieceTrayUI();
+            refreshPreview();
+            render();
+            saveState();
+        }
+
+        function drawNextPiece() {
+            if (pieceQueue.length === 0) pieceQueue = shuffledBag();
+            return pieceQueue.shift();
+        }
+
+        function rotatePiece() {
+            const list = ORIENTATIONS[currentPieceType];
+            if (!list) return;
+            currentRot = (currentRot + 1) % list.length;
+            soundManager.playClick();
+            updatePieceTrayUI();
+            refreshPreview();
+            render();
+        }`;
+const CLICK_BODY = `            if (!isMyTurn()) return;
+
+            const anchor = getAnchorFromEvent(e);
+            if (!anchor) return;
+
+            const isTouch = lastPointerType === 'touch';
+
+            if (!isTouch) {
+                // マウス: クリックで即配置
+                const pl = getPlacementAt(anchor.u, anchor.v);
+                if (isValidPlacement(pl.cells, turn)) {
+                    executeMove({ cells: pl.cells, type: currentPieceType, rot: currentRot }, turn);
+                    previewPos = null;
+                }
+                return;
+            }
+
+            // タッチ: 1回目のタップ=プレビュー、プレビュー上の2回目のタップ=確定
+            if (previewPos && isTapOnPreview(e, previewPos)) {
+                if (previewPos.valid) {
+                    executeMove({ cells: previewPos.cells, type: previewPos.type, rot: previewPos.rot }, turn);
+                    previewPos = null;
+                    render();
+                }
+                // 置けない場所(赤)の場合はプレビューのまま維持
+            } else {
+                previewPos = computePreview(anchor.u, anchor.v);
+                render();
+            }
+        }`;
+const MOUSE_MOVE = `        function handleMouseMove(e) {
+            if (lastPointerType === 'touch') return; // タッチ操作ではホバープレビューを出さない
+            if (gameOver || gamePhase === 'dead_stone_selection' || !isMyTurn()) return;
+            const anchor = getAnchorFromEvent(e);
+            if (anchor) {
+                previewPos = computePreview(anchor.u, anchor.v);
+                render();
+            }
+        }`;
+const PLACE_AT = `        function getPlacementAt(u, v) {
+            const list = ORIENTATIONS[currentPieceType];
+            const shape = list[currentRot % list.length];`;
+const REFRESH_PREVIEW = `        function refreshPreview() {
+            if (!previewPos) return;
+            previewPos = computePreview(previewPos.u, previewPos.v);
+        }`;
+const RESET_SUPPLY = `            if (pieceMode === 'next') {
+                pieceQueue = shuffledBag();
+                currentPieceType = pieceQueue.shift();
+            }`;
+const LOAD_QUEUE = `            pieceQueue = Array.isArray(s.pieceQueue)
+                ? s.pieceQueue.filter(t => PIECE_TYPES.includes(t)) : [];
+            if (pieceMode === 'next' && pieceQueue.length === 0) pieceQueue = shuffledBag();`;
+const SAVE_QUEUE = `                    pieceQueue,
+                    heldPieces,`;
+const SNAP_QUEUE = `                pieceQueue: [...pieceQueue],`;
+const UNDO_QUEUE = `            if (snap.pieceQueue) pieceQueue = snap.pieceQueue;`;
+const ONLINE_QUEUE_RECV = `            if (data.pieceQueue) pieceQueue = data.pieceQueue;`;
+const ONLINE_QUEUE_SEND = `                pieceQueue,
+                heldPieces,`;
+const PALETTE_FOR = `                PIECE_TYPES.forEach(t => {
+                    const c = paletteCanvases[t];
+                    if (c) drawMiniPiece(c, t, 0, turn);
+                    const btn = c && c.parentElement;
+                    if (btn) btn.style.outline = (t === currentPieceType) ? '2px solid currentColor' : 'none';
+                });`;
+const PALETTE_CLICK = `                    if (pieceMode !== 'free') return;
+                    currentPieceType = t;
+                    currentRot = 0;`;
+const SHUFFLE_FN = `        // 全7種1巡バッグ (テトリス方式) のシャッフル
+        function shuffledBag() {
+            const bag = [...PIECE_TYPES];
+            for (let i = bag.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [bag[i], bag[j]] = [bag[j], bag[i]];
+            }
+            return bag;
+        }`;
+const QUEUE_DECL = `        let pieceQueue = [];        // 'next'モード用の今後の供給列`;
+const PMODE_DECL = `        let pieceMode = 'next'; // 'free' (自由選択) | 'next' (7種1巡ランダム)`;
+const AI_TYPES = `            const types = pieceMode === 'next' ? [currentPieceType] : PIECE_TYPES;`;
+const SUPPLY_BLOCK = `            // ネクストモードでは次のピースを供給
+            if (pieceMode === 'next') {
+                currentPieceType = drawNextPiece();
+            }
+
+            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;`;
+
+// ============================================================
+// ルールブロック生成ヘルパー
+// ============================================================
+const rv = (lines) => '        const RULES_VARIANT = [\n'
+    + lines.map(l => `            '${l}',`).join('\n') + '\n        ];';
+const rc = (lines) => '        const RULES_CONTROLS = [\n'
+    + lines.map(l => `            '${l}',`).join('\n') + '\n        ];';
+const RULES_STONE_COMMON = `        const RULES_COMMON = [
+            '黒 (先手) と白が交互に着手。自分の手番では空いている交点に碁石を1個置くか、パスを選ぶ。',
+            '同じ色で隣接した石は「連」としてつながり、呼吸を共有する。',
+            '連に隣接する空点は「呼吸点」。呼吸点が0になった連は取られ、相手のアゲハマになる。',
+            '自殺手禁止: 着手の結果、自分の連の呼吸点が0になる場所には置けない (相手の連を取れる場合を除く)。',
+            'コウ禁止: 相手の直前の着手前と同一の盤面を再現する手は打てない。',
+            '双方が連続でパスすると終局。地の中の死に石を確認し、地の数 + アゲハマ数 (+白はコミ6.5目) で勝敗を決める。',
+        ];`;
+const RULES_STONE_CONTROLS = rc([
+    '配置: 盤上をクリック/タップ。',
+    'スマホ: 1タップ目=プレビュー表示、2タップ目=確定。',
+]);
+const STARS_GENERIC = `        function getStarPoints(size) {
+            if (size === 9) {
+                return [{x:2,y:2}, {x:6,y:2}, {x:4,y:4}, {x:2,y:6}, {x:6,y:6}];
+            } else if (size === 13) {
+                return [{x:3,y:3}, {x:9,y:3}, {x:6,y:6}, {x:3,y:9}, {x:9,y:9}];
+            } else if (size === 19) {
+                return [
+                    {x:3,y:3}, {x:9,y:3}, {x:15,y:3},
+                    {x:3,y:9}, {x:9,y:9}, {x:15,y:9},
+                    {x:3,y:15}, {x:9,y:15}, {x:15,y:15}
+                ];
+            } else if (size === 25) {
+                return [
+                    {x:4,y:4}, {x:12,y:4}, {x:20,y:4},
+                    {x:4,y:12}, {x:12,y:12}, {x:20,y:12},
+                    {x:4,y:20}, {x:12,y:20}, {x:20,y:20}
+                ];
+            }
+            return [];
+        }`;
+const SIZE_BTNS_91319 = `                    <button data-size="9" class="btn-size py-2 rounded-lg border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-all">9路盤</button>
+                    <button data-size="13" class="btn-size py-2 rounded-lg border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-all">13路盤</button>
+                    <button data-size="19" class="btn-size py-2 rounded-lg border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-all">19路盤</button>`;
+
+// ============================================================
+// 共通リブランド仕様: rb(en名, jp名, ルームprefix)
+//   タイトル/H1/ルームID/保存キー/セクションコメント を一括差替
+// ============================================================
+const rb = (en, jp, prefix) => [
+    [ONE, '<title>ALGO - アルカン碁</title>', `<title>${en} - ${jp}</title>`],
+    [ONE, '>ALGO <span class="text-sm font-bold opacity-60">アルカン碁</span>',
+          `>${en} <span class="text-sm font-bold opacity-60">${jp}</span>`],
+    [ONE, `ROOM_ID_PREFIX = 'algo-'`, `ROOM_ID_PREFIX = '${prefix}-'`],
+    [ONE, `STORAGE_KEY = 'algo-save-v1'`, `STORAGE_KEY = '${prefix}-save-v1'`],
+    [ONE, '// 8. 囲碁 & ALGO ルール判定アルゴリズム', `// 8. 囲碁 & ${en} ルール判定アルゴリズム`],
+];
+
+// ============================================================
+// STONE_SPEC: 「通常囲碁化」共通仕様
+//   碁カン(分子) → 碁石(1マス)。窒息領域は自然に消滅 (PIECE_SIZE=1)。
+//   トレイ・供給設定・図鑑は不要なので隠す。盤は 9/13/19 路。
+//   ※ 各バリアントのルール/機構仕様の「後」に適用すること。
+// ============================================================
+const STONE_DEFS = `        // 通常の碁石: 1手につき空いている交点へ1石を置く標準的な囲碁。
+        const MOLECULES = {
+            STONE: { name: '碁石', iupac: '', formula: '', atoms: [[0,0]] }
+        };`;
+const STONE_SPEC = [
+    [ONE, MOLECULES_ALGO, STONE_DEFS],
+    [ONE, OCNT_ALGO, '// 碁石は1マス: 回転の区別なし (1パターン)'],
+    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'STONE';`],
+    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'STONE'`],
+    // 盤サイズ 13/19/25 → 9/13/19 (標準的な囲碁サイズ)
+    [ONE, SIZE_BTNS, SIZE_BTNS_91319],
+    [ONE, `![13, 19, 25].includes(s.boardSize)`, `![9, 13, 19].includes(s.boardSize)`],
+    [ONE, STARS_ALGO, STARS_GENERIC],
+    // トレイ非表示 (石は1種のみ)
+    [ONE, TRAY_DIV, `        <div id="pieceTray" class="hidden w-full items-center gap-3 p-3 rounded-xl border transition-colors">`],
+    // 供給モード設定を除去 (自由/ネクストの区別が無意味)
+    [ONE, SUPPLY_SEC, ''],
+    // 碁カン図鑑の行を除去 + リスナーをガード (要素なしでも起動できるように)
+    [ONE, CATALOG_ROW, ''],
+    [ONE, `        btnOpenCatalog.addEventListener('click', () => {`,
+          `        if (btnOpenCatalog) btnOpenCatalog.addEventListener('click', () => {`],
+    [ONE, `        btnCloseCatalog.addEventListener('click', () => {`,
+          `        if (btnCloseCatalog) btnCloseCatalog.addEventListener('click', () => {`],
+    // ルール文 → 通常碁版
+    [ONE, RCM_ALGO, RULES_STONE_COMMON],
+    [ONE, RC_ALGO, RULES_STONE_CONTROLS],
+    // 残った「碁カン」表記を全て碁石へ
+    [ALL, '碁カン', '碁石'],
+];
+
+// ============================================================
+// PER_PLAYER_SPEC: プレイヤー別ピースセット機構 (ASYMGO/DRAFTGO共通)
+// ============================================================
+const PER_PLAYER_SPEC = [
+    [ONE, SHUFFLE_FN,
+`        // ピース列シャッフル & プレイヤー別バッグ
+        function shuffleTypes(types) {
+            const bag = [...types];
+            for (let i = bag.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [bag[i], bag[j]] = [bag[j], bag[i]];
+            }
+            return bag;
+        }
+        function shuffledBag(player) { return shuffleTypes(PLAYER_PIECES[player]); }
+        function validTypes(arr) { return Array.isArray(arr) ? arr.filter(t => PIECE_TYPES.includes(t)) : []; }`],
+    [ONE, QUEUE_DECL,
+`        let pieceQueues = { 1: [], 2: [] }; // プレイヤー別の供給列
+        let PLAYER_PIECES = { 1: [...PIECE_TYPES], 2: [...PIECE_TYPES] }; // プレイヤー別使用ピース`],
+    [ONE, SAVE_QUEUE,
+`                    pieceQueues,
+                    heldPieces,`],
+    [ONE, LOAD_QUEUE,
+`            pieceQueues = (s.pieceQueues && typeof s.pieceQueues === 'object')
+                ? { 1: validTypes(s.pieceQueues[1]), 2: validTypes(s.pieceQueues[2]) }
+                : { 1: [], 2: [] };
+            if (pieceMode === 'next' && pieceQueues[turn].length === 0) pieceQueues[turn] = shuffledBag(turn);`],
+    [ONE, PALETTE_FOR,
+`                PIECE_TYPES.forEach(t => {
+                    const c = paletteCanvases[t];
+                    const btn = c && c.parentElement;
+                    if (btn) btn.style.display = PLAYER_PIECES[turn].includes(t) ? '' : 'none';
+                    if (c) drawMiniPiece(c, t, 0, turn);
+                    if (btn) btn.style.outline = (t === currentPieceType) ? '2px solid currentColor' : 'none';
+                });`],
+    [ONE, PALETTE_CLICK,
+`                    if (pieceMode !== 'free') return;
+                    if (!PLAYER_PIECES[turn].includes(t)) return;
+                    currentPieceType = t;
+                    currentRot = 0;`],
+    [ONE, `                trayModeLabel.textContent = \`NEXT (全\${PIECE_TYPES.length}種1巡モード)\`;
+                // NEXTピースは次の手番(相手)の色で描く
+                if (pieceQueue[0]) drawMiniPiece(nextPieceCanvas, pieceQueue[0], 0, turn === 1 ? 2 : 1);`,
+`                trayModeLabel.textContent = 'NEXT (自軍バッグから供給)';
+                // NEXTピースは次の手番(相手)のバッグ先頭を相手色で描く
+                const nq = pieceQueues[turn === 1 ? 2 : 1];
+                if (nq && nq[0]) drawMiniPiece(nextPieceCanvas, nq[0], 0, turn === 1 ? 2 : 1);`],
+    [ONE, `        function drawNextPiece() {
+            if (pieceQueue.length === 0) pieceQueue = shuffledBag();
+            return pieceQueue.shift();
         }`,
+`        function drawNextPiece() {
+            if (pieceQueues[turn].length === 0) pieceQueues[turn] = shuffledBag(turn);
+            return pieceQueues[turn].shift();
+        }`],
+    // 手番交代してから次プレイヤーのバッグから供給
+    [ONE, SUPPLY_BLOCK,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;
+
+            // ネクストモード: 次の手番プレイヤーのバッグから供給
+            if (pieceMode === 'next') {
+                currentPieceType = drawNextPiece();
+            }`],
+    [ONE, `                currentPieceType,
+                pieceQueue: [...pieceQueue],`,
+`                currentPieceType,
+                pieceQueues: { 1: [...pieceQueues[1]], 2: [...pieceQueues[2]] },`],
+    [ONE, UNDO_QUEUE,
+`            if (snap.pieceQueues) pieceQueues = { 1: [...snap.pieceQueues[1]], 2: [...snap.pieceQueues[2]] };`],
+    [ONE, ONLINE_QUEUE_RECV,
+`            if (data.pieceQueues) pieceQueues = data.pieceQueues;`],
+    [ONE, ONLINE_QUEUE_SEND,
+`                pieceQueues,
+                heldPieces,`],
+    [ONE, AI_TYPES,
+`            const types = pieceMode === 'next' ? [currentPieceType] : PLAYER_PIECES[turn];`],
+    [ONE, RESET_SUPPLY,
+`            if (pieceMode === 'next') {
+                pieceQueues = { 1: shuffledBag(1), 2: shuffledBag(2) };
+                currentPieceType = drawNextPiece();
+            }`],
+];
+
+// 即勝利ヘルパー (KINGGO/MAXGO用): ルール勝ちで即終局
+const WIN_BY_RULE_FN = `
+        // ルール勝ち: 地集計を待たず即終局
+        function winByRule(player, reason, details) {
+            gameOver = true;
+            const name = player === 1 ? '黒' : '白';
+            gameResultData = { title: \`\${name}の\${reason}\`, details };
+            updateUI();
+            soundManager.playWin();
+            showResultModal();
+            if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+            saveState();
+        }
+`;
+
+// ============================================================
+// 1. NORMGO (通常碁) — 標準的な囲碁そのもの (ベースライン)
+// ============================================================
+out('normgo.html', apply(ALGO, [
+    ...rb('GO', '通常碁', 'normgo'),
+    [ONE, RV_ALGO, rv([
+        'このゲームは標準的な囲碁。1手1石、特殊ルールなし。',
+        '盤サイズは9/13/19路から選択できる (コミ6.5目)。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 (拡張ルールなし)<br>
+            PC: クリックで配置 / スマホ: 1タップ目プレビュー、2タップ目確定`],
+    ...STONE_SPEC,
+], 'normgo'));
+
+// ============================================================
+// 2. TORUSGO (トーラス碁) — 辺がループする碁盤
+// ============================================================
+out('torusgo.html', apply(ALGO, [
+    ...rb('TORUSGO', 'トーラス碁', 'torusgo'),
+    [ONE, RV_ALGO, rv([
+        '盤面はトーラス: 上下・左右の端がつながっており、隅や辺が存在しない。',
+        '端を越えても連・呼吸点・取り・地の判定はそのまま続く。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + トーラス盤<br>
+            ※上下左右の端がつながっている (隅・辺なし)`],
+    [ONE, NBRS_GRID,
 `        // トーラス: 上下左右の端がループするので全点が等価 (隅・辺なし)
         function getNeighbors(idx) {
             const x = idx % BOARD_SIZE;
@@ -105,14 +625,11 @@ out('torusgo.html', apply(TETOGO, [
             ];
         }`],
     [ONE, `                const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy }));`,
-          `                const cells = shape.map(([dx, dy]) => ({
+`                const cells = shape.map(([dx, dy]) => ({
                     x: ((tx + dx) % BOARD_SIZE + BOARD_SIZE) % BOARD_SIZE,
                     y: ((ty + dy) % BOARD_SIZE + BOARD_SIZE) % BOARD_SIZE
                 }));`],
-    [ONE, `            for (const p of cells) {
-                if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
-                if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
-            }`,
+    [ONE, VALID_BOUNDS,
 `            // トーラス盤: セル座標は正規化済み。端を回って同一点に重なる配置は不可。
             const seen = new Set();
             for (const p of cells) {
@@ -121,31 +638,422 @@ out('torusgo.html', apply(TETOGO, [
                 seen.add(key);
                 if (board[key] !== 0) return false;
             }`],
-    [ONE, `ROOM_ID_PREFIX = 'tetogo-'`, `ROOM_ID_PREFIX = 'torusgo-'`],
-    [ONE, `STORAGE_KEY = 'tetogo-save-v1'`, `STORAGE_KEY = 'torusgo-save-v1'`],
-    [ONE, `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)`,
-          `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)<br>
-            ※トーラス盤: 上下左右の端がつながっている (隅・辺なし)`],
+    ...STONE_SPEC,
 ], 'torusgo'));
 
 // ============================================================
-// 3. DECAYGO (崩壊碁) — 碁石が寿命で崩壊する
+// 3. DIAGO (斜め碁) — 斜めも連・呼吸点になる8近傍盤
 // ============================================================
-out('decaygo.html', apply(TETOGO, [
-    [ONE, '<title>TETOGO - テトリス碁</title>', '<title>DECAYGO - 崩壊碁</title>'],
-    [ONE, '>TETOGO <span class="text-sm font-bold opacity-60">テトリス碁</span>', '>DECAYGO <span class="text-sm font-bold opacity-60">崩壊碁</span>'],
-    [ONE, '// 8. 囲碁 & TETOGO ルール判定アルゴリズム', '// 8. 囲碁 & DECAYGO ルール判定アルゴリズム'],
-    [ONE, `        const PIECE_SIZE = 4;`,
-          `        const PIECE_SIZE = 4;
+out('diago.html', apply(ALGO, [
+    ...rb('DIAGO', '斜め碁', 'diago'),
+    [ONE, RV_ALGO, rv([
+        '近傍は斜めを含む8方向: 斜めに隣接する石も連になり、呼吸点・取り・地の判定も8方向で行う。',
+        '斜めの連だけでも連結扱いになるため、従来よりはるかに強く繋がる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 斜め連結<br>
+            ※近傍は8方向: 斜めに隣接する石も連になる`],
+    [ONE, NBRS_GRID,
+`        // 斜め碁: 近傍は斜めを含む8方向 (連・呼吸点・取り・地すべて8方向)
+        function getNeighbors(idx) {
+            const x = idx % BOARD_SIZE;
+            const y = Math.floor(idx / BOARD_SIZE);
+            const neighbors = [];
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    if (dx === 0 && dy === 0) continue;
+                    const nx = x + dx, ny = y + dy;
+                    if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE) continue;
+                    neighbors.push(ny * BOARD_SIZE + nx);
+                }
+            }
+            return neighbors;
+        }`],
+    ...STONE_SPEC,
+], 'diago'));
+
+// ============================================================
+// 4. WALLGO (迷路碁) — ランダムな壁マスがある碁盤
+// ============================================================
+out('wallgo.html', apply(ALGO, [
+    ...rb('WALLGO', '迷路碁', 'wallgo'),
+    [ONE, RV_ALGO, rv([
+        '対局開始時に盤上へランダムで壁マス (約12%) が配置される。',
+        '壁は石を置けず、呼吸点にも地にもならない中立のブロック。取ることもできない。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 迷路壁<br>
+            ※ランダムな壁マスがあり、置けない・呼吸点にも地にもならない`],
+    [ONE, BOARD_DECL,
+`        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白, 3:壁
+        const WALL_RATE = 0.12; // 壁マスの密度`],
+    // 壁の生成 (リセット時にランダム配置)
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            // 迷路ルール: 壁マスをランダム配置
+            for (let i = 0; i < board.length; i++) {
+                if (Math.random() < WALL_RATE) board[i] = 3;
+            }`],
+    // 壁の描画 + フォールバックで壁を石として描かないよう除外
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 壁マスの描画 (中立ブロック)
+            for (let wy = 0; wy < BOARD_SIZE; wy++) {
+                for (let wx = 0; wx < BOARD_SIZE; wx++) {
+                    if (board[wy * BOARD_SIZE + wx] !== 3) continue;
+                    const bx = padding + wx * cellSize;
+                    const by = padding + wy * cellSize;
+                    const bs = cellSize * 0.52;
+                    ctx.fillStyle = 'rgba(60, 42, 25, 0.85)';
+                    ctx.fillRect(bx - bs / 2, by - bs / 2, bs, bs);
+                    ctx.strokeStyle = 'rgba(30, 20, 10, 0.9)';
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(bx - bs / 2, by - bs / 2, bs, bs);
+                }
+            }`],
+    [ONE, FALLBACK_SKIP,
+`                    if (val !== 1 && val !== 2) continue; // 空点・壁は石として描かない`],
+    // 死に石選択で壁を選べないようにする
+    [ONE, TOGGLE_GUARD,
+`            const color = board[startIdx];
+            if (color === 0 || color === 3) return;`],
+    ...STONE_SPEC,
+], 'wallgo'));
+
+// ============================================================
+// 5. GRAVGO (重力碁) — 石は最下段か石の直上にしか置けない
+// ============================================================
+out('gravgo.html', apply(ALGO, [
+    ...rb('GRAVGO', '重力碁', 'gravgo'),
+    [ONE, RV_ALGO, rv([
+        '重力ルール: 石は盤の最下段か、真下に他の石がある交点にしか置けない。',
+        '取りで支えを失った石は浮いたまま残る (落下はしない)。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 重力ルール<br>
+            ※石は最下段または他の石の直上にしか置けない`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 重力ルール: 最下段か、真下の交点が既に占有されている場所のみ置ける
+            if (!cells.every(p => p.y === BOARD_SIZE - 1 || board[(p.y + 1) * BOARD_SIZE + p.x] !== 0)) return false;`],
+    ...STONE_SPEC,
+], 'gravgo'));
+
+// ============================================================
+// 6. SPAWNGO (繁殖碁) — 自分の石に隣接する点にしか置けない
+// ============================================================
+out('spawngo.html', apply(ALGO, [
+    ...rb('SPAWNGO', '繁殖碁', 'spawngo'),
+    [ONE, RV_ALGO, rv([
+        '繁殖ルール: 自分の石が盤にある間は、既存の自分の石に隣接する空点にしか置けない。',
+        '全滅した場合のみ、盤上のどこにでも置ける。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 繁殖ルール<br>
+            ※自分の石に隣接する空点にしか置けない (全滅時のみ自由)`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 繁殖ルール: 自分の石が盤にある間は既存の石に隣接する点のみ置ける
+            if (board.includes(player) && !cells.some(p =>
+                getNeighbors(p.y * BOARD_SIZE + p.x).some(n => board[n] === player))) return false;`],
+    ...STONE_SPEC,
+], 'spawngo'));
+
+// ============================================================
+// 7. MIRRGO (対称碁) — 着手が縦中央線で鏡映される
+// ============================================================
+out('mirrgo.html', apply(ALGO, [
+    ...rb('MIRRGO', '対称碁', 'mirrgo'),
+    [ONE, RV_ALGO, rv([
+        '対称ルール: 着手すると盤の縦中央線に対して鏡映した位置にも同じ石が置かれる (最大で着手の2倍)。',
+        '鏡映先が塞がっているセルは置かれない。鏡映側で自分の連が窒息する場合はその鏡映をスキップする。',
+        '鏡映した石も通常の石として取り・呼吸点に関与する。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 対称ルール<br>
+            ※着手は縦中央線で鏡映され、空いていれば両側に置かれる`],
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            // 対称ルール: 縦中央線に対して鏡映した位置にも同じ形を置く
+            const mirrored = move.cells
+                .map(p => ({ x: BOARD_SIZE - 1 - p.x, y: p.y }))
+                .filter(p => board[p.y * BOARD_SIZE + p.x] === 0);
+            if (mirrored.length > 0) {
+                // 鏡映による相手石の捕獲を先に解決してから、自連の窒息を判定
+                const sim = [...board];
+                mirrored.forEach(p => { sim[p.y * BOARD_SIZE + p.x] = player; });
+                const opp2 = player === 1 ? 2 : 1;
+                getCapturedStones(sim, opp2).forEach(i => { sim[i] = 0; });
+                if (getCapturedStones(sim, player).length === 0) {
+                    mirrored.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
+                    pieces.push({ id: Date.now() + Math.random(), player, type: move.type, rot: move.rot, cells: mirrored });
+                    lastMove.cells.push(...mirrored.map(p => ({ ...p })));
+                }
+            }`],
+    ...STONE_SPEC,
+], 'mirrgo'));
+
+// ============================================================
+// 8. TWICEGO (二手碁) — 各手番で2石ずつ置く
+// ============================================================
+out('twicego.html', apply(ALGO, [
+    ...rb('TWICEGO', '二手碁', 'twicego'),
+    [ONE, RV_ALGO, rv([
+        '二手碁: 各手番で2石ずつ置く (同じ色が2連続で着手する)。',
+        '途中でパスすれば残りの着手を放棄して手番が渡る。手番表示の「n手目/2」で残りを確認できる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 二手ルール<br>
+            ※各手番で2石置く (途中パスで残りを放棄)`],
+    [ONE, `        let consecutivePasses = 0;`,
+`        let consecutivePasses = 0;
+        let turnPlacements = 0; // この手番で置いた石数 (2で手番交代)`],
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turnPlacements++;
+            if (turnPlacements >= 2) {
+                turnPlacements = 0;
+                turn = opponent; // 2石置き切りで手番交代
+            }`],
+    // パスは残り着手を放棄して手番を渡す
+    [ONE, PASS_INC,
+`            prevBoard = null; // パスでコウ制限は解除
+            consecutivePasses++;
+            turnPlacements = 0;`],
+    // 手番表示に「n手目/2」を追加
+    [ONE, TURN_LINE,
+`            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + \` · \${turnPlacements + 1}手目/2\`;`],
+    // 状態保存・復元・同期に turnPlacements を追加
+    [ONE, SAVE_TAIL,
+`                    heldPieces,
+                    holdUsed,
+                    turnPlacements,
+                    gameMode,`],
+    [ONE, LOAD_HOLD,
+`            holdUsed = !!s.holdUsed;
+            turnPlacements = Number.isInteger(s.turnPlacements) ? s.turnPlacements : 0;`],
+    [ONE, SNAP_PUSH,
+`                heldPieces: { ...heldPieces },
+                holdUsed,
+                turnPlacements
+            });`],
+    [ONE, SNAP_POP,
+`            holdUsed = !!snap.holdUsed;
+            turnPlacements = snap.turnPlacements || 0;`],
+    [ONE, ONLINE_SEND,
+`                heldPieces,
+                holdUsed,
+                turnPlacements,
+                deadStones: [...deadStones],`],
+    [ONE, ONLINE_RECV,
+`            holdUsed = !!data.holdUsed;
+            turnPlacements = data.turnPlacements || 0;`],
+    ...STONE_SPEC,
+], 'twicego'));
+
+// ============================================================
+// 9. KINGGO (王碁) — 最初に置いた石が王。王を取られると即負け
+// ============================================================
+out('kinggo.html', apply(ALGO, [
+    ...rb('KINGGO', '王碁', 'kinggo'),
+    [ONE, RV_ALGO, rv([
+        '各プレイヤーが最初に置いた石は「王」(♛マーク) になる。',
+        '王を含む連が取られると即座に敗北。通常の地集計勝負 (パス2連続) も同時に有効。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 王石ルール<br>
+            ※各プレイヤーの最初の石が王 (♛)。王を取られると即負け`],
+    [ONE, `        let consecutivePasses = 0;`,
+`        let consecutivePasses = 0;
+        let kings = { 1: -1, 2: -1 }; // 各プレイヤーの王石 (盤面idx、-1=未配置)`],
+    // 着手後: 初手は王として登録
+    [ONE, PIECES_PUSH,
+`            // 王碁: 各プレイヤーが最初に置いた石が「王」になる
+            if (kings[player] === -1) kings[player] = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+
+${PIECES_PUSH}`],
+    // 捕獲時に相手の王を取っていたら即勝利
+    [ONE, CAPTURE_BLOCK,
+`            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                captures[player] += captured.length;
+                if (captured.includes(kings[opponent])) {
+                    kings[opponent] = -1;
+                    winByRule(player, '王取り', \`\${player === 1 ? '黒' : '白'}が相手の王を取りました\`);
+                    return;
+                }
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    // 王石の冠マーカー描画
+    [ONE, `        function drawLastMove(padding, cellSize) {`,
+`        // 王石 (♛) の描画
+        function drawKings(padding, cellSize) {
+            [1, 2].forEach(pl => {
+                const k = kings[pl];
+                if (k < 0 || board[k] !== pl) return;
+                const kx = k % BOARD_SIZE, ky = Math.floor(k / BOARD_SIZE);
+                ctx.save();
+                ctx.fillStyle = pl === 1 ? '#fbbf24' : '#b45309';
+                ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                ctx.lineWidth = 1;
+                ctx.font = \`bold \${Math.round(cellSize * 0.5)}px sans-serif\`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const kcx = padding + kx * cellSize, kcy = padding + ky * cellSize;
+                ctx.strokeText('♛', kcx, kcy + cellSize * 0.04);
+                ctx.fillText('♛', kcx, kcy + cellSize * 0.04);
+                ctx.restore();
+            });
+        }
+
+        function drawLastMove(padding, cellSize) {`],
+    [ONE, `            // 直前に配置したピースのハイライト(緑系)
+            drawLastMove(padding, cellSize);`,
+`            // 直前に配置したピースのハイライト(緑系)
+            drawLastMove(padding, cellSize);
+
+            // 王石の冠マーカー
+            drawKings(padding, cellSize);`],
+    // 状態保存・復元・同期に kings を追加
+    [ONE, SAVE_TAIL,
+`                    heldPieces,
+                    holdUsed,
+                    kings,
+                    gameMode,`],
+    [ONE, LOAD_HOLD,
+`            holdUsed = !!s.holdUsed;
+            kings = (s.kings && typeof s.kings === 'object')
+                ? { 1: s.kings[1] || -1, 2: s.kings[2] || -1 } : { 1: -1, 2: -1 };`],
+    [ONE, SNAP_PUSH,
+`                heldPieces: { ...heldPieces },
+                holdUsed,
+                kings: { ...kings }
+            });`],
+    [ONE, SNAP_POP,
+`            holdUsed = !!snap.holdUsed;
+            kings = snap.kings ? { ...snap.kings } : { 1: -1, 2: -1 };`],
+    [ONE, ONLINE_SEND,
+`                heldPieces,
+                holdUsed,
+                kings,
+                deadStones: [...deadStones],`],
+    [ONE, ONLINE_RECV,
+`            holdUsed = !!data.holdUsed;
+            kings = data.kings ? { ...data.kings } : { 1: -1, 2: -1 };`],
+    [ONE, RESET_HELD,
+`            heldPieces = { 1: null, 2: null };
+            kings = { 1: -1, 2: -1 };`],
+    // 即勝利ヘルパー
+    [ONE, `        function endGameByScore() {`, WIN_BY_RULE_FN + `
+        function endGameByScore() {`],
+    ...STONE_SPEC,
+], 'kinggo'));
+
+// ============================================================
+// 10. MAXGO (先取碁) — 10石先取で即勝利
+// ============================================================
+out('maxgo.html', apply(ALGO, [
+    ...rb('MAXGO', '先取碁', 'maxgo'),
+    [ONE, RV_ALGO, rv([
+        '先取ルール: 先に10石取った側がその場で勝利する。',
+        '通常の終局 (パス2連続→地集計+コミ) も同時に有効。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 先取ルール<br>
+            ※先に10石取った側が即勝利 (地集計も有効)`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        const WIN_CAPTURES = 10; // 先取ルール: この数のアゲハマで即勝利`],
+    [ONE, CAPTURE_BLOCK,
+`            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                captures[player] += captured.length;
+                if (captures[player] >= WIN_CAPTURES) {
+                    winByRule(player, '先取', \`\${player === 1 ? '黒' : '白'}が先に \${WIN_CAPTURES} 石を取りました\`);
+                    return;
+                }
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    [ONE, `        function endGameByScore() {`, WIN_BY_RULE_FN + `
+        function endGameByScore() {`],
+    ...STONE_SPEC,
+], 'maxgo'));
+
+// ============================================================
+// 11. SANDGO (ハサミ碁) — 上下/左右に挟まれた敵石を追加捕獲
+// ============================================================
+out('sandgo.html', apply(ALGO, [
+    ...rb('SANDGO', 'ハサミ碁', 'sandgo'),
+    [ONE, RV_ALGO, rv([
+        'ハサミ取り: 着手後、自分の石で上下か左右に一直線に挟まれた敵石は呼吸点に関係なく取られる。',
+        '挟まれた側は自分の番では取られないので、隙間に逃げ込む手は安全。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + ハサミ取り<br>
+            ※敵石を上下/左右に一直線に挟むと呼吸点に関係なく取れる`],
+    [ONE, `            // ネクストモードでは次のピースを供給`,
+`            // ハサミ取り: 着手側の石で上下または左右に挟まれた敵石を追加捕獲
+            {
+                const squeezed = [];
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== opponent) continue;
+                    const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
+                    const l = sx > 0 ? board[i - 1] : -1;
+                    const r = sx < BOARD_SIZE - 1 ? board[i + 1] : -1;
+                    const u = sy > 0 ? board[i - BOARD_SIZE] : -1;
+                    const d = sy < BOARD_SIZE - 1 ? board[i + BOARD_SIZE] : -1;
+                    if ((l === player && r === player) || (u === player && d === player)) {
+                        squeezed.push(i);
+                    }
+                }
+                if (squeezed.length > 0) {
+                    squeezed.forEach(i => { board[i] = 0; });
+                    captures[player] += squeezed.length;
+                    soundManager.playCapture();
+                    cleanUpPieces();
+                }
+            }
+
+            // ネクストモードでは次のピースを供給`],
+    ...STONE_SPEC,
+], 'sandgo'));
+
+// ============================================================
+// 12. DECAYGO (崩壊碁) — 碁石が寿命で崩壊する
+// ============================================================
+out('decaygo.html', apply(ALGO, [
+    ...rb('DECAYGO', '崩壊碁', 'decaygo'),
+    [ONE, RV_ALGO, rv([
+        '碁石に寿命がある: 配置から8手 (自分+相手の着手計) 経過した石は崩壊して消える。',
+        '崩壊した石はアゲハマにならない。石は古くなるほど薄く表示される。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 崩壊ルール<br>
+            ※碁石は配置から8手で崩壊・消滅 (薄いほど寿命が近い)`],
+    [ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`,
+`        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));
         // 碁石の寿命: 配置から DECAY_LIMIT ターン経過すると崩壊して消える
         const DECAY_LIMIT = 8;`],
-    [ONE, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白`,
-          `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
+    [ONE, BOARD_DECL,
+`${BOARD_DECL}
         let ages = Array(BOARD_SIZE * BOARD_SIZE).fill(0);   // 各碁石の経過ターン (崩壊カウンタ)`],
     [ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
-          `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; ages[p.y * BOARD_SIZE + p.x] = 0; });`],
+`            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; ages[p.y * BOARD_SIZE + p.x] = 0; });`],
     [ONE, `            // ネクストモードでは次のピースを供給`,
-          `            // 崩壊処理: 全碁石のカウンタを進め、寿命超過を除去 (アゲハマにはならない)
+`            // 崩壊処理: 全碁石のカウンタを進め、寿命超過を除去 (アゲハマにはならない)
             let decayed = 0;
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== 0) {
@@ -156,8 +1064,9 @@ out('decaygo.html', apply(TETOGO, [
             if (decayed > 0) cleanUpPieces();
 
             // ネクストモードでは次のピースを供給`],
+    // 古い石ほど薄く描画 (ピース単位)
     [ONE, `                drawPieceShape(alive, padding, cellSize, fill, stroke, isDead ? 0.35 : 1);`,
-          `                // 経過ターンごとに透明度を変えて描画 (古い石ほど薄くなる)
+`                // 経過ターンごとに透明度を変えて描画 (古い石ほど薄くなる)
                 const byAge = {};
                 alive.forEach(p => {
                     const a = ages[p.y * BOARD_SIZE + p.x] || 0;
@@ -168,48 +1077,44 @@ out('decaygo.html', apply(TETOGO, [
                     drawPieceShape(byAge[a], padding, cellSize, fill, stroke, alpha);
                 });`],
     [ONE, `                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);`,
-          `                    const a = ages[idx] || 0;
+`                    const a = ages[idx] || 0;
                     const alpha = isDead ? 0.35 : Math.max(0.25, 1 - a / (DECAY_LIMIT + 1));
                     drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, alpha);`],
     // 永続化・履歴・オンライン同期に ages を追加
     [ONE, `                    board,
                     pieces,`,
-          `                    board,
+`                    board,
                     ages,
                     pieces,`],
     [ONE, `            board = s.board;`,
-          `            board = s.board;
+`            board = s.board;
             ages = Array.isArray(s.ages) && s.ages.length === BOARD_SIZE * BOARD_SIZE
                 ? s.ages : new Array(BOARD_SIZE * BOARD_SIZE).fill(0);`],
     [ONE, `                board: [...board],
                 pieces:`,
-          `                board: [...board],
+`                board: [...board],
                 ages: [...ages],
                 pieces:`],
     [ONE, `            board = snap.board;`,
-          `            board = snap.board;
+`            board = snap.board;
             ages = Array.isArray(snap.ages) ? snap.ages : new Array(BOARD_SIZE * BOARD_SIZE).fill(0);`],
     [ONE, `            board = data.board;`,
-          `            board = data.board;
+`            board = data.board;
             ages = Array.isArray(data.ages) && data.ages.length === board.length
                 ? data.ages : new Array(BOARD_SIZE * BOARD_SIZE).fill(0);`],
     [ONE, `                board,
                 pieces,`,
-          `                board,
+`                board,
                 ages,
                 pieces,`],
-    [ONE, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);`,
-          `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             ages = Array(BOARD_SIZE * BOARD_SIZE).fill(0);`],
-    [ONE, `ROOM_ID_PREFIX = 'tetogo-'`, `ROOM_ID_PREFIX = 'decaygo-'`],
-    [ONE, `STORAGE_KEY = 'tetogo-save-v1'`, `STORAGE_KEY = 'decaygo-save-v1'`],
-    [ONE, `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)`,
-          `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)<br>
-            ※碁石は配置から${8}ターンで崩壊・消滅します (薄くなるほど寿命が近い)`],
+    ...STONE_SPEC,
 ], 'decaygo'));
 
 // ============================================================
-// 4. LIFEGO (生命碁) — 着手ごとにライフゲーム1世代
+// 13. LIFEGO (生命碁) — 着手ごとにライフゲーム1世代
 // ============================================================
 const LIFE_FN = `
         // 着手ごとに盤面全体を Conway のライフゲーム1世代進める。
@@ -247,10 +1152,16 @@ const LIFE_FN = `
         }
 `;
 
-out('lifego.html', apply(TETOGO, [
-    [ONE, '<title>TETOGO - テトリス碁</title>', '<title>LIFEGO - 生命碁</title>'],
-    [ONE, '>TETOGO <span class="text-sm font-bold opacity-60">テトリス碁</span>', '>LIFEGO <span class="text-sm font-bold opacity-60">生命碁</span>'],
-    [ONE, '// 8. 囲碁 & TETOGO ルール判定アルゴリズム', '// 8. 囲碁 & LIFEGO ルール判定アルゴリズム'],
+out('lifego.html', apply(ALGO, [
+    ...rb('LIFEGO', '生命碁', 'lifego'),
+    [ONE, RV_ALGO, rv([
+        '着手ごとに盤面全体がライフゲーム1世代進化する (近傍=上下左右の4方向)。',
+        '石は2〜3個の生きた隣接石で生存、4近傍以上は過密死、0〜1は過疎死、空点はちょうど3近傍で誕生 (混色時は誕生しない)。',
+        '世代交代で呼吸点を失った連は両色とも除去される。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + ライフゲーム<br>
+            ※配置のたびに全碁石が1世代進化 (過疎・過密死・3近傍誕生)`],
     [ONE, `        function cleanUpPieces() {
             pieces = pieces.filter(pc =>
                 pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] !== 0)
@@ -263,34 +1174,34 @@ out('lifego.html', apply(TETOGO, [
         }
 ${LIFE_FN}`],
     [ONE, `            // ネクストモードでは次のピースを供給`,
-          `            // ライフゲーム世代交代: 着手ごとに盤面全体を1世代進める
+`            // ライフゲーム世代交代: 着手ごとに盤面全体を1世代進める
             applyLifeStep();
 
             // ネクストモードでは次のピースを供給`],
-    [ONE, `ROOM_ID_PREFIX = 'tetogo-'`, `ROOM_ID_PREFIX = 'lifego-'`],
-    [ONE, `STORAGE_KEY = 'tetogo-save-v1'`, `STORAGE_KEY = 'lifego-save-v1'`],
-    [ONE, `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)`,
-          `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)<br>
-            ※配置のたびに全碁石がライフゲーム1世代進化 (過疎・過密死・3近傍誕生)`],
+    ...STONE_SPEC,
 ], 'lifego'));
 
 // ============================================================
-// 5. RUSHGO (スピード碁) — 1手の制限時間 + 自動パス
+// 14. RUSHGO (スピード碁) — 1手の制限時間 + 自動パス
 // ============================================================
 const RUSH_TIMER_FN = `
         // ---- 制限時間タイマー ----
         function armMoveTimer() {
             clearMoveTimer();
-            const active = timeLimit > 0 && !gameOver && gamePhase === 'playing';
-            if (!active) { timerText.textContent = '-'; timerFill.style.width = '100%'; return; }
+            const active = timeLimit > 0 && !gameOver && gamePhase === 'playing' && isMyTurn();
+            const timerFill = document.getElementById('timerFill');
+            const timerText = document.getElementById('timerText');
+            if (!active) { if (timerText) timerText.textContent = '-'; if (timerFill) timerFill.style.width = '100%'; return; }
             moveDeadline = Date.now() + timeLimit * 1000;
             tickMoveTimer();
             moveTimerInterval = setInterval(tickMoveTimer, 100);
         }
         function tickMoveTimer() {
+            const timerFill = document.getElementById('timerFill');
+            const timerText = document.getElementById('timerText');
             const remain = Math.max(0, moveDeadline - Date.now());
-            timerText.textContent = (remain / 1000).toFixed(1);
-            timerFill.style.width = (remain / (timeLimit * 1000) * 100) + '%';
+            if (timerText) timerText.textContent = (remain / 1000).toFixed(1);
+            if (timerFill) timerFill.style.width = (remain / (timeLimit * 1000) * 100) + '%';
             if (remain <= 0) {
                 clearMoveTimer();
                 if (!gameOver && gamePhase === 'playing' && isMyTurn()) handlePass();
@@ -301,10 +1212,15 @@ const RUSH_TIMER_FN = `
         }
 `;
 
-out('rushgo.html', apply(TETOGO, [
-    [ONE, '<title>TETOGO - テトリス碁</title>', '<title>RUSHGO - スピード碁</title>'],
-    [ONE, '>TETOGO <span class="text-sm font-bold opacity-60">テトリス碁</span>', '>RUSHGO <span class="text-sm font-bold opacity-60">スピード碁</span>'],
-    [ONE, '// 8. 囲碁 & TETOGO ルール判定アルゴリズム', '// 8. 囲碁 & RUSHGO ルール判定アルゴリズム'],
+out('rushgo.html', apply(ALGO, [
+    ...rb('RUSHGO', 'スピード碁', 'rushgo'),
+    [ONE, RV_ALGO, rv([
+        '1手ごとの制限時間付き (設定でなし/5/10/30秒)。時間切れは自動パスになる。',
+        'タイムバーはステータスカードの下に常時表示される。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + スピードルール<br>
+            ※1手の制限時間を超えると自動でパスされる`],
     // タイマー表示 (ステータスカード内)
     [ONE, `                    <span id="komiDisplay" class="font-bold font-mono">6.5</span>
                 </div>
@@ -337,26 +1253,22 @@ out('rushgo.html', apply(TETOGO, [
             </div>
 
             <!-- 2. 対戦モード -->`],
-    [ONE, `        const komiDisplay = document.getElementById('komiDisplay');`,
-          `        const komiDisplay = document.getElementById('komiDisplay');
-        const timerFill = document.getElementById('timerFill');
-        const timerText = document.getElementById('timerText');`],
     [ONE, `        let history = []; // 1手戻る用: 各着手前のスナップショットのスタック`,
-          `        let history = []; // 1手戻る用: 各着手前のスナップショットのスタック
+`        let history = []; // 1手戻る用: 各着手前のスナップショットのスタック
         let timeLimit = 10;    // 1手の制限時間 (秒)。0=無制限
         let moveDeadline = 0;
         let moveTimerInterval = null;`],
     [ONE, `                    holdUsed,
                     gameMode,`,
-          `                    holdUsed,
+`                    holdUsed,
                     timeLimit,
                     gameMode,`],
     [ONE, `            holdUsed = !!s.holdUsed;`,
-          `            holdUsed = !!s.holdUsed;
+`            holdUsed = !!s.holdUsed;
             timeLimit = [0, 5, 10, 30].includes(s.timeLimit) ? s.timeLimit : 10;`],
     [ONE, `            document.querySelectorAll('.btn-mode').forEach(b => {
                 const active = b.dataset.mode === gameMode;`,
-          `            document.querySelectorAll('.btn-tlimit').forEach(b => {
+`            document.querySelectorAll('.btn-tlimit').forEach(b => {
                 const active = parseInt(b.dataset.tlimit) === timeLimit;
                 b.classList.toggle('bg-neutral-900', active);
                 b.classList.toggle('text-white', active);
@@ -379,24 +1291,370 @@ out('rushgo.html', apply(TETOGO, [
         // モード選択ボタン`],
     [ONE, `        function updateUI() {`, RUSH_TIMER_FN + `
         function updateUI() {`],
-    [ONE, `            btnUndo.disabled = !canUndo();
-            updatePieceTrayUI();
-            render();
-        }`,
+    [ONE, UI_TAIL,
 `            btnUndo.disabled = !canUndo();
             updatePieceTrayUI();
             render();
             armMoveTimer();
         }`],
-    [ONE, `ROOM_ID_PREFIX = 'tetogo-'`, `ROOM_ID_PREFIX = 'rushgo-'`],
-    [ONE, `STORAGE_KEY = 'tetogo-save-v1'`, `STORAGE_KEY = 'rushgo-save-v1'`],
-    [ONE, `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)`,
-          `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)<br>
-            ※1手の制限時間を超えると自動でパスされます`],
+    ...STONE_SPEC,
 ], 'rushgo'));
 
 // ============================================================
-// 6. CYCLOGO (シクロ碁) — シクロアルカン (環状分子) の碁
+// 15. 3DGO (立体碁) — 3層盤面、上下も連・呼吸点になる
+// ============================================================
+let d3 = apply(ALGO, [
+    ...rb('3DGO', '立体碁', '3dgo'),
+    [ONE, RV_ALGO, rv([
+        '盤面は3層。同じ層の上下左右に加えて、真上・真下の層の点も近傍になる (最大6近傍)。',
+        '層タブで置く層を選ぶ。他層の石は薄い◆で表示される。',
+        '取り・呼吸点・地の判定は3層をまたいで行われる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 3層盤面<br>
+            ※盤面は3層: 上下の層も連・呼吸点になる。他層の石は薄い◆で表示`],
+    [ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`,
+`        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));
+        const LAYERS = 3; // 立体盤の層数`],
+    [ONE, BOARD_DECL,
+`        let board = Array(BOARD_SIZE * BOARD_SIZE * LAYERS).fill(0); // 0:空, 1:黒, 2:白 (3層)
+        let activeLayer = 0; // 表示・入力中の層`],
+    // 全セル→idx変換を z 対応に (ピースセルは {x,y,z})
+    // ※getNeighbors挿入より先に行うこと (cellIndex本体が置換対象文字列を含むため)
+    [ALL, 'p.y * BOARD_SIZE + p.x', 'cellIndex(p)'],
+    [ONE, 'cells[0].y * BOARD_SIZE + cells[0].x', 'cellIndex(cells[0])'],
+    // ※drawPieceShapeの連結判定キーは2Dのままにする (描画対象は常に同一層)
+    [ONE, `const set = new Set(cellsAbs.map(p => cellIndex(p)));`,
+`const set = new Set(cellsAbs.map(p => p.y * BOARD_SIZE + p.x));`],
+    [ONE, NBRS_GRID,
+`        function layerCells() { return BOARD_SIZE * BOARD_SIZE; }
+        function cellIndex(p) { return p.z * layerCells() + p.y * BOARD_SIZE + p.x; }
+
+        // 3D盤: 同一層の4近傍 + 上下層の2近傍 (最大6近傍)
+        function getNeighbors(idx) {
+            const ls = layerCells();
+            const z = Math.floor(idx / ls);
+            const rem = idx % ls;
+            const x = rem % BOARD_SIZE;
+            const y = Math.floor(rem / BOARD_SIZE);
+            const neighbors = [];
+
+            if (x > 0) neighbors.push(idx - 1);
+            if (x < BOARD_SIZE - 1) neighbors.push(idx + 1);
+            if (y > 0) neighbors.push(idx - BOARD_SIZE);
+            if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
+            if (z > 0) neighbors.push(idx - ls);
+            if (z < LAYERS - 1) neighbors.push(idx + ls);
+
+            return neighbors;
+        }`],
+    // 配置セルに activeLayer を付与
+    [ONE, `            shape.forEach(([cx, cy]) => {
+                const tx = Math.round(u) - cx;
+                const ty = Math.round(v) - cy;
+                const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy }));`,
+`            shape.forEach(([cx, cy]) => {
+                const tx = Math.round(u) - cx;
+                const ty = Math.round(v) - cy;
+                const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy, z: activeLayer }));`],
+    // 表示はアクティブ層のセルのみ
+    [ONE, `                const alive = pc.cells.filter(p => board[cellIndex(p)] === pc.player);`,
+`                const alive = pc.cells.filter(p => board[cellIndex(p)] === pc.player && p.z === activeLayer);`],
+    [ONE, `            const alive = lastMove.cells.filter(p => board[cellIndex(p)] === lastMove.player);`,
+`            const alive = lastMove.cells.filter(p => board[cellIndex(p)] === lastMove.player && p.z === activeLayer);`],
+    // 窒息領域表示はアクティブ層のみ
+    [ONE, `            for (let i = 0; i < board.length; i++) {
+                if (board[i] === 0 && deadMask[i]) {
+                    const x = i % BOARD_SIZE;
+                    const y = Math.floor(i / BOARD_SIZE);`,
+`            const ls = layerCells();
+            const z0 = activeLayer * ls;
+            for (let i = z0; i < z0 + ls; i++) {
+                if (board[i] === 0 && deadMask[i]) {
+                    const x = (i - z0) % BOARD_SIZE;
+                    const y = Math.floor((i - z0) / BOARD_SIZE);`],
+    // 層内 idx (フォールバック描画 & 死に石タップ) を層オフセット付きに
+    [ALL, `const idx = y * BOARD_SIZE + x;`, `const idx = activeLayer * layerCells() + y * BOARD_SIZE + x;`],
+    // 他層の石の位置を薄い菱形で表示
+    [ONE, `                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);
+                    if (isDead) drawDeadMarker(cx, cy, r);
+                }
+            }
+        }
+
+        function drawLastMove(padding, cellSize) {`,
+`                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);
+                    if (isDead) drawDeadMarker(cx, cy, r);
+                }
+            }
+
+            // 他層の石の位置を薄い菱形で表示 (上下の連・呼吸点が見えるように)
+            for (let z = 0; z < LAYERS; z++) {
+                if (z === activeLayer) continue;
+                for (let y = 0; y < BOARD_SIZE; y++) {
+                    for (let x = 0; x < BOARD_SIZE; x++) {
+                        const idx2 = z * layerCells() + y * BOARD_SIZE + x;
+                        const val = board[idx2];
+                        if (val === 0) continue;
+                        const s2 = cellSize * 0.16;
+                        ctx.save();
+                        ctx.globalAlpha = 0.28;
+                        ctx.fillStyle = val === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                        ctx.translate(padding + (x + 0.32) * cellSize, padding + (y - 0.32) * cellSize);
+                        ctx.rotate(Math.PI / 4);
+                        ctx.fillRect(-s2 / 2, -s2 / 2, s2, s2);
+                        ctx.restore();
+                    }
+                }
+            }
+        }
+
+        function drawLastMove(padding, cellSize) {`],
+    // 層選択タブ
+    [ONE, `        <!-- 碁カントレイ`,
+`        <!-- 層選択タブ -->
+        <div class="w-full flex justify-center gap-2">
+            <button data-layer="0" class="btn-layer flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all hover:opacity-80">第1層</button>
+            <button data-layer="1" class="btn-layer flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all hover:opacity-80">第2層</button>
+            <button data-layer="2" class="btn-layer flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all hover:opacity-80">第3層</button>
+        </div>
+
+        <!-- 碁カントレイ`],
+    [ONE, `        // 盤サイズ選択ボタン`,
+`        // 層選択タブ
+        document.querySelectorAll('.btn-layer').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                soundManager.playClick();
+                activeLayer = parseInt(e.target.dataset.layer);
+                updateUI();
+            });
+        });
+
+        function updateLayerTabs() {
+            document.querySelectorAll('.btn-layer').forEach(b => {
+                const active = parseInt(b.dataset.layer) === activeLayer;
+                b.classList.toggle('bg-neutral-900', active);
+                b.classList.toggle('text-white', active);
+            });
+        }
+
+        // 盤サイズ選択ボタン`],
+    [ONE, UI_TAIL,
+`            btnUndo.disabled = !canUndo();
+            updatePieceTrayUI();
+            render();
+            updateLayerTabs();
+        }`],
+    // 永続化: 盤面は3層分
+    [ONE, `                || !Array.isArray(s.board) || s.board.length !== s.boardSize * s.boardSize) {`,
+`                || !Array.isArray(s.board) || s.board.length !== s.boardSize * s.boardSize * LAYERS) {`],
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE * LAYERS).fill(0);
+            activeLayer = 0;`],
+    [ONE, `            if (data.boardSize && data.boardSize !== BOARD_SIZE) {
+                BOARD_SIZE = data.boardSize;
+                pendingBoardSize = BOARD_SIZE;
+                resizeCanvas();
+            }`,
+`            if (data.boardSize && data.boardSize !== BOARD_SIZE) {
+                BOARD_SIZE = data.boardSize;
+                pendingBoardSize = BOARD_SIZE;
+                activeLayer = 0;
+                resizeCanvas();
+            }`],
+    ...STONE_SPEC,
+], '3dgo');
+out('3dgo.html', d3);
+
+// ============================================================
+// 16. GRAPHGO (グラフ碁) — 盤面が分子グラフ
+//     呼吸点・連は盤の辺のみ。ピース内隣接には辺が必要
+// ============================================================
+let graph = apply(ALGO, [
+    ...rb('GRAPHGO', 'グラフ碁', 'graphgo'),
+    [ONE, RV_ALGO, rv([
+        '盤面はランダムな分子グラフ: 全格子辺から約28%を連結を保ちながら除去して生成。',
+        '連・呼吸点・取り・地の判定はすべてグラフの辺 (結合線) だけを辿る。辺のない隣接はつながらない。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 分子グラフ盤<br>
+            ※呼吸点・連は結合(辺)のみ。格子の隣接でも辺がなければつながらない`],
+    [ONE, BOARD_DECL,
+`${BOARD_DECL}
+        let ADJ = []; // グラフ隣接リスト (盤面=分子グラフ: 頂点=炭素, 辺=結合)
+        let graphRemoved = []; // 除去された辺のインデックス (保存・同期用)`],
+    [ONE, NBRS_GRID,
+`        // グラフ盤: 近傍=辺で結ばれた頂点のみ
+        function getNeighbors(idx) { return ADJ[idx] || []; }
+        function hasEdge(a, b) { return ADJ[a] && ADJ[a].includes(b); }
+
+        function gridEdges() {
+            const all = [];
+            for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                const i = y * BOARD_SIZE + x;
+                if (x < BOARD_SIZE - 1) all.push([i, i + 1]);
+                if (y < BOARD_SIZE - 1) all.push([i, i + BOARD_SIZE]);
+            }
+            return all;
+        }
+
+        function rebuildADJ(removedSet) {
+            const n = BOARD_SIZE * BOARD_SIZE;
+            ADJ = Array.from({ length: n }, () => []);
+            gridEdges().forEach(([a, b], i) => {
+                if (removedSet.has(i)) return;
+                ADJ[a].push(b); ADJ[b].push(a);
+            });
+        }
+
+        // 全格子辺から約28%をランダム除去 (連結性は維持) → 分子骨格状の盤面
+        function buildGraph() {
+            const n = BOARD_SIZE * BOARD_SIZE;
+            const all = gridEdges();
+            const removed = new Set();
+            const target = Math.floor(all.length * 0.28);
+            const order = [...all.keys()];
+            for (let i = order.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [order[i], order[j]] = [order[j], order[i]];
+            }
+            const connected = (rem) => {
+                const adj = Array.from({ length: n }, () => []);
+                all.forEach(([a, b], i) => { if (!rem.has(i)) { adj[a].push(b); adj[b].push(a); } });
+                const seen = new Set([0]); const q = [0];
+                while (q.length) { const c = q.pop(); for (const m of adj[c]) if (!seen.has(m)) { seen.add(m); q.push(m); } }
+                return seen.size === n;
+            };
+            let count = 0;
+            for (const i of order) {
+                if (count >= target) break;
+                removed.add(i);
+                if (!connected(removed)) removed.delete(i); else count++;
+            }
+            graphRemoved = [...removed];
+            rebuildADJ(removed);
+        }`],
+    // 盤面描画: 格子線→結合線+炭素ノード (星はなし)
+    [ONE, GRID_RENDER,
+`            // 分子グラフ盤: 辺=結合線、頂点=炭素球
+            ctx.strokeStyle = currentTheme.lineColor;
+            ctx.lineWidth = Math.max(1.5, cellSize * 0.055);
+            for (let a = 0; a < ADJ.length; a++) {
+                const ax = a % BOARD_SIZE, ay = Math.floor(a / BOARD_SIZE);
+                for (const b of ADJ[a]) {
+                    if (b < a) continue;
+                    const bx = b % BOARD_SIZE, by = Math.floor(b / BOARD_SIZE);
+                    ctx.beginPath();
+                    ctx.moveTo(padding + ax * cellSize, padding + ay * cellSize);
+                    ctx.lineTo(padding + bx * cellSize, padding + by * cellSize);
+                    ctx.stroke();
+                }
+            }
+            // 外枠強調
+            ctx.strokeStyle = currentTheme.lineColor;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(padding, padding, width - padding * 2, width - padding * 2);
+
+            // 炭素ノード (頂点)
+            for (let y = 0; y < BOARD_SIZE; y++) {
+                for (let x = 0; x < BOARD_SIZE; x++) {
+                    ctx.beginPath();
+                    ctx.arc(padding + x * cellSize, padding + y * cellSize, cellSize * 0.09, 0, Math.PI * 2);
+                    ctx.fillStyle = currentTheme.starColor;
+                    ctx.fill();
+                }
+            }`],
+    // 永続化・リセット・オンライン同期にグラフを含める
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            buildGraph();`],
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    graphRemoved,
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            graphRemoved = Array.isArray(s.graphRemoved) ? s.graphRemoved : [];
+            rebuildADJ(new Set(graphRemoved));`],
+    [ONE, `            if (data.boardSize && data.boardSize !== BOARD_SIZE) {
+                BOARD_SIZE = data.boardSize;
+                pendingBoardSize = BOARD_SIZE;
+                resizeCanvas();
+            }`,
+`            if (data.boardSize && data.boardSize !== BOARD_SIZE) {
+                BOARD_SIZE = data.boardSize;
+                pendingBoardSize = BOARD_SIZE;
+                resizeCanvas();
+            }
+            if (Array.isArray(data.graphRemoved)) {
+                graphRemoved = data.graphRemoved;
+                rebuildADJ(new Set(graphRemoved));
+            }`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                graphRemoved,
+                pieceMode,`],
+    ...STONE_SPEC,
+], 'graphgo');
+out('graphgo.html', graph);
+
+// ============================================================
+// 17. PENGO (ペン碁) — ペントミノ12種の分子
+// ============================================================
+const PENTO_MOLS = `        // 12種のペントミノを分子として扱う (5連結マス)。窒息領域は5マス未満。
+        const MOLECULES = {
+            F: { name: 'Fペントミノ', iupac: 'F', formula: 'ペントミノ (5マス)', atoms: [[1,0],[2,0],[0,1],[1,1],[1,2]] },
+            I: { name: 'Iペントミノ', iupac: 'I', formula: 'ペントミノ (5マス)', atoms: [[0,0],[1,0],[2,0],[3,0],[4,0]] },
+            L: { name: 'Lペントミノ', iupac: 'L', formula: 'ペントミノ (5マス)', atoms: [[0,0],[0,1],[0,2],[0,3],[1,3]] },
+            P: { name: 'Pペントミノ', iupac: 'P', formula: 'ペントミノ (5マス)', atoms: [[0,0],[1,0],[0,1],[1,1],[0,2]] },
+            N: { name: 'Nペントミノ', iupac: 'N', formula: 'ペントミノ (5マス)', atoms: [[1,0],[1,1],[0,2],[1,2],[0,3]] },
+            T: { name: 'Tペントミノ', iupac: 'T', formula: 'ペントミノ (5マス)', atoms: [[0,0],[1,0],[2,0],[1,1],[1,2]] },
+            U: { name: 'Uペントミノ', iupac: 'U', formula: 'ペントミノ (5マス)', atoms: [[0,0],[2,0],[0,1],[1,1],[2,1]] },
+            V: { name: 'Vペントミノ', iupac: 'V', formula: 'ペントミノ (5マス)', atoms: [[0,0],[0,1],[0,2],[1,2],[2,2]] },
+            W: { name: 'Wペントミノ', iupac: 'W', formula: 'ペントミノ (5マス)', atoms: [[0,0],[0,1],[1,1],[1,2],[2,2]] },
+            X: { name: 'Xペントミノ', iupac: 'X', formula: 'ペントミノ (5マス)', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2]] },
+            Y: { name: 'Yペントミノ', iupac: 'Y', formula: 'ペントミノ (5マス)', atoms: [[1,0],[0,1],[1,1],[1,2],[1,3]] },
+            Z: { name: 'Zペントミノ', iupac: 'Z', formula: 'ペントミノ (5マス)', atoms: [[0,0],[1,0],[1,1],[1,2],[2,2]] }
+        };`;
+
+out('pengo.html', apply(ALGO, [
+    ...rb('PENGO', 'ペン碁', 'pengo'),
+    [ONE, RV_ALGO, rv([
+        'このゲームで使う碁ペンはペントミノ12種 (5マスの連結形)。',
+        '窒息領域: 5マス未満の空領域は呼吸点にも地にもならない。',
+        '回転のみ可能 (鏡像は別の向きとしては出ない)。',
+        '供給モード: 「自由選択」は毎手好きな碁ペンを選べる。「ネクスト」は12種1巡のランダム供給 (ホールド可)。',
+    ])],
+    [ONE, INFO_ALGO,
+`            ペントミノ「碁ペン」を配置し合う変則囲碁<br>
+            ※窒息領域は5マス未満 (ペントミノが入らない空領域)`],
+    [ONE, MOLECULES_ALGO, PENTO_MOLS],
+    [ONE, OCNT_ALGO, '// 回転のみ (鏡像なし): F4/I2/L4/P4/N4/T4/U4/V4/W4/X1/Y4/Z4 = 計45パターン'],
+    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'F';`],
+    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'F'`],
+    [ONE, '登場アルカン', '登場ペントミノ'],
+    [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
+`ペントミノは碁石5個が連結した形 (12種)。5マス未満の窒息領域にはどの碁ペンも入りません。`],
+    [ONE, `// 3. アルカン分子 (ピース) 定義`, `// 3. ペントミノ分子 (ピース) 定義`],
+    [ONE, `        // アルカンの炭素骨格を碁盤の格子に写した形。原子=碁石、結合=連結。
+        // すべて4原子以上なので「4マス未満の窒息領域」ルールがそのまま機能する。`,
+`        // ペントミノ (5連結マス) を分子として描画する。原子=碁石、結合=連結。
+        // すべて5マスなので「5マス未満の窒息領域」ルールが機能する。`],
+    [ALL, '碁カン', '碁ペン'],
+    [ALL, '全7種1巡', '全12種1巡'],
+    [ALL, '7種1巡', '12種1巡'],
+], 'pengo'));
+
+// ============================================================
+// 18. CYCLOGO (シクロ碁) — シクロアルカン (環状分子)
 // ============================================================
 const CYCLO_MOLECULES = `        const MOLECULES = {
             CYCLOBUTANE:       { name: 'シクロブタン',       iupac: 'シクロブタン',        formula: 'C₄H₈',  atoms: [[0,0],[1,0],[0,1],[1,1]] },
@@ -408,39 +1666,33 @@ const CYCLO_MOLECULES = `        const MOLECULES = {
             ADAMANTANE:        { name: 'アダマンタン',       iupac: 'アダマンタン',        formula: 'C₁₀H₁₆', atoms: [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]] }
         };`;
 
-let cyc = apply(ALGO, [
-    [ONE, '<title>ALGO - アルカン碁</title>', '<title>CYCLOGO - シクロ碁</title>'],
-    [ONE, '>ALGO <span class="text-sm font-bold opacity-60">アルカン碁</span>', '>CYCLOGO <span class="text-sm font-bold opacity-60">シクロ碁</span>'],
-    [ALL, '碁カン', '碁クロ'],
-    [ONE, 'アルカン分子「碁クロ」を配置し合う変則囲碁', 'シクロアルカン「碁クロ」を配置し合う変則囲碁'],
+out('cyclogo.html', apply(ALGO, [
+    ...rb('CYCLOGO', 'シクロ碁', 'cyclogo'),
+    [ONE, RV_ALGO, rv([
+        'このゲームで使う碁クロはシクロアルカン7種 (環状分子)。',
+        'リング状の碁クロは内側に空点を残すことがある。窒息領域は4マス未満。',
+    ])],
+    [ONE, MOLECULES_ALGO, CYCLO_MOLECULES],
+    [ONE, OCNT_ALGO, '// シクロブタン:1 / メチルシクロブタン:4 / シクロヘキサン:2 / エチルシクロブタン:4 / シクロオクタン:1 / ナフタレン:2 / アダマンタン:1 = 計15パターン'],
+    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'CYCLOBUTANE';`],
+    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'CYCLOBUTANE'`],
     [ONE, '登場アルカン', '登場シクロアルカン'],
-    [ONE, 'アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。',
-          'シクロアルカンは炭素骨格が環を含む。リング状の碁クロは内側に穴を残すことがある。CYCLOGO では全7種が登場します。'],
-    [ONE, '// 3. アルカン分子 (ピース) 定義', '// 3. シクロアルカン分子 (ピース) 定義'],
+    [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
+`シクロアルカンは炭素骨格が環を含む。リング状の碁クロは内側に穴を残すことがある。CYCLOGO では全7種が登場します。`],
+    [ONE, `// 3. アルカン分子 (ピース) 定義`, `// 3. シクロアルカン分子 (ピース) 定義`],
     [ONE, `        // アルカンの炭素骨格を碁盤の格子に写した形。原子=碁石、結合=連結。
         // すべて4原子以上なので「4マス未満の窒息領域」ルールがそのまま機能する。`,
-          `        // シクロアルカンの炭素骨格を碁盤の格子に写した形。原子=碁石、結合=連結。
+`        // シクロアルカンの炭素骨格を碁盤の格子に写した形。原子=碁石、結合=連結。
         // リング状分子は内側に空点を残すが、そこは窒息領域なら呼吸点にならない。`],
-    [ONE, `        const MOLECULES = {
-            BUTANE:         { name: 'ブタン',            iupac: 'n-ブタン',             formula: 'C₄H₁₀', atoms: [[0,0],[1,0],[1,1],[2,1]] },
-            ISOBUTANE:      { name: 'イソブタン',         iupac: '2-メチルプロパン',     formula: 'C₄H₁₀', atoms: [[1,0],[0,1],[1,1],[2,1]] },
-            PENTANE:        { name: 'ペンタン',           iupac: 'n-ペンタン',           formula: 'C₅H₁₂', atoms: [[0,0],[1,0],[2,0],[3,0],[4,0]] },
-            ISOPENTANE:     { name: 'イソペンタン',       iupac: '2-メチルブタン',       formula: 'C₅H₁₂', atoms: [[0,0],[1,0],[2,0],[3,0],[1,1]] },
-            NEOPENTANE:     { name: 'ネオペンタン',       iupac: '2,2-ジメチルプロパン', formula: 'C₅H₁₂', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2]] },
-            HEXANE:         { name: 'ヘキサン',           iupac: 'n-ヘキサン',           formula: 'C₆H₁₄', atoms: [[0,0],[1,0],[1,1],[2,1],[2,2],[3,2]] },
-            NEOHEXANE:      { name: 'ネオヘキサン',       iupac: '2,2-ジメチルブタン',   formula: 'C₆H₁₄', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2],[1,3]] }
-        };`, CYCLO_MOLECULES],
-    [ONE, '// ブタン:2 / イソブタン:4 / ペンタン:2 / イソペンタン:4 / ネオペンタン:1 / ヘキサン:2 / ネオヘキサン:4 = 計19パターン',
-          '// シクロブタン:1 / メチルシクロブタン:4 / シクロヘキサン:2 / エチルシクロブタン:4 / シクロオクタン:1 / ナフタレン:2 / アダマンタン:1 = 計15パターン'],
-    [ALL, `'ISOBUTANE'`, `'CYCLOBUTANE'`],
-    [ONE, `ROOM_ID_PREFIX = 'algo-'`, `ROOM_ID_PREFIX = 'cyclogo-'`],
-    [ONE, `STORAGE_KEY = 'algo-save-v1'`, `STORAGE_KEY = 'cyclogo-save-v1'`],
-    [ONE, '// 8. 囲碁 & ALGO ルール判定アルゴリズム', '// 8. 囲碁 & CYCLOGO ルール判定アルゴリズム'],
-], 'cyclogo');
-out('cyclogo.html', cyc);
+    [ONE, INFO_ALGO,
+`            シクロアルカン「碁クロ」を配置し合う変則囲碁<br>
+            PC: クリックで配置 / 回転=Rキー・右クリック・ホイール / ホールド=Hキー<br>
+            スマホ: 1タップ目プレビュー、2タップ目確定 (回転・ホールドはボタン)`],
+    [ALL, '碁カン', '碁クロ'],
+], 'cyclogo'));
 
 // ============================================================
-// 7. ALKENEGO (アルケン碁) — 剛直な不飽和分子 (回転不可)
+// 19. ALKENEGO (アルケン碁) — 剛直な不飽和分子 (回転不可)
 // ============================================================
 const ALKENE_MOLECULES = `        const MOLECULES = {
             BUTENE:      { name: '1-ブテン',       iupac: 'ブト-1-エン',               formula: 'C₄H₈',  atoms: [[0,0],[1,0],[1,1],[2,1]], db: [[0,1]] },
@@ -453,29 +1705,22 @@ const ALKENE_MOLECULES = `        const MOLECULES = {
         };`;
 
 let alk = apply(ALGO, [
-    [ONE, '<title>ALGO - アルカン碁</title>', '<title>ALKENEGO - アルケン碁</title>'],
-    [ONE, '>ALGO <span class="text-sm font-bold opacity-60">アルカン碁</span>', '>ALKENEGO <span class="text-sm font-bold opacity-60">アルケン碁</span>'],
-    [ALL, '碁カン', '碁ケン'],
-    [ONE, 'アルカン分子「碁ケン」を配置し合う変則囲碁', 'アルケン・アルキン「碁ケン」を配置し合う変則囲碁 (二重結合は剛直・回転不可)'],
+    ...rb('ALKENEGO', 'アルケン碁', 'alkenego'),
+    [ONE, RV_ALGO, rv([
+        'このゲームで使う碁ケンはアルケン・アルキン7種 (二重・三重結合を含む不飽和分子)。',
+        '多重結合は剛直のため碁ケンは回転できない (全分子1向き固定)。二重線が多重結合。',
+    ])],
     [ONE, '登場アルカン', '登場アルケン・アルキン'],
-    [ONE, 'アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。',
-          'アルケン・アルキンは二重・三重結合を持つ不飽和炭化水素。結合が剛直なため盤上で回転できません。全7種が登場します。'],
-    [ONE, '// 3. アルカン分子 (ピース) 定義', '// 3. 不飽和炭化水素 (アルケン/アルキン) 定義'],
+    [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
+`アルケン・アルキンは二重・三重結合を持つ不飽和炭化水素。結合が剛直なため盤上で回転できません。全7種が登場します。`],
+    [ONE, `// 3. アルカン分子 (ピース) 定義`, `// 3. 不飽和炭化水素 (アルケン/アルキン) 定義`],
     [ONE, `        // アルカンの炭素骨格を碁盤の格子に写した形。原子=碁石、結合=連結。
         // すべて4原子以上なので「4マス未満の窒息領域」ルールがそのまま機能する。`,
-          `        // 不飽和炭化水素の骨格を碁盤の格子に写した形。原子=碁石、結合=連結。
+`        // 不飽和炭化水素の骨格を碁盤の格子に写した形。原子=碁石、結合=連結。
         // 二重/三重結合 (db) は剛直: 分子は回転できない。`],
-    [ONE, `        const MOLECULES = {
-            BUTANE:         { name: 'ブタン',            iupac: 'n-ブタン',             formula: 'C₄H₁₀', atoms: [[0,0],[1,0],[1,1],[2,1]] },
-            ISOBUTANE:      { name: 'イソブタン',         iupac: '2-メチルプロパン',     formula: 'C₄H₁₀', atoms: [[1,0],[0,1],[1,1],[2,1]] },
-            PENTANE:        { name: 'ペンタン',           iupac: 'n-ペンタン',           formula: 'C₅H₁₂', atoms: [[0,0],[1,0],[2,0],[3,0],[4,0]] },
-            ISOPENTANE:     { name: 'イソペンタン',       iupac: '2-メチルブタン',       formula: 'C₅H₁₂', atoms: [[0,0],[1,0],[2,0],[3,0],[1,1]] },
-            NEOPENTANE:     { name: 'ネオペンタン',       iupac: '2,2-ジメチルプロパン', formula: 'C₅H₁₂', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2]] },
-            HEXANE:         { name: 'ヘキサン',           iupac: 'n-ヘキサン',           formula: 'C₆H₁₄', atoms: [[0,0],[1,0],[1,1],[2,1],[2,2],[3,2]] },
-            NEOHEXANE:      { name: 'ネオヘキサン',       iupac: '2,2-ジメチルブタン',   formula: 'C₆H₁₄', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2],[1,3]] }
-        };`, ALKENE_MOLECULES],
+    [ONE, MOLECULES_ALGO, ALKENE_MOLECULES],
     [ONE, `        // 各分子の回転バリエーションを事前生成 (重複排除)
-        // ブタン:2 / イソブタン:4 / ペンタン:2 / イソペンタン:4 / ネオペンタン:1 / ヘキサン:2 / ネオヘキサン:4 = 計19パターン
+        ${OCNT_ALGO}
         const ORIENTATIONS = {};
         PIECE_TYPES.forEach(type => {
             let cells = normalizeCells(PIECE_DEFS[type]);
@@ -508,16 +1753,23 @@ let alk = apply(ALGO, [
                 [[m.atoms[a][0] - minX, m.atoms[a][1] - minY],
                  [m.atoms[b][0] - minX, m.atoms[b][1] - minY]]);
         });`],
-    [ALL, `'ISOBUTANE'`, `'BUTENE'`],
-    [ONE, `ROOM_ID_PREFIX = 'algo-'`, `ROOM_ID_PREFIX = 'alkenego-'`],
-    [ONE, `STORAGE_KEY = 'algo-save-v1'`, `STORAGE_KEY = 'alkenego-save-v1'`],
-    [ONE, '// 8. 囲碁 & ALGO ルール判定アルゴリズム', '// 8. 囲碁 & ALKENEGO ルール判定アルゴリズム'],
+    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'BUTENE';`],
+    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'BUTENE'`],
     [ONE, '⟳ 回転', '⟳ 回転不可'],
-    [ONE, `            PC: クリックで配置 / 回転=Rキー・右クリック・ホイール / ホールド=Hキー<br>
-            スマホ: 1タップ目プレビュー、2タップ目確定 (回転・ホールドはボタン)`,
-`            PC: クリックで配置 / ホールド=Hキー<br>
-            スマホ: 1タップ目プレビュー、2タップ目確定 (ホールドはボタン)<br>
-            ※回転不可: 剛直な不飽和結合のため碁ケンは向きを変えられません`],
+    [ONE, INFO_ALGO,
+`            アルケン・アルキン「碁ケン」を配置し合う変則囲碁 (回転不可)<br>
+            PC: クリックで配置 / ホールド=Hキー<br>
+            スマホ: 1タップ目プレビュー、2タップ目確定<br>
+            ※剛直な多重結合のため碁ケンは向きを変えられません`],
+    [ALL, '碁カン', '碁ケン'],
+    // 回転ボタン無効化 (起動時)
+    [ONE, `        window.onload = () => {
+            buildThemeList();`,
+`        window.onload = () => {
+            // 不飽和分子は回転不可
+            btnRotate.disabled = true;
+            btnRotate.classList.add('opacity-40', 'cursor-not-allowed');
+            buildThemeList();`],
 ], 'alkenego');
 
 // 二重結合描画: drawMiniPiece の結合ループを多重結合対応に差し替え
@@ -571,45 +1823,55 @@ alk = apply(alk, [
                 });
             });
             c.stroke();`],
-    // 回転ボタン無効化 (起動時)
-    [ONE, `        window.onload = () => {
-            buildThemeList();`,
-`        window.onload = () => {
-            // 不飽和分子は回転不可
-            btnRotate.disabled = true;
-            btnRotate.classList.add('opacity-40', 'cursor-not-allowed');
-            buildThemeList();`],
 ], 'alkenego-render');
 out('alkenego.html', alk);
 
 // ============================================================
-// 8. POLYGO (ポリ碁) — 自由に曲がるポリマー鎖を毎手描く
+// 20. POLYGO (ポリ碁) — 自由に曲がるポリマー鎖を毎手描く
 // ============================================================
-let poly = apply(TETOGO, [
-    [ONE, '<title>TETOGO - テトリス碁</title>', '<title>POLYGO - ポリ碁</title>'],
-    [ONE, '>TETOGO <span class="text-sm font-bold opacity-60">テトリス碁</span>', '>POLYGO <span class="text-sm font-bold opacity-60">ポリ碁</span>'],
-    [ONE, '// 8. 囲碁 & TETOGO ルール判定アルゴリズム', '// 8. 囲碁 & POLYGO ルール判定アルゴリズム'],
+let poly = apply(ALGO, [
+    ...rb('POLYGO', 'ポリ碁', 'polygo'),
+    [ONE, RV_ALGO, rv([
+        '毎手、盤上に4連のポリマー鎖を自由に描いて置く (形は固定ではない)。',
+        '鎖は隣接する空点にのみ伸ばせる。完成した鎖上をタップするか「配置する」で確定。',
+        '窒息領域: 4マス未満の空領域は呼吸点にも地にもならない。',
+    ])],
+    [ONE, RC_ALGO, rc([
+        '鎖の構築: タップ/クリックで隣接する空点にモノマーを追加 (4連で完成)。',
+        '確定: 完成した鎖の上をタップ、または「配置する」ボタン。',
+        '1マス戻す: 右クリック・Rキー・「↩ 1マス戻す」ボタン。鎖の途中をタップするとそこまで切り戻せる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            ポリマー鎖を自由に描く変則囲碁<br>
+            タップ/クリックでモノマーを追加し、4連のポリマー鎖を構築 (隣接する空点にのみ伸ばせます)<br>
+            完成した鎖の上をタップ or 「配置する」で確定。末尾を戻す=右クリック・Rキー・「↩ 1マス戻す」`],
     // ピース定義 → モノマー鎖
-    [ONE, `        // 7種のテトロミノ。碁石4つが連結した形で、碁盤の交点を占有する。
-        const PIECE_SIZE = 4;
-        const PIECE_DEFS = {
-            I: [[0,0],[1,0],[2,0],[3,0]],
-            O: [[0,0],[1,0],[0,1],[1,1]],
-            T: [[0,0],[1,0],[2,0],[1,1]],
-            L: [[0,0],[1,0],[0,1],[0,2]],
-            J: [[1,0],[1,1],[0,2],[1,2]],
-            S: [[1,0],[2,0],[0,1],[1,1]],
-            Z: [[0,0],[1,0],[1,1],[2,1]]
-        };
-        const PIECE_TYPES = Object.keys(PIECE_DEFS);`,
+    [ONE, `        // アルカンの炭素骨格を碁盤の格子に写した形。原子=碁石、結合=連結。
+        // すべて4原子以上なので「4マス未満の窒息領域」ルールがそのまま機能する。
+        const MOLECULES = {
+            BUTANE:         { name: 'ブタン',            iupac: 'n-ブタン',             formula: 'C₄H₁₀', atoms: [[0,0],[1,0],[1,1],[2,1]] },
+            ISOBUTANE:      { name: 'イソブタン',         iupac: '2-メチルプロパン',     formula: 'C₄H₁₀', atoms: [[1,0],[0,1],[1,1],[2,1]] },
+            PENTANE:        { name: 'ペンタン',           iupac: 'n-ペンタン',           formula: 'C₅H₁₂', atoms: [[0,0],[1,0],[2,0],[3,0],[4,0]] },
+            ISOPENTANE:     { name: 'イソペンタン',       iupac: '2-メチルブタン',       formula: 'C₅H₁₂', atoms: [[0,0],[1,0],[2,0],[3,0],[1,1]] },
+            NEOPENTANE:     { name: 'ネオペンタン',       iupac: '2,2-ジメチルプロパン', formula: 'C₅H₁₂', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2]] },
+            HEXANE:         { name: 'ヘキサン',           iupac: 'n-ヘキサン',           formula: 'C₆H₁₄', atoms: [[0,0],[1,0],[1,1],[2,1],[2,2],[3,2]] },
+            NEOHEXANE:      { name: 'ネオヘキサン',       iupac: '2,2-ジメチルブタン',   formula: 'C₆H₁₄', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2],[1,3]] }
+        };`,
 `        // ポリマー鎖: ピースは固定形を持たず、毎手 MONOMERS 連の自由な鎖を描く。
-        // 窒息領域のしきい値はモノマー数と同じ4。
+        const MOLECULES = {}; // 固定ピースなし`],
+    [ONE, `        const PIECE_TYPES = Object.keys(MOLECULES);
+        const PIECE_DEFS = {};
+        PIECE_TYPES.forEach(t => { PIECE_DEFS[t] = MOLECULES[t].atoms; });
+        // 最小分子サイズ (窒息領域の判定しきい値)
+        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`,
+`        const PIECE_TYPES = Object.keys(MOLECULES);
+        const PIECE_DEFS = {};
+        PIECE_TYPES.forEach(t => { PIECE_DEFS[t] = MOLECULES[t].atoms; });
+        // 窒息領域のしきい値はモノマー数と同じ4
         const PIECE_SIZE = 4;
-        const MONOMERS = 4;
-        const PIECE_DEFS = {}; // 固定ピースなし
-        const PIECE_TYPES = [];`],
-    [ONE, `        // 各ピースの回転バリエーションを事前生成 (重複排除)
-        // I:2 / O:1 / T:4 / L:4 / J:4 / S:2 / Z:2 = 計19パターン
+        const MONOMERS = 4;`],
+    [ONE, `        // 各分子の回転バリエーションを事前生成 (重複排除)
+        ${OCNT_ALGO}
         const ORIENTATIONS = {};
         PIECE_TYPES.forEach(type => {
             let cells = normalizeCells(PIECE_DEFS[type]);
@@ -625,19 +1887,8 @@ let poly = apply(TETOGO, [
                 cells = rot90(cells);
             }
             ORIENTATIONS[type] = list;
-        });
-
-        // 7種1巡バッグ (テトリス方式) のシャッフル
-        function shuffledBag() {
-            const bag = [...PIECE_TYPES];
-            for (let i = bag.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [bag[i], bag[j]] = [bag[j], bag[i]];
-            }
-            return bag;
-        }`,
+        });`,
 `        const ORIENTATIONS = {}; // 固定形なし
-        function shuffledBag() { return []; }
 
         // 構築中のポリマー鎖 (盤面座標の配列)
         let chainCells = [];
@@ -647,63 +1898,28 @@ let poly = apply(TETOGO, [
                 ? { cells: chainCells, valid: chainCells.length === MONOMERS && isValidPlacement(chainCells, turn) }
                 : null;
         }`],
-    // 供給モード廃止: 常に自由描画
-    [ONE, `        let pieceMode = 'next'; // 'free' (自由選択) | 'next' (7種1巡ランダム)`,
-          `        let pieceMode = 'free'; // ポリマー鎖は自由描画のみ`],
+    [ONE, SHUFFLE_FN,
+`        function shuffledBag() { return []; } // ポリマー鎖は自由描画のみ`],
+    [ONE, PMODE_DECL,
+`        let pieceMode = 'free'; // ポリマー鎖は自由描画のみ`],
     [ONE, `            pieceMode = ['free', 'next'].includes(s.pieceMode) ? s.pieceMode : 'next';`,
-          `            pieceMode = 'free';`],
-    // 設定モーダルの配給セクション → 説明文
-    [ONE, `            <!-- 3. ピース配給モード -->
-            <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-bold uppercase tracking-wider text-neutral-500">ピース配給</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button data-pmode="free" class="btn-pmode py-2 rounded-lg border border-neutral-300 font-bold text-xs sm:text-sm hover:bg-neutral-100 transition-all">自由選択</button>
-                    <button data-pmode="next" class="btn-pmode py-2 rounded-lg border border-neutral-300 font-bold text-xs sm:text-sm hover:bg-neutral-100 transition-all">ネクスト (7種1巡)</button>
-                </div>
-            </div>`,
+`            pieceMode = 'free';`],
+    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'POLY';`],
+    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'POLY'`],
+    // 設定: 供給モード → 説明文 / 図鑑 → 除去
+    [ONE, SUPPLY_SEC,
 `            <!-- 3. ポリマー説明 -->
             <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-bold uppercase tracking-wider text-neutral-500">ピース</label>
                 <p class="text-xs text-neutral-500">毎ターン、隣接する空点へ4連のポリマー鎖を自由に描いて配置します。形は毎手自分で決められます。</p>
             </div>`],
+    [ONE, CATALOG_ROW, ''],
+    [ONE, `        btnOpenCatalog.addEventListener('click', () => {`,
+          `        if (btnOpenCatalog) btnOpenCatalog.addEventListener('click', () => {`],
+    [ONE, `        btnCloseCatalog.addEventListener('click', () => {`,
+          `        if (btnCloseCatalog) btnCloseCatalog.addEventListener('click', () => {`],
     // トレイUI: 鎖の構築状況表示 + ボタン流用
-    [ONE, `        function updatePieceTrayUI() {
-            const list = ORIENTATIONS[currentPieceType];
-            if (!list) return;
-            currentRot = currentRot % list.length;
-            drawMiniPiece(currentPieceCanvas, currentPieceType, currentRot);
-            currentPieceLabel.textContent = \`ピース: \${currentPieceType}\`;
-
-            if (pieceMode === 'free') {
-                paletteBox.classList.remove('hidden');
-                nextBox.classList.add('hidden');
-                nextBox.classList.remove('flex');
-                trayModeLabel.textContent = 'ピース選択 (自由モード)';
-                PIECE_TYPES.forEach(t => {
-                    const c = paletteCanvases[t];
-                    if (c) drawMiniPiece(c, t, 0, turn);
-                    const btn = c && c.parentElement;
-                    if (btn) btn.style.outline = (t === currentPieceType) ? '2px solid currentColor' : 'none';
-                });
-            } else {
-                paletteBox.classList.add('hidden');
-                nextBox.classList.remove('hidden');
-                nextBox.classList.add('flex');
-                trayModeLabel.textContent = 'NEXT (7種1巡モード)';
-                // NEXTピースは次の手番(相手)の色で描く
-                if (pieceQueue[0]) drawMiniPiece(nextPieceCanvas, pieceQueue[0], 0, turn === 1 ? 2 : 1);
-            }
-
-            // ホールド欄はネクストモードのみ (自由選択では不要)
-            holdBox.classList.toggle('hidden', pieceMode !== 'next');
-            if (pieceMode === 'next') {
-                const hc = holdPieceCanvas.getContext('2d');
-                hc.clearRect(0, 0, holdPieceCanvas.width, holdPieceCanvas.height);
-                if (heldPieces[turn]) drawMiniPiece(holdPieceCanvas, heldPieces[turn], 0, turn);
-                holdPieceCanvas.style.opacity = (holdUsed && heldPieces[turn]) ? 0.35 : 1;
-                btnHold.disabled = holdUsed || gameOver || gamePhase !== 'playing' || !isMyTurn();
-            }
-        }`,
+    [ONE, TRAY_UI_ALGO,
 `        // ポリマー鎖の構築状況をトレイに表示 (進捗ドット + 確定ボタン制御)
         function updatePieceTrayUI() {
             currentPieceLabel.textContent = 'モノマー鎖';
@@ -735,40 +1951,7 @@ let poly = apply(TETOGO, [
             btnRotate.disabled = chainCells.length === 0;
         }`],
     // ホールド/回転の流用: 確定と1マス戻し
-    [ONE, `        // ホールド: 現在ピースを自分のホールド枠に保存して次を供給 (初回)
-        // か保持ピースと交換 (2回目以降)。1手につき1回まで (着手するまで再ホールド不可)。
-        function holdPiece() {
-            if (pieceMode !== 'next' || holdUsed || gameOver
-                || gamePhase !== 'playing' || !isMyTurn()) return;
-            soundManager.playClick();
-            if (heldPieces[turn] === null) {
-                heldPieces[turn] = currentPieceType;
-                currentPieceType = drawNextPiece();
-            } else {
-                [heldPieces[turn], currentPieceType] = [currentPieceType, heldPieces[turn]];
-            }
-            currentRot = 0;
-            holdUsed = true;
-            updatePieceTrayUI();
-            refreshPreview();
-            render();
-            saveState();
-        }
-
-        function drawNextPiece() {
-            if (pieceQueue.length === 0) pieceQueue = shuffledBag();
-            return pieceQueue.shift();
-        }
-
-        function rotatePiece() {
-            const list = ORIENTATIONS[currentPieceType];
-            if (!list) return;
-            currentRot = (currentRot + 1) % list.length;
-            soundManager.playClick();
-            updatePieceTrayUI();
-            refreshPreview();
-            render();
-        }`,
+    [ONE, HOLD_ROTATE_FNS,
 `        // 「配置する」: 完成した鎖を確定して着手
         function holdPiece() {
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
@@ -792,49 +1975,12 @@ let poly = apply(TETOGO, [
             render();
         }`],
     // ホバープレビューは鎖構築では不要
-    [ONE, `        function handleMouseMove(e) {
-            if (lastPointerType === 'touch') return; // タッチ操作ではホバープレビューを出さない
-            if (gameOver || gamePhase === 'dead_stone_selection' || !isMyTurn()) return;
-            const anchor = getAnchorFromEvent(e);
-            if (anchor) {
-                previewPos = computePreview(anchor.u, anchor.v);
-                render();
-            }
-        }`,
+    [ONE, MOUSE_MOVE,
 `        function handleMouseMove(e) {
             // ポリマー鎖はクリックで構築するためホバープレビューなし
         }`],
     // クリック処理: 鎖の構築と確定
-    [ONE, `            if (!isMyTurn()) return;
-
-            const anchor = getAnchorFromEvent(e);
-            if (!anchor) return;
-
-            const isTouch = lastPointerType === 'touch';
-
-            if (!isTouch) {
-                // マウス: クリックで即配置
-                const pl = getPlacementAt(anchor.u, anchor.v);
-                if (isValidPlacement(pl.cells, turn)) {
-                    executeMove({ cells: pl.cells, type: currentPieceType, rot: currentRot }, turn);
-                    previewPos = null;
-                }
-                return;
-            }
-
-            // タッチ: 1回目のタップ=プレビュー、プレビュー上の2回目のタップ=確定
-            if (previewPos && isTapOnPreview(e, previewPos)) {
-                if (previewPos.valid) {
-                    executeMove({ cells: previewPos.cells, type: previewPos.type, rot: previewPos.rot }, turn);
-                    previewPos = null;
-                    render();
-                }
-                // 置けない場所(赤)の場合はプレビューのまま維持
-            } else {
-                previewPos = computePreview(anchor.u, anchor.v);
-                render();
-            }
-        }`,
+    [ONE, CLICK_BODY,
 `            if (!isMyTurn()) return;
 
             // ポリマー鎖の構築: クリックでモノマー追加、完成した鎖上のクリックで確定
@@ -879,33 +2025,7 @@ let poly = apply(TETOGO, [
             }
         }`],
     // AI: ランダムウォークで合法な4連鎖を生成
-    [ONE, `        function evaluateBestAiMove() {
-            const candidates = [];
-            // 自由モードは全ピース、ネクストモードは現在ピースのみ
-            const types = pieceMode === 'next' ? [currentPieceType] : PIECE_TYPES;
-
-            types.forEach(type => {
-                ORIENTATIONS[type].forEach((shape, rot) => {
-                    const w = Math.max(...shape.map(c => c[0])) + 1;
-                    const h = Math.max(...shape.map(c => c[1])) + 1;
-                    for (let ty = 0; ty + h <= BOARD_SIZE; ty++) {
-                        for (let tx = 0; tx + w <= BOARD_SIZE; tx++) {
-                            const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy }));
-                            if (isValidPlacement(cells, turn)) {
-                                const score = rateMove(cells, turn);
-                                candidates.push({ cells, type, rot, score });
-                            }
-                        }
-                    }
-                });
-            });
-
-            if (candidates.length === 0) return null;
-
-            // スコア降順ソート
-            candidates.sort((a, b) => b.score - a.score);
-            return candidates[0];
-        }`,
+    [ONE, AI_EVAL,
 `        function evaluateBestAiMove() {
             // ランダムウォークで4連鎖を生成し、合法かつ高評価の手を探す
             let best = null;
@@ -938,382 +2058,52 @@ let poly = apply(TETOGO, [
                 </button>`],
     [ONE, `<span class="text-[10px] font-bold tracking-widest opacity-60">HOLD</span>`,
           `<span class="text-[10px] font-bold tracking-widest opacity-60">確定</span>`],
-    [ONE, `<span id="currentPieceLabel" class="text-[10px] font-bold tracking-widest opacity-60">ピース</span>`,
+    [ONE, `<span id="currentPieceLabel" class="text-[10px] font-bold tracking-widest opacity-60">碁カン</span>`,
           `<span id="currentPieceLabel" class="text-[10px] font-bold tracking-widest opacity-60">モノマー鎖</span>`],
     [ONE, `<span id="trayModeLabel" class="text-[10px] font-bold tracking-widest opacity-60">ピース選択</span>`,
           `<span id="trayModeLabel" class="text-[10px] font-bold tracking-widest opacity-60">チェーン構築</span>`],
     // リセット時に鎖をクリア
     [ONE, `            previewPos = null;
             lastMove = null;`,
-          `            previewPos = null;
+`            previewPos = null;
             chainCells = [];
             lastMove = null;`],
-    [ONE, `ROOM_ID_PREFIX = 'tetogo-'`, `ROOM_ID_PREFIX = 'polygo-'`],
-    [ONE, `STORAGE_KEY = 'tetogo-save-v1'`, `STORAGE_KEY = 'polygo-save-v1'`],
-    [ONE, `            PC: クリックで配置 / 回転=右クリック・ホイール・Rキー<br>
-            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)`,
-`            タップ/クリックでモノマーを追加し、4連のポリマー鎖を構築 (隣接する空点にのみ伸ばせます)<br>
-            完成した鎖の上をタップ or 「配置する」で確定。末尾を戻す=右クリック・Rキー・「↩ 1マス戻す」`],
-    // 残置コードの安全化: refreshPreview→鎖プレビュー / 供給モードはfree固定
-    [ONE, `        function refreshPreview() {
-            if (!previewPos) return;
-            previewPos = computePreview(previewPos.u, previewPos.v);
-        }`,
-`        function refreshPreview() { refreshChainPreview(); }`],
-    [ONE, `                pieceMode = e.target.dataset.pmode;`,
-          `                pieceMode = 'free'; // ポリマー鎖は自由描画固定`],
-    [ONE, `        function getPlacementAt(u, v) {
-            const list = ORIENTATIONS[currentPieceType];
-            const shape = list[currentRot % list.length];`,
-`        function getPlacementAt(u, v) {
-            return null; // ポリマー鎖はクリック構築のため未使用
-            const list = ORIENTATIONS[currentPieceType];
-            const shape = list[currentRot % list.length];`],
-    // 構築中の鎖はリセット/復元時にクリア
     [ONE, `            history = [];
             currentRot = 0;`,
 `            history = [];
             currentRot = 0;
             chainCells = [];`],
+    // 残置コードの安全化
+    [ONE, REFRESH_PREVIEW,
+`        function refreshPreview() { refreshChainPreview(); }`],
+    [ONE, `                pieceMode = e.target.dataset.pmode;`,
+`                pieceMode = 'free'; // ポリマー鎖は自由描画固定`],
+    [ONE, PLACE_AT,
+`        function getPlacementAt(u, v) {
+            return null; // ポリマー鎖はクリック構築のため未使用
+            const list = ORIENTATIONS[currentPieceType];
+            const shape = list[currentRot % list.length];`],
+    [ALL, '碁カン', 'ポリマー'],
 ], 'polygo');
 out('polygo.html', poly);
 
 // ============================================================
-// 9. 3DGO (立体碁) — 3層盤面、上下も連・呼吸点になる
+// 21. ASYMGO (非対称碁) — 黒=直鎖アルカン / 白=分枝アルカン
 // ============================================================
-let d3 = apply(TETOGO, [
-    [ONE, '<title>TETOGO - テトリス碁</title>', '<title>3DGO - 立体碁</title>'],
-    [ONE, '>TETOGO <span class="text-sm font-bold opacity-60">テトリス碁</span>', '>3DGO <span class="text-sm font-bold opacity-60">立体碁</span>'],
-    [ONE, '// 8. 囲碁 & TETOGO ルール判定アルゴリズム', '// 8. 囲碁 & 3DGO ルール判定アルゴリズム'],
-    [ONE, `        const PIECE_SIZE = 4;`,
-          `        const PIECE_SIZE = 4;
-        const LAYERS = 3; // 立体盤の層数`],
-    [ONE, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白`,
-          `        let board = Array(BOARD_SIZE * BOARD_SIZE * LAYERS).fill(0); // 0:空, 1:黒, 2:白 (3層)
-        let activeLayer = 0; // 表示・入力中の層`],
-    // 全セル→idx変換を z 対応に (ピースセルは {x,y,z})
-    // ※getNeighbors挿入より先に行うこと (cellIndex本体が置換対象文字列を含むため)
-    [ALL, 'p.y * BOARD_SIZE + p.x', 'cellIndex(p)'],
-    [ONE, 'cells[0].y * BOARD_SIZE + cells[0].x', 'cellIndex(cells[0])'],
-    // ※pieceUnionPathの連結判定キーは2Dのままにする (描画対象は常に同一層)
-    [ONE, `const set = new Set(cellsAbs.map(p => cellIndex(p)));`,
-          `const set = new Set(cellsAbs.map(p => p.y * BOARD_SIZE + p.x));`],
-    // getNeighbors → 6近傍 + 座標→idxヘルパー
-    [ONE, `        function getNeighbors(idx) {
-            const x = idx % BOARD_SIZE;
-            const y = Math.floor(idx / BOARD_SIZE);
-            const neighbors = [];
-
-            if (x > 0) neighbors.push(idx - 1);
-            if (x < BOARD_SIZE - 1) neighbors.push(idx + 1);
-            if (y > 0) neighbors.push(idx - BOARD_SIZE);
-            if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
-
-            return neighbors;
-        }`,
-`        function layerCells() { return BOARD_SIZE * BOARD_SIZE; }
-        function cellIndex(p) { return p.z * layerCells() + p.y * BOARD_SIZE + p.x; }
-
-        // 3D盤: 同一層の4近傍 + 上下層の2近傍 (最大6近傍)
-        function getNeighbors(idx) {
-            const ls = layerCells();
-            const z = Math.floor(idx / ls);
-            const rem = idx % ls;
-            const x = rem % BOARD_SIZE;
-            const y = Math.floor(rem / BOARD_SIZE);
-            const neighbors = [];
-
-            if (x > 0) neighbors.push(idx - 1);
-            if (x < BOARD_SIZE - 1) neighbors.push(idx + 1);
-            if (y > 0) neighbors.push(idx - BOARD_SIZE);
-            if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
-            if (z > 0) neighbors.push(idx - ls);
-            if (z < LAYERS - 1) neighbors.push(idx + ls);
-
-            return neighbors;
-        }`],
-    // 配置セルに activeLayer を付与
-    [ONE, `            shape.forEach(([cx, cy]) => {
-                const tx = Math.round(u) - cx;
-                const ty = Math.round(v) - cy;
-                const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy }));`,
-          `            shape.forEach(([cx, cy]) => {
-                const tx = Math.round(u) - cx;
-                const ty = Math.round(v) - cy;
-                const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy, z: activeLayer }));`],
-    // 表示はアクティブ層のセルのみ
-    [ONE, `                const alive = pc.cells.filter(p => board[cellIndex(p)] === pc.player);`,
-          `                const alive = pc.cells.filter(p => board[cellIndex(p)] === pc.player && p.z === activeLayer);`],
-    [ONE, `            const alive = lastMove.cells.filter(p => board[cellIndex(p)] === lastMove.player);`,
-          `            const alive = lastMove.cells.filter(p => board[cellIndex(p)] === lastMove.player && p.z === activeLayer);`],
-    // 窒息領域表示はアクティブ層のみ
-    [ONE, `            for (let i = 0; i < board.length; i++) {
-                if (board[i] === 0 && deadMask[i]) {
-                    const x = i % BOARD_SIZE;
-                    const y = Math.floor(i / BOARD_SIZE);`,
-          `            const ls = layerCells();
-            const z0 = activeLayer * ls;
-            for (let i = z0; i < z0 + ls; i++) {
-                if (board[i] === 0 && deadMask[i]) {
-                    const x = (i - z0) % BOARD_SIZE;
-                    const y = Math.floor((i - z0) / BOARD_SIZE);`],
-    // 層内 idx (フォールバック描画 & 死に石タップ) を層オフセット付きに
-    [ALL, `const idx = y * BOARD_SIZE + x;`, `const idx = activeLayer * layerCells() + y * BOARD_SIZE + x;`],
-    // 他層の石の位置を薄い菱形で表示
-    [ONE, `                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);
-                    if (isDead) drawDeadMarker(cx, cy, r);
-                }
-            }
-        }
-
-        function drawLastMove(padding, cellSize) {`,
-`                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);
-                    if (isDead) drawDeadMarker(cx, cy, r);
-                }
-            }
-
-            // 他層の石の位置を薄い菱形で表示 (上下の連・呼吸点が見えるように)
-            for (let z = 0; z < LAYERS; z++) {
-                if (z === activeLayer) continue;
-                for (let y = 0; y < BOARD_SIZE; y++) {
-                    for (let x = 0; x < BOARD_SIZE; x++) {
-                        const idx = z * layerCells() + y * BOARD_SIZE + x;
-                        const val = board[idx];
-                        if (val === 0) continue;
-                        const s2 = cellSize * 0.16;
-                        ctx.save();
-                        ctx.globalAlpha = 0.28;
-                        ctx.fillStyle = val === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
-                        ctx.translate(padding + (x + 0.32) * cellSize, padding + (y - 0.32) * cellSize);
-                        ctx.rotate(Math.PI / 4);
-                        ctx.fillRect(-s2 / 2, -s2 / 2, s2, s2);
-                        ctx.restore();
-                    }
-                }
-            }
-        }
-
-        function drawLastMove(padding, cellSize) {`],
-    // 層選択タブ
-    [ONE, `        <!-- ピーストレイ`,
-`        <!-- 層選択タブ -->
-        <div class="w-full flex justify-center gap-2">
-            <button data-layer="0" class="btn-layer flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all hover:opacity-80">第1層</button>
-            <button data-layer="1" class="btn-layer flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all hover:opacity-80">第2層</button>
-            <button data-layer="2" class="btn-layer flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all hover:opacity-80">第3層</button>
-        </div>
-
-        <!-- ピーストレイ`],
-    [ONE, `        // 盤サイズ選択ボタン`,
-`        // 層選択タブ
-        document.querySelectorAll('.btn-layer').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                soundManager.playClick();
-                activeLayer = parseInt(e.target.dataset.layer);
-                updateUI();
-            });
-        });
-
-        function updateLayerTabs() {
-            document.querySelectorAll('.btn-layer').forEach(b => {
-                const active = parseInt(b.dataset.layer) === activeLayer;
-                b.classList.toggle('bg-neutral-900', active);
-                b.classList.toggle('text-white', active);
-            });
-        }
-
-        // 盤サイズ選択ボタン`],
-    [ONE, `            btnUndo.disabled = !canUndo();
-            updatePieceTrayUI();
-            render();
-        }`,
-`            btnUndo.disabled = !canUndo();
-            updatePieceTrayUI();
-            render();
-            updateLayerTabs();
-        }`],
-    // AI: 全層を探索
-    [ONE, `                    for (let ty = 0; ty + h <= BOARD_SIZE; ty++) {
-                        for (let tx = 0; tx + w <= BOARD_SIZE; tx++) {
-                            const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy }));
-                            if (isValidPlacement(cells, turn)) {
-                                const score = rateMove(cells, turn);
-                                candidates.push({ cells, type, rot, score });
-                            }
-                        }
-                    }`,
-`                    for (let z = 0; z < LAYERS; z++) {
-                        for (let ty = 0; ty + h <= BOARD_SIZE; ty++) {
-                            for (let tx = 0; tx + w <= BOARD_SIZE; tx++) {
-                                const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy, z }));
-                                if (isValidPlacement(cells, turn)) {
-                                    const score = rateMove(cells, turn);
-                                    candidates.push({ cells, type, rot, score });
-                                }
-                            }
-                        }
-                    }`],
-    // 永続化: 盤面は3層分
-    [ONE, `                || !Array.isArray(s.board) || s.board.length !== s.boardSize * s.boardSize) {`,
-          `                || !Array.isArray(s.board) || s.board.length !== s.boardSize * s.boardSize * LAYERS) {`],
-    [ONE, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);`,
-          `            board = Array(BOARD_SIZE * BOARD_SIZE * LAYERS).fill(0);
-            activeLayer = 0;`],
-    [ONE, `            if (data.boardSize && data.boardSize !== BOARD_SIZE) {
-                BOARD_SIZE = data.boardSize;
-                pendingBoardSize = BOARD_SIZE;
-                resizeCanvas();
-            }`,
-`            if (data.boardSize && data.boardSize !== BOARD_SIZE) {
-                BOARD_SIZE = data.boardSize;
-                pendingBoardSize = BOARD_SIZE;
-                activeLayer = 0;
-                resizeCanvas();
-            }`],
-    [ONE, `ROOM_ID_PREFIX = 'tetogo-'`, `ROOM_ID_PREFIX = '3dgo-'`],
-    [ONE, `STORAGE_KEY = 'tetogo-save-v1'`, `STORAGE_KEY = '3dgo-save-v1'`],
-    [ONE, `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)`,
-          `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)<br>
-            ※盤面は3層: 上下の層も連・呼吸点になります。他層の石は薄い◆で表示`],
-], '3dgo');
-out('3dgo.html', d3);
-
-// ============================================================
-// 10. ASYMGO (非対称碁) — 黒と白で使える碁テトが違う
-//     黒: I・O・T (対称の安定形) / 白: L・J・S・Z (変形)
-// ============================================================
-// プレイヤー別ピースセット機構 (ASYMGO/DRAFTGO共通)
-const PER_PLAYER_SPEC = [
-    [ONE, `        const PIECE_TYPES = Object.keys(PIECE_DEFS);`,
-`        const PIECE_TYPES = Object.keys(PIECE_DEFS);
-        // プレイヤー別の使用可能ピース (非対称ルール)
-        let PLAYER_PIECES = { 1: ['I', 'O', 'T'], 2: ['L', 'J', 'S', 'Z'] };`],
-    [ONE, `        // 7種1巡バッグ (テトリス方式) のシャッフル
-        function shuffledBag() {
-            const bag = [...PIECE_TYPES];
-            for (let i = bag.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [bag[i], bag[j]] = [bag[j], bag[i]];
-            }
-            return bag;
-        }`,
-`        // ピース列シャッフル & プレイヤー別バッグ
-        function shuffleTypes(types) {
-            const bag = [...types];
-            for (let i = bag.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [bag[i], bag[j]] = [bag[j], bag[i]];
-            }
-            return bag;
-        }
-        function shuffledBag(player) { return shuffleTypes(PLAYER_PIECES[player]); }
-        function validTypes(arr) { return Array.isArray(arr) ? arr.filter(t => PIECE_TYPES.includes(t)) : []; }`],
-    [ONE, `        let pieceQueue = [];        // 'next'モード用の今後の供給列`,
-          `        let pieceQueues = { 1: [], 2: [] }; // プレイヤー別の供給列`],
-    // saveState (20スペースインデント)
-    [ONE, `                    pieceQueue,
-                    heldPieces,`,
-`                    pieceQueues,
-                    heldPieces,`],
-    // loadState
-    [ONE, `            pieceQueue = Array.isArray(s.pieceQueue)
-                ? s.pieceQueue.filter(t => PIECE_TYPES.includes(t)) : [];
-            if (pieceMode === 'next' && pieceQueue.length === 0) pieceQueue = shuffledBag();`,
-`            pieceQueues = (s.pieceQueues && typeof s.pieceQueues === 'object')
-                ? { 1: validTypes(s.pieceQueues[1]), 2: validTypes(s.pieceQueues[2]) }
-                : { 1: [], 2: [] };
-            if (pieceMode === 'next' && pieceQueues[turn].length === 0) pieceQueues[turn] = shuffledBag(turn);`],
-    // トレイ: 自由選択は自軍セットのみ表示 / NEXTは相手キュー先頭
-    [ONE, `                PIECE_TYPES.forEach(t => {
-                    const c = paletteCanvases[t];
-                    if (c) drawMiniPiece(c, t, 0, turn);
-                    const btn = c && c.parentElement;
-                    if (btn) btn.style.outline = (t === currentPieceType) ? '2px solid currentColor' : 'none';
-                });`,
-`                PIECE_TYPES.forEach(t => {
-                    const c = paletteCanvases[t];
-                    const btn = c && c.parentElement;
-                    if (btn) btn.style.display = PLAYER_PIECES[turn].includes(t) ? '' : 'none';
-                    if (c) drawMiniPiece(c, t, 0, turn);
-                    if (btn) btn.style.outline = (t === currentPieceType) ? '2px solid currentColor' : 'none';
-                });`],
-    [ONE, `                    currentPieceType = t;
-                    currentRot = 0;`,
-`                    if (!PLAYER_PIECES[turn].includes(t)) return;
-                    currentPieceType = t;
-                    currentRot = 0;`],
-    [ONE, `                trayModeLabel.textContent = 'NEXT (7種1巡モード)';
-                // NEXTピースは次の手番(相手)の色で描く
-                if (pieceQueue[0]) drawMiniPiece(nextPieceCanvas, pieceQueue[0], 0, turn === 1 ? 2 : 1);`,
-`                trayModeLabel.textContent = 'NEXT (自軍バッグから供給)';
-                // NEXTピースは次の手番(相手)のバッグ先頭を相手色で描く
-                const nq = pieceQueues[turn === 1 ? 2 : 1];
-                if (nq && nq[0]) drawMiniPiece(nextPieceCanvas, nq[0], 0, turn === 1 ? 2 : 1);`],
-    // ドローは「今の手番」のバッグから (executeMoveでは手番交代後に呼ぶ)
-    [ONE, `        function drawNextPiece() {
-            if (pieceQueue.length === 0) pieceQueue = shuffledBag();
-            return pieceQueue.shift();
-        }`,
-`        function drawNextPiece() {
-            if (pieceQueues[turn].length === 0) pieceQueues[turn] = shuffledBag(turn);
-            return pieceQueues[turn].shift();
-        }`],
-    // 着手後: 手番を交代してから次プレイヤーのバッグから供給
-    [ONE, `            // ネクストモードでは次のピースを供給
-            if (pieceMode === 'next') {
-                currentPieceType = drawNextPiece();
-            }
-
-            consecutivePasses = 0;
-            holdUsed = false; // 着手でホールド権利が戻る
-            turn = opponent;`,
-`            consecutivePasses = 0;
-            holdUsed = false; // 着手でホールド権利が戻る
-            turn = opponent;
-
-            // ネクストモード: 次の手番プレイヤーのバッグから供給
-            if (pieceMode === 'next') {
-                currentPieceType = drawNextPiece();
-            }`],
-    // history/undo/online
-    [ONE, `                currentPieceType,
-                pieceQueue: [...pieceQueue],`,
-`                currentPieceType,
-                pieceQueues: { 1: [...pieceQueues[1]], 2: [...pieceQueues[2]] },`],
-    [ONE, `            if (snap.pieceQueue) pieceQueue = snap.pieceQueue;`,
-`            if (snap.pieceQueues) pieceQueues = { 1: [...snap.pieceQueues[1]], 2: [...snap.pieceQueues[2]] };`],
-    [ONE, `            if (data.pieceQueue) pieceQueue = data.pieceQueue;`,
-`            if (data.pieceQueues) pieceQueues = data.pieceQueues;`],
-    [ONE, `                pieceQueue,
-                heldPieces,`,
-`                pieceQueues,
-                heldPieces,`],
-    // AI: 自由モード時も自軍セットのみ
-    [ONE, `            const types = pieceMode === 'next' ? [currentPieceType] : PIECE_TYPES;`,
-`            const types = pieceMode === 'next' ? [currentPieceType] : PLAYER_PIECES[turn];`],
-    // resetGame
-    [ONE, `            if (pieceMode === 'next') {
-                pieceQueue = shuffledBag();
-                currentPieceType = pieceQueue.shift();
-            }`,
-`            if (pieceMode === 'next') {
-                pieceQueues = { 1: shuffledBag(1), 2: shuffledBag(2) };
-                currentPieceType = drawNextPiece();
-            }`],
-];
-
-let asym = apply(TETOGO, [
-    [ONE, '<title>TETOGO - テトリス碁</title>', '<title>ASYMGO - 非対称碁</title>'],
-    [ONE, '>TETOGO <span class="text-sm font-bold opacity-60">テトリス碁</span>', '>ASYMGO <span class="text-sm font-bold opacity-60">非対称碁</span>'],
-    [ONE, '// 8. 囲碁 & TETOGO ルール判定アルゴリズム', '// 8. 囲碁 & ASYMGO ルール判定アルゴリズム'],
+let asym = apply(ALGO, [
+    ...rb('ASYMGO', '非対称碁', 'asymgo'),
+    [ONE, RV_ALGO, rv([
+        '非対称ルール: 使える碁カンがプレイヤーで違う。',
+        '黒=直鎖アルカン (ブタン・ペンタン・ヘキサン) / 白=分枝アルカン (イソブタン・イソペンタン・ネオペンタン・ネオヘキサン)。',
+        '供給は各プレイヤー自分のセットから1巡バッグ。自由選択モードでも自軍の種類のみ選べる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            アルカン分子「碁カン」を配置し合う変則囲碁 (非対称)<br>
+            PC: クリックで配置 / 回転=Rキー・右クリック・ホイール / ホールド=Hキー<br>
+            スマホ: 1タップ目プレビュー、2タップ目確定<br>
+            ※黒=直鎖 (ブタン・ペンタン・ヘキサン) / 白=分枝 (イソブタン・イソペンタン・ネオペンタン・ネオヘキサン)`],
     // 使用セットの凡例
-    [ONE, `                <div id="nextBox" class="hidden items-center gap-2.5">
-                    <canvas id="nextPieceCanvas" width="46" height="46"></canvas>
-                    <div class="flex flex-col">
-                        <span class="text-xs font-bold tracking-widest">NEXT</span>
-                        <span class="text-[10px] opacity-60 leading-tight">7種1巡<br>ランダム</span>
-                    </div>
-                </div>`,
+    [ONE, NEXTBOX_HTML,
 `                <div id="nextBox" class="hidden items-center gap-2.5">
                     <canvas id="nextPieceCanvas" width="46" height="46"></canvas>
                     <div class="flex flex-col">
@@ -1321,24 +2111,28 @@ let asym = apply(TETOGO, [
                         <span class="text-[10px] opacity-60 leading-tight">自軍バッグ<br>から供給</span>
                     </div>
                 </div>
-                <span class="text-[10px] opacity-60">使用ピース — 黒: I・O・T / 白: L・J・S・Z</span>`],
+                <span class="text-[10px] opacity-60">使用ピース — 黒: 直鎖 / 白: 分枝</span>`],
     ...PER_PLAYER_SPEC,
-    [ONE, `ROOM_ID_PREFIX = 'tetogo-'`, `ROOM_ID_PREFIX = 'asymgo-'`],
-    [ONE, `STORAGE_KEY = 'tetogo-save-v1'`, `STORAGE_KEY = 'asymgo-save-v1'`],
-    [ONE, `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)`,
-          `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)<br>
-            ※非対称ルール: 黒は安定形 (I・O・T)、白は変形 (L・J・S・Z) のみ使用可能`],
+    // 黒=直鎖 / 白=分枝 のセットに書き換え
+    [ONE, `let PLAYER_PIECES = { 1: [...PIECE_TYPES], 2: [...PIECE_TYPES] }; // プレイヤー別使用ピース`,
+`let PLAYER_PIECES = { 1: ['BUTANE', 'PENTANE', 'HEXANE'], 2: ['ISOBUTANE', 'ISOPENTANE', 'NEOPENTANE', 'NEOHEXANE'] }; // 黒=直鎖 / 白=分枝`],
 ], 'asymgo');
 out('asymgo.html', asym);
 
 // ============================================================
-// 11. DRAFTGO (ドラフト碁) — 対局前にピースを交互ドラフト
-//     各3種を取り合い、以後は自軍の獲得ピースのみ出る
+// 22. DRAFTGO (ドラフト碁) — 対局前にピースを交互ドラフト
 // ============================================================
-let draft = apply(TETOGO, [
-    [ONE, '<title>TETOGO - テトリス碁</title>', '<title>DRAFTGO - ドラフト碁</title>'],
-    [ONE, '>TETOGO <span class="text-sm font-bold opacity-60">テトリス碁</span>', '>DRAFTGO <span class="text-sm font-bold opacity-60">ドラフト碁</span>'],
-    [ONE, '// 8. 囲碁 & TETOGO ルール判定アルゴリズム', '// 8. 囲碁 & DRAFTGO ルール判定アルゴリズム'],
+let draft = apply(ALGO, [
+    ...rb('DRAFTGO', 'ドラフト碁', 'draftgo'),
+    [ONE, RV_ALGO, rv([
+        '対局前にドラフト: 7種の碁カンから黒→白の順に交互に3種ずつピック。',
+        '対局中は各プレイヤーが獲得した3種のみが供給される (自軍バッグ1巡)。',
+    ])],
+    [ONE, INFO_ALGO,
+`            アルカン分子「碁カン」を配置し合う変則囲碁 (ドラフト制)<br>
+            PC: クリックで配置 / 回転=Rキー・右クリック・ホイール / ホールド=Hキー<br>
+            スマホ: 1タップ目プレビュー、2タップ目確定<br>
+            ※対局開始前にドラフト: 黒→白と交互に3種ずつピースを獲得。以後は獲得ピースのみ出現`],
     // ドラフトパネル
     [ONE, `        <!-- ゲーム操作ボタンエリア -->`,
 `        <!-- ドラフトパネル -->
@@ -1352,13 +2146,7 @@ let draft = apply(TETOGO, [
         </div>
 
         <!-- ゲーム操作ボタンエリア -->`],
-    [ONE, `                <div id="nextBox" class="hidden items-center gap-2.5">
-                    <canvas id="nextPieceCanvas" width="46" height="46"></canvas>
-                    <div class="flex flex-col">
-                        <span class="text-xs font-bold tracking-widest">NEXT</span>
-                        <span class="text-[10px] opacity-60 leading-tight">7種1巡<br>ランダム</span>
-                    </div>
-                </div>`,
+    [ONE, NEXTBOX_HTML,
 `                <div id="nextBox" class="hidden items-center gap-2.5">
                     <canvas id="nextPieceCanvas" width="46" height="46"></canvas>
                     <div class="flex flex-col">
@@ -1366,17 +2154,13 @@ let draft = apply(TETOGO, [
                         <span class="text-[10px] opacity-60 leading-tight">ドラフト獲得<br>ピースのみ</span>
                     </div>
                 </div>`],
-    // 状態変数
-    [ONE, `        const PIECE_TYPES = Object.keys(PIECE_DEFS);`,
-`        const PIECE_TYPES = Object.keys(PIECE_DEFS);
-        const DRAFT_PICKS = 3; // 各プレイヤーの獲得ピース種数`],
-    [ONE, `        let pieceQueue = [];        // 'next'モード用の今後の供給列`,
-`        let pieceQueues = { 1: [], 2: [] }; // プレイヤー別の供給列
-        let PLAYER_PIECES = { 1: [...PIECE_TYPES], 2: [...PIECE_TYPES] }; // ドラフトで確定
+    ...PER_PLAYER_SPEC,
+    // ドラフト状態変数
+    [ONE, `let PLAYER_PIECES = { 1: [...PIECE_TYPES], 2: [...PIECE_TYPES] }; // プレイヤー別使用ピース`,
+`let PLAYER_PIECES = { 1: [...PIECE_TYPES], 2: [...PIECE_TYPES] }; // ドラフトで確定
         let draftState = null; // { pool:[types], picks:{1:[],2:[]}, turn } ドラフト中のみ非null
-        let aiDraftTimer = null;`],
-    ...PER_PLAYER_SPEC.filter(([_, o]) =>
-        !o.includes('PLAYER_PIECES = { 1:') && !o.includes('pieceQueue = []') && !o.includes('PIECE_TYPES = Object.keys')),
+        let aiDraftTimer = null;
+        const DRAFT_PICKS = 3; // 各プレイヤーの獲得ピース種数`],
     // draftPick系 + UI (updatePieceTrayUI直前に挿入)
     [ONE, `        function updatePieceTrayUI() {`,
 `        // ---- ドラフトフェーズ ----
@@ -1480,10 +2264,7 @@ let draft = apply(TETOGO, [
     [ONE, `            btnHold.disabled = holdUsed || gameOver || gamePhase !== 'playing' || !isMyTurn();`,
 `            btnHold.disabled = holdUsed || gameOver || gamePhase !== 'playing' || !!draftState || !isMyTurn();`],
     // updateUI → updateDraftUI
-    [ONE, `            btnUndo.disabled = !canUndo();
-            updatePieceTrayUI();
-            render();
-        }`,
+    [ONE, UI_TAIL,
 `            btnUndo.disabled = !canUndo();
             updatePieceTrayUI();
             render();
@@ -1533,212 +2314,8 @@ let draft = apply(TETOGO, [
     [ONE, `            buildPalette();`,
 `            buildPalette();
             buildDraftPool();`],
-    [ONE, `ROOM_ID_PREFIX = 'tetogo-'`, `ROOM_ID_PREFIX = 'draftgo-'`],
-    [ONE, `STORAGE_KEY = 'tetogo-save-v1'`, `STORAGE_KEY = 'draftgo-save-v1'`],
-    [ONE, `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)`,
-          `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)<br>
-            ※対局開始前にドラフト: 黒→白→黒…と交互に3種ずつピースを獲得。以後は獲得ピースのみ出現`],
 ], 'draftgo');
 out('draftgo.html', draft);
-
-// ============================================================
-// 12. GRAPHGO (グラフ碁) — 盤面が分子グラフ (炭素=頂点, 結合=辺)
-//     呼吸点・連は盤の辺のみ。ピース内隣接には辺が必要
-// ============================================================
-let graph = apply(TETOGO, [
-    [ONE, '<title>TETOGO - テトリス碁</title>', '<title>GRAPHGO - グラフ碁</title>'],
-    [ONE, '>TETOGO <span class="text-sm font-bold opacity-60">テトリス碁</span>', '>GRAPHGO <span class="text-sm font-bold opacity-60">グラフ碁</span>'],
-    [ONE, '// 8. 囲碁 & TETOGO ルール判定アルゴリズム', '// 8. 囲碁 & GRAPHGO ルール判定アルゴリズム'],
-    // グラフ状態 + getNeighbors を辺ベースに
-    [ONE, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白`,
-`        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        let ADJ = []; // グラフ隣接リスト (盤面=分子グラフ: 頂点=炭素, 辺=結合)
-        let graphRemoved = []; // 除去された辺のインデックス (保存・同期用)`],
-    [ONE, `        function getNeighbors(idx) {
-            const x = idx % BOARD_SIZE;
-            const y = Math.floor(idx / BOARD_SIZE);
-            const neighbors = [];
-
-            if (x > 0) neighbors.push(idx - 1);
-            if (x < BOARD_SIZE - 1) neighbors.push(idx + 1);
-            if (y > 0) neighbors.push(idx - BOARD_SIZE);
-            if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
-
-            return neighbors;
-        }`,
-`        // グラフ盤: 近傍=辺で結ばれた頂点のみ
-        function getNeighbors(idx) { return ADJ[idx] || []; }
-        function hasEdge(a, b) { return ADJ[a] && ADJ[a].includes(b); }
-
-        function gridEdges() {
-            const all = [];
-            for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                const i = y * BOARD_SIZE + x;
-                if (x < BOARD_SIZE - 1) all.push([i, i + 1]);
-                if (y < BOARD_SIZE - 1) all.push([i, i + BOARD_SIZE]);
-            }
-            return all;
-        }
-
-        function rebuildADJ(removedSet) {
-            const n = BOARD_SIZE * BOARD_SIZE;
-            ADJ = Array.from({ length: n }, () => []);
-            gridEdges().forEach(([a, b], i) => {
-                if (removedSet.has(i)) return;
-                ADJ[a].push(b); ADJ[b].push(a);
-            });
-        }
-
-        // 全格子辺から約28%をランダム除去 (連結性は維持) → 分子骨格状の盤面
-        function buildGraph() {
-            const n = BOARD_SIZE * BOARD_SIZE;
-            const all = gridEdges();
-            const removed = new Set();
-            const target = Math.floor(all.length * 0.28);
-            const order = [...all.keys()];
-            for (let i = order.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [order[i], order[j]] = [order[j], order[i]];
-            }
-            const connected = (rem) => {
-                const adj = Array.from({ length: n }, () => []);
-                all.forEach(([a, b], i) => { if (!rem.has(i)) { adj[a].push(b); adj[b].push(a); } });
-                const seen = new Set([0]); const q = [0];
-                while (q.length) { const c = q.pop(); for (const m of adj[c]) if (!seen.has(m)) { seen.add(m); q.push(m); } }
-                return seen.size === n;
-            };
-            let count = 0;
-            for (const i of order) {
-                if (count >= target) break;
-                removed.add(i);
-                if (!connected(removed)) removed.delete(i); else count++;
-            }
-            graphRemoved = [...removed];
-            rebuildADJ(removed);
-        }`],
-    // 配置: ピース内の格子隣接セルには盤の辺が必要 (分子として繋がること)
-    [ONE, `            for (const p of cells) {
-                if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
-                if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
-            }`,
-`            for (const p of cells) {
-                if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
-                if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
-            }
-
-            // グラフ盤: ピース内の隣接セル同士は盤の結合(辺)が必要
-            for (const a of cells) {
-                for (const b of cells) {
-                    if (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1) {
-                        if (!hasEdge(a.y * BOARD_SIZE + a.x, b.y * BOARD_SIZE + b.x)) return false;
-                    }
-                }
-            }`],
-    // 盤面描画: 格子線→結合線+炭素ノード (星はなし)
-    [ONE, `            // 格子線
-            ctx.strokeStyle = currentTheme.lineColor;
-            ctx.lineWidth = 1;
-            for (let i = 0; i < BOARD_SIZE; i++) {
-                const pos = padding + i * cellSize;
-                ctx.beginPath();
-                ctx.moveTo(pos, padding);
-                ctx.lineTo(pos, width - padding);
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(padding, pos);
-                ctx.lineTo(width - padding, pos);
-                ctx.stroke();
-            }
-
-            // 外枠強調
-            ctx.strokeStyle = currentTheme.lineColor;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(padding, padding, width - padding * 2, width - padding * 2);
-
-            // 星 (天元・星の点)
-            const starPoints = getStarPoints(BOARD_SIZE);
-            ctx.fillStyle = currentTheme.starColor;
-            starPoints.forEach(pt => {
-                const cx = padding + pt.x * cellSize;
-                const cy = padding + pt.y * cellSize;
-                ctx.beginPath();
-                ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
-                ctx.fill();
-            });`,
-`            // 分子グラフ盤: 辺=結合線、頂点=炭素球
-            ctx.strokeStyle = currentTheme.lineColor;
-            ctx.lineWidth = Math.max(1.5, cellSize * 0.055);
-            for (let a = 0; a < ADJ.length; a++) {
-                const ax = a % BOARD_SIZE, ay = Math.floor(a / BOARD_SIZE);
-                for (const b of ADJ[a]) {
-                    if (b < a) continue;
-                    const bx = b % BOARD_SIZE, by = Math.floor(b / BOARD_SIZE);
-                    ctx.beginPath();
-                    ctx.moveTo(padding + ax * cellSize, padding + ay * cellSize);
-                    ctx.lineTo(padding + bx * cellSize, padding + by * cellSize);
-                    ctx.stroke();
-                }
-            }
-            // 外枠強調
-            ctx.strokeStyle = currentTheme.lineColor;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(padding, padding, width - padding * 2, width - padding * 2);
-
-            // 炭素ノード (頂点)
-            for (let y = 0; y < BOARD_SIZE; y++) {
-                for (let x = 0; x < BOARD_SIZE; x++) {
-                    ctx.beginPath();
-                    ctx.arc(padding + x * cellSize, padding + y * cellSize, cellSize * 0.09, 0, Math.PI * 2);
-                    ctx.fillStyle = currentTheme.starColor;
-                    ctx.fill();
-                }
-            }`],
-    // 永続化・リセット・オンライン同期にグラフを含める
-    [ONE, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);`,
-`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            buildGraph();`],
-    [ONE, `                    prevBoard,
-                    lastMove,
-                    history`,
-`                    prevBoard,
-                    lastMove,
-                    graphRemoved,
-                    history`],
-    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
-            lastMove = s.lastMove || null;`,
-`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
-            lastMove = s.lastMove || null;
-            graphRemoved = Array.isArray(s.graphRemoved) ? s.graphRemoved : [];
-            rebuildADJ(new Set(graphRemoved));`],
-    [ONE, `            if (data.boardSize && data.boardSize !== BOARD_SIZE) {
-                BOARD_SIZE = data.boardSize;
-                pendingBoardSize = BOARD_SIZE;
-                resizeCanvas();
-            }`,
-`            if (data.boardSize && data.boardSize !== BOARD_SIZE) {
-                BOARD_SIZE = data.boardSize;
-                pendingBoardSize = BOARD_SIZE;
-                resizeCanvas();
-            }
-            if (Array.isArray(data.graphRemoved)) {
-                graphRemoved = data.graphRemoved;
-                rebuildADJ(new Set(graphRemoved));
-            }`],
-    [ONE, `                prevBoard,
-                lastMove,
-                pieceMode,`,
-`                prevBoard,
-                lastMove,
-                graphRemoved,
-                pieceMode,`],
-    [ONE, `ROOM_ID_PREFIX = 'tetogo-'`, `ROOM_ID_PREFIX = 'graphgo-'`],
-    [ONE, `STORAGE_KEY = 'tetogo-save-v1'`, `STORAGE_KEY = 'graphgo-save-v1'`],
-    [ONE, `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)`,
-          `            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)<br>
-            ※盤面は分子グラフ: 呼吸点・連は結合(辺)のみ。ピースを置くには全ての隣接箇所に結合が必要`],
-], 'graphgo');
-out('graphgo.html', graph);
 
 console.log(failures === 0 ? 'ALL OK' : `${failures} replacements MISSING`);
 process.exitCode = failures ? 1 : 0;

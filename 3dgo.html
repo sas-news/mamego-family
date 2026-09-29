@@ -37,7 +37,7 @@
 
         <!-- ヘッダー: タイトル & 設定歯車ボタン -->
         <header class="w-full flex items-center justify-between pt-1">
-            <div class="w-8"></div> <!-- レイアウト崩れ防止用ダミー -->
+            <button id="btnOpenRules" title="ルール" class="w-9 h-9 flex items-center justify-center rounded-full border border-current/25 hover:bg-black/5 active:scale-95 transition-all text-base font-extrabold">?</button>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-wider text-center">3DGO <span class="text-sm font-bold opacity-60">立体碁</span></h1>
             <button id="btnOpenSettings" title="設定" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5 active:scale-95 transition-all">
                 <svg class="w-6 h-6 current-color" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,8 +93,8 @@
             <button data-layer="2" class="btn-layer flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all hover:opacity-80">第3層</button>
         </div>
 
-        <!-- ピーストレイ: ホールド / 現在のピース & 回転 / パレット or NEXT -->
-        <div id="pieceTray" class="w-full flex items-center gap-3 p-3 rounded-xl border transition-colors">
+        <!-- 碁石トレイ: ホールド / 現在の碁石 & 回転 / パレット or NEXT -->
+        <div id="pieceTray" class="hidden w-full items-center gap-3 p-3 rounded-xl border transition-colors">
             <div id="holdBox" class="flex flex-col items-center gap-1.5 shrink-0">
                 <span class="text-[10px] font-bold tracking-widest opacity-60">HOLD</span>
                 <canvas id="holdPieceCanvas" width="46" height="46" class="rounded-lg"></canvas>
@@ -103,7 +103,7 @@
                 </button>
             </div>
             <div class="flex flex-col items-center gap-1.5 shrink-0">
-                <span id="currentPieceLabel" class="text-[10px] font-bold tracking-widest opacity-60">ピース</span>
+                <span id="currentPieceLabel" class="text-[10px] font-bold tracking-widest opacity-60">碁石</span>
                 <canvas id="currentPieceCanvas" width="68" height="68" class="rounded-lg"></canvas>
                 <button id="btnRotate" class="px-3 py-1.5 text-xs font-bold rounded-lg border hover:opacity-80 active:scale-95 transition-all">
                     ⟳ 回転
@@ -116,7 +116,7 @@
                     <canvas id="nextPieceCanvas" width="46" height="46"></canvas>
                     <div class="flex flex-col">
                         <span class="text-xs font-bold tracking-widest">NEXT</span>
-                        <span class="text-[10px] opacity-60 leading-tight">7種1巡<br>ランダム</span>
+                        <span class="text-[10px] opacity-60 leading-tight">全7種1巡<br>ランダム</span>
                     </div>
                 </div>
             </div>
@@ -164,17 +164,27 @@
 
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
-            PC: クリックで配置 / 回転=右クリック・ホイール・Rキー<br>
-            スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)<br>
-            ※盤面は3層: 上下の層も連・呼吸点になります。他層の石は薄い◆で表示
+            通常の囲碁 + 3層盤面<br>
+            ※盤面は3層: 上下の層も連・呼吸点になる。他層の石は薄い◆で表示
         </p>
+    </div>
+
+    <!-- 【ルールモーダル】 -->
+    <div id="rulesModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] hidden">
+        <div class="bg-white text-neutral-900 p-5 sm:p-6 max-w-md w-full rounded-2xl shadow-2xl flex flex-col gap-4 border border-neutral-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b pb-3 border-neutral-200">
+                <h2 class="text-xl font-bold tracking-wide">ルール</h2>
+                <button id="btnCloseRules" class="text-neutral-400 hover:text-neutral-800 text-xl font-bold px-2">✕</button>
+            </div>
+            <div id="rulesBody" class="text-xs sm:text-sm text-neutral-700 flex flex-col gap-3 leading-relaxed"></div>
+        </div>
     </div>
 
     <!-- 【1手戻る確認モーダル】 -->
     <div id="undoModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-white text-neutral-900 p-6 max-w-sm w-full text-center flex flex-col gap-5 rounded-2xl shadow-2xl border border-neutral-200">
             <h2 class="text-xl font-extrabold tracking-wide">1手戻りますか？</h2>
-            <p class="text-sm text-neutral-600">直前に打たれたピースを取り消し、その手番に戻ります。</p>
+            <p class="text-sm text-neutral-600">直前に打たれた碁石を取り消し、その手番に戻ります。</p>
             <div class="flex flex-col gap-2 pt-1">
                 <button id="btnUndoConfirm" class="w-full py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white text-sm font-bold rounded-xl transition-colors">
                     1手戻る
@@ -214,14 +224,7 @@
                 </div>
             </div>
 
-            <!-- 3. ピース配給モード -->
-            <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-bold uppercase tracking-wider text-neutral-500">ピース配給</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button data-pmode="free" class="btn-pmode py-2 rounded-lg border border-neutral-300 font-bold text-xs sm:text-sm hover:bg-neutral-100 transition-all">自由選択</button>
-                    <button data-pmode="next" class="btn-pmode py-2 rounded-lg border border-neutral-300 font-bold text-xs sm:text-sm hover:bg-neutral-100 transition-all">ネクスト (7種1巡)</button>
-                </div>
-            </div>
+
 
             <!-- AI詳細設定 (モード=ai時のみ表示) -->
             <div id="aiOptions" class="p-3 bg-neutral-50 rounded-xl border border-neutral-200 flex flex-col gap-2 hidden">
@@ -269,10 +272,24 @@
                 </div>
             </div>
 
+
+
             <!-- ニューゲームスタート -->
             <button id="btnStartNewGame" class="w-full py-3 bg-neutral-900 text-white font-bold text-sm tracking-wider rounded-xl hover:bg-neutral-800 active:scale-98 transition-all mt-2">
                 ニューゲームスタート
             </button>
+        </div>
+    </div>
+
+    <!-- 【碁石図鑑モーダル】 -->
+    <div id="catalogModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] hidden">
+        <div class="bg-white text-neutral-900 p-5 sm:p-6 max-w-md w-full rounded-2xl shadow-2xl flex flex-col gap-4 border border-neutral-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b pb-3 border-neutral-200">
+                <h2 class="text-xl font-bold tracking-wide">碁石図鑑</h2>
+                <button id="btnCloseCatalog" class="text-neutral-400 hover:text-neutral-800 text-xl font-bold px-2">✕</button>
+            </div>
+            <p class="text-xs text-neutral-500">アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。</p>
+            <div id="catalogList" class="flex flex-col gap-3"></div>
         </div>
     </div>
 
@@ -337,7 +354,7 @@
                 bg: 'bg-[#f4e4bc]',
                 text: 'text-[#3e2211]',
                 subText: 'text-[#785338]',
-                boardBg: '#e8c88b',
+                boardBg: '#e4bb70',
                 lineColor: '#3e2211',
                 starColor: '#3e2211',
                 p1Fill: '#1c1917', p1Stroke: '#000000',
@@ -467,21 +484,39 @@
         const soundManager = new SoundManager();
 
         // ==========================================
-        // 3. テトロミノ (ピース) 定義
+        // 3. アルカン分子 (ピース) 定義
         // ==========================================
-        // 7種のテトロミノ。碁石4つが連結した形で、碁盤の交点を占有する。
-        const PIECE_SIZE = 4;
-        const LAYERS = 3; // 立体盤の層数
-        const PIECE_DEFS = {
-            I: [[0,0],[1,0],[2,0],[3,0]],
-            O: [[0,0],[1,0],[0,1],[1,1]],
-            T: [[0,0],[1,0],[2,0],[1,1]],
-            L: [[0,0],[1,0],[0,1],[0,2]],
-            J: [[1,0],[1,1],[0,2],[1,2]],
-            S: [[1,0],[2,0],[0,1],[1,1]],
-            Z: [[0,0],[1,0],[1,1],[2,1]]
+        // アルカンの炭素骨格を碁盤の格子に写した形。原子=碁石、結合=連結。
+        // すべて4原子以上なので「4マス未満の窒息領域」ルールがそのまま機能する。
+        // 通常の碁石: 1手につき空いている交点へ1石を置く標準的な囲碁。
+        const MOLECULES = {
+            STONE: { name: '碁石', iupac: '', formula: '', atoms: [[0,0]] }
         };
-        const PIECE_TYPES = Object.keys(PIECE_DEFS);
+        const PIECE_TYPES = Object.keys(MOLECULES);
+        const PIECE_DEFS = {};
+        PIECE_TYPES.forEach(t => { PIECE_DEFS[t] = MOLECULES[t].atoms; });
+        // 最小分子サイズ (窒息領域の判定しきい値)
+        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));
+        const LAYERS = 3; // 立体盤の層数
+
+        // ---- ルール説明文 (バリアントごとの差分はここだけ差し替える) ----
+        const RULES_COMMON = [
+            '黒 (先手) と白が交互に着手。自分の手番では空いている交点に碁石を1個置くか、パスを選ぶ。',
+            '同じ色で隣接した石は「連」としてつながり、呼吸を共有する。',
+            '連に隣接する空点は「呼吸点」。呼吸点が0になった連は取られ、相手のアゲハマになる。',
+            '自殺手禁止: 着手の結果、自分の連の呼吸点が0になる場所には置けない (相手の連を取れる場合を除く)。',
+            'コウ禁止: 相手の直前の着手前と同一の盤面を再現する手は打てない。',
+            '双方が連続でパスすると終局。地の中の死に石を確認し、地の数 + アゲハマ数 (+白はコミ6.5目) で勝敗を決める。',
+        ];
+        const RULES_VARIANT = [
+            '盤面は3層。同じ層の上下左右に加えて、真上・真下の層の点も近傍になる (最大6近傍)。',
+            '層タブで置く層を選ぶ。他層の石は薄い◆で表示される。',
+            '取り・呼吸点・地の判定は3層をまたいで行われる。',
+        ];
+        const RULES_CONTROLS = [
+            '配置: 盤上をクリック/タップ。',
+            'スマホ: 1タップ目=プレビュー表示、2タップ目=確定。',
+        ];
 
         function normalizeCells(cells) {
             const minX = Math.min(...cells.map(c => c[0]));
@@ -496,8 +531,8 @@
             return cells.map(([x, y]) => [-y, x]);
         }
 
-        // 各ピースの回転バリエーションを事前生成 (重複排除)
-        // I:2 / O:1 / T:4 / L:4 / J:4 / S:2 / Z:2 = 計19パターン
+        // 各分子の回転バリエーションを事前生成 (重複排除)
+        // 碁石は1マス: 回転の区別なし (1パターン)
         const ORIENTATIONS = {};
         PIECE_TYPES.forEach(type => {
             let cells = normalizeCells(PIECE_DEFS[type]);
@@ -515,7 +550,7 @@
             ORIENTATIONS[type] = list;
         });
 
-        // 7種1巡バッグ (テトリス方式) のシャッフル
+        // 全7種1巡バッグ (テトリス方式) のシャッフル
         function shuffledBag() {
             const bag = [...PIECE_TYPES];
             for (let i = bag.length - 1; i > 0; i--) {
@@ -528,7 +563,7 @@
         // ==========================================
         // 4. ゲーム状態変数
         // ==========================================
-        let BOARD_SIZE = 9;
+        let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE * LAYERS).fill(0); // 0:空, 1:黒, 2:白 (3層)
         let activeLayer = 0; // 表示・入力中の層
@@ -544,7 +579,7 @@
 
         // ピース配給
         let pieceMode = 'next'; // 'free' (自由選択) | 'next' (7種1巡ランダム)
-        let currentPieceType = 'T'; // 現在操作中のピース
+        let currentPieceType = 'STONE'; // 現在操作中の分子
         let currentRot = 0;         // 回転インデックス
         let pieceQueue = [];        // 'next'モード用の今後の供給列
         let heldPieces = { 1: null, 2: null }; // 各プレイヤーのホールドピース
@@ -553,7 +588,7 @@
         // モード & 設定
         let gameMode = 'local'; // 'local' | 'ai' | 'online'
         let aiPlayer = 2; // AIの手番 (2: 白=後手, 1: 黒=先手)
-        let currentTheme = THEMES.default;
+        let currentTheme = THEMES.go;
         let previewPos = null; // { u, v, cells, valid, type, rot }
         let lastMove = null; // 直前に配置したピース { player, cells }
         let prevBoard = null; // コウ判定用: 直前の着手が行われる前の盤面
@@ -632,7 +667,7 @@
             lastMove = s.lastMove || null;
             history = Array.isArray(s.history) ? s.history : [];
             pieceMode = ['free', 'next'].includes(s.pieceMode) ? s.pieceMode : 'next';
-            currentPieceType = PIECE_TYPES.includes(s.currentPieceType) ? s.currentPieceType : 'T';
+            currentPieceType = PIECE_TYPES.includes(s.currentPieceType) ? s.currentPieceType : 'STONE';
             currentRot = Number.isInteger(s.currentRot) ? s.currentRot : 0;
             pieceQueue = Array.isArray(s.pieceQueue)
                 ? s.pieceQueue.filter(t => PIECE_TYPES.includes(t)) : [];
@@ -708,6 +743,14 @@
         const inputRoomId = document.getElementById('inputRoomId');
         const onlineRoomStatus = document.getElementById('onlineRoomStatus');
         const btnToggleSound = document.getElementById('btnToggleSound');
+        const btnOpenCatalog = document.getElementById('btnOpenCatalog');
+        const btnCloseCatalog = document.getElementById('btnCloseCatalog');
+        const rulesModal = document.getElementById('rulesModal');
+        const rulesBody = document.getElementById('rulesBody');
+        const btnOpenRules = document.getElementById('btnOpenRules');
+        const btnCloseRules = document.getElementById('btnCloseRules');
+        const catalogModal = document.getElementById('catalogModal');
+        const catalogList = document.getElementById('catalogList');
         const btnStartNewGame = document.getElementById('btnStartNewGame');
         const themeList = document.getElementById('themeList');
         const resultModal = document.getElementById('resultModal');
@@ -748,68 +791,116 @@
             render();
         }
 
+        // 碁盤らしい余白: 外周の余白 = 1目分の格子幅
         function getBoardMetrics() {
             const width = canvas.getBoundingClientRect().width;
-            const padding = width * 0.08;
-            const cellSize = (width - padding * 2) / (BOARD_SIZE - 1);
+            const cellSize = width / (BOARD_SIZE + 1);
+            const padding = cellSize;
             return { width, padding, cellSize };
         }
 
-        // ピースのセル集合を「角丸の融合テトロミノ」として描く。
-        // 各セルの角丸正方形 + 隣接セル間の連結矩形を1つのパスにまとめて一度だけ塗る。
-        // - 1回の塗りなので重なり部分があっても色が濃くならない (半透明でも均一)
-        // - ブロックはセルより一回り小さいため、別ピースのブロックとは隙間で分離される
-        function pieceUnionPath(cellsAbs, padding, cellSize, half, rr) {
+        // ---- 色ユーティリティ ('#rrggbb' / 'rgba(...)' 両対応) ----
+        function parseColor(c) {
+            if (typeof c === 'string' && c[0] === '#') {
+                const n = parseInt(c.slice(1), 16);
+                return [n >> 16 & 255, n >> 8 & 255, n & 255, 1];
+            }
+            const m = String(c).match(/[\d.]+/g);
+            return [+m[0], +m[1], +m[2], m.length > 3 ? +m[3] : 1];
+        }
+        function shiftColor(c, amt) { // amt>0: 白寄り, amt<0: 黒寄り
+            const [r, g, b, a] = parseColor(c);
+            const t = amt > 0 ? 255 : 0, k = Math.abs(amt);
+            const f = v => Math.round(v + (t - v) * k);
+            return `rgba(${f(r)},${f(g)},${f(b)},${a})`;
+        }
+        function alphaColor(c, a) {
+            const [r, g, b] = parseColor(c);
+            return `rgba(${r},${g},${b},${a})`;
+        }
+
+        // 分子の描画: 球棒モデル (原子=艶のある球, 結合=太い棒)。
+        // 結合は同一分子内の隣接原子間のみ引くので、別分子とは分離して見える。
+        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
+            if (!cellsAbs || cellsAbs.length === 0) return;
             const set = new Set(cellsAbs.map(p => p.y * BOARD_SIZE + p.x));
+            const R = cellSize * 0.42;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+
+            // C-C 結合
+            ctx.strokeStyle = shiftColor(fill, -0.15);
+            ctx.lineWidth = cellSize * 0.30;
+            ctx.lineCap = 'round';
             ctx.beginPath();
             cellsAbs.forEach(p => {
                 const cx = padding + p.x * cellSize;
                 const cy = padding + p.y * cellSize;
-                if (ctx.roundRect) {
-                    ctx.roundRect(cx - half, cy - half, half * 2, half * 2, rr);
-                } else {
-                    ctx.rect(cx - half, cy - half, half * 2, half * 2);
-                }
                 [[1, 0], [0, 1]].forEach(([dx, dy]) => {
-                    const qx = p.x + dx;
-                    const qy = p.y + dy;
-                    if (set.has(qy * BOARD_SIZE + qx)) {
-                        if (dx === 1) ctx.rect(cx, cy - half, cellSize, half * 2);
-                        else ctx.rect(cx - half, cy, half * 2, cellSize);
+                    if (set.has((p.y + dy) * BOARD_SIZE + (p.x + dx))) {
+                        ctx.moveTo(cx, cy);
+                        ctx.lineTo(cx + dx * cellSize, cy + dy * cellSize);
                     }
                 });
             });
-        }
+            ctx.stroke();
 
-        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
-            if (!cellsAbs || cellsAbs.length === 0) return;
-            const half = cellSize * 0.44;
-            const rr = half * 0.38;
-            const outline = 1.4;
-            ctx.save();
-            ctx.globalAlpha = alpha;
-            if (stroke) {
-                // 一回り大きいシルエットを輪郭色で塗って均一なアウトラインにする
-                ctx.fillStyle = stroke;
-                pieceUnionPath(cellsAbs, padding, cellSize, half + outline, rr + outline);
+            // 原子球 (放射グラデーション + 輪郭 + スペキュラハイライト)
+            cellsAbs.forEach(p => {
+                const cx = padding + p.x * cellSize;
+                const cy = padding + p.y * cellSize;
+                const g = ctx.createRadialGradient(cx - R * 0.38, cy - R * 0.42, R * 0.08, cx, cy, R);
+                g.addColorStop(0, shiftColor(fill, 0.55));
+                g.addColorStop(0.65, fill);
+                g.addColorStop(1, shiftColor(fill, -0.25));
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(cx, cy, R, 0, Math.PI * 2);
                 ctx.fill();
-            }
-            ctx.fillStyle = fill;
-            pieceUnionPath(cellsAbs, padding, cellSize, half, rr);
-            ctx.fill();
+                if (stroke) {
+                    ctx.strokeStyle = stroke;
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.stroke();
+                }
+                ctx.fillStyle = 'rgba(255,255,255,0.45)';
+                ctx.beginPath();
+                ctx.arc(cx - R * 0.34, cy - R * 0.38, R * 0.17, 0, Math.PI * 2);
+                ctx.fill();
+            });
             ctx.restore();
         }
 
         function render() {
             const { width, padding, cellSize } = getBoardMetrics();
 
-            // 盤面背景クリア
-            ctx.fillStyle = currentTheme.boardBg;
+            // 木目調の盤面: 斜めグラデーション + うっすら縞 + 隅のヴィネット
+            const bg = ctx.createLinearGradient(0, 0, width, width);
+            bg.addColorStop(0, shiftColor(currentTheme.boardBg, 0.10));
+            bg.addColorStop(0.5, currentTheme.boardBg);
+            bg.addColorStop(1, shiftColor(currentTheme.boardBg, -0.10));
+            ctx.fillStyle = bg;
             ctx.fillRect(0, 0, width, width);
+
+            ctx.save();
+            ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.045);
+            ctx.lineWidth = width * 0.02;
+            for (let i = 0; i < 6; i++) {
+                const gy = width * (0.08 + i * 0.17);
+                ctx.beginPath();
+                ctx.moveTo(0, gy);
+                ctx.bezierCurveTo(width * 0.3, gy + width * 0.025, width * 0.7, gy - width * 0.025, width, gy);
+                ctx.stroke();
+            }
+            const vg = ctx.createRadialGradient(width / 2, width / 2, width * 0.55, width / 2, width / 2, width * 0.75);
+            vg.addColorStop(0, 'rgba(0,0,0,0)');
+            vg.addColorStop(1, 'rgba(0,0,0,0.09)');
+            ctx.fillStyle = vg;
+            ctx.fillRect(0, 0, width, width);
+            ctx.restore();
 
             // 格子線
             ctx.strokeStyle = currentTheme.lineColor;
-            ctx.lineWidth = 1;
+            ctx.lineWidth = Math.max(1, cellSize * 0.028);
             for (let i = 0; i < BOARD_SIZE; i++) {
                 const pos = padding + i * cellSize;
                 ctx.beginPath();
@@ -823,23 +914,28 @@
                 ctx.stroke();
             }
 
-            // 外枠強調
+            // 外枠強調 (二重線で碁盤らしく)
             ctx.strokeStyle = currentTheme.lineColor;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = Math.max(1.6, cellSize * 0.055);
             ctx.strokeRect(padding, padding, width - padding * 2, width - padding * 2);
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.35;
+            ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
+            ctx.globalAlpha = 1;
 
             // 星 (天元・星の点)
             const starPoints = getStarPoints(BOARD_SIZE);
             ctx.fillStyle = currentTheme.starColor;
+            const starR = Math.max(2.5, cellSize * 0.10);
             starPoints.forEach(pt => {
                 const cx = padding + pt.x * cellSize;
                 const cy = padding + pt.y * cellSize;
                 ctx.beginPath();
-                ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+                ctx.arc(cx, cy, starR, 0, Math.PI * 2);
                 ctx.fill();
             });
 
-            // 窒息領域 (ピースが入れない4マス未満の空領域) を薄い中間色で表示
+            // 窒息領域 (分子が入れない最小サイズ未満の空領域) を薄い中間色で表示
             drawDeadSpacePoints(padding, cellSize);
 
             // ピース描画
@@ -865,12 +961,18 @@
                     {x:3,y:9}, {x:9,y:9}, {x:15,y:9},
                     {x:3,y:15}, {x:9,y:15}, {x:15,y:15}
                 ];
+            } else if (size === 25) {
+                return [
+                    {x:4,y:4}, {x:12,y:4}, {x:20,y:4},
+                    {x:4,y:12}, {x:12,y:12}, {x:20,y:12},
+                    {x:4,y:20}, {x:12,y:20}, {x:20,y:20}
+                ];
             }
             return [];
         }
 
         function drawDeadSpacePoints(padding, cellSize) {
-            const r = cellSize * 0.40;
+            const r = cellSize * 0.16;
             const deadMask = computeDeadMask(board);
             ctx.save();
             ctx.fillStyle = 'rgba(128, 128, 128, 0.35)';
@@ -937,8 +1039,8 @@
                 if (z === activeLayer) continue;
                 for (let y = 0; y < BOARD_SIZE; y++) {
                     for (let x = 0; x < BOARD_SIZE; x++) {
-                        const idx = z * layerCells() + y * BOARD_SIZE + x;
-                        const val = board[idx];
+                        const idx2 = z * layerCells() + y * BOARD_SIZE + x;
+                        const val = board[idx2];
                         if (val === 0) continue;
                         const s2 = cellSize * 0.16;
                         ctx.save();
@@ -984,9 +1086,9 @@
         }
 
         // ==========================================
-        // 6. ピーストレイ UI (現在ピース・回転・パレット/NEXT)
+        // 6. 碁石トレイ UI (現在碁石・回転・パレット/NEXT)
         // ==========================================
-        // ミニキャンバスにピースを描画。player: 描くプレイヤー色 (省略時=現在の手番)
+        // ミニキャンバスに分子を球棒モデルで描画。player: 描くプレイヤー色 (省略時=現在の手番)
         function drawMiniPiece(canvasEl, type, rotIdx, player) {
             const list = ORIENTATIONS[type];
             if (!list || list.length === 0) return;
@@ -998,26 +1100,49 @@
 
             const w = Math.max(...shape.map(p => p[0])) + 1;
             const h = Math.max(...shape.map(p => p[1])) + 1;
-            const s = Math.min((cw - 12) / w, (ch - 12) / h);
-            const ox = (cw - w * s) / 2;
-            const oy = (ch - h * s) / 2;
+            const s = Math.min((cw - 10) / w, (ch - 10) / h);
+            const ox = (cw - w * s) / 2 + s / 2;
+            const oy = (ch - h * s) / 2 + s / 2;
             const pl = player || turn;
+            const fill = pl === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+            const stroke = pl === 1 ? currentTheme.p1Stroke : currentTheme.p2Stroke;
+            const R = s * 0.44;
+            const set = new Set(shape.map(p => p.join(',')));
 
-            c.fillStyle = pl === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
-            c.strokeStyle = pl === 1 ? currentTheme.p1Stroke : currentTheme.p2Stroke;
-            c.lineWidth = 1.5;
-            const rr = Math.max(1.5, s * 0.14);
+            // C-C 結合
+            c.strokeStyle = shiftColor(fill, -0.15);
+            c.lineWidth = s * 0.28;
+            c.lineCap = 'round';
+            c.beginPath();
             shape.forEach(([px, py]) => {
-                const rx = ox + px * s + 0.5;
-                const ry = oy + py * s + 0.5;
+                [[1, 0], [0, 1]].forEach(([dx, dy]) => {
+                    if (set.has((px + dx) + ',' + (py + dy))) {
+                        c.moveTo(ox + px * s, oy + py * s);
+                        c.lineTo(ox + (px + dx) * s, oy + (py + dy) * s);
+                    }
+                });
+            });
+            c.stroke();
+
+            // 原子球
+            shape.forEach(([px, py]) => {
+                const cx = ox + px * s;
+                const cy = oy + py * s;
+                const g = c.createRadialGradient(cx - R * 0.38, cy - R * 0.42, R * 0.08, cx, cy, R);
+                g.addColorStop(0, shiftColor(fill, 0.55));
+                g.addColorStop(0.65, fill);
+                g.addColorStop(1, shiftColor(fill, -0.25));
+                c.fillStyle = g;
                 c.beginPath();
-                if (c.roundRect) {
-                    c.roundRect(rx, ry, s - 1, s - 1, rr);
-                } else {
-                    c.rect(rx, ry, s - 1, s - 1);
-                }
+                c.arc(cx, cy, R, 0, Math.PI * 2);
                 c.fill();
+                c.strokeStyle = stroke;
+                c.lineWidth = 1;
                 c.stroke();
+                c.fillStyle = 'rgba(255,255,255,0.45)';
+                c.beginPath();
+                c.arc(cx - R * 0.34, cy - R * 0.38, R * 0.17, 0, Math.PI * 2);
+                c.fill();
             });
         }
 
@@ -1026,11 +1151,11 @@
             PIECE_TYPES.forEach(t => {
                 const b = document.createElement('button');
                 b.className = 'p-0.5 rounded-lg border border-transparent hover:opacity-80 active:scale-95 transition-all';
-                b.title = t;
+                b.title = `${MOLECULES[t].name} ${MOLECULES[t].formula}`;
                 b.dataset.type = t;
                 const c = document.createElement('canvas');
-                c.width = 40;
-                c.height = 40;
+                c.width = 44;
+                c.height = 44;
                 b.appendChild(c);
                 b.addEventListener('click', () => {
                     if (pieceMode !== 'free') return;
@@ -1051,13 +1176,13 @@
             if (!list) return;
             currentRot = currentRot % list.length;
             drawMiniPiece(currentPieceCanvas, currentPieceType, currentRot);
-            currentPieceLabel.textContent = `ピース: ${currentPieceType}`;
+            currentPieceLabel.textContent = `${MOLECULES[currentPieceType].name} ${MOLECULES[currentPieceType].formula}`;
 
             if (pieceMode === 'free') {
                 paletteBox.classList.remove('hidden');
                 nextBox.classList.add('hidden');
                 nextBox.classList.remove('flex');
-                trayModeLabel.textContent = 'ピース選択 (自由モード)';
+                trayModeLabel.textContent = '碁石選択 (自由モード)';
                 PIECE_TYPES.forEach(t => {
                     const c = paletteCanvases[t];
                     if (c) drawMiniPiece(c, t, 0, turn);
@@ -1068,7 +1193,7 @@
                 paletteBox.classList.add('hidden');
                 nextBox.classList.remove('hidden');
                 nextBox.classList.add('flex');
-                trayModeLabel.textContent = 'NEXT (7種1巡モード)';
+                trayModeLabel.textContent = `NEXT (全${PIECE_TYPES.length}種1巡モード)`;
                 // NEXTピースは次の手番(相手)の色で描く
                 if (pieceQueue[0]) drawMiniPiece(nextPieceCanvas, pieceQueue[0], 0, turn === 1 ? 2 : 1);
             }
@@ -1332,8 +1457,8 @@
         // 8. 囲碁 & 3DGO ルール判定アルゴリズム
         // ==========================================
         // 【窒息領域ルール】
-        // 連結した空領域が PIECE_SIZE(=4) マス未満の場合、その領域には
-        // どのピースも物理的に置けないため「窒息領域」とみなす。
+        // 連結した空領域が最小分子サイズ (PIECE_SIZE=4) マス未満の場合、その領域には
+        // どの分子も物理的に置けないため「窒息領域」とみなす。
         // 窒息領域の空点は呼吸点にも地にもならない (MAMEGOの孤立空点ルールの一般化)。
         function computeDeadMask(boardState) {
             const dead = new Uint8Array(boardState.length);
@@ -1571,14 +1696,12 @@
                 ORIENTATIONS[type].forEach((shape, rot) => {
                     const w = Math.max(...shape.map(c => c[0])) + 1;
                     const h = Math.max(...shape.map(c => c[1])) + 1;
-                    for (let z = 0; z < LAYERS; z++) {
-                        for (let ty = 0; ty + h <= BOARD_SIZE; ty++) {
-                            for (let tx = 0; tx + w <= BOARD_SIZE; tx++) {
-                                const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy, z }));
-                                if (isValidPlacement(cells, turn)) {
-                                    const score = rateMove(cells, turn);
-                                    candidates.push({ cells, type, rot, score });
-                                }
+                    for (let ty = 0; ty + h <= BOARD_SIZE; ty++) {
+                        for (let tx = 0; tx + w <= BOARD_SIZE; tx++) {
+                            const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy }));
+                            if (isValidPlacement(cells, turn)) {
+                                const score = rateMove(cells, turn);
+                                candidates.push({ cells, type, rot, score });
                             }
                         }
                     }
@@ -2123,6 +2246,77 @@
         btnCloseSettings.addEventListener('click', () => {
             soundManager.playClick();
             settingsModal.classList.add('hidden');
+        });
+
+        // ---- 碁石図鑑 ----
+        // MOLECULES を化学式ごとにグループ化し、球棒モデルのミニ図付きで一覧表示する
+        function buildCatalog() {
+            catalogList.innerHTML = '';
+            const groups = {};
+            PIECE_TYPES.forEach(t => {
+                const m = MOLECULES[t];
+                (groups[m.formula] = groups[m.formula] || []).push({ type: t, m });
+            });
+            Object.keys(groups).forEach(formula => {
+                const members = groups[formula];
+                const g = document.createElement('div');
+                g.className = 'rounded-xl bg-neutral-50 border border-neutral-200 p-3';
+                g.innerHTML = `
+                    <div class="flex items-baseline gap-2 mb-2">
+                        <span class="text-sm font-extrabold">${formula}</span>
+                        <span class="text-[10px] font-bold text-neutral-500">炭素数 ${members[0].m.atoms.length} / ${members.length} 異性体</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>`;
+                const grid = g.querySelector('.grid');
+                members.forEach(({ type, m }) => {
+                    const item = document.createElement('div');
+                    item.className = 'flex flex-col items-center gap-1 bg-white rounded-lg py-2 px-1 border border-neutral-100';
+                    const cv = document.createElement('canvas');
+                    cv.width = 84; cv.height = 64;
+                    item.appendChild(cv);
+                    const label = document.createElement('div');
+                    label.className = 'text-center';
+                    label.innerHTML = `<div class="text-xs font-bold">${m.name}</div><div class="text-[9px] text-neutral-500">${m.iupac}</div>`;
+                    item.appendChild(label);
+                    grid.appendChild(item);
+                    drawMiniPiece(cv, type, 0, 1);
+                });
+                catalogList.appendChild(g);
+            });
+        }
+
+        if (btnOpenCatalog) btnOpenCatalog.addEventListener('click', () => {
+            soundManager.playClick();
+            buildCatalog();
+            catalogModal.classList.remove('hidden');
+        });
+        if (btnCloseCatalog) btnCloseCatalog.addEventListener('click', () => {
+            soundManager.playClick();
+            catalogModal.classList.add('hidden');
+        });
+
+        // ルールモーダル
+        function buildRules() {
+            const sec = (title, items) => {
+                const d = document.createElement('div');
+                d.innerHTML = `<div class="font-bold text-neutral-800 border-l-2 border-neutral-400 pl-2 mb-1">${title}</div>` +
+                    '<ul class="list-disc pl-5 flex flex-col gap-1">' +
+                    items.map(t => `<li>${t}</li>`).join('') + '</ul>';
+                return d;
+            };
+            rulesBody.innerHTML = '';
+            rulesBody.appendChild(sec('基本ルール', RULES_COMMON));
+            rulesBody.appendChild(sec('このゲームのルール', RULES_VARIANT));
+            rulesBody.appendChild(sec('操作', RULES_CONTROLS));
+        }
+        btnOpenRules.addEventListener('click', () => {
+            soundManager.init();
+            soundManager.playClick();
+            buildRules();
+            rulesModal.classList.remove('hidden');
+        });
+        btnCloseRules.addEventListener('click', () => {
+            rulesModal.classList.add('hidden');
         });
 
         // 層選択タブ

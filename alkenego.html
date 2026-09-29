@@ -37,7 +37,7 @@
 
         <!-- ヘッダー: タイトル & 設定歯車ボタン -->
         <header class="w-full flex items-center justify-between pt-1">
-            <div class="w-8"></div> <!-- レイアウト崩れ防止用ダミー -->
+            <button id="btnOpenRules" title="ルール" class="w-9 h-9 flex items-center justify-center rounded-full border border-current/25 hover:bg-black/5 active:scale-95 transition-all text-base font-extrabold">?</button>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-wider text-center">ALKENEGO <span class="text-sm font-bold opacity-60">アルケン碁</span></h1>
             <button id="btnOpenSettings" title="設定" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5 active:scale-95 transition-all">
                 <svg class="w-6 h-6 current-color" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,11 +157,22 @@
 
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
-            アルケン・アルキン「碁ケン」を配置し合う変則囲碁 (二重結合は剛直・回転不可)<br>
+            アルケン・アルキン「碁ケン」を配置し合う変則囲碁 (回転不可)<br>
             PC: クリックで配置 / ホールド=Hキー<br>
-            スマホ: 1タップ目プレビュー、2タップ目確定 (ホールドはボタン)<br>
-            ※回転不可: 剛直な不飽和結合のため碁ケンは向きを変えられません
+            スマホ: 1タップ目プレビュー、2タップ目確定<br>
+            ※剛直な多重結合のため碁ケンは向きを変えられません
         </p>
+    </div>
+
+    <!-- 【ルールモーダル】 -->
+    <div id="rulesModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] hidden">
+        <div class="bg-white text-neutral-900 p-5 sm:p-6 max-w-md w-full rounded-2xl shadow-2xl flex flex-col gap-4 border border-neutral-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b pb-3 border-neutral-200">
+                <h2 class="text-xl font-bold tracking-wide">ルール</h2>
+                <button id="btnCloseRules" class="text-neutral-400 hover:text-neutral-800 text-xl font-bold px-2">✕</button>
+            </div>
+            <div id="rulesBody" class="text-xs sm:text-sm text-neutral-700 flex flex-col gap-3 leading-relaxed"></div>
+        </div>
     </div>
 
     <!-- 【1手戻る確認モーダル】 -->
@@ -500,6 +511,26 @@
         // 最小分子サイズ (窒息領域の判定しきい値)
         const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));
 
+        // ---- ルール説明文 (バリアントごとの差分はここだけ差し替える) ----
+        const RULES_COMMON = [
+            '黒 (先手) と白が交互に着手。自分の手番では盤上に碁ケンを1個配置するか、パスを選ぶ。',
+            '碁ケン内で隣接する原子同士は結合しており、つながった石は1つの「連」として呼吸を共有する。',
+            '連に隣接する空点は「呼吸点」。呼吸点が0になった連は取られ、相手のアゲハマになる。',
+            '自殺手禁止: 着手の結果、自分の連の呼吸点が0になる場所には置けない (相手の連を取れる場合を除く)。',
+            'コウ禁止: 相手の直前の着手前と同一の盤面を再現する手は打てない。',
+            `窒息領域: ${PIECE_SIZE}マス未満の連結した空領域にはどの碁ケンも入らないため、呼吸点にも地にもならない。`,
+            '双方が連続でパスすると終局。地の中の死に石を確認し、地の数 + アゲハマ数 (+白はコミ6.5目) で勝敗を決める。',
+        ];
+        const RULES_VARIANT = [
+            'このゲームで使う碁ケンはアルケン・アルキン7種 (二重・三重結合を含む不飽和分子)。',
+            '多重結合は剛直のため碁ケンは回転できない (全分子1向き固定)。二重線が多重結合。',
+        ];
+        const RULES_CONTROLS = [
+            '配置: 盤上をクリック/タップ。回転 = Rキー・右クリック・ホイール・「回転」ボタン。',
+            'ホールド = Hキーまたは「ホールド」ボタン (ネクストモードのみ)。',
+            'スマホ: 1タップ目=プレビュー表示、2タップ目=確定。',
+        ];
+
         function normalizeCells(cells) {
             const minX = Math.min(...cells.map(c => c[0]));
             const minY = Math.min(...cells.map(c => c[1]));
@@ -646,7 +677,7 @@
             lastMove = s.lastMove || null;
             history = Array.isArray(s.history) ? s.history : [];
             pieceMode = ['free', 'next'].includes(s.pieceMode) ? s.pieceMode : 'next';
-            currentPieceType = PIECE_TYPES.includes(s.currentPieceType) ? s.currentPieceType : 'BUTANE';
+            currentPieceType = PIECE_TYPES.includes(s.currentPieceType) ? s.currentPieceType : 'BUTENE';
             currentRot = Number.isInteger(s.currentRot) ? s.currentRot : 0;
             pieceQueue = Array.isArray(s.pieceQueue)
                 ? s.pieceQueue.filter(t => PIECE_TYPES.includes(t)) : [];
@@ -724,6 +755,10 @@
         const btnToggleSound = document.getElementById('btnToggleSound');
         const btnOpenCatalog = document.getElementById('btnOpenCatalog');
         const btnCloseCatalog = document.getElementById('btnCloseCatalog');
+        const rulesModal = document.getElementById('rulesModal');
+        const rulesBody = document.getElementById('rulesBody');
+        const btnOpenRules = document.getElementById('btnOpenRules');
+        const btnCloseRules = document.getElementById('btnCloseRules');
         const catalogModal = document.getElementById('catalogModal');
         const catalogList = document.getElementById('catalogList');
         const btnStartNewGame = document.getElementById('btnStartNewGame');
@@ -2255,6 +2290,30 @@
         btnCloseCatalog.addEventListener('click', () => {
             soundManager.playClick();
             catalogModal.classList.add('hidden');
+        });
+
+        // ルールモーダル
+        function buildRules() {
+            const sec = (title, items) => {
+                const d = document.createElement('div');
+                d.innerHTML = `<div class="font-bold text-neutral-800 border-l-2 border-neutral-400 pl-2 mb-1">${title}</div>` +
+                    '<ul class="list-disc pl-5 flex flex-col gap-1">' +
+                    items.map(t => `<li>${t}</li>`).join('') + '</ul>';
+                return d;
+            };
+            rulesBody.innerHTML = '';
+            rulesBody.appendChild(sec('基本ルール', RULES_COMMON));
+            rulesBody.appendChild(sec('このゲームのルール', RULES_VARIANT));
+            rulesBody.appendChild(sec('操作', RULES_CONTROLS));
+        }
+        btnOpenRules.addEventListener('click', () => {
+            soundManager.init();
+            soundManager.playClick();
+            buildRules();
+            rulesModal.classList.remove('hidden');
+        });
+        btnCloseRules.addEventListener('click', () => {
+            rulesModal.classList.add('hidden');
         });
 
         // 盤サイズ選択ボタン

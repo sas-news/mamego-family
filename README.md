@@ -1,37 +1,65 @@
 # 変則碁シリーズ (MAMEGO family)
 
-碁のルール (連・呼吸点・取り・コウ・地集計) に「つながったピース」を持ち込んだ
-ブラウザゲーム集。[MAMEGO](https://github.com/cerevisiae-fii/mamego) の派生。
+標準的な囲碁のルール (連・呼吸点・取り・コウ・地集計) をベースに、
+特殊ルールや特殊碁石を加えたブラウザゲーム集。[MAMEGO](https://github.com/cerevisiae-fii/mamego) の派生。
 
 **Play:** https://sas-news.github.io/mamego-family/
 
 ## ゲーム一覧
 
+### ピース系 (連結碁石)
+
 | ゲーム | 内容 |
 |---|---|
+| GO `normgo.html` | 標準的な囲碁 (派生のベース) |
 | TETOGO `tetogo.html` | テトロミノ碁。7種テトロミノ・回転・ホールド・NEXTキュー |
 | ALGO `algo.html` | アルカン碁。球棒モデルの炭化水素分子「碁カン」+ 碁カン図鑑 |
 | PENGO `pengo.html` | ペントミノ12種、窒息領域 < 5 |
-| TORUSGO `torusgo.html` | トーラス盤 (上下左右の端が繋がる) |
-| DECAYGO `decaygo.html` | 碁石に寿命 (8手で崩壊) |
-| LIFEGO `lifego.html` | 着手ごとに盤面がライフゲーム1世代進化 |
-| RUSHGO `rushgo.html` | 1手あたり制限時間、時間切れ=自動パス |
 | CYCLOGO `cyclogo.html` | シクロアルカン環状分子「碁クロ」 |
 | ALKENEGO `alkenego.html` | アルケン/アルキン。剛直な二重結合で回転不可 |
 | POLYGO `polygo.html` | 毎手4連のポリマー鎖を自由に描画 |
+| ASYMGO `asymgo.html` | 非対称ピースセット (黒:直鎖アルカン、白:分枝) |
+| DRAFTGO `draftgo.html` | 対局前に碁カンを交互ドラフト |
+
+### 盤面・配置ルール系 (通常碁石 + 特殊ルール)
+
+| ゲーム | 内容 |
+|---|---|
+| TORUSGO `torusgo.html` | トーラス盤 (上下左右の端が繋がる) |
+| DIAGO `diago.html` | 8近傍。斜めの連も繋がる |
+| WALLGO `wallgo.html` | ランダム壁マス (置けない・呼吸点にならない) |
+| GRAVGO `gravgo.html` | 重力ルール (最下段か石の直上のみ) |
+| SPAWNGO `spawngo.html` | 繁殖ルール (自石隣接のみ配置可) |
+| MIRRGO `mirrgo.html` | 対称ルール (縦中央線で鏡映して両側に置く) |
+| GRAPHGO `graphgo.html` | 盤面が分子グラフ (結合=辺のみが道) |
 | 3DGO `3dgo.html` | 3層立体盤、上下層も連・呼吸点 |
-| ASYMGO `asymgo.html` | 非対称ピースセット (黒:I/O/T、白:L/J/S/Z) |
-| DRAFTGO `draftgo.html` | 対局前にピースを交互ドラフト |
-| GRAPHGO `graphgo.html` | 盤面そのものが分子グラフ (結合=辺のみが道) |
+
+### 手順・勝敗系
+
+| ゲーム | 内容 |
+|---|---|
+| TWICEGO `twicego.html` | 各手番で2石ずつ置く |
+| KINGGO `kinggo.html` | 初手が王(♛)。王を取られると即負け |
+| MAXGO `maxgo.html` | 先取ルール (10石先取で即勝利) |
+| SANDGO `sandgo.html` | ハサミ取り (上下/左右に挟んだ敵石を捕獲) |
+| RUSHGO `rushgo.html` | 1手あたり制限時間、時間切れ=自動パス |
+
+### 自動変化系
+
+| ゲーム | 内容 |
+|---|---|
+| DECAYGO `decaygo.html` | 碁石に寿命 (8手で崩壊) |
+| LIFEGO `lifego.html` | 着手ごとに盤面がライフゲーム1世代進化 |
 
 ## 共通機能
 
 - ローカル / AI / オンライン (PeerJS) 対戦
 - 1手戻る、sessionStorage による対局状態の保存、テーマ・サウンド設定
 - 9・13・19路 (ALGO は 13/19/25路) の盤サイズ
+- 各画面右上の「?」ボタンでルールモーダル (基本ルール + 派生ルール + 操作説明)
 
 ## 開発
 
-- `gen_variants.js` — バリアント HTML を TETOGO/ALGO から生成するジェネレータ (`node gen_variants.js`)
+- `gen_variants.js` — バリアント HTML を ALGO ベース (通常囲碁エンジン) から生成 (`node gen_variants.js`)
 - `node test-logic.js` / `node test-algo.js` — TETOGO/ALGO のルールエンジンテスト (vm + DOM スタブ)
 - `node test-variants.js` — 全バリアントの起動 + 固有ルールのスモークテスト
