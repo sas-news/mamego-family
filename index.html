@@ -194,6 +194,16 @@
             { file: 'stonerain.html', name: 'STONERAIN', jp: '石雨碁',    desc: '9手ごとにランダムな空点へ壁が降る', kind: 'rain' },
             { file: 'splitgo.html', name: 'SPLITGO',  jp: '分裂碁',       desc: '7石以上の連は半分が敵色に分裂', kind: 'split' },
             { file: 'minigo.html',  name: 'MINIGO',   jp: '少子碁',       desc: '得点が少ない側が勝つ (ミゼール)', kind: 'mini' },
+            { file: 'grenadego.html', name: 'GRENADEGO', jp: '榴弾碁',    desc: '取られた連は爆発し8方向の石を道連れ', kind: 'grenade' },
+            { file: 'infectgo.html', name: 'INFECTGO', jp: '感染碁',      desc: '7手ごとに孤立石が隣の敵石を感染', kind: 'infect' },
+            { file: 'bondgo.html',  name: 'BONDGO',   jp: '結合碁',       desc: '敵連を取ると接触自連も道連れ', kind: 'bond' },
+            { file: 'rimgo.html',   name: 'RIMGO',    jp: '淵碁',         desc: '外周の地は2倍計算', kind: 'rim' },
+            { file: 'budgetgo.html', name: 'BUDGETGO', jp: '手数碁',      desc: '60手で自動終局して得点計算', kind: 'budget' },
+            { file: 'frontgo.html', name: 'FRONTGO',  jp: '前線碁',       desc: '前線が下へ進み後方の石は確定', kind: 'front' },
+            { file: 'chargego.html', name: 'CHARGEGO', jp: '溜め碁',      desc: 'パスで溜まり次の石が5手間不死', kind: 'charge' },
+            { file: 'shufflego.html', name: 'SHUFFLEGO', jp: '混成碁',    desc: '15手ごとに全石が50%で色反転', kind: 'shuffle' },
+            { file: 'taxgo.html',   name: 'TAXGO',    jp: '関税碁',       desc: '敵陣半分への着手は相手に+1目', kind: 'tax' },
+            { file: 'greedgo.html', name: 'GREEDGO',  jp: '強欲碁',       desc: 'アタリ状態なら取る手しか打てない', kind: 'greed' },
         ];
 
         const grid = document.getElementById('gameGrid');
@@ -811,6 +821,69 @@
                     c.fillStyle = P1S; c.font = `bold ${cell*1.3}px sans-serif`;
                     c.fillText('＜', at(3,3.2).x, at(3,3.2).y);
                     dot(1.6,3,P1,P1S,R*0.55); dot(4.4,3,P2,P2S);
+                    break;
+                case 'grenade': // 榴弾 (爆発)
+                    dot(3,3,P2,P2S);
+                    c.strokeStyle = '#dc2626'; c.lineWidth = 2; c.lineCap = 'round';
+                    [[0,-1],[0.7,-0.7],[1,0],[0.7,0.7],[0,1],[-0.7,0.7],[-1,0],[-0.7,-0.7]].forEach(([dx,dy]) => {
+                        const a = at(3 + dx * 0.9, 3 + dy * 0.9), b = at(3 + dx * 1.6, 3 + dy * 1.6);
+                        c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke();
+                    });
+                    break;
+                case 'infect': // 感染 (色が伝播)
+                    dot(2.2,3,P1,P1S); dot(3.8,3,P2,P2S);
+                    c.strokeStyle = P1; c.lineWidth = 1.8; c.lineCap = 'round';
+                    c.beginPath(); c.moveTo(at(2.7,3).x, at(2.7,3).y); c.lineTo(at(3.3,3).x, at(3.3,3).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(3,2.7).x, at(3,2.7).y); c.lineTo(at(3.4,3).x, at(3.4,3).y); c.lineTo(at(3,3.3).x, at(3,3.3).y); c.stroke();
+                    break;
+                case 'bond': // 結合 (手錠風に連結した異色)
+                    dot(2.4,3,P1,P1S); dot(3.6,3,P2,P2S);
+                    c.strokeStyle = P1S; c.lineWidth = 2;
+                    c.beginPath(); c.moveTo(at(2.4,3).x, at(2.4,3).y); c.lineTo(at(3.6,3).x, at(3.6,3).y); c.stroke();
+                    break;
+                case 'rim': // 淵 (外周強調)
+                    c.strokeStyle = '#ca8a04'; c.lineWidth = 2.5;
+                    c.strokeRect(at(0.8,0.8).x, at(0.8,0.8).y, cell*4.4, cell*4.4);
+                    dot(3,3,P1,P1S); dot(1.4,1.4,P2,P2S);
+                    break;
+                case 'budget': // 手数 (時計)
+                    c.strokeStyle = P1S; c.lineWidth = 2;
+                    c.beginPath(); c.arc(at(3,3).x, at(3,3).y, cell*1.2, 0, Math.PI*2); c.stroke();
+                    c.beginPath(); c.moveTo(at(3,3).x, at(3,3).y); c.lineTo(at(3,2.2).x, at(3,2.2).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(3,3).x, at(3,3).y); c.lineTo(at(3.7,3.4).x, at(3.7,3.4).y); c.stroke();
+                    break;
+                case 'front': // 前線 (進行する線)
+                    c.strokeStyle = '#16a34a'; c.lineWidth = 2.5;
+                    c.beginPath(); c.moveTo(at(0.8,2.4).x, at(0.8,2.4).y); c.lineTo(at(5.2,2.4).x, at(5.2,2.4).y); c.stroke();
+                    c.fillStyle = '#16a34a';
+                    c.beginPath(); c.moveTo(at(2.6,1.4).x, at(2.6,1.4).y); c.lineTo(at(3.4,1.4).x, at(3.4,1.4).y); c.lineTo(at(3,2.1).x, at(3,2.1).y); c.fill();
+                    dot(2,4,P1,P1S); dot(4,4,P2,P2S);
+                    break;
+                case 'charge': // 溜め (雷マーク)
+                    c.fillStyle = '#eab308';
+                    c.beginPath(); c.moveTo(at(3.4,1.2).x, at(3.4,1.2).y); c.lineTo(at(2.4,3.2).x, at(2.4,3.2).y);
+                    c.lineTo(at(3.1,3.2).x, at(3.1,3.2).y); c.lineTo(at(2.6,4.8).x, at(2.6,4.8).y);
+                    c.lineTo(at(4,2.7).x, at(4,2.7).y); c.lineTo(at(3.3,2.7).x, at(3.3,2.7).y); c.fill();
+                    break;
+                case 'shuffle': // 混成 (シャッフル矢印)
+                    c.strokeStyle = P1S; c.lineWidth = 2; c.lineCap = 'round';
+                    c.beginPath(); c.moveTo(at(1.4,2).x, at(1.4,2).y); c.lineTo(at(4.6,4).x, at(4.6,4).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(4.2,3.6).x, at(4.2,3.6).y); c.lineTo(at(4.7,4).x, at(4.7,4).y); c.lineTo(at(4.2,4.4).x, at(4.2,4.4).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(4.6,2).x, at(4.6,2).y); c.lineTo(at(1.4,4).x, at(1.4,4).y); c.stroke();
+                    break;
+                case 'tax': // 関税 (¥マーク)
+                    c.fillStyle = P1S; c.font = `bold ${cell*1.1}px sans-serif`;
+                    c.fillText('¥', at(2.4,3.2).x, at(2.4,3.2).y);
+                    dot(4.2,3,P2,P2S);
+                    break;
+                case 'greed': // 強欲 (囲む矢印)
+                    dot(3,3,P2,P2S);
+                    c.strokeStyle = '#dc2626'; c.lineWidth = 1.8; c.lineCap = 'round';
+                    [[1.6,3],[4.4,3],[3,1.6],[3,4.4]].forEach(([x,y]) => {
+                        c.beginPath(); c.moveTo(at(x,y).x, at(x,y).y);
+                        const t = at(3 + (3-x)*0.25, 3 + (3-y)*0.25);
+                        c.lineTo(t.x, t.y); c.stroke();
+                    });
                     break;
             }
         }

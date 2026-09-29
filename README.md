@@ -98,6 +98,16 @@
 | FINITEGO `finitego.html` | 有限碁 (各プレイヤーの石は最大12個) |
 | COPYGO `copygo.html` | 模倣碁 (相手の着手の点対称位置のみ可) |
 | SPLITGO `splitgo.html` | 分裂碁 (7石以上の連は半分が敵化) |
+| GRENADEGO `grenadego.html` | 榴弾碁 (取られた連が爆発し8方向を道連れ) |
+| BONDGO `bondgo.html` | 結合碁 (敵連を取ると接触自連も道連れ) |
+| INFECTGO `infectgo.html` | 感染碁 (孤立石が敵石を感染させる) |
+| GREEDGO `greedgo.html` | 強欲碁 (アタリ状態なら取る手のみ合法) |
+| CHARGEGO `chargego.html` | 溜め碁 (パスで次の石が5手間不死) |
+| TAXGO `taxgo.html` | 関税碁 (敵陣への着手は相手に+1目) |
+| RIMGO `rimgo.html` | 淵碁 (外周の地は2倍計算) |
+| BUDGETGO `budgetgo.html` | 手数碁 (60手で自動終局) |
+| FRONTGO `frontgo.html` | 前線碁 (前線より上の石は取られない) |
+| SHUFFLEGO `shufflego.html` | 混成碁 (15手ごとに全石が50%で色反転) |
 
 ### 自動変化系
 

@@ -5001,5 +5001,446 @@ out('minigo.html', apply(ALGO, [
     ...STONE_SPEC,
 ], 'minigo'));
 
+// ============================================================
+// ==== 第9バッチ: 追加10派生 ====
+// ============================================================
+
+// 8方向近傍ヘルパー (連鎖爆発・榴弾共通)
+const NBRS8_FN = `        // 8方向近傍
+        function nbrs8(i) {
+            const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
+            const out8 = [...getNeighbors(i)];
+            [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([dx, dy]) => {
+                const nx = x + dx, ny = y + dy;
+                if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE)
+                    out8.push(ny * BOARD_SIZE + nx);
+            });
+            return out8;
+        }
+`;
+
+// 93. GRENADEGO (榴弾碁) — 取られた連は爆発し周囲8方向の石を道連れ
+out('grenadego.html', apply(ALGO, [
+    ...rb('GRENADEGO', '榴弾碁', 'grenadego'),
+    [ONE, RV_ALGO, rv([
+        '榴弾ルール: 取られた連は爆発し、周囲8方向の石 (両色) も道連れに消える。',
+        '爆発に巻き込まれた自分の石もアゲハマに加算される。囲みすぎると自爆する攻撃的碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 榴弾ルール<br>
+            ※取られた連は爆発し周囲8方向の石 (両色) を道連れ`],
+    [ONE, `        function endGameByScore() {`, NBRS8_FN + `
+        function endGameByScore() {`],
+    [ONE, CAPTURE_BLOCK,
+`            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                // 榴弾: 取られたマスの8方向の石 (両色) も爆発で消える
+                const boom = new Set();
+                captured.forEach(idx => nbrs8(idx).forEach(n => {
+                    if (board[n] === 1 || board[n] === 2) boom.add(n);
+                }));
+                boom.forEach(i => { board[i] = 0; });
+                captures[player] += captured.length + boom.size;
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    ...STONE_SPEC,
+], 'grenadego'));
+
+// 94. INFECTGO (感染碁) — 7手ごとに孤立石が隣接する敵石を感染させる
+out('infectgo.html', apply(ALGO, [
+    ...rb('INFECTGO', '感染碁', 'infectgo'),
+    [ONE, RV_ALGO, rv([
+        '感染ルール: 合計7手ごとに、味方石と繋がっていない孤立石が隣接する敵石を全て自分の色に感染させる。',
+        '孤立石は感染源として兵器になる。連を維持するか散らすかの駆け引き。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 感染ルール<br>
+            ※7手ごとに孤立石が隣の敵石を自色に変える`],
+    [ONE, TURN_FLIP,
+`${TURN_FLIP}
+            // 感染: 7手ごとに孤立石が敵石を自色化
+            if (history.length % 7 === 0) {
+                const flips = [];
+                for (let i = 0; i < board.length; i++) {
+                    const c0 = board[i];
+                    if (c0 !== 1 && c0 !== 2) continue;
+                    if (getNeighbors(i).some(n => board[n] === c0)) continue;
+                    getNeighbors(i).forEach(n => {
+                        if (board[n] === 3 - c0) flips.push([n, c0]);
+                    });
+                }
+                flips.forEach(([n]) => { board[n] = 0; });
+                pieces.forEach(pc => {
+                    pc.cells = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
+                });
+                cleanUpPieces();
+                flips.forEach(([n, c]) => {
+                    board[n] = c;
+                    pieces.push({
+                        id: Date.now() + Math.random(), player: c, type: 'STONE', rot: 0,
+                        cells: [{ x: n % BOARD_SIZE, y: (n / BOARD_SIZE) | 0 }]
+                    });
+                });
+            }`],
+    ...STONE_SPEC,
+], 'infectgo'));
+
+// 95. BONDGO (結合碁) — 敵連を取ると接触していた自連も道連れ
+out('bondgo.html', apply(ALGO, [
+    ...rb('BONDGO', '結合碁', 'bondgo'),
+    [ONE, RV_ALGO, rv([
+        '結合ルール: 敵連を取ると、その連に隣接していた自分の連も全て道連れに消える (相手のアゲハマになる)。',
+        '取りは必ず相打ち。囲んだ側も犠牲を払う特攻的な碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 結合ルール<br>
+            ※敵連を取ると接触していた自連も全て道連れ (相手のアゲハマ)`],
+    [ONE, CAPTURE_BLOCK,
+`            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                captures[player] += captured.length;
+                // 結合の代償: 取った連に隣接する自分の連も全て道連れ
+                const ownDead = new Set();
+                captured.forEach(idx => getNeighbors(idx).forEach(n => {
+                    if (board[n] === player && !ownDead.has(n))
+                        getConnectedGroup(n, player).forEach(g => ownDead.add(g));
+                }));
+                ownDead.forEach(i => { board[i] = 0; });
+                captures[opponent] += ownDead.size;
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    ...STONE_SPEC,
+], 'bondgo'));
+
+// 96. RIMGO (淵碁) — 外周の地は2倍計算
+out('rimgo.html', apply(ALGO, [
+    ...rb('RIMGO', '淵碁', 'rimgo'),
+    [ONE, RV_ALGO, rv([
+        '淵ルール: 終局時、外周1列の自分の地は2倍計算される。',
+        '辺の取り合いが通常以上に重要になる外周重視碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 淵ルール<br>
+            ※外周1列の地は2倍計算`],
+    [ONE, `            const blackTotal = territory.black + captures[1];
+            const whiteTotal = territory.white + captures[2] + komi;`,
+`            // 淵: 外周の地の所有者を判定して2倍分を加算
+            const n = BOARD_SIZE;
+            const ringVis = new Set();
+            let blackEdge = 0, whiteEdge = 0;
+            const ringOwner = i => {
+                const q = [i], vis = new Set([i]);
+                let tb = false, tw = false;
+                while (q.length) {
+                    const c0 = q.pop();
+                    getNeighbors(c0).forEach(m => {
+                        if (board[m] === 0 && !vis.has(m)) { vis.add(m); q.push(m); }
+                        else if (board[m] === 1) tb = true;
+                        else if (board[m] === 2) tw = true;
+                    });
+                }
+                vis.forEach(v => ringVis.add(v));
+                return tb && !tw ? 1 : (!tb && tw ? 2 : 0);
+            };
+            for (let i = 0; i < n; i++) {
+                [i, (n - 1) * n + i, i * n, i * n + n - 1].forEach(idx => {
+                    if (board[idx] !== 0 || ringVis.has(idx)) return;
+                    const o = ringOwner(idx);
+                    if (o === 1) blackEdge++; else if (o === 2) whiteEdge++;
+                });
+            }
+            const blackTotal = territory.black + blackEdge + captures[1];
+            const whiteTotal = territory.white + whiteEdge + captures[2] + komi;`],
+    [ONE, `<div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>`,
+`<div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>
+                    <div class="flex justify-between"><span>黒の淵ボーナス:</span> <strong>+\${blackEdge}</strong></div>`],
+    [ONE, `<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
+`<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
+                    <div class="flex justify-between"><span>白の淵ボーナス:</span> <strong>+\${whiteEdge}</strong></div>`],
+    ...STONE_SPEC,
+], 'rimgo'));
+
+// 97. BUDGETGO (手数碁) — 60手で自動終局
+out('budgetgo.html', apply(ALGO, [
+    ...rb('BUDGETGO', '手数碁', 'budgetgo'),
+    [ONE, RV_ALGO, rv([
+        '手数ルール: 合計60手に達すると自動終局し、その時点で得点計算する。',
+        'パスで手数を稼ぐことはできない (パスも1手に数える)。手番横が残り手数。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 手数ルール<br>
+            ※合計60手で自動終局。手番横が残り手数`],
+    [ONE, TURN_FLIP,
+`${TURN_FLIP}
+            // 手数上限: 60手で自動終局
+            if (history.length >= 60) { endGameByScore(); return; }`],
+    [ONE, TURN_LINE,
+`            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + ' 残' + Math.max(0, 60 - history.length) + '手';`],
+    ...STONE_SPEC,
+], 'budgetgo'));
+
+// 98. FRONTGO (前線碁) — 前線が上から下へ進み、後方の石は不死
+out('frontgo.html', apply(ALGO, [
+    ...rb('FRONTGO', '前線碁', 'frontgo'),
+    [ONE, RV_ALGO, rv([
+        '前線ルール: 4手ごとに前線が1行下へ進む。前線より上の行の石は確定済みで取られなくなる。',
+        '上から確定していくので、盤面上部の陣取りが早い者勝ちになる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 前線ルール<br>
+            ※4手ごとに前線が1行下へ。前線より上の石は取られない`],
+    [ONE, `        function endGameByScore() {`,
+`        const frontRow = () => Math.min(((history.length / 4) | 0), BOARD_SIZE - 1);
+        function endGameByScore() {`],
+    [ONE, CAPTURE_BLOCK,
+`            let captured = getCapturedStones(board, opponent);
+            // 前線: 前線より上の石は確定済みで取られない
+            captured = captured.filter(i => ((i / BOARD_SIZE) | 0) >= frontRow());
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                captures[player] += captured.length;
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    [ONE, TURN_LINE,
+`            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + ' 前線' + (frontRow() + 1) + '行';`],
+    ...STONE_SPEC,
+], 'frontgo'));
+
+// 99. CHARGEGO (溜め碁) — パスで次の石が5手間不死
+out('chargego.html', apply(ALGO, [
+    ...rb('CHARGEGO', '溜め碁', 'chargego'),
+    [ONE, RV_ALGO, rv([
+        '溜めルール: パスをすると溜めが貯まり、次に置く石が5手間取られなくなる (装甲)。',
+        'パスの代償で絶対に死なない一手が打てる — 侵入・押さえ込みに有効。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 溜めルール<br>
+            ※パスで溜めが貯まり次の石が5手間不死になる`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        let passCharge = { 1: false, 2: false }; // 溜めフラグ
+        let armorUntil = {};                     // 装甲の残り (idx -> 期限手数)`],
+    [ONE, RESET_HELD,
+`${RESET_HELD}
+            passCharge = { 1: false, 2: false };
+            armorUntil = {};`],
+    // パス時に溜める
+    [ONE, PASS_INC,
+`${PASS_INC}
+            passCharge[turn] = true; // 溜め`],
+    // 配置時: 溜めがあれば装甲付与
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            if (passCharge[player]) {
+                passCharge[player] = false;
+                move.cells.forEach(p => { armorUntil[p.y * BOARD_SIZE + p.x] = history.length + 5; });
+            }`],
+    // 装甲のある敵石は取れない
+    [ONE, CAPTURE_BLOCK,
+`            let captured = getCapturedStones(board, opponent);
+            // 装甲中の石は取れない (期限切れは取れる)
+            captured = captured.filter(i => !(armorUntil[i] > history.length));
+            if (captured.length > 0) {
+                captured.forEach(idx => { board[idx] = 0; delete armorUntil[idx]; });
+                captures[player] += captured.length;
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    [ONE, TURN_LINE,
+`            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + (passCharge[turn] ? ' ⚡溜' : '');`],
+    // undo/保存/同期
+    [ONE, `                prevBoard,
+                lastMove,
+                currentPieceType,`,
+`                prevBoard,
+                lastMove,
+                passCharge: { ...passCharge }, armorUntil: { ...armorUntil },
+                currentPieceType,`],
+    [ONE, `            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;`,
+`            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;
+            passCharge = snap.passCharge ? { ...snap.passCharge } : passCharge;
+            armorUntil = snap.armorUntil ? { ...snap.armorUntil } : armorUntil;`],
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    passCharge: { ...passCharge }, armorUntil: { ...armorUntil },
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            if (s.passCharge) passCharge = { ...s.passCharge };
+            if (s.armorUntil) armorUntil = { ...s.armorUntil };`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                passCharge, armorUntil,
+                pieceMode,`],
+    [ONE, `            lastMove = data.lastMove || null;`,
+`            lastMove = data.lastMove || null;
+            if (data.passCharge) passCharge = { ...data.passCharge };
+            if (data.armorUntil) armorUntil = { ...data.armorUntil };`],
+    ...STONE_SPEC,
+], 'chargego'));
+
+// 100. SHUFFLEGO (混成碁) — 15手ごとに全石が50%で色反転
+out('shufflego.html', apply(ALGO, [
+    ...rb('SHUFFLEGO', '混成碁', 'shufflego'),
+    [ONE, RV_ALGO, rv([
+        '混成ルール: 合計15手ごとに盤上の全石が50%の確率で色が反転する。',
+        '勢力図が定期的にシャッフルされる混沌碁。アゲハマと地集計は通常通り。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 混成ルール<br>
+            ※15手ごとに全石が50%で色反転`],
+    [ONE, TURN_FLIP,
+`${TURN_FLIP}
+            // 混成: 15手ごとに全石が50%で反転しピース再構成
+            if (history.length % 15 === 0) {
+                for (let i = 0; i < board.length; i++)
+                    if ((board[i] === 1 || board[i] === 2) && Math.random() < 0.5)
+                        board[i] = 3 - board[i];
+                pieces = [];
+                for (let i = 0; i < board.length; i++) {
+                    const c = board[i];
+                    if (c === 1 || c === 2)
+                        pieces.push({
+                            id: Date.now() + Math.random(), player: c, type: 'STONE', rot: 0,
+                            cells: [{ x: i % BOARD_SIZE, y: (i / BOARD_SIZE) | 0 }]
+                        });
+                }
+            }`],
+    ...STONE_SPEC,
+], 'shufflego'));
+
+// 101. TAXGO (関税碁) — 敵陣半分に置くと相手に+1目
+out('taxgo.html', apply(ALGO, [
+    ...rb('TAXGO', '関税碁', 'taxgo'),
+    [ONE, RV_ALGO, rv([
+        '関税ルール: 敵陣側の半分 (黒なら下半分、白なら上半分) に石を置くたび相手に+1目が入る。',
+        '侵入は強力だが税がかかる — 攻め込みコストを考える碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 関税ルール<br>
+            ※敵陣半分 (黒=下側/白=上側) への着手は相手に+1目`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        let toll = { 1: 0, 2: 0 }; // 相手に支払った関税`],
+    [ONE, RESET_HELD,
+`${RESET_HELD}
+            toll = { 1: 0, 2: 0 };`],
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            // 関税: 敵陣半分への着手は相手に+1目
+            {
+                const mid = Math.ceil(BOARD_SIZE / 2);
+                if (move.cells.some(p => player === 1 ? p.y >= mid : p.y < BOARD_SIZE - mid))
+                    toll[player]++;
+            }`],
+    [ONE, `            const blackTotal = territory.black + captures[1];
+            const whiteTotal = territory.white + captures[2] + komi;`,
+`            const blackTotal = territory.black + captures[1] + toll[2];
+            const whiteTotal = territory.white + captures[2] + toll[1] + komi;`],
+    [ONE, `<div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>`,
+`<div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>
+                    <div class="flex justify-between"><span>黒の関税収入:</span> <strong>+\${toll[2]}</strong></div>`],
+    [ONE, `<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
+`<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
+                    <div class="flex justify-between"><span>白の関税収入:</span> <strong>+\${toll[1]}</strong></div>`],
+    [ONE, `                prevBoard,
+                lastMove,
+                currentPieceType,`,
+`                prevBoard,
+                lastMove,
+                toll: { ...toll },
+                currentPieceType,`],
+    [ONE, `            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;`,
+`            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;
+            if (snap.toll) toll = { ...snap.toll };`],
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    toll: { ...toll },
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            if (s.toll) toll = { ...s.toll };`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                toll: { ...toll },
+                pieceMode,`],
+    [ONE, `            lastMove = data.lastMove || null;`,
+`            lastMove = data.lastMove || null;
+            if (data.toll) toll = { ...data.toll };`],
+    ...STONE_SPEC,
+], 'taxgo'));
+
+// 102. GREEDGO (強欲碁) — 取れる手があるときは取る手のみ合法
+out('greedgo.html', apply(ALGO, [
+    ...rb('GREEDGO', '強欲碁', 'greedgo'),
+    [ONE, RV_ALGO, rv([
+        '強欲ルール: 敵連の呼吸点が1つだけ残っている (アタリ) 場合、その呼吸点を取る手しか打てない。',
+        '取れるなら取れ。逃げる猶予がない即断の碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 強欲ルール<br>
+            ※敵連がアタリ状態なら取る手しか打てない`],
+    [ONE, `        function endGameByScore() {`,
+`        // 強欲: 敵連の呼吸点が1つのものがあれば取る手のみ合法
+        function canCaptureMove(player) {
+            const opp = player === 1 ? 2 : 1;
+            const seen = new Set();
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== opp || seen.has(i)) continue;
+                const grp = getConnectedGroup(i, opp);
+                grp.forEach(g => seen.add(g));
+                const libs = new Set();
+                grp.forEach(g => getNeighbors(g).forEach(n => { if (board[n] === 0) libs.add(n); }));
+                if (libs.size === 1) return true;
+            }
+            return false;
+        }
+
+        function endGameByScore() {`],
+    [ONE, `            const opponent = player === 1 ? 2 : 1;
+            const captured = getCapturedStones(tempBoard, opponent);`,
+`            const opponent = player === 1 ? 2 : 1;
+            const captured = getCapturedStones(tempBoard, opponent);
+
+            // 強欲: この手で取れず、他に取れる手があれば非合法
+            if (captured.length === 0 && canCaptureMove(player)) return false;`],
+    ...STONE_SPEC,
+], 'greedgo'));
+
 console.log(failures === 0 ? 'ALL OK' : `${failures} replacements MISSING`);
 process.exitCode = failures ? 1 : 0;

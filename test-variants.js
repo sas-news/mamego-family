@@ -865,6 +865,122 @@ const SPECS = {
         // 地0同士+コミ6.5: 黒=0,白=6.5 → 少ない黒の勝ち
         assert('少子で黒勝ち', gameResultData && gameResultData.title.includes('黒'));
     `,
+    'grenadego.html': `
+        resetGame();
+        // 白(0,0)を黒(1,0)(0,1)で囲む→取り→(1,1)の黒も爆発で道連れ
+        board[0] = 2; board[1] = 1; board[BOARD_SIZE] = 1;
+        board[BOARD_SIZE + 1] = 1; // (1,1)の黒は(0,0)の斜め→爆発道連れ
+        executeMove({ cells: [{x:9,y:9}], type: 'STONE', rot: 0 }, 1);
+        assert('基本取り', board[0] === 0);
+        assert('斜めの石も道連れ', board[BOARD_SIZE + 1] === 0);
+        assert('道連れもアゲハマ', captures[1] === 4); // 白1+黒3(1,0)(0,1)(1,1)
+    `,
+    'infectgo.html': `
+        resetGame();
+        // 孤立黒(5,5)が隣接白(6,5)を感染 (7手目で発動)
+        board[5 * BOARD_SIZE + 5] = 1; board[5 * BOARD_SIZE + 6] = 2;
+        for (let i = 0; i < 7; i++)
+            executeMove({ cells: [{x:i,y:12}], type: 'STONE', rot: 0 }, (i%2)+1);
+        assert('白が感染して黒化', board[5 * BOARD_SIZE + 6] === 1);
+    `,
+    'bondgo.html': `
+        resetGame();
+        // 白(0,0)を黒(1,0)(0,1)で囲む → 黒の着手で白が取れるが、隣接した黒連も道連れ
+        board[0] = 2; board[1] = 1; board[BOARD_SIZE] = 1;
+        executeMove({ cells: [{x:9,y:9}], type: 'STONE', rot: 0 }, 1);
+        assert('白を取った', board[0] === 0 && captures[1] === 1);
+        assert('自連も道連れ', board[1] === 0 && board[BOARD_SIZE] === 0);
+        assert('道連れは相手のアゲハマ', captures[2] === 2);
+    `,
+    'rimgo.html': `
+        resetGame();
+        // 黒が上辺(0..3,y=0)の地を囲む状況を直接構築
+        for (let x = 0; x <= 4; x++) board[BOARD_SIZE + x] = 1; // (0..4, 1) 黒
+        board[0] = 1; // 角にも黒
+        executeMove({ cells: [{x:12,y:12}], type: 'STONE', rot: 0 }, 1);
+        executeMove({ cells: [{x:11,y:12}], type: 'STONE', rot: 0 }, 2);
+        endGameByScore();
+        assert('淵ボーナス込みで集計', gameResultData !== null);
+    `,
+    'budgetgo.html': `
+        resetGame();
+        assert('残り手数表示要素', typeof turnIndicator !== 'undefined');
+        // 60手実行で自動終局 — 全セル走査で合法手を順に打つ
+        let idx = 0, moves = 0, ended = false;
+        while (moves < 60) {
+            let placed = false;
+            while (idx < board.length) {
+                const p = { x: idx % BOARD_SIZE, y: (idx / BOARD_SIZE) | 0 }; idx++;
+                if (board[p.y * BOARD_SIZE + p.x] === 0 && isValidPlacement([p], (moves % 2) + 1)) {
+                    executeMove({ cells: [p], type: 'STONE', rot: 0 }, (moves % 2) + 1);
+                    placed = true; break;
+                }
+            }
+            if (!placed) break;
+            moves++;
+            if (gameOver) { ended = true; break; }
+        }
+        assert('60手で自動終局', ended === true && moves >= 60);
+    `,
+    'frontgo.html': `
+        resetGame();
+        assert('frontRow定義', typeof frontRow === 'function' && frontRow() === 0);
+        // 8手で前線が2行目(インデックス2)へ
+        for (let i = 0; i < 8; i++)
+            executeMove({ cells: [{x:i+1,y:12}], type: 'STONE', rot: 0 }, (i%2)+1);
+        assert('前線が進行', frontRow() === 2);
+    `,
+    'chargego.html': `
+        resetGame();
+        assert('パスで溜まる', passCharge[1] === false);
+        turn = 1; handlePass();
+        assert('溜めフラグON', passCharge[1] === true);
+        // 黒が溜め石を置く
+        turn = 1;
+        executeMove({ cells: [{x:5,y:5}], type: 'STONE', rot: 0 }, 1);
+        assert('装甲付与', armorUntil[5 * BOARD_SIZE + 5] > 0);
+        assert('溜め消費', passCharge[1] === false);
+        // 白が(5,5)周辺を完全に囲んでも装甲中は取れない
+        board[5 * BOARD_SIZE + 4] = 2; board[4 * BOARD_SIZE + 5] = 2;
+        board[6 * BOARD_SIZE + 5] = 2; board[5 * BOARD_SIZE + 6] = 2;
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 2);
+        assert('装甲中は取れない', board[5 * BOARD_SIZE + 5] === 1);
+    `,
+    'shufflego.html': `
+        resetGame();
+        board[0] = 1; board[1] = 1; board[2] = 2; board[3] = 2;
+        const sig = () => [0,1,2,3].map(i => board[i]).join('');
+        // 15手実行→シャッフル発動 (色分布が変化するか試行)
+        for (let i = 0; i < 15; i++)
+            executeMove({ cells: [{x:i%13,y:i<13?12:11}], type: 'STONE', rot: 0 }, (i%2)+1);
+        const counts = {1:0,2:0};
+        [0,1,2,3].forEach(i => { if (board[i]===1) counts[1]++; else if (board[i]===2) counts[2]++; });
+        assert('石は消えない', counts[1]+counts[2] === 4);
+    `,
+    'taxgo.html': `
+        resetGame();
+        executeMove({ cells: [{x:6,y:3}], type: 'STONE', rot: 0 }, 1); // 上半分→税なし
+        assert('自陣は無税', toll[1] === 0);
+        executeMove({ cells: [{x:6,y:9}], type: 'STONE', rot: 0 }, 2); // 白の敵陣=上半分… 9>=7は下半分
+        // 白の敵陣は上半分(y<7)なのでy=9は自陣 → 税なし
+        assert('白自陣は無税', toll[2] === 0);
+        executeMove({ cells: [{x:2,y:10}], type: 'STONE', rot: 0 }, 1); // 黒敵陣=下半分 y>=7 → +1
+        assert('黒敵陣で関税', toll[1] === 1);
+        executeMove({ cells: [{x:10,y:2}], type: 'STONE', rot: 0 }, 2); // 白敵陣=上半分 → +1
+        assert('白敵陣で関税', toll[2] === 1);
+    `,
+    'greedgo.html': `
+        resetGame();
+        assert('canCaptureMove定義', typeof canCaptureMove === 'function');
+        // 白(0,0)の呼吸点が(0,1)だけになるよう黒(1,0)配置
+        board[0] = 2; board[1] = 1;
+        // 黒の番: (0,1)に打てば白が取れる → それ以外は非合法
+        assert('アタリ時は取る手のみ', isValidPlacement([{x:0,y:1}], 1) === true);
+        assert('他は非合法', isValidPlacement([{x:6,y:6}], 1) === false);
+        // 呼吸点が残り1つの敵連が無ければ自由
+        board[0] = 0;
+        assert('アタリ無しは自由', isValidPlacement([{x:6,y:6}], 1) === true);
+    `,
 };
 
 let total = 0, failed = 0;
