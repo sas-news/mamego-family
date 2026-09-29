@@ -4548,5 +4548,458 @@ out('chaingo.html', apply(ALGO, [
     ...STONE_SPEC,
 ], 'chaingo'));
 
+// ============================================================
+// ==== 第8バッチ: 追加10派生 ====
+// ============================================================
+
+// 83. FINITEGO (有限碁) — 各プレイヤーの石は最大12個、超えると最古が消える
+out('finitego.html', apply(ALGO, [
+    ...rb('FINITEGO', '有限碁', 'finitego'),
+    [ONE, RV_ALGO, rv([
+        '有限ルール: 各プレイヤーが盤上に持てる石は最大12個。13個目を置くと最も古い石が消える。',
+        '消えた石はアゲハマにならない。取り合いに加えて「どの石を残すか」の管理が要る。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 有限ルール<br>
+            ※各プレイヤーの石は最大12個。超過すると最古の石が消える`],
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            // 有限: 自石は最大12個 — 超過分は最古から消える
+            {
+                const mine = pieces.filter(pc => pc.player === player);
+                if (mine.length > 12) {
+                    const old = mine[0];
+                    old.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = 0; });
+                    pieces = pieces.filter(pc => pc !== old);
+                }
+            }`],
+    ...STONE_SPEC,
+], 'finitego'));
+
+// 84. COPYGO (模倣碁) — 相手の直前着手の対称点にしか打てない
+out('copygo.html', apply(ALGO, [
+    ...rb('COPYGO', '模倣碁', 'copygo'),
+    [ONE, RV_ALGO, rv([
+        '模倣ルール: 相手の直前の着手と盤の中心に点対称な位置にしか打てない (鏡写し)。',
+        'その位置が埋まっていれば自由に打てる。序盤は完全なコピー戦になる古典的な対称碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 模倣ルール<br>
+            ※相手の直前着手の点対称位置にしか打てない (埋まっていれば自由)`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 模倣ルール: 相手直前着手の点対称位置が空いていればそこにしか打てない
+            if (lastMove && lastMove.player !== player) {
+                const need = lastMove.cells.map(p => ({ x: BOARD_SIZE - 1 - p.x, y: BOARD_SIZE - 1 - p.y }));
+                const mirrorOk = need.every(p => board[p.y * BOARD_SIZE + p.x] === 0);
+                const isMirror = cells.length === need.length &&
+                    cells.every((p, i) => p.x === need[i].x && p.y === need[i].y);
+                if (mirrorOk && !isMirror) return false;
+            }`],
+    ...STONE_SPEC,
+], 'copygo'));
+
+// 85. SWAMPGO (沼碁) — 沼地の石は3手後に沈む
+out('swampgo.html', apply(ALGO, [
+    ...rb('SWAMPGO', '沼碁', 'swampgo'),
+    [ONE, RV_ALGO, rv([
+        '沼ルール: 盤上に6個の沼地 (緑色の枡) がある。沼に置いた石は6手後に沈んで消える。',
+        '沼地は置けるが寿命付き。沈む直前に取り合いに使う高等戦術もある。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 沼ルール<br>
+            ※緑の沼地に置いた石は6手後に沈む`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        let swamp = new Set();    // 沼地の盤面インデックス
+        let swampSink = {};       // 沼上の石 -> 沈む手数 (history.length基準)`],
+    [ONE, RESET_BOARD,
+`${RESET_BOARD}
+            swamp = new Set();
+            swampSink = {};
+            // 内側エリアに6個の沼をランダム配置
+            while (swamp.size < 6) {
+                const x = 1 + ((Math.random() * (BOARD_SIZE - 2)) | 0);
+                const y = 1 + ((Math.random() * (BOARD_SIZE - 2)) | 0);
+                swamp.add(y * BOARD_SIZE + x);
+            }`],
+    // 沼描画 (石の下の地形)
+    [ONE, `        function drawBoardElements(padding, cellSize) {
+            const r = cellSize * 0.46;`,
+`        function drawBoardElements(padding, cellSize) {
+            const r = cellSize * 0.46;
+
+            // 沼地
+            swamp.forEach(i => {
+                const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
+                ctx.fillStyle = 'rgba(101, 163, 13, 0.30)';
+                ctx.fillRect(padding + x * cellSize - cellSize / 2, padding + y * cellSize - cellSize / 2,
+                    cellSize, cellSize);
+            });`],
+    // 配置時: 沼上なら沈没タイマー登録
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            move.cells.forEach(p => {
+                const i = p.y * BOARD_SIZE + p.x;
+                if (swamp.has(i)) swampSink[i] = history.length + 6;
+            });`],
+    // 手番交代時: 期限切れの沼上の石を沈める
+    [ONE, TURN_FLIP,
+`${TURN_FLIP}
+            Object.keys(swampSink).forEach(k => {
+                const i = +k;
+                if (swampSink[i] <= history.length || board[i] === 0) {
+                    if (board[i] !== 0) board[i] = 0;
+                    delete swampSink[i];
+                }
+            });
+            pieces.forEach(pc => { pc.cells = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player); });
+            cleanUpPieces();`],
+    // undo/保存/同期
+    [ONE, `                prevBoard,
+                lastMove,
+                currentPieceType,`,
+`                prevBoard,
+                lastMove,
+                swamp: [...swamp], swampSink: { ...swampSink },
+                currentPieceType,`],
+    [ONE, `            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;`,
+`            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;
+            swamp = new Set(snap.swamp || []); swampSink = snap.swampSink ? { ...snap.swampSink } : swampSink;`],
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    swamp: [...swamp], swampSink: { ...swampSink },
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            swamp = new Set(s.swamp || []); swampSink = s.swampSink ? { ...s.swampSink } : {};`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                swamp: [...swamp], swampSink,
+                pieceMode,`],
+    [ONE, `            lastMove = data.lastMove || null;`,
+`            lastMove = data.lastMove || null;
+            if (data.swamp) swamp = new Set(data.swamp);
+            if (data.swampSink) swampSink = { ...data.swampSink };`],
+    ...STONE_SPEC,
+], 'swampgo'));
+
+// 86. TIDEGO (潮汐碁) — 10手ごとに外周が水没/干潟を繰り返す
+out('tidego.html', apply(ALGO, [
+    ...rb('TIDEGO', '潮汐碁', 'tidego'),
+    [ONE, RV_ALGO, rv([
+        '潮汐ルール: 10手ごとに満ち干が交代。満潮時は盤の外周1列が水没 (壁) になり、そこにある石は消える。',
+        '干潮時は外周が戻る。外周の陣地は定期的に失われる。手番横の表示が潮位。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 潮汐ルール<br>
+            ※10手ごとに外周が水没↔復活。手番横の🌊が満潮`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        let tideHigh = false; // 満潮フラグ`],
+    [ONE, RESET_BOARD,
+`${RESET_BOARD}
+            tideHigh = false;`],
+    [ONE, `        function endGameByScore() {`,
+`        // 潮汐: 外周1列を水没/復活させる
+        function applyTide() {
+            tideHigh = !tideHigh;
+            const n = BOARD_SIZE;
+            for (let i = 0; i < n; i++) {
+                [i, (n - 1) * n + i, i * n, i * n + n - 1].forEach(idx => {
+                    board[idx] = tideHigh ? 3 : 0;
+                });
+            }
+            pieces.forEach(pc => {
+                pc.cells = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
+            });
+            cleanUpPieces();
+        }
+
+        function endGameByScore() {`],
+    [ONE, TURN_FLIP,
+`${TURN_FLIP}
+            // 潮汐: 10手ごとに満ち干交代
+            if (history.length % 10 === 0) applyTide();`],
+    [ONE, TURN_LINE,
+`            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + (tideHigh ? ' 🌊満' : ' 干');`],
+    [ONE, `                prevBoard,
+                lastMove,
+                currentPieceType,`,
+`                prevBoard,
+                lastMove,
+                tideHigh,
+                currentPieceType,`],
+    [ONE, `            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;`,
+`            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;
+            if (snap.tideHigh !== undefined) tideHigh = snap.tideHigh;`],
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    tideHigh,
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            if (s.tideHigh !== undefined) tideHigh = s.tideHigh;`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                tideHigh,
+                pieceMode,`],
+    [ONE, `            lastMove = data.lastMove || null;`,
+`            lastMove = data.lastMove || null;
+            if (data.tideHigh !== undefined) tideHigh = data.tideHigh;`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'tidego'));
+
+// 87. PULSEGO (脈動碁) — 6手ごとに全ての連が呼吸点へ1石伸びる
+out('pulsego.html', apply(ALGO, [
+    ...rb('PULSEGO', '脈動碁', 'pulsego'),
+    [ONE, RV_ALGO, rv([
+        '脈動ルール: 合計6手ごとに盤上の全連がランダムな呼吸点へ1石伸びる (自動増殖)。',
+        '囲いきる前に連が伸びるので、取り合いは時間との勝負。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 脈動ルール<br>
+            ※6手ごとに全連がランダムな空点へ1石伸びる`],
+    [ONE, `        function endGameByScore() {`,
+`        // 脈動: 全連をランダムな呼吸点へ1石伸ばす
+        function applyPulse() {
+            pieces.forEach(pc => {
+                const libs = new Set();
+                pc.cells.forEach(p => {
+                    getNeighbors(p.y * BOARD_SIZE + p.x).forEach(n => {
+                        if (board[n] === 0) libs.add(n);
+                    });
+                });
+                if (!libs.size) return;
+                const arr = [...libs];
+                const ni = arr[(Math.random() * arr.length) | 0];
+                board[ni] = pc.player;
+                pc.cells.push({ x: ni % BOARD_SIZE, y: (ni / BOARD_SIZE) | 0 });
+            });
+        }
+
+        function endGameByScore() {`],
+    [ONE, TURN_FLIP,
+`${TURN_FLIP}
+            // 脈動: 6手ごとに全連が増殖
+            if (history.length % 6 === 0) applyPulse();`],
+    ...STONE_SPEC,
+], 'pulsego'));
+
+// 88. RECYCLEGO (再生碁) — 取られた石は10手後に持ち主の色でランダム復活
+out('recyclego.html', apply(ALGO, [
+    ...rb('RECYCLEGO', '再生碁', 'recyclego'),
+    [ONE, RV_ALGO, rv([
+        '再生ルール: 取られた石は10手後に元の持ち主の色でランダムな空点に復活する。',
+        'アゲハマは通常通り計上されるが、石が盤に戻ってくるので勢力が保たれる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 再生ルール<br>
+            ※取られた石は10手後に元の持ち主の石としてランダム復活`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        let returnQueue = []; // { player, due } — 再生待ちの石`],
+    [ONE, RESET_BOARD,
+`${RESET_BOARD}
+            returnQueue = [];`],
+    [ONE, CAPTURE_BLOCK,
+`            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                captured.forEach(idx => {
+                    board[idx] = 0;
+                    // 再生: 10手後に元の持ち主の色で復活
+                    returnQueue.push({ player: opponent, due: history.length + 10 });
+                });
+                captures[player] += captured.length;
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    [ONE, TURN_FLIP,
+`${TURN_FLIP}
+            // 再生: 期限到来の石をランダムな空点に復活
+            returnQueue = returnQueue.filter(q => {
+                if (q.due > history.length) return true;
+                const empties = [];
+                for (let i = 0; i < board.length; i++) if (board[i] === 0) empties.push(i);
+                if (!empties.length) return true;
+                const ni = empties[(Math.random() * empties.length) | 0];
+                board[ni] = q.player;
+                pieces.push({
+                    id: Date.now() + Math.random(), player: q.player, type: 'STONE', rot: 0,
+                    cells: [{ x: ni % BOARD_SIZE, y: (ni / BOARD_SIZE) | 0 }]
+                });
+                return false;
+            });`],
+    [ONE, `                prevBoard,
+                lastMove,
+                currentPieceType,`,
+`                prevBoard,
+                lastMove,
+                returnQueue: returnQueue.map(q => ({ ...q })),
+                currentPieceType,`],
+    [ONE, `            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;`,
+`            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;
+            returnQueue = snap.returnQueue ? snap.returnQueue.map(q => ({ ...q })) : returnQueue;`],
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    returnQueue: returnQueue.map(q => ({ ...q })),
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            returnQueue = Array.isArray(s.returnQueue) ? s.returnQueue.map(q => ({ ...q })) : [];`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                returnQueue: returnQueue.map(q => ({ ...q })),
+                pieceMode,`],
+    [ONE, `            lastMove = data.lastMove || null;`,
+`            lastMove = data.lastMove || null;
+            if (Array.isArray(data.returnQueue)) returnQueue = data.returnQueue.map(q => ({ ...q }));`],
+    ...STONE_SPEC,
+], 'recyclego'));
+
+// 89. LIBGO (呼吸碁) — 得点は自連の呼吸点の合計
+out('libgo.html', apply(ALGO, [
+    ...rb('LIBGO', '呼吸碁', 'libgo'),
+    [ONE, RV_ALGO, rv([
+        '呼吸得点: 得点 = 自分の全連の呼吸点の合計 + アゲハマ (+白はコミ)。地は数えない。',
+        '囲うより呼吸の多い形を作るほうが得 — 伸び伸びした形が強い碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 呼吸得点<br>
+            ※得点=自連の呼吸点合計+アゲハマ (地は数えない)`],
+    [ONE, `            const blackTotal = territory.black + captures[1];
+            const whiteTotal = territory.white + captures[2] + komi;`,
+`            // 呼吸得点: 各自の連の呼吸点合計を得点に
+            const libSum = p => {
+                const seen = new Set(); let total = 0;
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== p || seen.has(i)) continue;
+                    const grp = getConnectedGroup(i, p);
+                    grp.forEach(g => seen.add(g));
+                    const libs = new Set();
+                    grp.forEach(g => getNeighbors(g).forEach(n => { if (board[n] === 0) libs.add(n); }));
+                    total += libs.size;
+                }
+                return total;
+            };
+            const blackLibs = libSum(1), whiteLibs = libSum(2);
+            const blackTotal = blackLibs + captures[1];
+            const whiteTotal = whiteLibs + captures[2] + komi;`],
+    [ONE, `<div class="flex justify-between"><span>黒の地:</span> <strong>\${territory.black}</strong></div>`,
+`<div class="flex justify-between"><span>黒の呼吸点:</span> <strong>\${blackLibs}</strong></div>`],
+    [ONE, `<div class="flex justify-between"><span>白の地:</span> <strong>\${territory.white}</strong></div>`,
+`<div class="flex justify-between"><span>白の呼吸点:</span> <strong>\${whiteLibs}</strong></div>`],
+    ...STONE_SPEC,
+], 'libgo'));
+
+// 90. STONERAIN (石雨碁) — 9手ごとにランダムな空点に壁が降る
+out('stonerain.html', apply(ALGO, [
+    ...rb('STONERAIN', '石雨碁', 'stonerain'),
+    [ONE, RV_ALGO, rv([
+        '石雨ルール: 合計9手ごとにランダムな空点に中立の壁ブロックが1個降ってくる。',
+        '壁は呼吸点にも地にもならず、盤面がだんだん欠けていく。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 石雨ルール<br>
+            ※9手ごとにランダムな空点へ中立壁が降る`],
+    [ONE, TURN_FLIP,
+`${TURN_FLIP}
+            // 石雨: 9手ごとにランダムな空点へ壁が降る
+            if (history.length % 9 === 0) {
+                const empties = [];
+                for (let i = 0; i < board.length; i++) if (board[i] === 0) empties.push(i);
+                if (empties.length) board[empties[(Math.random() * empties.length) | 0]] = 3;
+            }`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'stonerain'));
+
+// 91. SPLITGO (分裂碁) — 7石以上の連は半分が敵色に変わる
+out('splitgo.html', apply(ALGO, [
+    ...rb('SPLITGO', '分裂碁', 'splitgo'),
+    [ONE, RV_ALGO, rv([
+        '分裂ルール: 着手後、自分の7石以上の連は分裂 — 半分の石が敵色に変わる。',
+        '大きな連は作れない。半分を敵に取られるかどうかは連鎖捕捉の後に判定。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 分裂ルール<br>
+            ※着手後、自分の7石以上の連は半分が敵色に変わる`],
+    [ONE, CAPTURE_BLOCK,
+`${CAPTURE_BLOCK}
+
+            // 分裂: 自分の7石以上の連は半分が敵色に
+            {
+                const seenS = new Set();
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== player || seenS.has(i)) continue;
+                    const grp = getConnectedGroup(i, player);
+                    grp.forEach(g => seenS.add(g));
+                    if (grp.length >= 7) {
+                        grp.slice(Math.ceil(grp.length / 2)).forEach(g => { board[g] = opponent; });
+                    }
+                }
+                cleanUpPieces();
+            }`],
+    ...STONE_SPEC,
+], 'splitgo'));
+
+// 92. MINIGO (少子碁) — 得点の少ない側が勝つ (ミゼール)
+out('minigo.html', apply(ALGO, [
+    ...rb('MINIGO', '少子碁', 'minigo'),
+    [ONE, RV_ALGO, rv([
+        '少子ルール (ミゼール): 得点計算は通常と同じだが、少ない側が勝つ。',
+        '地もアゲハマも少ないほうが勝ち — 相手に取らせる・囲わせる逆転の碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 少子ルール<br>
+            ※合計得点が少ない側の勝ち (ミゼール)`],
+    [ONE, `            let winnerTitle = '';
+            if (blackTotal > whiteTotal) winnerTitle = '黒の勝ち';
+            else if (whiteTotal > blackTotal) winnerTitle = '白の勝ち';
+            else winnerTitle = '引き分け';`,
+`            let winnerTitle = '';
+            // 少子ルール: 少ない側が勝ち
+            if (blackTotal < whiteTotal) winnerTitle = '黒の勝ち';
+            else if (whiteTotal < blackTotal) winnerTitle = '白の勝ち';
+            else winnerTitle = '引き分け';`],
+    ...STONE_SPEC,
+], 'minigo'));
+
 console.log(failures === 0 ? 'ALL OK' : `${failures} replacements MISSING`);
 process.exitCode = failures ? 1 : 0;

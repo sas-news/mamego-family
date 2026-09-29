@@ -93,6 +93,11 @@
 | EYEGO `eyego.html` | 眼碁 (最初に眼を作った側が即勝利) |
 | LASTGO `lastgo.html` | 終着碁 (最後に石を置いた側が勝つ) |
 | SUMGO `sumgo.html` | 実子碁 (得点=地+生き石+アゲハマ) |
+| LIBGO `libgo.html` | 呼吸碁 (得点=自連の呼吸点合計+アゲハマ) |
+| MINIGO `minigo.html` | 少子碁 (得点の少ない側が勝つミゼール) |
+| FINITEGO `finitego.html` | 有限碁 (各プレイヤーの石は最大12個) |
+| COPYGO `copygo.html` | 模倣碁 (相手の着手の点対称位置のみ可) |
+| SPLITGO `splitgo.html` | 分裂碁 (7石以上の連は半分が敵化) |
 
 ### 自動変化系
 
@@ -110,6 +115,11 @@
 | GHOSTGO `ghostgo.html` | 幽霊碁 (取られたマスは幽霊として6手間塞がる) |
 | ZOMBEGO `zombego.html` | ゾンビ碁 (取られた石は徘徊する中立壁) |
 | DRIFTGO `driftgo.html` | 漂流碁 (8手ごとに全石がランダムに流れる) |
+| TIDEGO `tidego.html` | 潮汐碁 (10手ごとに外周が水没↔復活) |
+| PULSEGO `pulsego.html` | 脈動碁 (6手ごとに全連が呼吸点へ増殖) |
+| STONERAIN `stonerain.html` | 石雨碁 (9手ごとにランダムな空点へ壁) |
+| SWAMPGO `swampgo.html` | 沼碁 (沼地の石は6手で沈む) |
+| RECYCLEGO `recyclego.html` | 再生碁 (取られた石は10手後に復活) |
 
 ## 共通機能
 

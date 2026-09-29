@@ -184,6 +184,16 @@
             { file: 'eyego.html',   name: 'EYEGO',    jp: '眼碁',         desc: '最初に眼を作った側が即勝利', kind: 'eye' },
             { file: 'brawlgo.html', name: 'BRAWLGO',  jp: '乱闘碁',       desc: '周囲3方向以上が敵の石は個別に取れる', kind: 'brawl' },
             { file: 'chaingo.html', name: 'CHAINGO',  jp: '連鎖爆発碁',   desc: '取った空点の8方向の敵石も連鎖爆発', kind: 'chain' },
+            { file: 'finitego.html', name: 'FINITEGO', jp: '有限碁',      desc: '各プレイヤーの石は最大12個。最古が消える', kind: 'finite' },
+            { file: 'copygo.html',  name: 'COPYGO',   jp: '模倣碁',       desc: '相手の直前着手の点対称位置にしか打てない', kind: 'copy' },
+            { file: 'swampgo.html', name: 'SWAMPGO',  jp: '沼碁',         desc: '沼地の石は6手で沈む', kind: 'swamp' },
+            { file: 'tidego.html',  name: 'TIDEGO',   jp: '潮汐碁',       desc: '10手ごとに外周が水没↔復活', kind: 'tide' },
+            { file: 'pulsego.html', name: 'PULSEGO',  jp: '脈動碁',       desc: '6手ごとに全連が呼吸点へ1石伸びる', kind: 'pulse' },
+            { file: 'recyclego.html', name: 'RECYCLEGO', jp: '再生碁',    desc: '取られた石は10手後にランダム復活', kind: 'recycle' },
+            { file: 'libgo.html',   name: 'LIBGO',    jp: '呼吸碁',       desc: '得点=自連の呼吸点合計+アゲハマ', kind: 'lib' },
+            { file: 'stonerain.html', name: 'STONERAIN', jp: '石雨碁',    desc: '9手ごとにランダムな空点へ壁が降る', kind: 'rain' },
+            { file: 'splitgo.html', name: 'SPLITGO',  jp: '分裂碁',       desc: '7石以上の連は半分が敵色に分裂', kind: 'split' },
+            { file: 'minigo.html',  name: 'MINIGO',   jp: '少子碁',       desc: '得点が少ない側が勝つ (ミゼール)', kind: 'mini' },
         ];
 
         const grid = document.getElementById('gameGrid');
@@ -736,6 +746,71 @@
                     c.beginPath(); c.moveTo(at(2.2,2.2).x, at(2.2,2.2).y); c.lineTo(at(2.7,2.7).x, at(2.7,2.7).y); c.stroke();
                     c.beginPath(); c.moveTo(at(3.4,3.4).x, at(3.4,3.4).y); c.lineTo(at(3.9,3.9).x, at(3.9,3.9).y); c.stroke();
                     dot(4.6,1.6,P1,P1S);
+                    break;
+                case 'finite': // 有限 (石+消える石)
+                    dot(2,3,P1,P1S); dot(3,3,P1,P1S);
+                    c.globalAlpha = 0.35; dot(4,3,P1,P1S); c.globalAlpha = 1;
+                    c.fillStyle = P1S; c.font = `bold ${cell*0.6}px sans-serif`;
+                    c.fillText('12', at(3,1.6).x, at(3,1.6).y);
+                    break;
+                case 'copy': // 模倣 (対称点)
+                    dot(2,2,P1,P1S); dot(4,4,P2,P2S);
+                    c.strokeStyle = '#ca8a04'; c.lineWidth = 1.6; c.setLineDash([2,3]);
+                    c.beginPath(); c.moveTo(at(2,2).x, at(2,2).y); c.lineTo(at(4,4).x, at(4,4).y); c.stroke();
+                    c.setLineDash([]);
+                    break;
+                case 'swamp': // 沼 (緑枡+石)
+                    c.fillStyle = 'rgba(101,163,13,0.35)';
+                    c.fillRect(at(1.8,1.8).x, at(1.8,1.8).y, cell*1.4, cell*1.4);
+                    c.fillRect(at(3.6,3.6).x, at(3.6,3.6).y, cell*1.4, cell*1.4);
+                    dot(2.5,2.5,P1,P1S);
+                    break;
+                case 'tide': // 潮汐 (波線)
+                    c.strokeStyle = '#0284c7'; c.lineWidth = 2; c.lineCap = 'round';
+                    [2.2, 3.4].forEach(y => {
+                        c.beginPath();
+                        for (let x = 1; x <= 5; x += 0.25)
+                            c.lineTo(at(x, y).x, at(x, y + Math.sin(x * 2) * 0.15).y);
+                        c.stroke();
+                    });
+                    break;
+                case 'pulse': // 脈動 (石+波紋)
+                    dot(3,3,P1,P1S);
+                    c.strokeStyle = P1S; c.lineWidth = 1.6;
+                    [0.6, 1.0].forEach(rr => {
+                        c.beginPath(); c.arc(at(3,3).x, at(3,3).y, cell*rr, 0, Math.PI*2); c.globalAlpha = 1.3 - rr; c.stroke(); c.globalAlpha = 1;
+                    });
+                    break;
+                case 'recycle': // 再生 (回転矢印)
+                    c.strokeStyle = P1S; c.lineWidth = 2; c.lineCap = 'round';
+                    c.beginPath(); c.arc(at(3,3).x, at(3,3).y, cell*1.1, -0.4, Math.PI*1.4); c.stroke();
+                    c.beginPath(); c.moveTo(at(4.1,2.6).x, at(4.1,2.6).y); c.lineTo(at(3.9,3.2).x, at(3.9,3.2).y); c.lineTo(at(4.5,3.1).x, at(4.5,3.1).y); c.stroke();
+                    dot(3,3,P2,P2S,R*0.6);
+                    break;
+                case 'lib': // 呼吸 (石+呼吸点)
+                    dot(3,3,P1,P1S);
+                    [[0,-1],[0,1],[-1,0],[1,0]].forEach(([dx, dy]) => {
+                        const p = at(3 + dx * 1.1, 3 + dy * 1.1);
+                        c.strokeStyle = '#16a34a'; c.lineWidth = 1.6;
+                        c.beginPath(); c.arc(p.x, p.y, cell*0.16, 0, Math.PI*2); c.stroke();
+                    });
+                    break;
+                case 'rain': // 石雨 (落下ブロック)
+                    c.fillStyle = 'rgba(100,110,130,0.75)';
+                    c.beginPath(); c.roundRect(at(1.6,1.4).x, at(1.6,1.4).y, cell*0.8, cell*0.8, cell*0.15); c.fill();
+                    c.beginPath(); c.roundRect(at(3.6,2.2).x, at(3.6,2.2).y, cell*0.8, cell*0.8, cell*0.15); c.fill();
+                    dot(2.6,4.4,P1,P1S);
+                    break;
+                case 'split': // 分裂 (半分敵化)
+                    dot(1.8,3,P1,P1S); dot(2.8,3,P1,P1S); dot(3.8,3,P2,P2S); dot(4.8,3,P2,P2S);
+                    c.strokeStyle = '#dc2626'; c.lineWidth = 1.6; c.setLineDash([2,2]);
+                    c.beginPath(); c.moveTo(at(3.3,1.6).x, at(3.3,1.6).y); c.lineTo(at(3.3,4.4).x, at(3.3,4.4).y); c.stroke();
+                    c.setLineDash([]);
+                    break;
+                case 'mini': // 少子 (小さい方勝ち)
+                    c.fillStyle = P1S; c.font = `bold ${cell*1.3}px sans-serif`;
+                    c.fillText('＜', at(3,3.2).x, at(3,3.2).y);
+                    dot(1.6,3,P1,P1S,R*0.55); dot(4.4,3,P2,P2S);
                     break;
             }
         }

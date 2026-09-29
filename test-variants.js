@@ -768,6 +768,103 @@ const SPECS = {
         assert('基本取り', board[0] === 0);
         assert('斜め連鎖爆発', board[BOARD_SIZE + 2] === 0 && captures[1] === 4);
     `,
+    'finitego.html': `
+        resetGame();
+        // 黒が13個置くと最古が消える
+        for (let i = 0; i < 13; i++) {
+            executeMove({ cells: [{x:i,y:i<7?12:11}], type: 'STONE', rot: 0 }, 1);
+            executeMove({ cells: [{x:i,y:0}], type: 'STONE', rot: 0 }, 2);
+        }
+        const blacks = pieces.filter(p => p.player === 1).length;
+        assert('黒は12個まで', blacks === 12);
+        assert('最古(0,12)が消滅', board[12 * BOARD_SIZE] === 0);
+    `,
+    'copygo.html': `
+        resetGame();
+        executeMove({ cells: [{x:3,y:4}], type: 'STONE', rot: 0 }, 1); // 黒(3,4)
+        // 白は対称点(N-1-3, N-1-4)=(9,8)にしか打てない
+        assert('対称点は可', isValidPlacement([{x:9,y:8}], 2) === true);
+        assert('非対称は不可', isValidPlacement([{x:0,y:0}], 2) === false);
+        // 対称点を埋めれば自由
+        board[8 * BOARD_SIZE + 9] = 1;
+        assert('埋まれば自由', isValidPlacement([{x:0,y:0}], 2) === true);
+    `,
+    'swampgo.html': `
+        resetGame();
+        assert('沼6個', swamp.size === 6);
+        const sw = [...swamp][0];
+        const sx = sw % BOARD_SIZE, sy = (sw / BOARD_SIZE) | 0;
+        assert('沼には置ける', isValidPlacement([{x:sx,y:sy}], 1) === true);
+        executeMove({ cells: [{x:sx,y:sy}], type: 'STONE', rot: 0 }, 1);
+        assert('沈没タイマー登録', swampSink[sw] !== undefined);
+        // 6手経過で沈む (沼に重ならない最下行で経過)
+        for (let i = 0; i < 6; i++)
+            executeMove({ cells: [{x:(i*2+1)%13,y:12}], type: 'STONE', rot: 0 }, (i%2)+1);
+        assert('沼の石は沈む', board[sw] === 0);
+    `,
+    'tidego.html': `
+        resetGame();
+        assert('初期は干潮', tideHigh === false);
+        applyTide();
+        assert('満潮で外周が壁', tideHigh === true && board[0] === 3 && board[BOARD_SIZE - 1] === 3);
+        applyTide();
+        assert('干潮で外周復帰', tideHigh === false && board[0] === 0);
+    `,
+    'pulsego.html': `
+        resetGame();
+        assert('applyPulse定義', typeof applyPulse === 'function');
+        board[6 * BOARD_SIZE + 6] = 1;
+        pieces.push({ id: 1, player: 1, type: 'STONE', rot: 0, cells: [{x:6,y:6}] });
+        applyPulse();
+        const grown = pieces.find(p => p.id === 1);
+        assert('連が1石伸びる', grown.cells.length === 2);
+    `,
+    'recyclego.html': `
+        resetGame();
+        // 白(0,0)を黒(1,0)(0,1)で囲む
+        board[0] = 2; board[1] = 1; board[BOARD_SIZE] = 1;
+        executeMove({ cells: [{x:9,y:9}], type: 'STONE', rot: 0 }, 1);
+        assert('取り発生', board[0] === 0 && captures[1] === 1);
+        assert('再生キュー入り', returnQueue.length === 1 && returnQueue[0].player === 2);
+        // 10手経過でランダム復活
+        for (let i = 0; i < 11; i++)
+            executeMove({ cells: [{x:(i*2)%13,y:11}], type: 'STONE', rot: 0 }, (i%2)+1);
+        assert('石が復活', board.filter(v => v === 2).length >= 1 && returnQueue.length === 0);
+    `,
+    'libgo.html': `
+        resetGame();
+        executeMove({ cells: [{x:6,y:6}], type: 'STONE', rot: 0 }, 1);
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 2);
+        // 黒(6,6)の呼吸点=4、白(0,0)の呼吸点=2+コミ6.5 → 白勝ち
+        endGameByScore();
+        assert('呼吸点+コミで白勝ち', gameResultData && gameResultData.title.includes('白'));
+    `,
+    'stonerain.html': `
+        resetGame();
+        // 9手実行→壁が1個降る
+        for (let i = 0; i < 9; i++)
+            executeMove({ cells: [{x:i%13,y:i<5?12:10}], type: 'STONE', rot: 0 }, (i%2)+1);
+        assert('壁が降った', board.filter(v => v === 3).length >= 1);
+    `,
+    'splitgo.html': `
+        resetGame();
+        // 黒7連を作る: (0..6, y=6)ライン — 交互に白も置く
+        for (let i = 0; i < 7; i++) {
+            executeMove({ cells: [{x:i,y:6}], type: 'STONE', rot: 0 }, 1);
+            if (i < 6) executeMove({ cells: [{x:i,y:0}], type: 'STONE', rot: 0 }, 2);
+        }
+        // 7連は半分(3個)が白に分裂
+        const whitesInLine = [0,1,2,3,4,5,6].filter(x => board[6 * BOARD_SIZE + x] === 2).length;
+        assert('半分が敵化', whitesInLine === 3);
+    `,
+    'minigo.html': `
+        resetGame();
+        executeMove({ cells: [{x:6,y:6}], type: 'STONE', rot: 0 }, 1);
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 2);
+        endGameByScore();
+        // 地0同士+コミ6.5: 黒=0,白=6.5 → 少ない黒の勝ち
+        assert('少子で黒勝ち', gameResultData && gameResultData.title.includes('黒'));
+    `,
 };
 
 let total = 0, failed = 0;
