@@ -20,6 +20,8 @@
 | POLYGO `polygo.html` | 毎手4連のポリマー鎖を自由に描画 |
 | ASYMGO `asymgo.html` | 非対称ピースセット (黒:直鎖アルカン、白:分枝) |
 | DRAFTGO `draftgo.html` | 対局前に碁カンを交互ドラフト |
+| MAMEGO `mamego.html` | 原作の碁豆 (ドミノ2連) を通常囲碁エンジンで再実装 |
+| TRIOGO `triogo.html` | 碁リオ=トリオミノ2種 (直鎖I・曲がりL、3連結) |
 
 ### 盤面・配置ルール系 (通常碁石 + 特殊ルール)
 
@@ -33,6 +35,10 @@
 | MIRRGO `mirrgo.html` | 対称ルール (縦中央線で鏡映して両側に置く) |
 | GRAPHGO `graphgo.html` | 盤面が分子グラフ (結合=辺のみが道) |
 | 3DGO `3dgo.html` | 3層立体盤、上下層も連・呼吸点 |
+| KOGO `kogo.html` | 孤立ルール (自石隣接には置けない、全石単石) |
+| RINGO `ringo.html` | 環状盤 (中央3×3が壁) |
+| CROSSGO `crossgo.html` | 十字盤 (四隅が壁で削れる) |
+| WORMGO `wormgo.html` | ワームホールペア (◎) が遠隔近傍を作る |
 
 ### 手順・勝敗系
 
@@ -51,6 +57,10 @@
 | BLASTGO `blastgo.html` | 隣接する敵石の連を無条件破壊 |
 | HANDIGO `handigo.html` | 置碁ハンデ (2〜9子、コミ0.5目) |
 | RUSHGO `rushgo.html` | 1手あたり制限時間、時間切れ=自動パス |
+| LIVEGO `livego.html` | 活石得点 (盤上の生き石+アゲハマで勝負、地は数えない) |
+| FUSEGO `fusego.html` | 融合ルール (隣接敵石が中立ブロックに中和) |
+| GRAVEGO `gravego.html` | 墓標ルール (取られたマスは壁になり盤面が狭まる) |
+| REAPGO `reapgo.html` | 連取ルール (取ったらもう1手、連鎖可) |
 
 ### 自動変化系
 

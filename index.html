@@ -134,6 +134,16 @@
             { file: 'asymgo.html',  name: 'ASYMGO',   jp: '非対称碁',     desc: '黒=直鎖アルカン、白=分枝アルカン', kind: 'asym' },
             { file: 'draftgo.html', name: 'DRAFTGO',  jp: 'ドラフト碁',   desc: '対局前に碁カンを交互ドラフト。獲得3種のみ出現', kind: 'draft' },
             { file: 'graphgo.html', name: 'GRAPHGO',  jp: 'グラフ碁',     desc: '盤面そのものが分子グラフ。結合(辺)だけが道', kind: 'graph' },
+            { file: 'mamego.html',  name: 'MAMEGO',   jp: '豆碁',         desc: '原作再実装。ドミノ「碁豆」のみを置く連結碁', kind: 'domino' },
+            { file: 'triogo.html',  name: 'TRIOGO',   jp: 'トリオ碁',     desc: '碁リオ=トリオミノ2種 (直鎖I・曲がりL)', kind: 'trio' },
+            { file: 'kogo.html',    name: 'KOGO',     jp: '孤立碁',       desc: '自分の石に隣接して置けない。全石が孤立単石', kind: 'iso' },
+            { file: 'ringo.html',   name: 'RINGO',    jp: '環状碁',       desc: '中央3×3が壁のドーナツ状盤面', kind: 'ring' },
+            { file: 'crossgo.html', name: 'CROSSGO',  jp: '十字碁',       desc: '四隅が削れた十字形の盤面', kind: 'cross' },
+            { file: 'livego.html',  name: 'LIVEGO',   jp: '活石碁',       desc: '地でなく盤上の生き石の数で勝負', kind: 'live' },
+            { file: 'fusego.html',  name: 'FUSEGO',   jp: '融合碁',       desc: '隣接した敵石が中立ブロックに「中和」される', kind: 'fuse' },
+            { file: 'wormgo.html',  name: 'WORMGO',   jp: '転送碁',       desc: 'ワームホールペア (◎) 同士が遠隔近傍として繋がる', kind: 'worm' },
+            { file: 'gravego.html', name: 'GRAVEGO',  jp: '墓標碁',       desc: '取られたマスは空点に戻らず墓標(壁)になる', kind: 'grave' },
+            { file: 'reapgo.html',  name: 'REAPGO',   jp: '連取碁',       desc: '敵石を取るともう1手打てる。連鎖可', kind: 'reap' },
         ];
 
         const grid = document.getElementById('gameGrid');
@@ -383,6 +393,69 @@
                 case 'handi': // 置碁
                     [[1.6,4.4],[4.4,1.6],[4.4,4.4],[1.6,1.6]].forEach(([x,y]) => dot(x, y, P1, P1S));
                     dot(3,3,P2,P2S);
+                    break;
+                case 'domino': // 碁豆 (2連ドミノ)
+                    dot(2.4,3,P1,P1S); dot(3.6,3,P1,P1S); bond(2.4,3,3.6,3,2.4);
+                    dot(3.4,1.8,P2,P2S); dot(3.4,4.2,P2,P2S); bond(3.4,1.8,3.4,4.2,0); // 縦置きは点線なし
+                    break;
+                case 'trio': // トリオミノ L字
+                    dot(2,2,P1,P1S); dot(2,3,P1,P1S); dot(3,3,P1,P1S);
+                    bond(2,2,2,3,2.4); bond(2,3,3,3,2.4);
+                    dot(4,4.2,P2,P2S); dot(4.6,3.2,P2,P2S); dot(3.4,4.6,P2,P2S);
+                    break;
+                case 'iso': // 孤立 (非隣接の散らばり)
+                    dot(1.8,1.8,P1,P1S); dot(4.2,2.2,P1,P1S); dot(2.6,4.4,P1,P1S);
+                    dot(4.4,4.4,P2,P2S); dot(2.2,3.2,P2,P2S);
+                    break;
+                case 'ring': // 中央穴
+                    for (let i = 0; i < 8; i++) {
+                        const a = i * Math.PI / 4;
+                        dot(3 + Math.cos(a) * 1.7, 3 + Math.sin(a) * 1.7, i % 2 ? P1 : P2, i % 2 ? P1S : P2S);
+                    }
+                    break;
+                case 'cross': // 十字盤 (隅マス省略)
+                    dot(3,1.6,P1,P1S); dot(3,4.4,P1,P1S); dot(1.6,3,P2,P2S); dot(4.4,3,P2,P2S); dot(3,3,P1,P1S);
+                    break;
+                case 'live': // 活き石カウント
+                    dot(2.2,3.4,P1,P1S); dot(3,3.4,P1,P1S); dot(3.8,3.4,P1,P1S);
+                    c.fillStyle = P1; c.font = `bold ${cell*0.85}px sans-serif`; c.textAlign = 'center';
+                    c.fillText('×3', at(3,1.6).x, at(3,1.6).y);
+                    break;
+                case 'fuse': // 融合→中立ブロック
+                    dot(2.2,3,P1,P1S); dot(3.8,3,P2,P2S);
+                    c.fillStyle = 'rgba(60,42,25,0.9)';
+                    c.fillRect(at(3,3).x - cell*0.28, at(3,3).y - cell*0.28, cell*0.56, cell*0.56);
+                    c.strokeStyle = 'rgba(30,20,10,0.9)'; c.lineWidth = 1.4;
+                    c.strokeRect(at(3,3).x - cell*0.28, at(3,3).y - cell*0.28, cell*0.56, cell*0.56);
+                    break;
+                case 'worm': // ワームホール◎
+                    dot(3,2,P1,P1S);
+                    c.strokeStyle = '#8b5cf6'; c.lineWidth = 2;
+                    [[1.8,4],[4.2,4]].forEach(([x,y]) => {
+                        c.beginPath(); c.arc(at(x,y).x, at(x,y).y, cell*0.42, 0, Math.PI*2); c.stroke();
+                        c.beginPath(); c.arc(at(x,y).x, at(x,y).y, cell*0.14, 0, Math.PI*2); c.stroke();
+                    });
+                    c.setLineDash([3,3]); c.beginPath();
+                    c.moveTo(at(1.8,4).x, at(1.8,4).y); c.lineTo(at(4.2,4).x, at(4.2,4).y); c.stroke();
+                    c.setLineDash([]);
+                    break;
+                case 'grave': // 墓標
+                    c.fillStyle = 'rgba(60,42,25,0.9)';
+                    [[2.2,2.4],[4,4]].forEach(([x,y]) => {
+                        c.fillRect(at(x,y).x - cell*0.26, at(x,y).y - cell*0.3, cell*0.52, cell*0.6);
+                    });
+                    dot(2.4,4.2,P1,P1S); dot(3.4,2.4,P2,P2S);
+                    break;
+                case 'reap': // 連取 (石+二重矢印)
+                    dot(2,3,P1,P1S); dot(4.4,3,P2,P2S);
+                    c.strokeStyle = P1; c.lineWidth = 2; c.lineCap = 'round';
+                    [[3.4,2.5,1],[3.6,3.5,-1]].forEach(([x,y,d]) => {
+                        c.beginPath(); c.moveTo(at(x,y).x, at(x,y).y);
+                        c.lineTo(at(x+1.1*d,y).x, at(x+1.1*d,y).y); c.stroke();
+                        c.beginPath(); c.moveTo(at(x+0.7*d,y-0.25).x, at(x+0.7*d,y-0.25).y);
+                        c.lineTo(at(x+1.15*d,y).x, at(x+1.15*d,y).y);
+                        c.lineTo(at(x+0.7*d,y+0.25).x, at(x+0.7*d,y+0.25).y); c.stroke();
+                    });
                     break;
             }
         }

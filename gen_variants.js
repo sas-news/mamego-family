@@ -2707,5 +2707,341 @@ out('handigo.html', apply(ALGO, [
     ...STONE_SPEC,
 ], 'handigo'));
 
+// ============================================================
+// ==== 第3バッチ: 追加10派生 ====
+// ============================================================
+
+// 盤サイズを 9/13/19 路へ (STONE_SPEC抜きのピース系バリアント用)
+const SIZE_91319 = [
+    [ONE, SIZE_BTNS, SIZE_BTNS_91319],
+    [ONE, `![13, 19, 25].includes(s.boardSize)`, `![9, 13, 19].includes(s.boardSize)`],
+    [ONE, STARS_ALGO, STARS_GENERIC],
+];
+
+// 壁マス機構の共通3置換 (壁描画/フォールバック除外/死に石選択ガード)
+const WALL_DRAW = `            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 壁マスの描画 (中立ブロック)
+            for (let wy = 0; wy < BOARD_SIZE; wy++) {
+                for (let wx = 0; wx < BOARD_SIZE; wx++) {
+                    if (board[wy * BOARD_SIZE + wx] !== 3) continue;
+                    const bx = padding + wx * cellSize;
+                    const by = padding + wy * cellSize;
+                    const bs = cellSize * 0.52;
+                    ctx.fillStyle = 'rgba(60, 42, 25, 0.85)';
+                    ctx.fillRect(bx - bs / 2, by - bs / 2, bs, bs);
+                    ctx.strokeStyle = 'rgba(30, 20, 10, 0.9)';
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(bx - bs / 2, by - bs / 2, bs, bs);
+                }
+            }`;
+const WALL_SPEC = [
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`, WALL_DRAW],
+    [ONE, FALLBACK_SKIP,
+`                    if (val !== 1 && val !== 2) continue; // 空点・壁は石として描かない`],
+    [ONE, TOGGLE_GUARD,
+`            const color = board[startIdx];
+            if (color === 0 || color === 3) return;`],
+];
+
+// 33. MAMEGO (豆碁) — 原作の碁豆 (ドミノ2連) を再実装
+const DOMINO_MOLS = `        // 碁豆: 2連のドミノ碁石 (原作 MAMEGO のピース)
+        const MOLECULES = {
+            DOMINO: { name: '碁豆', iupac: 'ドミノ', formula: '2連結', atoms: [[0,0],[1,0]] }
+        };`;
+out('mamego.html', apply(ALGO, [
+    ...rb('MAMEGO', '豆碁', 'mamego'),
+    [ONE, RV_ALGO, rv([
+        'このゲームで使う碁豆はドミノ (2連結) のみ。',
+        '原作 MAMEGO (碁豆) の同系ルールを通常囲碁エンジン上に再実装したもの。',
+    ])],
+    [ONE, INFO_ALGO,
+`            ドミノ「碁豆」を配置し合う変則囲碁 (原作リスペクト)<br>
+            PC: クリックで配置 / 回転=Rキー・右クリック・ホイール / ホールド=Hキー<br>
+            スマホ: 1タップ目プレビュー、2タップ目確定`],
+    [ONE, MOLECULES_ALGO, DOMINO_MOLS],
+    [ONE, OCNT_ALGO, '// 碁豆: 縦/横 = 2パターン'],
+    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'DOMINO';`],
+    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'DOMINO'`],
+    [ONE, '登場アルカン', '登場碁豆'],
+    [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
+`碁豆は2連のドミノ形のみ。孤立した1マスの空領域は窒息領域になります。`],
+    ...SIZE_91319,
+    [ALL, '碁カン', '碁豆'],
+    [ALL, '全7種1巡', '補充なし'],
+], 'mamego'));
+
+// 34. TRIOGO (トリオ碁) — トリオミノ (3連結: I/L) のみ
+const TRIO_MOLS = `        // トリオミノ: 3連結の形2種 (直鎖 / L字)
+        const MOLECULES = {
+            TRI_I: { name: 'Iトリオミノ', iupac: '直鎖3', formula: '3連結', atoms: [[0,0],[1,0],[2,0]] },
+            TRI_L: { name: 'Lトリオミノ', iupac: 'L字3', formula: '3連結', atoms: [[0,0],[0,1],[1,1]] }
+        };`;
+out('triogo.html', apply(ALGO, [
+    ...rb('TRIOGO', 'トリオ碁', 'triogo'),
+    [ONE, RV_ALGO, rv([
+        'このゲームで使う碁リオはトリオミノ2種 (直鎖I / 曲がりL、いずれも3連結)。',
+    ])],
+    [ONE, INFO_ALGO,
+`            トリオミノ「碁リオ」を配置し合う変則囲碁<br>
+            PC: クリックで配置 / 回転=Rキー・右クリック・ホイール / ホールド=Hキー<br>
+            スマホ: 1タップ目プレビュー、2タップ目確定`],
+    [ONE, MOLECULES_ALGO, TRIO_MOLS],
+    [ONE, OCNT_ALGO, '// I:2 / L:4 = 計6パターン'],
+    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'TRI_I';`],
+    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'TRI_I'`],
+    [ONE, '登場アルカン', '登場トリオミノ'],
+    [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
+`トリオミノは碁石3個の連結形 (直鎖とL字の2種)。3マス未満の窒息領域には入りません。`],
+    ...SIZE_91319,
+    [ALL, '碁カン', '碁リオ'],
+    [ALL, '全7種1巡', '全2種1巡'],
+    [ALL, '7種1巡', '2種1巡'],
+], 'triogo'));
+
+// 35. KOGO (孤立碁) — 自分の石に隣接して置けない
+out('kogo.html', apply(ALGO, [
+    ...rb('KOGO', '孤立碁', 'kogo'),
+    [ONE, RV_ALGO, rv([
+        '孤立ルール: 自分の石に隣接する空点には置けない。自連は一切作れず、全石が単独のまま。',
+        '取り・呼吸点・自殺禁止・コウは通常通り。単石は最大4呼吸点しか持てないため脆い。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 孤立ルール<br>
+            ※自分の石に隣接する点には置けない (全石が孤立単石)`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 孤立ルール: 自分の石に隣接する点には置けない
+            if (cells.some(p =>
+                getNeighbors(p.y * BOARD_SIZE + p.x).some(n => board[n] === player))) return false;`],
+    ...STONE_SPEC,
+], 'kogo'));
+
+// 36. RINGO (環状碁) — 中央3×3が壁のドーナツ盤
+out('ringo.html', apply(ALGO, [
+    ...rb('RINGO', '環状碁', 'ringo'),
+    [ONE, RV_ALGO, rv([
+        '盤の中央3×3が壁 (使用不能領域) のドーナツ状盤面。',
+        '壁は石を置けず、呼吸点にも地にもならない。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 環状盤<br>
+            ※中央3×3が壁。壁は置けず呼吸点にも地にもならない`],
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            // 環状盤: 中央3x3を壁にする
+            const c0 = Math.floor(BOARD_SIZE / 2);
+            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++)
+                board[(c0 + dy) * BOARD_SIZE + (c0 + dx)] = 3;`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'ringo'));
+
+// 37. CROSSGO (十字碁) — 四隅が壁の十字盤
+out('crossgo.html', apply(ALGO, [
+    ...rb('CROSSGO', '十字碁', 'crossgo'),
+    [ONE, RV_ALGO, rv([
+        '四隅が壁で削られた十字形の盤面 (隅は盤面の約1/3)。',
+        '壁は石を置けず、呼吸点にも地にもならない。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 十字盤<br>
+            ※四隅が壁の十字形盤面。壁は置けず呼吸点にも地にもならない`],
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            // 十字盤: 四隅を壁にする
+            const cs = Math.max(2, Math.floor(BOARD_SIZE / 3));
+            for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                if ((x < cs || x >= BOARD_SIZE - cs) && (y < cs || y >= BOARD_SIZE - cs))
+                    board[y * BOARD_SIZE + x] = 3;
+            }`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'crossgo'));
+
+// 38. LIVEGO (活石碁) — 地ではなく盤上の石数で勝負
+out('livego.html', apply(ALGO, [
+    ...rb('LIVEGO', '活石碁', 'livego'),
+    [ONE, RV_ALGO, rv([
+        '得点は「地」ではなく盤上に残った自分の石の数。アゲハマも加算 (生き石+アゲハマ+コミ)。',
+        '石を多く生き残らせることがそのまま得点になる。地の囲い込みは意味を持たない。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 活石得点<br>
+            ※得点=盤上の自分の石数+アゲハマ (地は数えない)`],
+    [ONE, `            const blackTotal = territory.black + captures[1];
+            const whiteTotal = territory.white + captures[2] + komi;`,
+`            const blackStones = board.filter(v => v === 1).length;
+            const whiteStones = board.filter(v => v === 2).length;
+            const blackTotal = blackStones + captures[1];
+            const whiteTotal = whiteStones + captures[2] + komi;`],
+    [ONE, `<div class="flex justify-between"><span>黒の地:</span> <strong>\${territory.black}</strong></div>`,
+          `<div class="flex justify-between"><span>黒の生き石:</span> <strong>\${blackStones}</strong></div>`],
+    [ONE, `<div class="flex justify-between"><span>白の地:</span> <strong>\${territory.white}</strong></div>`,
+          `<div class="flex justify-between"><span>白の生き石:</span> <strong>\${whiteStones}</strong></div>`],
+    ...STONE_SPEC,
+], 'livego'));
+
+// 39. FUSEGO (融合碁) — 隣接する敵石が中立ブロックに変化
+out('fusego.html', apply(ALGO, [
+    ...rb('FUSEGO', '融合碁', 'fusego'),
+    [ONE, RV_ALGO, rv([
+        '融合ルール: 置いた石に隣接する敵石は「中和」されて中立ブロック (壁) に変わる。',
+        '中和された石はアゲハマにならず、そのマスは以後使えない。通常の取り判定も有効。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 融合ルール<br>
+            ※置いた石に隣接する敵石は中立ブロックに変わる (アゲハマにならない)`],
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            // 融合ルール: 置いた石に隣接する敵石を中立ブロック(壁)に変える
+            {
+                const opp2 = player === 1 ? 2 : 1;
+                const fused = [];
+                move.cells.forEach(p => {
+                    getNeighbors(p.y * BOARD_SIZE + p.x).forEach(n => {
+                        if (board[n] === opp2) fused.push(n);
+                    });
+                });
+                fused.forEach(i => { board[i] = 3; });
+                if (fused.length) cleanUpPieces();
+            }`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'fusego'));
+
+// 40. WORMGO (転送碁) — ワームホールペアが近傍をつなぐ
+out('wormgo.html', apply(ALGO, [
+    ...rb('WORMGO', '転送碁', 'wormgo'),
+    [ONE, RV_ALGO, rv([
+        '転送ルール: 盤上にランダムなワームホールペア (◎マーク) が2組ある。',
+        'ワームホール端点同士は近傍としてつながる (連・呼吸点・取りが遠隔で成立)。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 転送ルール<br>
+            ※盤上のワームホールペア (◎) 同士が近傍としてつながる`],
+    [ONE, BOARD_DECL,
+`${BOARD_DECL}
+        let WORMHOLES = []; // [[idxA,idxB], ...] ワームホールペア (遠隔近傍)`],
+    [ONE, NBRS_GRID,
+`        function getNeighbors(idx) {
+            const x = idx % BOARD_SIZE;
+            const y = Math.floor(idx / BOARD_SIZE);
+            const neighbors = [];
+
+            if (x > 0) neighbors.push(idx - 1);
+            if (x < BOARD_SIZE - 1) neighbors.push(idx + 1);
+            if (y > 0) neighbors.push(idx - BOARD_SIZE);
+            if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
+
+            // ワームホール: ペア端点同士が近傍
+            WORMHOLES.forEach(([a, b]) => {
+                if (a === idx) neighbors.push(b);
+                else if (b === idx) neighbors.push(a);
+            });
+
+            return neighbors;
+        }
+
+        // ワームホールペアをランダム生成 (2組=4点)
+        function buildWormholes() {
+            const n = BOARD_SIZE * BOARD_SIZE;
+            const cells = [...Array(n).keys()];
+            const pick = () => cells.splice((Math.random() * cells.length) | 0, 1)[0];
+            WORMHOLES = [[pick(), pick()], [pick(), pick()]];
+        }`],
+    // ワームホール端点の描画 (◎マーク)
+    [ONE, `            // 星 (天元・星の点)
+            const starPoints = getStarPoints(BOARD_SIZE);`,
+`            // ワームホール端点の描画 (紫の◎ペア)
+            ctx.strokeStyle = '#8b5cf6';
+            WORMHOLES.forEach(([a, b]) => {
+                [a, b].forEach(i => {
+                    const wx = padding + (i % BOARD_SIZE) * cellSize;
+                    const wy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.arc(wx, wy, cellSize * 0.30, 0, Math.PI * 2); ctx.stroke();
+                    ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.arc(wx, wy, cellSize * 0.10, 0, Math.PI * 2); ctx.stroke();
+                });
+            });
+
+            // 星 (天元・星の点)
+            const starPoints = getStarPoints(BOARD_SIZE);`],
+    // 生成・永続化・同期
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            buildWormholes();`],
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    wormholes: WORMHOLES,
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            WORMHOLES = Array.isArray(s.wormholes) ? s.wormholes : [];
+            if (!WORMHOLES.length) buildWormholes();`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                wormholes: WORMHOLES,
+                pieceMode,`],
+    [ONE, `            lastMove = data.lastMove || null;`,
+`            lastMove = data.lastMove || null;
+            if (Array.isArray(data.wormholes)) WORMHOLES = data.wormholes;`],
+    ...STONE_SPEC,
+], 'wormgo'));
+
+// 41. GRAVEGO (墓標碁) — 取られたマスが壁になる
+out('gravego.html', apply(ALGO, [
+    ...rb('GRAVEGO', '墓標碁', 'gravego'),
+    [ONE, RV_ALGO, rv([
+        '墓標ルール: 取られた石のマスは空点に戻らず「墓標」(壁) になる。',
+        '墓標は石を置けず、呼吸点にも地にもならない。盤面は徐々に狭くなる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 墓標ルール<br>
+            ※取られたマスは空点に戻らず壁になる。盤面は次第に狭くなる`],
+    [ONE, CAPTURE_BLOCK,
+`            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                // 墓標ルール: 取られたマスは壁(墓標)になり、空点に戻らない
+                captured.forEach(idx => board[idx] = 3);
+                captures[player] += captured.length;
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'gravego'));
+
+// 42. REAPGO (連取碁) — 取ったらもう1手打てる
+out('reapgo.html', apply(ALGO, [
+    ...rb('REAPGO', '連取碁', 'reapgo'),
+    [ONE, RV_ALGO, rv([
+        '連取ルール: 着手で敵石を1個以上取った場合、同じプレイヤーがもう1手打てる (連鎖可)。',
+        '取らなかった場合のみ手番が交代する。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 連取ルール<br>
+            ※敵石を取るともう1手打てる (連鎖可)`],
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            // 連取ルール: 取った場合のみ手番継続
+            if (captured.length === 0) turn = opponent;`],
+    ...STONE_SPEC,
+], 'reapgo'));
+
 console.log(failures === 0 ? 'ALL OK' : `${failures} replacements MISSING`);
 process.exitCode = failures ? 1 : 0;

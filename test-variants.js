@@ -345,6 +345,83 @@ const SPECS = {
         assert('互先は石なし', board.every(v => v === 0));
         assert('互先コミ6.5', komi === 6.5);
     `,
+    'mamego.html': `
+        resetGame();
+        assert('碁豆は1種', PIECE_TYPES.length === 1 && PIECE_TYPES[0] === 'DOMINO');
+        assert('PIECE_SIZE=2', PIECE_SIZE === 2);
+        executeMove({ cells: [{x:0,y:0},{x:1,y:0}], type: 'DOMINO', rot: 0 }, 1);
+        assert('ドミノ配置', board[0] === 1 && board[1] === 1);
+    `,
+    'triogo.html': `
+        resetGame();
+        assert('トリオ2種', PIECE_TYPES.length === 2);
+        assert('PIECE_SIZE=3', PIECE_SIZE === 3);
+        executeMove({ cells: [{x:0,y:0},{x:1,y:0},{x:2,y:0}], type: 'TRI_I', rot: 0 }, 1);
+        assert('I配置', board[0] === 1 && board[1] === 1 && board[2] === 1);
+    `,
+    'kogo.html': `
+        resetGame();
+        executeMove({ cells: [{x:5,y:5}], type: 'STONE', rot: 0 }, 1);
+        assert('自連隣接は不可', isValidPlacement([{x:6,y:5}], 1) === false);
+        assert('非隣接は可', isValidPlacement([{x:0,y:0}], 1) === true);
+        assert('敵隣接は可', isValidPlacement([{x:6,y:5}], 2) === true);
+    `,
+    'ringo.html': `
+        resetGame();
+        const rc = Math.floor(BOARD_SIZE / 2);
+        assert('中央は壁', board[rc * BOARD_SIZE + rc] === 3);
+        assert('中央には置けない', isValidPlacement([{x:rc,y:rc}], 1) === false);
+        assert('隅は空', board[0] === 0);
+    `,
+    'crossgo.html': `
+        resetGame();
+        const cc = Math.floor(BOARD_SIZE / 2);
+        assert('左上隅は壁', board[0] === 3);
+        assert('中央は空', board[cc * BOARD_SIZE + cc] === 0);
+        assert('中央に置ける', isValidPlacement([{x:cc,y:cc}], 1) === true);
+    `,
+    'livego.html': `
+        resetGame();
+        for (let i = 0; i < 8; i++)
+            executeMove({ cells: [{x:i,y:0}], type: 'STONE', rot: 0 }, 1);
+        endGameByScore();
+        assert('生き石集計', gameResultData.details.indexOf('生き石') >= 0);
+        assert('黒8石>白コミで黒勝ち', gameResultData.title.indexOf('黒') >= 0);
+    `,
+    'fusego.html': `
+        resetGame();
+        executeMove({ cells: [{x:5,y:5}], type: 'STONE', rot: 0 }, 1);
+        executeMove({ cells: [{x:5,y:6}], type: 'STONE', rot: 0 }, 2);
+        assert('隣接敵石が壁化', board[5 * BOARD_SIZE + 5] === 3);
+        assert('自分の石は残る', board[6 * BOARD_SIZE + 5] === 2);
+        assert('アゲハマにならない', captures[2] === 0);
+    `,
+    'wormgo.html': `
+        resetGame();
+        assert('ワームホール2組', WORMHOLES.length === 2 && WORMHOLES.every(w => w.length === 2));
+        const [wa, wb] = WORMHOLES[0];
+        assert('ワーム近傍a→b', getNeighbors(wa).includes(wb));
+        assert('ワーム近傍b→a', getNeighbors(wb).includes(wa));
+    `,
+    'gravego.html': `
+        resetGame();
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 2);
+        executeMove({ cells: [{x:1,y:0}], type: 'STONE', rot: 0 }, 1);
+        executeMove({ cells: [{x:0,y:1}], type: 'STONE', rot: 0 }, 1);
+        assert('取られたマスは墓標', board[0] === 3);
+        assert('アゲハマ計上', captures[1] === 1);
+        assert('墓標には置けない', isValidPlacement([{x:0,y:0}], 2) === false);
+    `,
+    'reapgo.html': `
+        resetGame();
+        executeMove({ cells: [{x:1,y:0}], type: 'STONE', rot: 0 }, 1);
+        assert('通常手は交代', turn === 2);
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 2);
+        executeMove({ cells: [{x:0,y:1}], type: 'STONE', rot: 0 }, 1);
+        assert('取ったら手番継続', turn === 1);
+        assert('白石は消えた', board[0] === 0);
+        assert('アゲハマ計上', captures[1] === 1);
+    `,
 };
 
 let total = 0, failed = 0;
