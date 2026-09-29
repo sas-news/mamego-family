@@ -3760,5 +3760,369 @@ out('escapego.html', apply(ALGO, [
     ...STONE_SPEC,
 ], 'escapego'));
 
+// ============================================================
+// ==== 第6バッチ: 追加10派生 ====
+// ============================================================
+
+// 63. SIPHONGO (吸収碁) — 取った敵石は消えず自分の色に変わる
+out('siphongo.html', apply(ALGO, [
+    ...rb('SIPHONGO', '吸収碁', 'siphongo'),
+    [ONE, RV_ALGO, rv([
+        '吸収ルール: 呼吸点0になった敵連は消えず、まるごと自分の石に変わる (アゲハマにはならない)。',
+        '取り合いがそのまま陣地転換になる — 大連を奪えば一気に盤面が塗り替わる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 吸収ルール<br>
+            ※取った敵連は消えず自分の色に変わる (アゲハマにはならない)`],
+    [ONE, CAPTURE_BLOCK,
+`            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                // 吸収: 取った連は自分の色に変わる
+                captured.forEach(idx => board[idx] = player);
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    ...STONE_SPEC,
+], 'siphongo'));
+
+// 64. MONOGO (単石碁) — 2石以上の連は不死、単石のみ取れる
+out('monogo.html', apply(ALGO, [
+    ...rb('MONOGO', '単石碁', 'monogo'),
+    [ONE, RV_ALGO, rv([
+        '単石ルール: 呼吸点が0になっても、2石以上の連は取られない (不死)。',
+        '取れるのは孤立した単石だけ — 早期に連を作ると安全だが隙もできる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 単石ルール<br>
+            ※2石以上の連は不死。取れるのは孤立した単石のみ`],
+    [ONE, `                    if (!hasLiberty) {
+                        captured.push(...group);
+                    }`,
+`                    // 単石ルール: 2石以上の連は取られない
+                    if (!hasLiberty && group.length === 1) {
+                        captured.push(...group);
+                    }`],
+    ...STONE_SPEC,
+], 'monogo'));
+
+// 65. REGGO (上限碁) — 自連は最大3石まで
+out('reggo.html', apply(ALGO, [
+    ...rb('REGGO', '上限碁', 'reggo'),
+    [ONE, RV_ALGO, rv([
+        '上限ルール: 着手の結果、自分の連が4石以上になる手は禁止 (連は最大3石)。',
+        '大きな連を作れないため、小規模な攻防の連続になる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 上限ルール<br>
+            ※自分の連は最大3石まで (4連以上になる着手は禁止)`],
+    [ONE, `            // コウ判定: 相手の直前の着手前と同一の盤面になる手は禁止
+            if (captured.length > 0 && prevBoard) {
+                if (after.every((v, i) => v === prevBoard[i])) return false;
+            }
+            return true;`,
+`            // コウ判定: 相手の直前の着手前と同一の盤面になる手は禁止
+            if (captured.length > 0 && prevBoard) {
+                if (after.every((v, i) => v === prevBoard[i])) return false;
+            }
+
+            // 上限ルール: 着手後に4石以上の連ができる手は禁止
+            for (const p of cells) {
+                const grp = new Set([p.y * BOARD_SIZE + p.x]);
+                const q = [...grp];
+                while (q.length) {
+                    const cur = q.pop();
+                    getNeighbors(cur).forEach(n => {
+                        if (after[n] === player && !grp.has(n)) { grp.add(n); q.push(n); }
+                    });
+                }
+                if (grp.size > 3) return false;
+            }
+            return true;`],
+    ...STONE_SPEC,
+], 'reggo'));
+
+// 66. ANTIGRAVGO (反重力碁) — 上向き重力
+out('antigravgo.html', apply(ALGO, [
+    ...rb('ANTIGRAVGO', '反重力碁', 'antigravgo'),
+    [ONE, RV_ALGO, rv([
+        '反重力ルール: 石は上に落ちる — 最上段か、直上に石がある点にしか置けない。',
+        '上から積み下ろす逆さまの重力碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 反重力ルール<br>
+            ※最上段か石の直下のみ配置可 (上向きに積み上がる)`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 反重力: 最上段か、直上に石がある点のみ
+            if (cells.some(p => p.y !== 0 && board[(p.y - 1) * BOARD_SIZE + p.x] === 0)) return false;`],
+    ...STONE_SPEC,
+], 'antigravgo'));
+
+// 67. FOURGO (四方重力碁) — 着手ごとに重力方向が回転
+out('fourgo.html', apply(ALGO, [
+    ...rb('FOURGO', '四方重力碁', 'fourgo'),
+    [ONE, RV_ALGO, rv([
+        '四方重力ルール: 手番ごとに重力方向が 下→左→上→右 と回転する。',
+        '着手はその手番の重力方向で「端に接するか、直下に石がある」点のみ。',
+        '手番表示の矢印が現在の重力方向。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 四方重力ルール<br>
+            ※重力方向が手番ごとに回転 (下→左→上→右)。矢印方向の端か石の上のみ配置可`],
+    [ONE, `        function endGameByScore() {`,
+`        // 四方重力: 現在の重力方向ベクトル
+        function gravityDir() {
+            return [[0, 1], [-1, 0], [0, -1], [1, 0]][history.length % 4];
+        }
+
+        function endGameByScore() {`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 四方重力: 重力方向の端か、その直下に石がある点のみ
+            {
+                const gd = gravityDir();
+                if (cells.some(p => {
+                    const nx = p.x + gd[0], ny = p.y + gd[1];
+                    if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE) return false;
+                    return board[ny * BOARD_SIZE + nx] === 0;
+                })) return false;
+            }`],
+    [ONE, TURN_LINE,
+`            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + ' ' + ['↓','←','↑','→'][history.length % 4];`],
+    ...STONE_SPEC,
+], 'fourgo'));
+
+// 68. PUSHCHAINGO (連鎖押し碁) — 押した石が連鎖して押す
+out('pushchaingo.html', apply(ALGO, [
+    ...rb('PUSHCHAINGO', '連鎖押し碁', 'pushchaingo'),
+    [ONE, RV_ALGO, rv([
+        '連鎖押しルール: 置いた石に隣接する敵石を1マス押す。行き先が敵石なら連鎖して押し続ける。',
+        '行き先が盤外か自分の石なら押せない (何も起きない)。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 連鎖押しルール<br>
+            ※隣接する敵石を1マス押す。押された先が敵石なら連鎖`],
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            // 連鎖押し: 隣接する敵石を方向へ押す (列が続けば連鎖)
+            {
+                const opp2 = player === 1 ? 2 : 1;
+                move.cells.forEach(p => {
+                    getNeighbors(p.y * BOARD_SIZE + p.x).forEach(n => {
+                        if (board[n] !== opp2) return;
+                        const dx = (n % BOARD_SIZE) - p.x;
+                        const dy = ((n / BOARD_SIZE) | 0) - p.y;
+                        const chain = [];
+                        let cx = n % BOARD_SIZE, cy = (n / BOARD_SIZE) | 0;
+                        while (true) {
+                            if (board[cy * BOARD_SIZE + cx] === 0) break;
+                            if (board[cy * BOARD_SIZE + cx] === player) return;
+                            chain.push(cy * BOARD_SIZE + cx);
+                            cx += dx; cy += dy;
+                            if (cx < 0 || cx >= BOARD_SIZE || cy < 0 || cy >= BOARD_SIZE) return;
+                        }
+                        for (let k = chain.length - 1; k >= 0; k--) {
+                            board[chain[k] + dx + dy * BOARD_SIZE] = board[chain[k]];
+                            board[chain[k]] = 0;
+                        }
+                    });
+                });
+                cleanUpPieces();
+            }`],
+    ...STONE_SPEC,
+], 'pushchaingo'));
+
+// 69. TWILIGHTGO (黄昏碁) — 昼=自由配置、夜=自石隣接のみ
+out('twilightgo.html', apply(ALGO, [
+    ...rb('TWILIGHTGO', '黄昏碁', 'twilightgo'),
+    [ONE, RV_ALGO, rv([
+        '黄昏ルール: 12手周期で昼と夜が交互に来る。昼 (前半6手) は通常配置、',
+        '夜 (後半6手) は自分の石に隣接する点にしか置けない (自石が無ければどこでも可)。',
+        '手番表示の ☀/☾ が現在のフェーズ。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 黄昏ルール<br>
+            ※昼(6手)=自由配置、夜(6手)=自石隣接のみ。☀/☾表示`],
+    [ONE, `        function endGameByScore() {`,
+`        // 黄昏: 12手周期の後半6手が「夜」
+        function isNight() {
+            return Math.floor(history.length / 6) % 2 === 1;
+        }
+
+        function endGameByScore() {`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 黄昏ルール: 夜は自石隣接のみ
+            if (isNight() && board.some(v => v === player) &&
+                !cells.some(p => getNeighbors(p.y * BOARD_SIZE + p.x).some(n => board[n] === player))) return false;`],
+    [ONE, TURN_LINE,
+`            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + (isNight() ? ' ☾' : ' ☀');`],
+    ...STONE_SPEC,
+], 'twilightgo'));
+
+// 70. HYDRAGO (ヒドラ碁) — 取られた石が隣の空点に復活
+out('hydrago.html', apply(ALGO, [
+    ...rb('HYDRAGO', 'ヒドラ碁', 'hydrago'),
+    [ONE, RV_ALGO, rv([
+        'ヒドラルール: 取られた石は隣のランダムな空点に1つずつ復活する (復活先がなければ消える)。',
+        '取っても取っても生えてくる — 完全に包囲して初めて取り切れる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + ヒドラルール<br>
+            ※取られた石は隣のランダムな空点に復活する`],
+    [ONE, CAPTURE_BLOCK,
+`            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                captures[player] += captured.length;
+                soundManager.playCapture();
+                // ヒドラ: 取られた石は隣の空点にランダム復活
+                captured.forEach(idx => {
+                    const cand = getNeighbors(idx).filter(i => board[i] === 0);
+                    if (cand.length) board[cand[(Math.random() * cand.length) | 0]] = opponent;
+                });
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    ...STONE_SPEC,
+], 'hydrago'));
+
+// 71. GHOSTGO (幽霊碁) — 取られたマスに6手間だけ幽霊が残る
+out('ghostgo.html', apply(ALGO, [
+    ...rb('GHOSTGO', '幽霊碁', 'ghostgo'),
+    [ONE, RV_ALGO, rv([
+        '幽霊ルール: 取られた石は消えず「幽霊」となって6手間そのマスを塞ぐ。',
+        '幽霊は置けず呼吸点にもならないが、6手経つと消えて空点に戻る。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 幽霊ルール<br>
+            ※取られたマスは幽霊となり6手間だけ塞がる`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        let ghostTimer = []; // 幽霊の残りターン (idxごと)`],
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            ghostTimer = Array(BOARD_SIZE * BOARD_SIZE).fill(0);`],
+    [ONE, CAPTURE_BLOCK,
+`            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                // 幽霊: 取られたマスは幽霊(4)として6手間残る
+                captured.forEach(idx => { board[idx] = 4; ghostTimer[idx] = 6; });
+                captures[player] += captured.length;
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;
+            // 幽霊の消滅カウントダウン
+            for (let gi = 0; gi < ghostTimer.length; gi++) {
+                if (ghostTimer[gi] > 0 && --ghostTimer[gi] === 0 && board[gi] === 4) board[gi] = 0;
+            }`],
+    // 幽霊の描画
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 幽霊マスの描画 (薄い輪郭)
+            for (let gy = 0; gy < BOARD_SIZE; gy++) {
+                for (let gx = 0; gx < BOARD_SIZE; gx++) {
+                    if (board[gy * BOARD_SIZE + gx] !== 4) continue;
+                    const bx = padding + gx * cellSize;
+                    const by = padding + gy * cellSize;
+                    ctx.strokeStyle = 'rgba(150, 160, 190, 0.8)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([3, 3]);
+                    ctx.beginPath();
+                    ctx.arc(bx, by, cellSize * 0.36, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }`],
+    [ONE, FALLBACK_SKIP,
+`                    if (val !== 1 && val !== 2) continue; // 空点・幽霊は石として描かない`],
+    [ONE, TOGGLE_GUARD,
+`            const color = board[startIdx];
+            if (color === 0 || color === 4) return;`],
+    // 幽霊の永続化・同期
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    ghostTimer,
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            ghostTimer = Array.isArray(s.ghostTimer) ? s.ghostTimer : Array(BOARD_SIZE * BOARD_SIZE).fill(0);`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                ghostTimer,
+                pieceMode,`],
+    [ONE, `            lastMove = data.lastMove || null;`,
+`            lastMove = data.lastMove || null;
+            if (Array.isArray(data.ghostTimer)) ghostTimer = data.ghostTimer;`],
+    // undo用スナップショット
+    [ONE, `                prevBoard,
+                lastMove,
+                currentPieceType,`,
+`                prevBoard,
+                lastMove,
+                ghostTimer: [...ghostTimer],
+                currentPieceType,`],
+    [ONE, `            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;`,
+`            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;
+            ghostTimer = snap.ghostTimer ? [...snap.ghostTimer] : ghostTimer;`],
+    ...STONE_SPEC,
+], 'ghostgo'));
+
+// 72. KLEINGO (クライン碁) — 両軸ループ+横は反転 (クライン瓶)
+out('kleingo.html', apply(ALGO, [
+    ...rb('KLEINGO', 'クライン碁', 'kleingo'),
+    [ONE, RV_ALGO, rv([
+        'クライン瓶ルール: 左右端は上下反転で繋がり、上下端も普通にループする。',
+        'トーラスよりさらにねじれたトポロジー。全ての端が存在しない。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + クライン瓶<br>
+            ※左右端は上下反転で接続、上下端もループ。端は存在しない`],
+    [ONE, NBRS_GRID,
+`        function getNeighbors(idx) {
+            const x = idx % BOARD_SIZE;
+            const y = Math.floor(idx / BOARD_SIZE);
+            const neighbors = [];
+
+            // 左右: 反転ループ (クライン瓶のねじれ)
+            if (x > 0) neighbors.push(idx - 1);
+            else neighbors.push((BOARD_SIZE - 1 - y) * BOARD_SIZE + BOARD_SIZE - 1);
+            if (x < BOARD_SIZE - 1) neighbors.push(idx + 1);
+            else neighbors.push((BOARD_SIZE - 1 - y) * BOARD_SIZE);
+            // 上下: 通常ループ
+            if (y > 0) neighbors.push(idx - BOARD_SIZE);
+            else neighbors.push((BOARD_SIZE - 1) * BOARD_SIZE + x);
+            if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
+            else neighbors.push(x);
+
+            return neighbors;
+        }`],
+    ...STONE_SPEC,
+], 'kleingo'));
+
 console.log(failures === 0 ? 'ALL OK' : `${failures} replacements MISSING`);
 process.exitCode = failures ? 1 : 0;

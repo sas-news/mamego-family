@@ -584,6 +584,99 @@ const SPECS = {
         board[ci - BOARD_SIZE] = 1; board[ci + BOARD_SIZE] = 1;
         assert('中央は通常通り', getCapturedStones(board, 2).length === 1);
     `,
+    'siphongo.html': `
+        resetGame();
+        executeMove({ cells: [{x:1,y:0}], type: 'STONE', rot: 0 }, 1);
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 2);
+        executeMove({ cells: [{x:0,y:1}], type: 'STONE', rot: 0 }, 1);
+        assert('取った石が自色化', board[0] === 1);
+        assert('アゲハマなし', captures[1] === 0);
+    `,
+    'monogo.html': `
+        resetGame();
+        // 単石は取れる
+        board[0] = 2; board[1] = 1; board[BOARD_SIZE] = 1;
+        assert('単石は取れる', getCapturedStones(board, 2).length === 1);
+        // 2連は不死
+        board[0] = 0; board[1] = 0; board[BOARD_SIZE] = 0;
+        board[5 * BOARD_SIZE + 5] = 2; board[5 * BOARD_SIZE + 6] = 2;
+        board[5 * BOARD_SIZE + 4] = 1; board[4 * BOARD_SIZE + 5] = 1; board[4 * BOARD_SIZE + 6] = 1;
+        board[6 * BOARD_SIZE + 5] = 1; board[6 * BOARD_SIZE + 6] = 1; board[5 * BOARD_SIZE + 7] = 1;
+        assert('2連は取れない', getCapturedStones(board, 2).length === 0);
+    `,
+    'reggo.html': `
+        resetGame();
+        board[0] = 1; board[1] = 1; board[2] = 1;
+        // (0,0)-(1,0)-(2,0) の3連に隣接して(3,0)に置くと4連 → 禁止
+        assert('4連になる手は禁止', isValidPlacement([{x:3,y:0}], 1) === false);
+        assert('離れた点は可', isValidPlacement([{x:0,y:5}], 1) === true);
+        // 2連への追加 (3連) は可
+        board[0] = 0;
+        assert('3連は可', isValidPlacement([{x:0,y:0}], 1) === true);
+    `,
+    'antigravgo.html': `
+        resetGame();
+        assert('最上段は可', isValidPlacement([{x:4,y:0}], 1) === true);
+        assert('宙に浮く手は不可', isValidPlacement([{x:4,y:4}], 1) === false);
+        board[4 * BOARD_SIZE + 4] = 1; // (4,4)に石
+        assert('石の直下は可', isValidPlacement([{x:4,y:5}], 1) === true);
+    `,
+    'fourgo.html': `
+        resetGame();
+        assert('gravityDir定義', typeof gravityDir === 'function');
+        assert('初期方向=下', gravityDir()[0] === 0 && gravityDir()[1] === 1);
+        const fb = BOARD_SIZE - 1;
+        assert('下端は可', isValidPlacement([{x:4,y:fb}], 1) === true);
+        assert('中央は不可', isValidPlacement([{x:4,y:4}], 1) === false);
+        history.push({}); history.push({}); // 手数+2 → 方向=上
+        assert('方向回転=上', gravityDir()[1] === -1);
+        assert('上端が可になる', isValidPlacement([{x:4,y:0}], 1) === true);
+    `,
+    'pushchaingo.html': `
+        resetGame();
+        board[1] = 2; board[2] = 2; // 敵石2連 (1,0)(2,0)
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 1);
+        assert('連鎖押しで2連移動', board[2] === 2 && board[3] === 2 && board[1] === 0);
+    `,
+    'twilightgo.html': `
+        resetGame();
+        assert('isNight定義', typeof isNight === 'function');
+        assert('開始は昼', isNight() === false);
+        for (let i = 0; i < 6; i++) history.push({}); // 夜へ
+        assert('6手後は夜', isNight() === true);
+        board[5 * BOARD_SIZE + 5] = 1;
+        assert('夜は自石隣接のみ', isValidPlacement([{x:6,y:5}], 1) === true);
+        assert('夜に遠方不可', isValidPlacement([{x:0,y:0}], 1) === false);
+    `,
+    'hydrago.html': `
+        resetGame();
+        executeMove({ cells: [{x:1,y:0}], type: 'STONE', rot: 0 }, 1);
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 2);
+        executeMove({ cells: [{x:0,y:1}], type: 'STONE', rot: 0 }, 1);
+        // 白(0,0)は取られたが隣の空点に復活する可能性: 消えたか復活したかは盤面上の白石数で確認
+        const whites = board.filter(v => v === 2).length;
+        assert('ヒドラ復活または消滅', whites <= 1);
+        assert('アゲハマ計上', captures[1] === 1);
+    `,
+    'ghostgo.html': `
+        resetGame();
+        executeMove({ cells: [{x:1,y:0}], type: 'STONE', rot: 0 }, 1);
+        executeMove({ cells: [{x:0,y:0}], type: 'STONE', rot: 0 }, 2);
+        executeMove({ cells: [{x:0,y:1}], type: 'STONE', rot: 0 }, 1);
+        assert('取られたマスは幽霊', board[0] === 4);
+        assert('幽霊には置けない', isValidPlacement([{x:0,y:0}], 2) === false);
+        for (let i = 0; i < 6; i++) executeMove({ cells: [{x:2+i*2,y:8}], type: 'STONE', rot: 0 }, (i % 2) + 1);
+        assert('幽霊は消える', board[0] === 0);
+    `,
+    'kleingo.html': `
+        resetGame();
+        // 左端(0,2)の左隣は右端反転(N-1, N-3)
+        const ki = 2 * BOARD_SIZE;
+        const kexp = (BOARD_SIZE - 3) * BOARD_SIZE + BOARD_SIZE - 1;
+        assert('横反転ループ', getNeighbors(ki).includes(kexp));
+        // 上端(0,0)の上は下端(0,N-1)
+        assert('縦通常ループ', getNeighbors(0).includes((BOARD_SIZE - 1) * BOARD_SIZE));
+    `,
 };
 
 let total = 0, failed = 0;

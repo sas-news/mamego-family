@@ -50,6 +50,11 @@
 | MOEBIUSGO `moebiusgo.html` | メビウス帯盤 (左右端が上下反転で接続) |
 | QUARTERGO `quartergo.html` | 象限碁 (手番ごとに許可象限が回転) |
 | CENTGO `centgo.html` | 中心碁 (中心からの円内のみ配置可、半径は手数で拡大) |
+| KLEINGO `kleingo.html` | クライン瓶 (横反転+縦ループ) |
+| ANTIGRAVGO `antigravgo.html` | 反重力 (最上段か石の直下のみ) |
+| FOURGO `fourgo.html` | 四方重力 (手番ごとに重力方向が回転) |
+| TWILIGHTGO `twilightgo.html` | 黄昏碁 (昼=自由、夜=自石隣接のみ) |
+| REGGO `reggo.html` | 上限碁 (自連は最大3石) |
 
 ### 手順・勝敗系
 
@@ -77,6 +82,9 @@
 | SELFGO `selfgo.html` | 自爆碁 (自殺手が合法、自連は相手のアゲハマ) |
 | CONNECTGO `connectgo.html` | 連絡碁 (黒=上下辺/白=左右辺の連結で即勝利) |
 | ESCAPEGO `escapego.html` | 脱出碁 (辺に接する連は不死) |
+| SIPHONGO `siphongo.html` | 吸収碁 (取った敵連が自色に変わる) |
+| MONOGO `monogo.html` | 単石碁 (2連以上は不死、単石のみ取れる) |
+| PUSHCHAINGO `pushchaingo.html` | 連鎖押し碁 (押した敵石がさらに押す) |
 
 ### 自動変化系
 
@@ -90,6 +98,8 @@
 | ORBITGO `orbitgo.html` | 周回碁 (着手ごとに外周が1マス回転) |
 | SWITCHGO `switchgo.html` | 転換碁 (12手ごとに全石の色が反転) |
 | THUNDERGO `thundergo.html` | 雷碁 (10手ごとに雷がランダムな連を破壊) |
+| HYDRAGO `hydrago.html` | ヒドラ碁 (取られた石が隣の空点に復活) |
+| GHOSTGO `ghostgo.html` | 幽霊碁 (取られたマスは幽霊として6手間塞がる) |
 
 ## 共通機能
 

@@ -164,6 +164,16 @@
             { file: 'moebiusgo.html', name: 'MOEBIUSGO', jp: 'メビウス碁', desc: '左端↔右端が上下反転して繋がるメビウス帯', kind: 'moebius' },
             { file: 'quartergo.html', name: 'QUARTERGO', jp: '象限碁',    desc: '着手はその手番の象限のみ。手番ごとに回転', kind: 'quarter' },
             { file: 'escapego.html', name: 'ESCAPEGO', jp: '脱出碁',      desc: '辺に接する連は不死。辺への接続が死活を決める', kind: 'escape' },
+            { file: 'siphongo.html', name: 'SIPHONGO', jp: '吸収碁',      desc: '取った敵連は消えず自分の色に変わる', kind: 'siphon' },
+            { file: 'monogo.html',  name: 'MONOGO',   jp: '単石碁',       desc: '2石以上の連は不死。取れるのは孤立単石のみ', kind: 'mono' },
+            { file: 'reggo.html',   name: 'REGGO',    jp: '上限碁',       desc: '自分の連は最大3石まで。4連以上は禁止', kind: 'reg' },
+            { file: 'antigravgo.html', name: 'ANTIGRAVGO', jp: '反重力碁', desc: '上向き重力。最上段か石の直下のみ配置可', kind: 'antigrav' },
+            { file: 'fourgo.html',  name: 'FOURGO',   jp: '四方重力碁',   desc: '重力方向が手番ごとに回転 (下→左→上→右)', kind: 'four' },
+            { file: 'pushchaingo.html', name: 'PUSHCHAINGO', jp: '連鎖押し碁', desc: '押した敵石が敵石をさらに押す連鎖', kind: 'pushchain' },
+            { file: 'twilightgo.html', name: 'TWILIGHTGO', jp: '黄昏碁',  desc: '昼=自由配置、夜=自石隣接のみ。12手周期', kind: 'twilight' },
+            { file: 'hydrago.html', name: 'HYDRAGO',  jp: 'ヒドラ碁',     desc: '取られた石は隣の空点にランダム復活', kind: 'hydra' },
+            { file: 'ghostgo.html', name: 'GHOSTGO',  jp: '幽霊碁',       desc: '取られたマスは幽霊となり6手間塞がる', kind: 'ghost' },
+            { file: 'kleingo.html', name: 'KLEINGO',  jp: 'クライン碁',   desc: 'クライン瓶: 横反転+縦ループの両軸トポロジー', kind: 'klein' },
         ];
 
         const grid = document.getElementById('gameGrid');
@@ -590,6 +600,68 @@
                     c.strokeStyle = P1; c.lineWidth = 2;
                     c.beginPath(); c.moveTo(at(3,4.4).x, at(3,4.4).y); c.lineTo(at(3,1.4).x, at(3,1.4).y); c.stroke();
                     dot(3,4.4,P1,P1S); dot(3,1.4,P1,P1S); dot(3.9,3,P2,P2S);
+                    break;
+                case 'siphon': // 吸収 (色転換矢印)
+                    dot(1.8,3,P2,P2S); dot(4.2,3,P1,P1S);
+                    c.strokeStyle = P1; c.lineWidth = 1.8; c.lineCap = 'round';
+                    c.beginPath(); c.moveTo(at(2.4,3).x, at(2.4,3).y); c.lineTo(at(3.6,3).x, at(3.6,3).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(3.2,2.7).x, at(3.2,2.7).y); c.lineTo(at(3.7,3).x, at(3.7,3).y); c.lineTo(at(3.2,3.3).x, at(3.2,3.3).y); c.stroke();
+                    break;
+                case 'mono': // 単石のみ
+                    dot(3,3,P2,P2S); dot(4.4,4.4,P1,P1S);
+                    c.strokeStyle = '#dc2626'; c.lineWidth = 2;
+                    c.beginPath(); c.arc(at(3,3).x, at(3,3).y, cell*0.7, 0, Math.PI*2); c.stroke();
+                    break;
+                case 'reg': // 上限3連
+                    dot(1.8,3,P1,P1S); dot(3,3,P1,P1S); dot(4.2,3,P1,P1S);
+                    c.strokeStyle = '#dc2626'; c.lineWidth = 2;
+                    c.beginPath(); c.moveTo(at(4.6,2.6).x, at(4.6,2.6).y); c.lineTo(at(5.4,3.4).x, at(5.4,3.4).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(5.4,2.6).x, at(5.4,2.6).y); c.lineTo(at(4.6,3.4).x, at(4.6,3.4).y); c.stroke();
+                    break;
+                case 'antigrav': // 反重力↑
+                    dot(3,1.6,P1,P1S); dot(3,2.8,P1,P1S);
+                    c.fillStyle = P1S; c.font = `bold ${cell*0.9}px sans-serif`;
+                    c.fillText('↑', at(3,4.6).x, at(3,4.6).y);
+                    break;
+                case 'four': // 四方回転矢印
+                    c.fillStyle = P1S; c.font = `bold ${cell*0.55}px sans-serif`;
+                    c.fillText('↓', at(3,4.8).x, at(3,4.8).y); c.fillText('←', at(1.4,3.2).x, at(1.4,3.2).y);
+                    c.fillText('↑', at(3,1.5).x, at(3,1.5).y); c.fillText('→', at(4.6,3.2).x, at(4.6,3.2).y);
+                    dot(3,3,P1,P1S);
+                    break;
+                case 'pushchain': // 連鎖押し
+                    dot(1.6,3,P1,P1S); dot(2.7,3,P2,P2S); dot(3.8,3,P2,P2S);
+                    c.strokeStyle = P1; c.lineWidth = 1.8; c.lineCap = 'round';
+                    c.beginPath(); c.moveTo(at(3,2.2).x, at(3,2.2).y); c.lineTo(at(4.8,2.2).x, at(4.8,2.2).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(4.4,1.9).x, at(4.4,1.9).y); c.lineTo(at(4.9,2.2).x, at(4.9,2.2).y); c.lineTo(at(4.4,2.5).x, at(4.4,2.5).y); c.stroke();
+                    break;
+                case 'twilight': // 昼夜
+                    dot(2.6,3,P1,P1S); dot(4,3,P2,P2S);
+                    c.fillStyle = '#ca8a04'; c.font = `bold ${cell*0.8}px sans-serif`;
+                    c.fillText('☀', at(1.6,1.6).x, at(1.6,1.6).y);
+                    c.fillStyle = '#64748b';
+                    c.fillText('☾', at(4.4,1.6).x, at(4.4,1.6).y);
+                    break;
+                case 'hydra': // ヒドラ (分裂)
+                    dot(2,4.2,P2,P2S);
+                    c.strokeStyle = P2S; c.lineWidth = 1.6;
+                    c.beginPath(); c.moveTo(at(2,4.2).x, at(2,4.2).y); c.lineTo(at(2.8,2.8).x, at(2.8,2.8).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(2.8,2.8).x, at(2.8,2.8).y); c.lineTo(at(2.2,1.8).x, at(2.2,1.8).y); c.stroke();
+                    c.beginPath(); c.moveTo(at(2.8,2.8).x, at(2.8,2.8).y); c.lineTo(at(4,2).x, at(4,2).y); c.stroke();
+                    dot(2.2,1.8,P2,P2S,R*0.7); dot(4,2,P2,P2S,R*0.7);
+                    break;
+                case 'ghost': // 幽霊 (破線丸)
+                    c.strokeStyle = 'rgba(150,160,190,0.9)'; c.lineWidth = 2; c.setLineDash([3,3]);
+                    c.beginPath(); c.arc(at(3,3).x, at(3,3).y, cell*0.75, 0, Math.PI*2); c.stroke();
+                    c.setLineDash([]);
+                    dot(2,4.4,P1,P1S);
+                    break;
+                case 'klein': // クライン瓶
+                    c.strokeStyle = P1S; c.lineWidth = 2;
+                    c.beginPath(); c.arc(at(2.5,3).x, at(2.5,3).y, cell*0.8, Math.PI*0.5, Math.PI*1.5); c.stroke();
+                    c.beginPath(); c.arc(at(3.5,3).x, at(3.5,3).y, cell*0.8, -Math.PI*0.5, Math.PI*0.5); c.stroke();
+                    c.beginPath(); c.moveTo(at(2.5,2.1).x, at(2.5,2.1).y); c.lineTo(at(3.5,3.9).x, at(3.5,3.9).y); c.stroke();
+                    dot(4.6,4.4,P1,P1S);
                     break;
             }
         }
