@@ -204,6 +204,12 @@
             { file: 'shufflego.html', name: 'SHUFFLEGO', jp: '混成碁',    desc: '15手ごとに全石が50%で色反転', kind: 'shuffle' },
             { file: 'taxgo.html',   name: 'TAXGO',    jp: '関税碁',       desc: '敵陣半分への着手は相手に+1目', kind: 'tax' },
             { file: 'greedgo.html', name: 'GREEDGO',  jp: '強欲碁',       desc: 'アタリ状態なら取る手しか打てない', kind: 'greed' },
+            { file: 'crosswallgo.html', name: 'CROSSWALLGO', jp: '十字壁碁', desc: '中央十字の壁で盤が4区域に分断', kind: 'crosswall' },
+            { file: 'polargo.html', name: 'POLARGO',  jp: '極地碁',       desc: '外周1周の回廊のみ有効', kind: 'polar' },
+            { file: 'microgo.html', name: 'MICROGO',  jp: '微細碁',       desc: '5・7・9路の小盤囲碁', kind: 'micro' },
+            { file: 'jumpgo.html', name: 'JUMPGO',   jp: '跳躍碁',       desc: '自石からちょうど距離2の点にしか打てない', kind: 'jump' },
+            { file: 'nokogo.html', name: 'NOKOGO',   jp: '劫無碁',       desc: 'コウ禁止がない — 再現は自由', kind: 'noko' },
+            { file: 'chaoticgo.html', name: 'CHAOTICGO', jp: '混沌碁',   desc: '漂流・潮汐・壁落下が周期的に襲う', kind: 'chaos' },
         ];
 
         const grid = document.getElementById('gameGrid');
@@ -876,6 +882,33 @@
                     c.fillText('¥', at(2.4,3.2).x, at(2.4,3.2).y);
                     dot(4.2,3,P2,P2S);
                     break;
+                case 'crosswall': // 十字壁
+                    for (let i = 0; i < 5; i++) { blk(i, 2, '#6b7280', '#4b5563'); blk(2, i, '#6b7280', '#4b5563'); }
+                    dot(0.8,0.8,P1,P1S); dot(3.2,0.8,P2,P2S); dot(0.8,3.2,P2,P2S); dot(3.2,3.2,P1,P1S);
+                    break;
+                case 'polar': // 中央が壁・外周のみ
+                    for (let i = 1; i < 4; i++) for (let j = 1; j < 4; j++) blk(i, j, '#6b7280', '#4b5563');
+                    dot(0,2,P1,P1S); dot(4,2,P2,P2S); dot(2,0,P2,P2S); dot(2,4,P1,P1S);
+                    break;
+                case 'micro': // 細密5路
+                    dot(2,2,P1,P1S); dot(2.7,2.7,P2,P2S); dot(1.5,2.5,P2,P2S,cell*0.3);
+                    dot(3.3,2,P1,P1S,cell*0.3); dot(2,3.5,P1,P1S,cell*0.3); break;
+                case 'jump': // 距離2ジャンプ
+                    dot(1,2,P1,P1S);
+                    c.strokeStyle = '#c9b96a'; c.lineWidth = 2; c.lineCap = 'round';
+                    c.setLineDash([4,4]); c.beginPath();
+                    { const p = at(1,2), q = at(3,2); c.moveTo(p.x, p.y); c.lineTo(q.x, q.y); }
+                    c.stroke(); c.setLineDash([]);
+                    dot(3,2,P1,P1S,cell*0.34); dot(3.5,3.5,P2,P2S); break;
+                case 'noko': // コウ形
+                    dot(2,1,P2,P2S); dot(1,2,P2,P2S); dot(3,2,P2,P2S);
+                    dot(2,2,P1,P1S); dot(2,3,P1,P1S); dot(2,2.6,P1,P1S,cell*0.3); break;
+                case 'chaos': // 混沌 (壁+石+爆発)
+                    blk(1,1,'#6b7280','#4b5563'); blk(4,3.5,'#6b7280','#4b5563');
+                    dot(2,2,P1,P1S); dot(2.8,2.5,P2,P2S); dot(1.2,3.5,P2,P2S);
+                    c.fillStyle = '#e25555'; c.beginPath();
+                    { const p = at(4,1); c.arc(p.x, p.y, cell*0.34, 0, Math.PI*2); }
+                    c.fill(); break;
                 case 'greed': // 強欲 (囲む矢印)
                     dot(3,3,P2,P2S);
                     c.strokeStyle = '#dc2626'; c.lineWidth = 1.8; c.lineCap = 'round';

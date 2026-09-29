@@ -5442,5 +5442,232 @@ out('greedgo.html', apply(ALGO, [
     ...STONE_SPEC,
 ], 'greedgo'));
 
+// ============================================================
+// ==== 第10バッチ: 最終6派生 (計100) ====
+// ============================================================
+
+// 103. CROSSWALLGO (十字壁碁) — 中央十字の壁で4区域に分断
+out('crosswallgo.html', apply(ALGO, [
+    ...rb('CROSSWALLGO', '十字壁碁', 'crosswallgo'),
+    [ONE, RV_ALGO, rv([
+        '十字壁ルール: 盤の中央を通る十字の壁で盤面が4つの区域に分断される。',
+        '区域同士は石も呼吸も通れない完全分離。4つの小盤で同時に地を争う。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 十字壁<br>
+            ※中央十字の壁が盤を4区域に分断`],
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            // 中央十字壁
+            const mid = (BOARD_SIZE / 2) | 0;
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                board[mid * BOARD_SIZE + i] = 3; // 横線
+                board[i * BOARD_SIZE + mid] = 3; // 縦線
+            }`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'crosswallgo'));
+
+// 104. POLARGO (額縁碁) — 内側は全て壁、外周1列のみで戦う
+out('polargo.html', apply(ALGO, [
+    ...rb('POLARGO', '額縁碁', 'polargo'),
+    [ONE, RV_ALGO, rv([
+        '額縁ルール: 盤の内側は全て壁。戦えるのは外周1列の細い回廊のみ。',
+        '石の呼吸点は最大3つ。回廊上での追い込みと封鎖だけの極限碁。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 額縁盤<br>
+            ※内側は全て壁。外周1列の回廊のみで戦う`],
+    [ONE, RESET_BOARD,
+`            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            // 額縁盤: 内側は全て壁
+            for (let y = 1; y < BOARD_SIZE - 1; y++)
+                for (let x = 1; x < BOARD_SIZE - 1; x++)
+                    board[y * BOARD_SIZE + x] = 3;`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'polargo'));
+
+// 105. MICROGO (微細碁) — 5/7/9路の小盤
+out('microgo.html', apply(ALGO, [
+    ...rb('MICROGO', '微細碁', 'microgo'),
+    [ONE, RV_ALGO, rv([
+        '微細盤ルール: 5路・7路・9路の小さな碁盤のみ。通常ルールそのまま。',
+        '小盤は取り合いが即座に始まる乱戦。9路がデフォルト。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 微細盤<br>
+            ※5/7/9路の小盤のみ (デフォルト9路)`],
+    ...STONE_SPEC, // 先に通常サイズ置換 (9/13/19) を適用してから微細盤に上書き
+    [ONE, `        let BOARD_SIZE = 13;`, `        let BOARD_SIZE = 9;`],
+    [ONE, SIZE_BTNS_91319,
+`                    <button data-size="5" class="btn-size py-2 rounded-lg border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-all">5路盤</button>
+                    <button data-size="7" class="btn-size py-2 rounded-lg border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-all">7路盤</button>
+                    <button data-size="9" class="btn-size py-2 rounded-lg border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-all">9路盤</button>`],
+    [ONE, `![9, 13, 19].includes(s.boardSize)`, `![5, 7, 9].includes(s.boardSize)`],
+    [ONE, STARS_GENERIC,
+`        function getStarPoints(size) {
+            if (size === 5) return [{x:2,y:2}];
+            if (size === 7) return [{x:3,y:3}];
+            return [{x:4,y:4}];
+        }`],
+], 'microgo'));
+
+// 106. JUMPGO (跳躍碁) — 自石からちょうど距離2の点にしか打てない
+out('jumpgo.html', apply(ALGO, [
+    ...rb('JUMPGO', '跳躍碁', 'jumpgo'),
+    [ONE, RV_ALGO, rv([
+        '跳躍ルール: 自分の石からマンハッタン距離ちょうど2の点にしか置けない (初手のみ自由)。',
+        '隣には置けない — 常に飛び石になる展開碁。取り合いは間接的に進む。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 跳躍ルール<br>
+            ※自石から距離ちょうど2の点のみ (初手は自由)`],
+    [ONE, VALID_BOUNDS,
+`${VALID_BOUNDS}
+
+            // 跳躍ルール: 自石から距離ちょうど2のみ (自石が無ければ自由)
+            {
+                let hasOwn = false, best = Infinity;
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== player) continue;
+                    hasOwn = true;
+                    const bx = i % BOARD_SIZE, by = (i / BOARD_SIZE) | 0;
+                    cells.forEach(p => {
+                        best = Math.min(best, Math.abs(p.x - bx) + Math.abs(p.y - by));
+                    });
+                }
+                if (hasOwn && best !== 2) return false;
+            }`],
+    ...STONE_SPEC,
+], 'jumpgo'));
+
+// 107. NOKOGO (無コウ碁) — コウ禁止が無い
+out('nokogo.html', apply(ALGO, [
+    ...rb('NOKOGO', '無コウ碁', 'nokogo'),
+    [ONE, RV_ALGO, rv([
+        '無コウルール: コウ禁止が存在しない。直前の盤面と同じ形に戻る着手も合法。',
+        'コウ争いが即座に繰り返せるため、単劫は互いに取り合い続ける膠着になる。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 無コウルール<br>
+            ※コウ禁止なし — 同一盤面の再現も合法`],
+    [ONE, `            // コウ判定: 相手の直前の着手前と同一の盤面になる手は禁止
+            if (captured.length > 0 && prevBoard) {
+                if (after.every((v, i) => v === prevBoard[i])) return false;
+            }`,
+`            // 無コウ: コウ判定は行わない (同一盤面の再現も合法)`],
+    ...STONE_SPEC,
+], 'nokogo'));
+
+// 108. CHAOTICGO (混沌碁) — 潮汐+漂流+石雨の全乗せ
+out('chaoticgo.html', apply(ALGO, [
+    ...rb('CHAOTICGO', '混沌碁', 'chaoticgo'),
+    [ONE, RV_ALGO, rv([
+        '混沌ルール: 盤面が常に変化する全乗せモード。',
+        '・8手ごとに全石がランダム方向へ漂流 / ・10手ごとに外周が水没↔復活 (潮汐) / ・9手ごとにランダムな空点へ壁が降る (石雨)',
+        '陣形も盤面も維持できない。最終的に地+アゲハマ+コミで勝敗。',
+    ])],
+    [ONE, INFO_ALGO,
+`            通常の囲碁 + 混沌ルール<br>
+            ※8手で全石漂流 / 10手で外周潮汐 / 9手で壁降下 — 全部同時`],
+    [ONE, `        let komi = 6.5;`,
+`        let komi = 6.5;
+        let tideHigh = false;`],
+    [ONE, RESET_BOARD,
+`${RESET_BOARD}
+            tideHigh = false;`],
+    [ONE, `        function endGameByScore() {`,
+`        // 混沌: 漂流 + 潮汐 + 石雨
+        function applyDrift() {
+            const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+            const [dx, dy] = dirs[(Math.random() * 4) | 0];
+            const n = BOARD_SIZE;
+            const order = [];
+            for (let i = 0; i < n * n; i++)
+                order.push({ i, key: (i % n) * dx + ((i / n) | 0) * dy });
+            order.sort((a, b) => b.key - a.key);
+            const moved = {};
+            order.forEach(({ i }) => {
+                if (board[i] !== 1 && board[i] !== 2) return;
+                const x = i % n, y = (i / n) | 0, nx = x + dx, ny = y + dy;
+                if (nx < 0 || nx >= n || ny < 0 || ny >= n) return;
+                const ni = ny * n + nx;
+                if (board[ni] === 0) { board[ni] = board[i]; board[i] = 0; moved[i] = ni; }
+            });
+            pieces.forEach(pc => {
+                pc.cells = pc.cells.map(p => {
+                    const i = p.y * BOARD_SIZE + p.x;
+                    return moved[i] === undefined ? p
+                        : { x: moved[i] % BOARD_SIZE, y: (moved[i] / BOARD_SIZE) | 0 };
+                });
+            });
+            cleanUpPieces();
+        }
+        function applyTide() {
+            tideHigh = !tideHigh;
+            const n = BOARD_SIZE;
+            for (let i = 0; i < n; i++) {
+                [i, (n - 1) * n + i, i * n, i * n + n - 1].forEach(idx => {
+                    board[idx] = tideHigh ? 3 : 0;
+                });
+            }
+            pieces.forEach(pc => {
+                pc.cells = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
+            });
+            cleanUpPieces();
+        }
+
+        function endGameByScore() {`],
+    [ONE, TURN_FLIP,
+`${TURN_FLIP}
+            // 混沌: 漂流(8) + 潮汐(10) + 石雨(9)
+            if (history.length % 8 === 0) applyDrift();
+            if (history.length % 10 === 0) applyTide();
+            if (history.length % 9 === 0) {
+                const empties = [];
+                for (let i = 0; i < board.length; i++) if (board[i] === 0) empties.push(i);
+                if (empties.length) board[empties[(Math.random() * empties.length) | 0]] = 3;
+            }`],
+    [ONE, TURN_LINE,
+`            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + (tideHigh ? ' 🌊満' : '');`],
+    [ONE, `                prevBoard,
+                lastMove,
+                currentPieceType,`,
+`                prevBoard,
+                lastMove,
+                tideHigh,
+                currentPieceType,`],
+    [ONE, `            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;`,
+`            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;
+            if (snap.tideHigh !== undefined) tideHigh = snap.tideHigh;`],
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    tideHigh,
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            if (s.tideHigh !== undefined) tideHigh = s.tideHigh;`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                tideHigh,
+                pieceMode,`],
+    [ONE, `            lastMove = data.lastMove || null;`,
+`            lastMove = data.lastMove || null;
+            if (data.tideHigh !== undefined) tideHigh = data.tideHigh;`],
+    ...WALL_SPEC,
+    ...STONE_SPEC,
+], 'chaoticgo'));
+
 console.log(failures === 0 ? 'ALL OK' : `${failures} replacements MISSING`);
 process.exitCode = failures ? 1 : 0;

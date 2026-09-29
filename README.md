@@ -104,6 +104,12 @@
 | GREEDGO `greedgo.html` | 強欲碁 (アタリ状態なら取る手のみ合法) |
 | CHARGEGO `chargego.html` | 溜め碁 (パスで次の石が5手間不死) |
 | TAXGO `taxgo.html` | 関税碁 (敵陣への着手は相手に+1目) |
+| CROSSWALLGO `crosswallgo.html` | 十字壁碁 (中央十字壁で盤が4区域に分断) |
+| POLARGO `polargo.html` | 極地碁 (外周1周の回廊のみ有効) |
+| MICROGO `microgo.html` | 微細碁 (5/7/9路の小盤) |
+| JUMPGO `jumpgo.html` | 跳躍碁 (自石から距離2の点のみ着手可) |
+| NOKOGO `nokogo.html` | 劫無碁 (コウ禁止なし) |
+| CHAOTICGO `chaoticgo.html` | 混沌碁 (漂流・潮汐・壁落下が周期的に発動) |
 | RIMGO `rimgo.html` | 淵碁 (外周の地は2倍計算) |
 | BUDGETGO `budgetgo.html` | 手数碁 (60手で自動終局) |
 | FRONTGO `frontgo.html` | 前線碁 (前線より上の石は取られない) |
