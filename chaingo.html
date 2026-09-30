@@ -1725,7 +1725,15 @@
                 });
             }
             if (captured.length > 0) {
-                captured.forEach(idx => board[idx] = 0);
+                // 連鎖爆発演出: 取れた連から連鎖した全セルで火花が走る
+                captured.forEach(idx => {
+                    board[idx] = 0;
+                    fxBurst(idx, '#f97316', 6, 1.3);
+                });
+                if (captured.length > 1) {
+                    fxText(captured[0], '連鎖!', '#fb923c', 950);
+                    fxShake(4, 260);
+                }
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();

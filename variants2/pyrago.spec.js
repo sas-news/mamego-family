@@ -33,7 +33,47 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.WALL_SPEC,
+        // 溝の専用テクスチャ: 削れた砂岩の溝 (石材層の段差が読める質感)
+        [K.ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // ピラミッドの溝 (壁セル): 石灰岩の掘り込み — 内陰つきの石溝
+            {
+                const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (!isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    const g = ctx.createLinearGradient(cx - hh, cy - hh, cx + hh, cy + hh);
+                    g.addColorStop(0, '#7c6a4f');
+                    g.addColorStop(0.5, '#5c4f3a');
+                    g.addColorStop(1, '#413729');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    // 石面の筋目 (掘削溝の圧縮方向に走る浅い縞)
+                    ctx.strokeStyle = 'rgba(30, 24, 15, 0.35)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.beginPath();
+                    ctx.moveTo(cx - hh, cy + hh * 0.33); ctx.lineTo(cx + hh, cy + hh * 0.33);
+                    ctx.moveTo(cx - hh, cy - hh * 0.33); ctx.lineTo(cx + hh, cy - hh * 0.33);
+                    ctx.stroke();
+                }
+                // 溝の内陰: 有効セル側に落ちる影の帯で段差を出す
+                ctx.strokeStyle = 'rgba(20, 16, 10, 0.5)';
+                ctx.lineWidth = Math.max(1.6, cellSize * 0.09);
+                ctx.beginPath();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    if (x > 0 && isV(x - 1, y)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
+                    if (x < BOARD_SIZE - 1 && isV(x + 1, y)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
+                    if (y > 0 && isV(x, y - 1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
+                    if (y < BOARD_SIZE - 1 && isV(x, y + 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
+                }
+                ctx.stroke();
+                ctx.restore();
+            }`],
+        ...K.WALL_GUARD_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '外郭・中段・頂の3層に溝で分かれたピラミッド盤。',
             '層の間は行き来できない。各層で独立した地取り合戦になる。',

@@ -1099,15 +1099,20 @@
             ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
             ctx.globalAlpha = 1;
 
-            // 隕石: 次の落下予告点に照準 (常時表示 = 預言)
+            // 隕石: 次の落下予告点に照準 (常時表示 = 預言。接近で脈動・警告色に転移)
             {
                 const mp = meteorPoint(nextMeteorMove());
                 const cx = padding + mp.x * cellSize, cy = padding + mp.y * cellSize;
+                const remain = nextMeteorMove() - history.length;
+                const urgency = Math.max(0, Math.min(1, (5 - remain) / 5));
+                const pl = Math.sin(fxNow() / (160 - urgency * 80));
                 ctx.save();
-                ctx.strokeStyle = 'rgba(249, 115, 22, 0.85)';
+                ctx.strokeStyle = urgency > 0.6
+                    ? 'rgba(239, 68, 68, ' + (0.75 + 0.2 * pl) + ')'
+                    : 'rgba(249, 115, 22, ' + (0.65 + 0.25 * pl) + ')';
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.055);
                 ctx.beginPath();
-                ctx.arc(cx, cy, cellSize * 0.5, 0, Math.PI * 2);
+                ctx.arc(cx, cy, cellSize * (0.46 + 0.08 * pl), 0, Math.PI * 2);
                 ctx.stroke();
                 ctx.beginPath();
                 ctx.moveTo(cx - cellSize * 0.7, cy); ctx.lineTo(cx - cellSize * 0.3, cy);
@@ -1773,11 +1778,18 @@
             // 預言碁: 15の倍数手の後に隕石落下。落下点の3x3の石を全て消し飛ばす
             if (history.length % 15 === 0) {
                 const mp = meteorPoint(history.length);
+                // 着弾演出: 預言どおりの着点で衝撃波・火花・画面揺れ
+                const mi = mp.y * BOARD_SIZE + mp.x;
+                fxGlow(mi, '#fdba74', 850);
+                fxText(mi, '着弾!', '#fb923c', 1000);
+                fxShake(8, 400);
                 for (let dy = -1; dy <= 1; dy++) {
                     for (let dx = -1; dx <= 1; dx++) {
                         const nx = mp.x + dx, ny = mp.y + dy;
                         if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) continue;
                         const i0 = ny * BOARD_SIZE + nx;
+                        fxBurst(i0, '#f97316', 9, 1.6);
+                        fxBurst(i0, '#fbbf24', 5, 1.1);
                         if (board[i0] === opponent) captures[player]++;
                         board[i0] = 0;
                     }

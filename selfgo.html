@@ -1722,7 +1722,14 @@
             // 自爆: 着手の結果、呼吸点0になった自連も消滅 (相手のアゲハマ)
             const selfDead = getCapturedStones(board, player);
             if (selfDead.length > 0) {
-                selfDead.forEach(idx => board[idx] = 0);
+                selfDead.forEach(idx => {
+                    board[idx] = 0;
+                    // 自爆演出: 暗い炎の爆発
+                    fxBurst(idx, '#ef4444', 8, 1.4);
+                    fxBurst(idx, '#78716c', 4, 0.9);
+                });
+                fxText(selfDead[0], '自爆!', '#fbbf24', 950);
+                fxShake(4, 280);
                 captures[opponent] += selfDead.length;
                 soundManager.playCapture();
                 cleanUpPieces();

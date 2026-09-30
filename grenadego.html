@@ -1719,7 +1719,17 @@
                 captured.forEach(idx => nbrs8(idx).forEach(n => {
                     if ((board[n] === 1 || board[n] === 2) && boom.size < 8) boom.add(n);
                 }));
-                boom.forEach(i => { board[i] = 0; });
+                if (boom.size > 0) {
+                    // 榴弾の誘爆: 取跡で連鎖する爆発 + 画面揺れ
+                    fxText(captured[0], '榴弾!', '#fb923c', 950);
+                    fxShake(6, 330);
+                }
+                boom.forEach(i => {
+                    board[i] = 0;
+                    fxGlow(i, '#fbbf24', 650);
+                    fxBurst(i, '#f97316', 8, 1.5);
+                    fxBurst(i, '#78716c', 4, 0.9);
+                });
                 captures[player] += captured.length + boom.size;
                 soundManager.playCapture();
                 cleanUpPieces();

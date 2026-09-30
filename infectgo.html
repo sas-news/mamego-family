@@ -1742,6 +1742,12 @@
                         if (board[n] === 3 - c0) flips.push([n, c0]);
                     });
                 }
+                // 感染演出: 胞子が広がり敵石を染める
+                flips.forEach(([n]) => {
+                    fxGlow(n, '#a3e635', 750);
+                    fxBurst(n, '#65a30d', 7, 1.2);
+                });
+                if (flips.length > 0) fxText(flips[0][0], '感染', '#a3e635', 950);
                 flips.forEach(([n]) => { board[n] = 0; });
                 pieces.forEach(pc => {
                     pc.cells = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);

@@ -17,14 +17,20 @@ module.exports = {
             //             燃焼域 (x+y<=手数) の石は焼けて相手のアゲハマになる。
             {
                 const N = BOARD_SIZE, r = history.length;
+                let burned = 0;
                 for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
                     if (x + y > r) continue;
                     const i = y * N + x;
                     if (board[i] === 1 || board[i] === 2) {
                         captures[board[i] === 1 ? 2 : 1]++;
                         board[i] = 0;
+                        // 焼け落ちる演出: 炎の粒 + 余熱リング
+                        fxBurst(i, '#f97316', 8, 1.4);
+                        fxBurst(i, '#fbbf24', 4, 1.0);
+                        burned++;
                     }
                 }
+                if (burned >= 2) fxShake(3, 200);
                 cleanUpPieces();
             }
 
@@ -35,16 +41,28 @@ module.exports = {
 
             turn = opponent;`],
         // 燃焼域の描画
-        K.CUE_GRID(`            // 燎原: 燃え広がる炎の帯
+        K.CUE_GRID(`            // 燎原: 燃え広がる炎の帯 (炎線は揺らめく)
             {
-                const r = history.length;
+                const r = history.length, now = fxNow();
                 ctx.save();
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     if (x + y > r) continue;
                     const front = (x + y === r);
-                    ctx.fillStyle = front ? 'rgba(255,110,20,0.45)' : 'rgba(200,60,20,0.22)';
+                    const fl = Math.sin(now / 130 + x * 2.1 + y * 1.7);
+                    ctx.fillStyle = front
+                        ? 'rgba(255,' + (110 + Math.round(60 * fl)) + ',20,' + (0.42 + fl * 0.14) + ')'
+                        : 'rgba(200,60,20,0.22)';
                     ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize,
                         cellSize, cellSize);
+                    // 火線の火の粉
+                    if (front && ((x * 7 + y * 3 + ((now / 200) | 0)) % 4 === 0)) {
+                        ctx.fillStyle = 'rgba(255,220,120,0.9)';
+                        ctx.beginPath();
+                        ctx.arc(padding + x * cellSize + fl * cellSize * 0.15,
+                            padding + y * cellSize - cellSize * (0.1 + 0.15 * fl),
+                            Math.max(1.2, cellSize * 0.07), 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                 }
                 ctx.restore();
             }`),

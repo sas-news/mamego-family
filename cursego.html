@@ -1104,9 +1104,10 @@
                 if (cp !== null && cp !== undefined && board[cp] === 0) {
                     const cx = padding + (cp % BOARD_SIZE) * cellSize;
                     const cy = padding + Math.floor(cp / BOARD_SIZE) * cellSize;
-                    const rr = cellSize * 0.3;
+                    const pulse = 0.8 + 0.25 * Math.sin(fxNow() / 160);
+                    const rr = cellSize * 0.3 * pulse;
                     ctx.save();
-                    ctx.strokeStyle = 'rgba(160, 60, 210, 0.95)';
+                    ctx.strokeStyle = 'rgba(160, 60, 210, ' + (0.65 + 0.3 * Math.sin(fxNow() / 160)) + ')';
                     ctx.lineWidth = Math.max(2, cellSize * 0.09);
                     ctx.beginPath();
                     ctx.moveTo(cx - rr, cy - rr); ctx.lineTo(cx + rr, cy + rr);
@@ -1750,6 +1751,8 @@
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
                 cursePoint[opponent] = captured[0]; // 呪い: 取られた側は取跡にしか打てない
+                fxGlow(captured[0], '#a855f7', 900);
+                fxText(captured[0], '呪', '#d8b4fe', 1200);
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {

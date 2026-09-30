@@ -1102,13 +1102,15 @@
             // 疫地: 黄緑の斑点を疫地の空点に描く
             {
                 ctx.save();
+                const now = fxNow();
                 for (const idx of plague) {
                     if (board[idx] !== 0) continue;
                     const x = idx % BOARD_SIZE, y = Math.floor(idx / BOARD_SIZE);
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
-                    ctx.fillStyle = 'rgba(140, 190, 40, 0.55)';
+                    const boil = 0.5 + 0.5 * Math.sin(now / 260 + idx * 1.3);
+                    ctx.fillStyle = 'rgba(140, 190, 40, ' + (0.40 + boil * 0.25) + ')';
                     ctx.beginPath();
-                    ctx.arc(cx, cy, cellSize * 0.28, 0, Math.PI * 2);
+                    ctx.arc(cx, cy, cellSize * (0.24 + boil * 0.08), 0, Math.PI * 2);
                     ctx.fill();
                     ctx.fillStyle = 'rgba(80, 120, 20, 0.8)';
                     ctx.beginPath();
@@ -1770,7 +1772,12 @@
                 let rot = 0;
                 plague.forEach(idx => {
                     const v = board[idx];
-                    if (v === 1 || v === 2) { board[idx] = 0; captures[v === 1 ? 2 : 1]++; rot++; }
+                    if (v === 1 || v === 2) {
+                        board[idx] = 0; captures[v === 1 ? 2 : 1]++; rot++;
+                        // 蝕まれる演出: 病緑の腐食が染み出る
+                        fxSplash(idx, '#a3e635', 8);
+                        fxBurst(idx, '#4d7c0f', 5, 1.0);
+                    }
                 });
                 if (rot > 0) cleanUpPieces();
             }

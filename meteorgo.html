@@ -1179,27 +1179,34 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // クレーター (壁セル): 黒焦げの岩盤とくすぶる残り火
             {
-                const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                const now = fxNow();
                 ctx.save();
-                ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.48);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
-                }
-                ctx.strokeStyle = currentTheme.lineColor;
-                ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
-                ctx.beginPath();
-                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if (isV(x, y)) continue;
+                    if (board[y * BOARD_SIZE + x] !== 3) continue;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
-                    if (x > 0 && isV(x - 1, y)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
-                    if (x < BOARD_SIZE - 1 && isV(x + 1, y)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
-                    if (y > 0 && isV(x, y - 1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
-                    if (y < BOARD_SIZE - 1 && isV(x, y + 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
+                    const g = ctx.createRadialGradient(cx, cy, cellSize * 0.05, cx, cy, cellSize * 0.75);
+                    g.addColorStop(0, '#1c1917');
+                    g.addColorStop(0.65, '#292524');
+                    g.addColorStop(1, '#44403c');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    // クレーター縁の焦げた環
+                    ctx.strokeStyle = 'rgba(120, 113, 108, 0.8)';
+                    ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.34, 0, Math.PI * 2);
+                    ctx.stroke();
+                    // 残り火: セルごとに位相の違う赤い脈動
+                    const em = Math.sin(now / 400 + x * 2.3 + y * 1.9);
+                    if (em > 0.25) {
+                        ctx.fillStyle = 'rgba(249, 115, 22,' + ((em - 0.25) * 0.75) + ')';
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cellSize * 0.13, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                 }
-                ctx.stroke();
                 ctx.restore();
             }
 
@@ -1774,9 +1781,16 @@
                 const N = BOARD_SIZE, n = history.length;
                 const mx = (n * 5 + 2) % N, my = (n * 7 + 3) % N;
                 const crater = [[mx, my], [mx - 1, my], [mx + 1, my], [mx, my - 1], [mx, my + 1]];
+                // 着弾演出: 衝撃波リング + 画面揺れ + 各クレーターの火砕
+                const ci = my * N + mx;
+                fxGlow(ci, '#fdba74', 800);
+                fxText(ci, '隕石!', '#fb923c', 1000);
+                fxShake(7, 380);
                 for (const [x, y] of crater) {
                     if (x < 0 || x >= N || y < 0 || y >= N) continue;
                     const i = y * N + x;
+                    fxBurst(i, '#f97316', 9, 1.5);
+                    fxBurst(i, '#78716c', 5, 1.0);
                     if (board[i] === 1 || board[i] === 2) captures[board[i] === 1 ? 2 : 1]++;
                     board[i] = 3;
                 }

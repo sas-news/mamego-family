@@ -1725,7 +1725,15 @@
                     const libs = new Set();
                     grp.forEach(g => getNeighbors(g).forEach(n => { if (board[n] === 0) libs.add(n); }));
                     let grow = Math.min(captured.length, libs.size - 1);
-                    for (const l of libs) { if (grow-- <= 0) break; board[l] = player; }
+                    const grown = grow;
+                    for (const l of libs) {
+                        if (grow-- <= 0) break;
+                        board[l] = player;
+                        // 自生した石: 吸い上げるように緑の輪が広がる
+                        fxGlow(l, '#4ade80', 650);
+                        fxBurst(l, '#86efac', 5, 0.9);
+                    }
+                    if (grown > 0) fxText(anchor, '+' + grown, '#4ade80', 1000);
                 }
                 soundManager.playCapture();
                 cleanUpPieces();

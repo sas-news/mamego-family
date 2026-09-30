@@ -1754,6 +1754,15 @@
                 at: history.length,
                 buried: st.pcnt[player] % 4 === 0
             });
+            // 埋蔵: 土が盛り上がる演出
+            if (st.pcnt[player] % 4 === 0) {
+                move.cells.forEach(p => {
+                    const bi = p.y * BOARD_SIZE + p.x;
+                    fxBurst(bi, '#8d6e63', 9, 1.0);
+                    fxBurst(bi, '#d7ccc8', 4, 0.7);
+                    fxText(bi, '埋蔵', '#a1887f', 900);
+                });
+            }
 
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;

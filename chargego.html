@@ -1737,7 +1737,13 @@
 
             if (passCharge[player]) {
                 passCharge[player] = false;
-                move.cells.forEach(p => { armorUntil[p.y * BOARD_SIZE + p.x] = history.length + 5; });
+                move.cells.forEach(p => {
+                    const ai = p.y * BOARD_SIZE + p.x;
+                    armorUntil[ai] = history.length + 5;
+                    fxGlow(ai, '#60a5fa', 900);
+                    fxBurst(ai, '#93c5fd', 8, 1.1);
+                    fxText(ai, '装甲!', '#bfdbfe', 1000);
+                });
             }
 
             // 捕獲処理
@@ -2032,6 +2038,11 @@
             prevBoard = null; // パスでコウ制限は解除
             consecutivePasses++;
             passCharge[turn] = true; // 溜め
+            {
+                const cc = ((BOARD_SIZE - 1) >> 1) * BOARD_SIZE + ((BOARD_SIZE - 1) >> 1);
+                fxText(cc, '⚡溜', '#fde047', 900);
+                fxShake(2, 140);
+            }
             if (consecutivePasses >= 2) {
                 startDeadStoneSelectionPhase();
                 if (gameMode === 'online' && onlineRoomId) {

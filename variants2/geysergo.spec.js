@@ -16,36 +16,56 @@ module.exports = {
             // 間欠泉ルール: 5手ごとに噴火。噴き口 (中央以外の星) 上の石は吹き飛んでアゲハマへ。
             if (history.length % 5 === 0) {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
+                let blown = 0;
                 for (const pt of getStarPoints(N)) {
                     if (pt.x === c && pt.y === c) continue; // 天元は泉ではない
                     const i = pt.y * N + pt.x;
+                    // 噴き上がる水柱と湯しぶき (泉は石の有無にかかわらず噴火する)
+                    fxSplash(i, '#7dd3fc', 10);
+                    fxSplash(i, '#e0f2fe', 6);
                     if (board[i] === 1 || board[i] === 2) {
                         captures[board[i] === 1 ? 2 : 1]++;
                         board[i] = 0;
+                        fxBurst(i, '#38bdf8', 7, 1.3);
+                        blown++;
                     }
+                }
+                if (blown > 0) {
+                    fxShake(4, 260);
+                    fxText(getStarPoints(N)[0].y * N + getStarPoints(N)[0].x, '噴火!', '#38bdf8', 900);
                 }
                 cleanUpPieces();
             }
 
             turn = opponent;`],
         // 噴き口の描画
-        K.CUE_STARS(`            // 間欠泉: 噴き口に水色の二重環
+        K.CUE_STARS(`            // 間欠泉: 噴き口に水色の二重環 (噴火が近づくほど沸き立つ)
             {
                 const c = Math.floor(BOARD_SIZE / 2);
+                const heat = (history.length % 5) / 5; // 噴火間近ほど1に近い
+                const now = fxNow();
                 ctx.save();
-                ctx.strokeStyle = 'rgba(80,170,255,0.65)';
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
                 for (const pt of getStarPoints(BOARD_SIZE)) {
                     if (pt.x === c && pt.y === c) continue;
                     const cx = padding + pt.x * cellSize, cy = padding + pt.y * cellSize;
+                    const wob = Math.sin(now / 120 + pt.x + pt.y) * cellSize * 0.02 * (1 + heat * 2);
+                    ctx.strokeStyle = 'rgba(80,170,255,' + (0.45 + heat * 0.45) + ')';
                     ctx.beginPath();
-                    ctx.arc(cx, cy, cellSize * 0.22, 0, Math.PI * 2);
+                    ctx.arc(cx, cy, cellSize * 0.22 + wob, 0, Math.PI * 2);
                     ctx.stroke();
+                    ctx.globalAlpha = 0.25 + heat * 0.45;
                     ctx.beginPath();
-                    ctx.arc(cx, cy, cellSize * 0.32, 0, Math.PI * 2);
-                    ctx.globalAlpha = 0.4;
+                    ctx.arc(cx, cy, cellSize * 0.32 + wob * 1.5, 0, Math.PI * 2);
                     ctx.stroke();
                     ctx.globalAlpha = 1;
+                    // 噴火直前は中心に湯のたまり
+                    if (heat >= 0.8) {
+                        ctx.fillStyle = 'rgba(150,220,255,' + (heat - 0.75) * 1.8 + ')';
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cellSize * 0.12, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                 }
                 ctx.restore();
             }`),
