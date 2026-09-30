@@ -65,7 +65,7 @@ wave3サイクル1の新規200案。候補母集団は本書200案 + rejected-po
 51. 【W3B2/springgo.html】季節碁 — 20手周期で春夏秋冬が巡り、春=石成長/夏=活発/秋=枯渇/冬=休眠
 52. 【W3B2/tidepoolgo.html】潮間碁 — 満潮・干潮周期で盤の辺縁が水没・露出する
 53. 【W3B2/eclipsego.html】日食碁 — 日食手では全石の色が反転する
-54. 【W3B2/monssoongo.html】雨季碁 — 雨季は低地が水没、乾季は回復。水没中の石は流される
+54. 【W3B2/monsoongo.html】雨季碁 — 雨季は低地が水没、乾季は回復。水没中の石は流される
 55. 【W3B2/droughtgo.html】干ばつ碁 — 水源から遠い石は渇きで徐々に弱る
 56. 【W3B2/foggo2.html】濃霧碁 — 霧の帯が盤を移動し、霧内の石は不可視・着手不可
 57. 【W3B2/volcango2.html】噴火碁 — 中央の火山が周期で噴火、溶岩流で経路上の石を全て焼失
@@ -248,7 +248,7 @@ wave3サイクル1の新規200案。候補母集団は本書200案 + rejected-po
 実装済み310種との非重複・実装可能性・面白さで絞った100件。バッチ順が優先順位の目安。
 
 - **W3B1 構造・属性・手番・経済・自然 (25)**: layergo, stripgo, crowngo2, forkgo, mirrorgo, shrinkgo, dungo, cloudgo, wafergo, spokego, covego, tunnelgo, raftgo, domgo, petalgo, stickygo, batterygo, magnetgo2, ghostgo2, crystalgo, slimego, mummgo, embergo, seedgo, shadowgo
-- **W3B2 属性続き・天候・心理・カード (25)**: mirrorstonego, swapstonego, glowgo, pendulumgo, handovergo, crisisgo, splitturngo, stormgo, echo2go, doubledown, outlastgo, rhythmgo, delaygo, springgo, tidepoolgo, eclipsego, monssoongo, droughtgo, foggo2, volcango2, snowgo, termitego, magnetstormgo, mirage2go, puppetgo
+- **W3B2 属性続き・天候・心理・カード (25)**: mirrorstonego, swapstonego, glowgo, pendulumgo, handovergo, crisisgo, splitturngo, stormgo, echo2go, doubledown, outlastgo, rhythmgo, delaygo, springgo, tidepoolgo, eclipsego, monsoongo, droughtgo, foggo2, volcango2, snowgo, termitego, magnetstormgo, mirage2go, puppetgo
 - **W3B3 心理続き・勝利・物理・生態 (25)**: oracle2go, paintergo, inkgo, chefgo, detectivego, narrativego, dreamgo, bluffgo, deckgo, tarotgo, dicebuildgo, trickgo, bingolinego, roulette2go, lotterygo, dominogo, scrabblogo, jengago, knight2go, pushrowgo, dragon2go, spearheadgo, hurdlego, lungego, wriggle
 - **W3B4 動作・勝利・抽象 (25)**: divego, sparrgo, vortex2go, templego, flag2go, crown2go, escapego2, circle2go, pyramid2go, zigguratgo, colonygo, dominiongo, sigilgo, orbit2go, springboardgo, chainreact, pendulum2go, marblego, collidego, pulleygo, capsulego, levergo, wave2go, predatorgo, mutatego
 - **W3B6 スポーツ続き・日常・魔法・ダーク・複合・究極 (残りから選定)**: swinggo, skigo, vaultgo, trafficgo, buildgo, garden go, recipego, festival go, fashiongo, urban go, bandgo, postergo, pubgo, spellgo, alchemygo, necrogo, dragoongo, golemgo, portalgo, enchantgo, mimicgo, familiar go, rune go, abyssgo, plague2go, curse2go

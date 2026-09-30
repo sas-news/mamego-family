@@ -1,15 +1,15 @@
 // MONSOONGO — 雨季碁: 12手周期で雨季(下2段が水没・石は流出)と乾季が巡る
 const K = require('../gen_kit.js');
 module.exports = {
-    file: 'monssoongo.html',
+    file: 'monsoongo.html',
     en: 'MONSOONGO',
     jp: '雨季碁',
-    prefix: 'monssoongo',
+    prefix: 'monsoongo',
     desc: '12手周期: 雨季は下2段が水没して着手不可、石は流出する。乾季で回復。',
     kind: 'weather',
-    icon: 'monssoongo',
+    icon: 'monsoongo',
     spec: [
-        ...K.rb('MONSOONGO', '雨季碁', 'monssoongo'),
+        ...K.rb('MONSOONGO', '雨季碁', 'monsoongo'),
         // 雨季 (手数の12の位が奇数帯) は下2段が水没で着手不可
         [K.ONE, K.VALID_BOUNDS, `            const wet = Math.floor(history.length / 12) % 2 === 1;
             for (const p of cells) {

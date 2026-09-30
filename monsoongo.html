@@ -589,7 +589,7 @@
         let history = []; // 1手戻る用: 各着手前のスナップショットのスタック
 
         // オンライン対戦 (PeerJS / WebRTC) 関連
-        const ROOM_ID_PREFIX = 'monssoongo-';
+        const ROOM_ID_PREFIX = 'monsoongo-';
         let peer = null;         // PeerJS Peerインスタンス
         let conn = null;         // PeerJS DataConnection (相手との接続)
         let onlineRoomId = null; // 表示用の5桁ルームコード
@@ -601,7 +601,7 @@
         // リロードで対局状態が消えないよう保存する。
         // sessionStorage はタブごとに独立なので、複数タブで別々の対局を進行できる。
         // ==========================================
-        const STORAGE_KEY = 'monssoongo-save-v1';
+        const STORAGE_KEY = 'monsoongo-save-v1';
 
         function saveState() {
             try {

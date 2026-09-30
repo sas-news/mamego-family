@@ -1,5 +1,5 @@
 module.exports = {
-    icon: 'monssoongo',
+    icon: 'monsoongo',
     body: `        dot(3, 1.6, P2, P2S);
         seg(1.6, 2.8, 1.3, 3.8, '#3b82f6', 2.2);
         seg(2.8, 2.8, 2.5, 3.8, '#3b82f6', 2.2);
