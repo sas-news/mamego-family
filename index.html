@@ -9,6 +9,62 @@
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
+        .roulette-btn {
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            box-shadow: 0 4px 0 #92400e, 0 8px 20px rgba(217, 119, 6, .45);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+        }
+        .roulette-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #92400e, 0 12px 28px rgba(217, 119, 6, .55); }
+        .roulette-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #92400e, 0 4px 12px rgba(217, 119, 6, .4); }
+        .roulette-btn:disabled { opacity: .55; pointer-events: none; }
+        #gameGrid.spinning { pointer-events: none; }
+        #gameGrid.spinning a.tile { opacity: .55; filter: saturate(.6); }
+        #gameGrid a.tile { position: relative; }
+        .tile.lit {
+            opacity: 1 !important; filter: none !important;
+            background: #fff; transform: scale(1.06); z-index: 5;
+            box-shadow: 0 0 0 3px #f59e0b, 0 0 22px 8px rgba(251, 191, 36, .85);
+        }
+        .tile.sparkle { opacity: 1 !important; background: #fffbeb; box-shadow: 0 0 0 2px #fde68a, 0 0 14px 4px rgba(253, 230, 138, .8); }
+        .tile.winner {
+            opacity: 1 !important; filter: none !important;
+            background: #fff; z-index: 6; transform: scale(1.07);
+            animation: winnerPulse .5s ease-in-out 3;
+            box-shadow: 0 0 0 4px #f59e0b, 0 0 34px 12px rgba(251, 191, 36, .95);
+        }
+        @keyframes winnerPulse {
+            0%, 100% { box-shadow: 0 0 0 3px #f59e0b, 0 0 20px 6px rgba(251, 191, 36, .7); transform: scale(1.06); }
+            50% { box-shadow: 0 0 0 5px #fbbf24, 0 0 46px 18px rgba(251, 191, 36, 1); transform: scale(1.11); }
+        }
+        .twinkle-star {
+            position: absolute; color: #fbbf24; pointer-events: none; z-index: 7;
+            text-shadow: 0 0 6px #fff, 0 0 10px #fde68a;
+            animation: twinkle .45s ease-in-out both;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0; transform: scale(.3) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.15) rotate(25deg); }
+            100% { opacity: 0; transform: scale(.6) rotate(45deg); }
+        }
+        .modal-card { animation: modalIn .4s cubic-bezier(.2, 1.5, .35, 1) both; }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(28px) scale(.8); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .confetti {
+            position: fixed; width: 8px; height: 8px; z-index: 60; pointer-events: none;
+            animation: confettiFly var(--d, 900ms) cubic-bezier(.15, .6, .4, 1) forwards;
+        }
+        @keyframes confettiFly {
+            to { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(.25); opacity: 0; }
+        }
+        .roulette-dice { display: inline-block; }
+        #spinBtn.spinning .roulette-dice { animation: diceShake .5s linear infinite; }
+        @keyframes diceShake {
+            0% { transform: rotate(0deg) scale(1); } 25% { transform: rotate(-18deg) scale(1.15); }
+            50% { transform: rotate(0deg) scale(1); } 75% { transform: rotate(18deg) scale(1.15); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-[#f4e4bc] text-[#3e2211] flex flex-col items-center p-4 sm:p-8 select-none">
@@ -19,6 +75,15 @@
             <h1 class="text-3xl sm:text-4xl font-extrabold tracking-wider">変則碁シリーズ</h1>
             <p class="text-sm opacity-70">碁のルールに「つながったピース」を持ち込んだ派生ゲーム一覧</p>
         </header>
+
+        <!-- おまかせルーレット -->
+        <button id="spinBtn" class="roulette-btn w-full sm:w-auto text-[#fff7ed] rounded-2xl px-8 py-3.5 transition-all flex items-center justify-center gap-3 mx-auto">
+            <span class="roulette-dice text-3xl">🎲</span>
+            <span class="flex flex-col items-start leading-tight">
+                <span class="font-extrabold text-lg sm:text-xl tracking-widest">おまかせルーレット</span>
+                <span class="text-[10px] font-bold opacity-80 tracking-wider"><span id="gameCount"></span>からランダムで1つ選ぶ</span>
+            </span>
+        </button>
 
         <!-- 全ゲーム一覧 -->
         <div id="gameGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
@@ -44,6 +109,27 @@
             共通ルール: 連で呼吸点を確保 / 囲まれると取り / コウ・自殺手禁止 / パス×2で終局→地集計+コミ<br>
             ローカル・AI・オンライン対戦対応
         </footer>
+    </div>
+
+    <!-- ルーレット結果モーダル -->
+    <div id="resultModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div id="resultBackdrop" class="absolute inset-0 bg-[#3e2211]/60 backdrop-blur-[3px]"></div>
+        <div class="modal-card relative bg-[#fdf6e3] rounded-3xl border-4 border-[#f59e0b] shadow-2xl p-6 w-full max-w-sm text-center flex flex-col items-center gap-3">
+            <div class="text-[11px] font-extrabold tracking-[0.3em] text-[#b45309]">★ 結果発表 ★</div>
+            <canvas id="resultIcon" width="112" height="112" class="rounded-2xl bg-[#e4bb70] w-24 h-24 shadow-md"></canvas>
+            <div>
+                <div class="flex items-baseline justify-center gap-2">
+                    <span id="resultName" class="text-2xl font-extrabold tracking-wide"></span>
+                    <span id="resultJp" class="text-sm font-bold opacity-60"></span>
+                </div>
+                <p id="resultDesc" class="text-xs sm:text-sm opacity-70 mt-1.5 leading-relaxed"></p>
+            </div>
+            <a id="resultLink" href="#" class="roulette-btn w-full text-[#fff7ed] font-extrabold text-lg rounded-2xl py-3 tracking-[0.3em] transition-all">遊ぶ ▶</a>
+            <div class="flex gap-2 w-full">
+                <button id="retryBtn" class="flex-1 bg-white/80 border border-[#cbb07a] rounded-xl py-2 text-sm font-bold hover:bg-white transition-all">もう一度回す</button>
+                <button id="closeBtn" class="flex-1 bg-white/40 border border-[#cbb07a] rounded-xl py-2 text-sm font-bold hover:bg-white/70 transition-all">閉じる</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -213,10 +299,12 @@
         ];
 
         const grid = document.getElementById('gameGrid');
+        const tiles = [];
+        document.getElementById('gameCount').textContent = `全${GAMES.length}種`;
         GAMES.forEach(v => {
             const a = document.createElement('a');
             a.href = v.file;
-            a.className = 'group bg-white/70 hover:bg-white rounded-xl border border-[#cbb07a] transition-all p-3 flex items-center gap-3 hover:shadow-sm';
+            a.className = 'tile group bg-white/70 hover:bg-white rounded-xl border border-[#cbb07a] transition-all p-3 flex items-center gap-3 hover:shadow-sm';
             const cv = document.createElement('canvas');
             cv.width = 56; cv.height = 56;
             cv.className = 'shrink-0 rounded-lg bg-[#e4bb70]';
@@ -234,6 +322,7 @@
             a.appendChild(cv); a.appendChild(body); a.appendChild(arrow);
             grid.appendChild(a);
             drawIcon(cv.getContext('2d'), v.kind, 56);
+            tiles.push(a);
         });
 
         // ---- ドミノ碁豆 (MAMEGO アイコン) ----
@@ -920,6 +1009,126 @@
                     break;
             }
         }
+
+        // ---- おまかせルーレット ----
+        const spinBtn = document.getElementById('spinBtn');
+        const resultModal = document.getElementById('resultModal');
+        let spinning = false, audioCtx = null;
+
+        function tick(freq, dur = 0.045, vol = 0.05) {
+            try {
+                audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = 'triangle'; o.frequency.value = freq;
+                g.gain.setValueAtTime(vol, audioCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+                o.connect(g).connect(audioCtx.destination);
+                o.start(); o.stop(audioCtx.currentTime + dur);
+            } catch (e) { /* 音は出せなくても良い */ }
+        }
+        function jingle() {
+            [660, 880, 1320].forEach((f, i) => setTimeout(() => tick(f, 0.18, 0.09), i * 110));
+        }
+
+        function spawnTwinkle() {
+            const t = tiles[Math.floor(Math.random() * tiles.length)];
+            if (!t || t.classList.contains('lit') || t.classList.contains('winner')) return;
+            const s = document.createElement('span');
+            s.className = 'twinkle-star';
+            s.textContent = Math.random() < 0.5 ? '✦' : '✧';
+            s.style.left = (8 + Math.random() * 84) + '%';
+            s.style.top = (6 + Math.random() * 76) + '%';
+            s.style.fontSize = (8 + Math.random() * 11) + 'px';
+            t.appendChild(s);
+            t.classList.add('sparkle');
+            setTimeout(() => { s.remove(); t.classList.remove('sparkle'); }, 420);
+        }
+
+        function confettiBurst(el) {
+            const r = el.getBoundingClientRect();
+            const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+            const colors = ['#f59e0b', '#fbbf24', '#fde68a', '#fff7ed', '#3e2211'];
+            for (let i = 0; i < 34; i++) {
+                const p = document.createElement('div');
+                p.className = 'confetti';
+                const a = Math.random() * Math.PI * 2, d = 60 + Math.random() * 160;
+                p.style.left = cx + 'px'; p.style.top = cy + 'px';
+                p.style.background = colors[i % colors.length];
+                p.style.setProperty('--dx', Math.cos(a) * d + 'px');
+                p.style.setProperty('--dy', (Math.sin(a) * d - 60) + 'px');
+                p.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+                p.style.setProperty('--d', (700 + Math.random() * 700) + 'ms');
+                if (Math.random() < 0.4) p.style.borderRadius = '50%';
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 1500);
+            }
+        }
+
+        function showResult(v) {
+            drawIcon(document.getElementById('resultIcon').getContext('2d'), v.kind, 112);
+            document.getElementById('resultName').textContent = v.name;
+            document.getElementById('resultJp').textContent = v.jp;
+            document.getElementById('resultDesc').textContent = v.desc;
+            document.getElementById('resultLink').href = v.file;
+            resultModal.classList.remove('hidden');
+            resultModal.classList.add('flex');
+        }
+        function hideResult() {
+            resultModal.classList.add('hidden');
+            resultModal.classList.remove('flex');
+        }
+
+        function spin() {
+            if (spinning) return;
+            spinning = true;
+            spinBtn.disabled = true;
+            spinBtn.classList.add('spinning');
+            grid.classList.add('spinning');
+            tiles.forEach(t => t.classList.remove('winner', 'lit', 'sparkle'));
+
+            const N = tiles.length;
+            const winner = Math.floor(Math.random() * N);
+            const start = Math.floor(Math.random() * N);
+            const total = N * 2 + ((winner - start) % N + N) % N;
+            const T = 3400 + Math.random() * 700;
+            const t0 = performance.now();
+            let lastIdx = -1, sparkleAt = 0;
+
+            function frame(now) {
+                const t = Math.min(1, (now - t0) / T);
+                const f = 1 - Math.pow(1 - t, 3); // easeOutCubic で減速
+                const idx = Math.floor(start + total * f) % N;
+                if (idx !== lastIdx) {
+                    if (lastIdx >= 0) tiles[lastIdx].classList.remove('lit');
+                    tiles[idx].classList.add('lit');
+                    tick(720, 0.04, 0.045);
+                    lastIdx = idx;
+                }
+                if (now - sparkleAt > 75) { sparkleAt = now; spawnTwinkle(); }
+                if (t < 1) requestAnimationFrame(frame);
+                else finish(idx);
+            }
+            requestAnimationFrame(frame);
+
+            function finish(idx) {
+                tiles[idx].classList.remove('lit');
+                tiles[idx].classList.add('winner');
+                grid.classList.remove('spinning');
+                tiles[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                confettiBurst(tiles[idx]);
+                jingle();
+                spinning = false;
+                spinBtn.disabled = false;
+                spinBtn.classList.remove('spinning');
+                setTimeout(() => showResult(GAMES[idx]), 900);
+            }
+        }
+
+        spinBtn.addEventListener('click', spin);
+        document.getElementById('retryBtn').addEventListener('click', () => { hideResult(); spin(); });
+        document.getElementById('closeBtn').addEventListener('click', hideResult);
+        document.getElementById('resultBackdrop').addEventListener('click', hideResult);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') hideResult(); });
     </script>
 </body>
 </html>
