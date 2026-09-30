@@ -1069,6 +1069,19 @@
             ctx.fillRect(0, 0, width, width);
             ctx.restore();
 
+            // 淵: 得点2倍の外周リングを金色に染める
+            {
+                const o0 = padding - cellSize * 0.5, o1 = padding + (BOARD_SIZE - 0.5) * cellSize;
+                const i0 = padding + cellSize * 0.5, i1 = padding + (BOARD_SIZE - 1.5) * cellSize;
+                ctx.save();
+                ctx.fillStyle = 'rgba(217, 119, 6, 0.14)';
+                ctx.fillRect(o0, o0, o1 - o0, i0 - o0);
+                ctx.fillRect(o0, i1, o1 - o0, o1 - i1);
+                ctx.fillRect(o0, i0, i0 - o0, i1 - i0);
+                ctx.fillRect(i1, i0, o1 - i1, i1 - i0);
+                ctx.restore();
+            }
+
             // 格子線
             ctx.strokeStyle = currentTheme.lineColor;
             ctx.lineWidth = Math.max(1, cellSize * 0.028);

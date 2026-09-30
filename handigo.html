@@ -2649,6 +2649,8 @@
                 getHandicapPoints(BOARD_SIZE).slice(0, handicap).forEach(([hx, hy], k) => {
                     board[hy * BOARD_SIZE + hx] = 1;
                     pieces.push({ id: Date.now() + k, player: 1, type: 'STONE', rot: 0, cells: [{ x: hx, y: hy }] });
+                    fxGlow(hy * BOARD_SIZE + hx, '#fbbf24', 700 + k * 60);
+                    if (k === 0) fxText(hy * BOARD_SIZE + hx, '置碁 ' + handicap + '子', '#f59e0b', 1300);
                 });
             }
             komi = handicap > 0 ? 0.5 : 6.5;

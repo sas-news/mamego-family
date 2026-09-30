@@ -1226,6 +1226,32 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 記録済みの敵石にX線の照準
+            {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(34, 211, 238, 0.75)';
+                ctx.lineWidth = Math.max(1.3, cellSize * 0.05);
+                (st.seen[turn] || []).forEach(i => {
+                    if (board[i] === 0 || board[i] === turn) return;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize;
+                    const cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
+                    const h = cellSize * 0.30;
+                    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {
+                        ctx.beginPath();
+                        ctx.moveTo(cx + sx * h, cy + sy * (h - cellSize * 0.12));
+                        ctx.lineTo(cx + sx * h, cy + sy * h);
+                        ctx.lineTo(cx + sx * (h - cellSize * 0.12), cy + sy * h);
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;

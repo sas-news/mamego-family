@@ -1190,6 +1190,33 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
+            // 連絡: 目標辺に接地した連を色リングで強調
+            {
+                const n = BOARD_SIZE;
+                const mark = (pl, edges) => {
+                    const seen = new Set();
+                    edges.forEach(e => {
+                        if (board[e] !== pl || seen.has(e)) return;
+                        getConnectedGroup(e, pl).forEach(g => seen.add(g));
+                    });
+                    return seen;
+                };
+                const bEdge = [], wEdge = [];
+                for (let i = 0; i < n; i++) { bEdge.push(i); bEdge.push((n - 1) * n + i); wEdge.push(i * n); wEdge.push(i * n + n - 1); }
+                ctx.save();
+                [[mark(1, bEdge), 'rgba(30,30,30,0.55)'], [mark(2, wEdge), 'rgba(255,255,255,0.65)']].forEach(([set, col]) => {
+                    ctx.strokeStyle = col;
+                    ctx.lineWidth = Math.max(1.3, cellSize * 0.05);
+                    set.forEach(i => {
+                        const cx = padding + (i % n) * cellSize, cy = padding + ((i / n) | 0) * cellSize;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cellSize * 0.52, 0, Math.PI * 2);
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
+            }
+
             // ピースごとに融合描画 (盤上に残っているセルのみ)
             pieces.forEach(pc => {
                 const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);

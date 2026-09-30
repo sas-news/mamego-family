@@ -55,6 +55,7 @@
                 <div class="flex items-center gap-2">
                     <span class="opacity-70">手番:</span>
                     <span id="turnIndicator" class="font-bold underline decoration-2 underline-offset-4">黒 (1P)</span>
+                    <span id="eventChip" class="text-[11px] px-2 py-0.5 rounded-full border border-current/25 opacity-80"></span>
                 </div>
                 <div id="gameModeBadge" class="text-xs px-2.5 py-1 rounded-full font-semibold border opacity-80">
                     ローカル対戦
@@ -712,6 +713,7 @@
         const statusCard = document.getElementById('statusCard');
         const turnIndicator = document.getElementById('turnIndicator');
         const gameModeBadge = document.getElementById('gameModeBadge');
+        const eventChip = document.getElementById('eventChip');
         const blackCapturesEl = document.getElementById('blackCaptures');
         const whiteCapturesEl = document.getElementById('whiteCaptures');
         const komiDisplay = document.getElementById('komiDisplay');
@@ -1684,6 +1686,16 @@
             }
             return false;
         }
+        // 合法手の数を数える (詰み警告・情報表示用)
+        function countLegalMoves(player) {
+            let n = 0;
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== 0) continue;
+                const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                if (isValidPlacement([{ x, y }], player)) n++;
+            }
+            return n;
+        }
 
         function isValidPlacement(cells, player) {
             for (const p of cells) {
@@ -2647,6 +2659,11 @@
             else if (gameMode === 'ai') gameModeBadge.textContent = `AI対戦 (${aiPlayer === 2 ? 'あなた:黒' : 'あなた:白'})`;
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
+            if (eventChip) {
+                const et = gameOver ? '' : ('合法手 ' + countLegalMoves(turn));
+                eventChip.textContent = et;
+                eventChip.style.display = et ? '' : 'none';
+            }
             btnUndo.disabled = !canUndo();
             updatePieceTrayUI();
             render();

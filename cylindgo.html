@@ -1197,6 +1197,23 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
+            // 円筒: 左右端の石は対側の端にも半透明で映る
+            {
+                ctx.save();
+                ctx.globalAlpha = 0.30;
+                for (let y = 0; y < BOARD_SIZE; y++) {
+                    [[0, BOARD_SIZE - 1], [BOARD_SIZE - 1, 0]].forEach(([sx, gx]) => {
+                        const v = board[y * BOARD_SIZE + sx];
+                        if (v !== 1 && v !== 2) return;
+                        ctx.fillStyle = v === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                        ctx.beginPath();
+                        ctx.arc(padding + gx * cellSize, padding + y * cellSize, cellSize * 0.26, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+                ctx.restore();
+            }
+
             // ピースごとに融合描画 (盤上に残っているセルのみ)
             pieces.forEach(pc => {
                 const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);

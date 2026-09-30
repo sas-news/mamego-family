@@ -879,6 +879,26 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 単石の危険度: 呼吸点1以下の孤立石を赤く点滅
+        fxAmbient((ctx2, now, pad, cs) => {
+            const n = BOARD_SIZE, seen = new Set();
+            ctx2.save();
+            for (let i = 0; i < n * n; i++) {
+                const v = board[i];
+                if ((v !== 1 && v !== 2) || seen.has(i)) continue;
+                const g = getConnectedGroup(i, v);
+                g.forEach(j => seen.add(j));
+                if (g.length !== 1) continue;
+                if (getLiberties(board, i) > 1) continue;
+                const cx = pad + (i % n) * cs, cy = pad + ((i / n) | 0) * cs;
+                const pulse = 0.5 + 0.5 * Math.sin(now / 200);
+                ctx2.globalAlpha = 0.45 + 0.45 * pulse;
+                ctx2.strokeStyle = '#ef4444';
+                ctx2.lineWidth = Math.max(1.6, cs * 0.08);
+                ctx2.beginPath(); ctx2.arc(cx, cy, cs * 0.58, 0, Math.PI * 2); ctx2.stroke();
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1212,6 +1232,29 @@
                     drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
+            }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 取れるのは孤立単石のみ — 孤立石に小さな角□を刻む
+            {
+                const seen = new Set();
+                ctx.save();
+                ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                for (let i = 0; i < board.length; i++) {
+                    const v = board[i];
+                    if (v !== 1 && v !== 2 || seen.has(i)) continue;
+                    const g = getConnectedGroup(i, v);
+                    g.forEach(j => seen.add(j));
+                    if (g.length !== 1) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + ((i / BOARD_SIZE) | 0) * cellSize, s = cellSize * 0.09;
+                    ctx.strokeStyle = v === 1 ? 'rgba(240,235,220,0.85)' : 'rgba(50,40,25,0.8)';
+                    ctx.strokeRect(cx - s, cy - s, s * 2, s * 2);
+                }
+                ctx.restore();
             }
         }
 
