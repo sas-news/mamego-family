@@ -889,6 +889,8 @@
             ctx2.strokeRect(pad + (qx - 0.5) * cs, pad + (qy - 0.5) * cs, mid * cs, mid * cs);
             ctx2.restore();
         });
+        // 静的層キャッシュ: エフェクトフレームでは全面再描画せずオフスクリーンを貼る
+        let fxStaticCv = null, fxStaticCtx = null, fxStaticW = 0;
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1143,12 +1145,35 @@
 
             // 画面揺れの transform を戻し、エフェクトを最前面に描画
             if (fxN0 < fxShakeUntil) ctx.restore();
+            // 静的層スナップショット (揺れ中は歪むので撮らない): エフェクトフレームの貼り付け元
+            if (fxN0 >= fxShakeUntil) {
+                if (!fxStaticCv) { fxStaticCv = document.createElement('canvas'); fxStaticCtx = fxStaticCv.getContext('2d'); }
+                if (fxStaticCv.width !== width) fxStaticCv.width = fxStaticCv.height = width;
+                fxStaticCtx.drawImage(canvas, 0, 0);
+                fxStaticW = width;
+            }
             fxBoardDiff(); // 差分検知で取り/反転/壁変化を自動演出
             drawFx(fxNow(), padding, cellSize);
 
             // エフェクトが生きている間は描画を続ける (常時オーバーレイ含む)
             if (fxActive() && typeof requestAnimationFrame === 'function') {
-                requestAnimationFrame(() => { try { render(); } catch (e) { fxList = []; } });
+                requestAnimationFrame(() => { try { fxFrame(); } catch (e) { fxList = []; } });
+            }
+        }
+
+        // エフェクトフレーム: 静的層はキャッシュを貼るだけ (全石・壁・格子の再描画を省く)
+        function fxFrame() {
+            const { width, padding, cellSize } = getBoardMetrics();
+            const now = fxNow();
+            // 揺れ中・キャッシュ未作成・リサイズ直後は全面描画にフォールバック
+            if (now < fxShakeUntil || !fxStaticCv || fxStaticW !== width) {
+                render();
+                return;
+            }
+            ctx.drawImage(fxStaticCv, 0, 0);
+            drawFx(now, padding, cellSize);
+            if (fxActive() && typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(() => { try { fxFrame(); } catch (e) { fxList = []; } });
             }
         }
 
@@ -1398,6 +1423,7 @@
         // ホールド: 現在ピースを自分のホールド枠に保存して次を供給 (初回)
         // か保持ピースと交換 (2回目以降)。1手につき1回まで (着手するまで再ホールド不可)。
         function holdPiece() {
+            if (btnHold.disabled) return; // ホールド無効時はキーでも無効
             if (pieceMode !== 'next' || holdUsed || gameOver
                 || gamePhase !== 'playing' || !isMyTurn()) return;
             soundManager.playClick();
@@ -1421,6 +1447,7 @@
         }
 
         function rotatePiece() {
+            if (btnRotate.disabled) return; // 回転不可バリアントはキー/ホイールも無効
             const list = ORIENTATIONS[currentPieceType];
             if (!list) return;
             currentRot = (currentRot + 1) % list.length;

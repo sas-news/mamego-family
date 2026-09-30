@@ -13,7 +13,7 @@ module.exports = {
         });`, `            ORIENTATIONS[type] = list;
         });
 
-        // このバリアントの専用ピース形 (回転=Rキー・右クリック・ホイール)
+        // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
         ORIENTATIONS.STONE = [[[0,0],[0,1],[1,1]],[[0,0],[1,0],[0,1]],[[0,0],[1,0],[1,1]],[[1,0],[0,1],[1,1]]];`],
         [K.ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`, `        const PIECE_SIZE = 3;`],
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
@@ -29,7 +29,7 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手はL字 (拐) の3連ピースのみ (回転=Rキー・右クリック・ホイール)。','ピースが入らない3マス未満の連結空領域は窒息領域。'])],
+        [K.ONE, K.RV_ALGO, K.rv(['着手はL字 (拐) の3連ピースのみ (回転=⟳ボタン・Rキー・右クリック・ホイール)。','ピースが入らない3マス未満の連結空領域は窒息領域。'])],
         // === FX: 積み木タイル駒 ===
         [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
 

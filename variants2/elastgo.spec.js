@@ -13,7 +13,7 @@ module.exports = {
         });`, `            ORIENTATIONS[type] = list;
         });
 
-        // このバリアントの専用ピース形 (回転=Rキー・右クリック・ホイール)
+        // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
         ORIENTATIONS.STONE = [[[0,0]],[[0,0],[1,0]],[[0,0],[0,1]],[[0,0],[1,0],[2,0]],[[0,0],[0,1],[0,2]]];`],
         [K.ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`, `        const PIECE_SIZE = 1;`],
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
@@ -29,7 +29,7 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手は伸縮ピース: 1・2・3連の長さを Rキー・右クリック・ホイールで選ぶ。','短くして隙間に置くか、伸ばして一気に地を取るか。'])],
+        [K.ONE, K.RV_ALGO, K.rv(['着手は伸縮ピース: 1・2・3連の長さを ⟳ボタン・Rキー・右クリック・ホイールで選ぶ。','短くして隙間に置くか、伸ばして一気に地を取るか。'])],
         // 伸縮ピース: 連結セル間にバネ (コイル) を描く
         [K.ONE, `                    if (isDead) drawDeadMarker(cx, cy, r);
                 }

@@ -13,7 +13,7 @@ module.exports = {
         });`, `            ORIENTATIONS[type] = list;
         });
 
-        // このバリアントの専用ピース形 (回転=Rキー・右クリック・ホイール)
+        // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
         ORIENTATIONS.STONE = [[[0,0],[1,0],[2,0]],[[0,0],[0,1],[0,2]]];`],
         [K.ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`, `        const PIECE_SIZE = 3;`],
         [K.ONE, `        function isValidPlacement(cells, player) {
@@ -114,7 +114,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv(['着手は1x3の橋ピース (回転=Rキー・右クリック・ホイール)。両端が空点なら、中点が自分の石でも上に架けられる。','自分の石を橋桁にして連を伸ばす。中点が敵石なら架けられない。'])],
+        [K.ONE, K.RV_ALGO, K.rv(['着手は1x3の橋ピース (回転=⟳ボタン・Rキー・右クリック・ホイール)。両端が空点なら、中点が自分の石でも上に架けられる。','自分の石を橋桁にして連を伸ばす。中点が敵石なら架けられない。'])],
         ...K.STONE_SPEC,
     ],
     test: `
