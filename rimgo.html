@@ -913,6 +913,17 @@
             ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
             ctx.globalAlpha = 1;
 
+            // 淵の境界: 外周1列(得点2倍)と内側を隔てる破線
+            {
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.4);
+                ctx.lineWidth = Math.max(1, cellSize * 0.028);
+                ctx.setLineDash([cellSize * 0.16, cellSize * 0.12]);
+                const i0 = padding + cellSize * 0.5;
+                ctx.strokeRect(i0, i0, (BOARD_SIZE - 2) * cellSize, (BOARD_SIZE - 2) * cellSize);
+                ctx.restore();
+            }
+
             // 星 (天元・星の点)
             const starPoints = getStarPoints(BOARD_SIZE);
             ctx.fillStyle = currentTheme.starColor;

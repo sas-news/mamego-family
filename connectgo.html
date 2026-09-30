@@ -888,6 +888,21 @@
             ctx.fillRect(0, 0, width, width);
             ctx.restore();
 
+            // 連絡目標: 黒は上下辺・白は左右辺に微かな帯
+            {
+                const gb = cellSize * 0.17;
+                const x0 = padding - cellSize * 0.5, y0 = padding - cellSize * 0.5;
+                const x1 = padding + (BOARD_SIZE - 0.5) * cellSize, y1 = padding + (BOARD_SIZE - 0.5) * cellSize;
+                ctx.save();
+                ctx.fillStyle = alphaColor(currentTheme.p2Fill, 0.22);
+                ctx.fillRect(x0, y0, gb, y1 - y0);
+                ctx.fillRect(x1 - gb, y0, gb, y1 - y0);
+                ctx.fillStyle = alphaColor(currentTheme.p1Stroke, 0.13);
+                ctx.fillRect(x0, y0, x1 - x0, gb);
+                ctx.fillRect(x0, y1 - gb, x1 - x0, gb);
+                ctx.restore();
+            }
+
             // 格子線
             ctx.strokeStyle = currentTheme.lineColor;
             ctx.lineWidth = Math.max(1, cellSize * 0.028);

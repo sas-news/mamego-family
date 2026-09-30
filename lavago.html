@@ -54,6 +54,7 @@
                 <div class="flex items-center gap-2">
                     <span class="opacity-70">手番:</span>
                     <span id="turnIndicator" class="font-bold underline decoration-2 underline-offset-4">黒 (1P)</span>
+                    <span id="eventChip" class="text-[11px] px-2 py-0.5 rounded-full border border-current/25 opacity-80"></span>
                 </div>
                 <div id="gameModeBadge" class="text-xs px-2.5 py-1 rounded-full font-semibold border opacity-80">
                     ローカル対戦
@@ -719,6 +720,7 @@
         const statusCard = document.getElementById('statusCard');
         const turnIndicator = document.getElementById('turnIndicator');
         const gameModeBadge = document.getElementById('gameModeBadge');
+        const eventChip = document.getElementById('eventChip');
         const blackCapturesEl = document.getElementById('blackCaptures');
         const whiteCapturesEl = document.getElementById('whiteCaptures');
         const komiDisplay = document.getElementById('komiDisplay');
@@ -992,18 +994,42 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁マスの描画 (中立ブロック)
-            for (let wy = 0; wy < BOARD_SIZE; wy++) {
-                for (let wx = 0; wx < BOARD_SIZE; wx++) {
-                    if (board[wy * BOARD_SIZE + wx] !== 3) continue;
-                    const bx = padding + wx * cellSize;
-                    const by = padding + wy * cellSize;
-                    const bs = cellSize * 0.52;
-                    ctx.fillStyle = 'rgba(60, 42, 25, 0.85)';
-                    ctx.fillRect(bx - bs / 2, by - bs / 2, bs, bs);
-                    ctx.strokeStyle = 'rgba(30, 20, 10, 0.9)';
-                    ctx.lineWidth = 1.5;
-                    ctx.strokeRect(bx - bs / 2, by - bs / 2, bs, bs);
+            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            {
+                const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                ctx.save();
+                ctx.fillStyle = 'rgba(64,32,20,0.92)';
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (!isV(x, y)) continue;
+                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                }
+                ctx.strokeStyle = currentTheme.lineColor;
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
+                ctx.beginPath();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    if (x > 0 && isV(x - 1, y)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
+                    if (x < BOARD_SIZE - 1 && isV(x + 1, y)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
+                    if (y > 0 && isV(x, y - 1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
+                    if (y < BOARD_SIZE - 1 && isV(x, y + 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+            // 次に沈むリングを微かな熱気で示す
+            {
+                const d = lavaDepth;
+                const n = BOARD_SIZE;
+                if (d < Math.ceil(n / 2)) {
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(215,90,30,0.13)';
+                    for (let y = d; y < n - d; y++) for (let x = d; x < n - d; x++) {
+                        if (x !== d && x !== n - 1 - d && y !== d && y !== n - 1 - d) continue;
+                        const i = y * n + x;
+                        if (board[i] === 0) ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                    }
+                    ctx.restore();
                 }
             }
 
@@ -2449,6 +2475,11 @@
             else if (gameMode === 'ai') gameModeBadge.textContent = `AI対戦 (${aiPlayer === 2 ? 'あなた:黒' : 'あなた:白'})`;
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
+            if (eventChip) {
+                const et = gameOver ? '' : ('沈下' + (LAVA_EVERY - history.length % LAVA_EVERY) + '手');
+                eventChip.textContent = et;
+                eventChip.style.display = et ? '' : 'none';
+            }
             btnUndo.disabled = !canUndo();
             updatePieceTrayUI();
             render();

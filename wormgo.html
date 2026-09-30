@@ -917,8 +917,19 @@
             ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
             ctx.globalAlpha = 1;
 
-            // ワームホール端点の描画 (紫の◎ペア)
+            // ワームホール端点の描画 (紫の◎ペア + ペア間の薄い破線)
             ctx.strokeStyle = '#8b5cf6';
+            ctx.save();
+            ctx.setLineDash([cellSize * 0.12, cellSize * 0.10]);
+            ctx.globalAlpha = 0.35;
+            WORMHOLES.forEach(([a, b]) => {
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding + (a % BOARD_SIZE) * cellSize, padding + Math.floor(a / BOARD_SIZE) * cellSize);
+                ctx.lineTo(padding + (b % BOARD_SIZE) * cellSize, padding + Math.floor(b / BOARD_SIZE) * cellSize);
+                ctx.stroke();
+            });
+            ctx.restore();
             WORMHOLES.forEach(([a, b]) => {
                 [a, b].forEach(i => {
                     const wx = padding + (i % BOARD_SIZE) * cellSize;

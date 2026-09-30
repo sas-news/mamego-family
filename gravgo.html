@@ -913,6 +913,21 @@
             ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
             ctx.globalAlpha = 1;
 
+            // 重力方向の印: 下端中央の下向き三角
+            {
+                ctx.save();
+                ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.6);
+                const gx = padding + (BOARD_SIZE - 1) / 2 * cellSize, gy = width - padding * 0.42;
+                const gs = cellSize * 0.11;
+                ctx.beginPath();
+                ctx.moveTo(gx - gs, gy - gs * 0.6);
+                ctx.lineTo(gx + gs, gy - gs * 0.6);
+                ctx.lineTo(gx, gy + gs * 0.8);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+
             // 星 (天元・星の点)
             const starPoints = getStarPoints(BOARD_SIZE);
             ctx.fillStyle = currentTheme.starColor;
@@ -930,6 +945,21 @@
 
             // ピース描画
             drawBoardElements(padding, cellSize);
+
+            // 着手可能な点を薄いドットで表示
+            if (!gameOver && gamePhase === 'playing' && isMyTurn()) {
+                ctx.save();
+                ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.40);
+                const dr = Math.max(2, cellSize * 0.09);
+                for (let dy = 0; dy < BOARD_SIZE; dy++) for (let dx = 0; dx < BOARD_SIZE; dx++) {
+                    if (board[dy * BOARD_SIZE + dx] !== 0) continue;
+                    if (!isValidPlacement([{ x: dx, y: dy }], turn)) continue;
+                    ctx.beginPath();
+                    ctx.arc(padding + dx * cellSize, padding + dy * cellSize, dr, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
 
             // 直前に配置したピースのハイライト(緑系)
             drawLastMove(padding, cellSize);
