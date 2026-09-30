@@ -33,6 +33,24 @@ module.exports = {
             if (p < getNeighbors._ord.length - 1) out.push(getNeighbors._ord[p + 1]);
             return out;
         }`],
+        // 螺旋: 通路に沿って進む光の玉 (1次元通路であることを常時示す)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const ord = render.__spiral;
+            if (!ord || !ord.length) return;
+            const head = (now / 80) % ord.length;
+            ctx2.save();
+            for (let k = 0; k < 7; k++) {
+                const i = ord[Math.floor(((head - k * 2) % ord.length + ord.length) % ord.length)];
+                ctx2.globalAlpha = 0.32 * (1 - k / 7);
+                ctx2.fillStyle = '#7dd3fc';
+                ctx2.beginPath();
+                ctx2.arc(pad + (i % BOARD_SIZE) * cs, pad + Math.floor(i / BOARD_SIZE) * cs, cs * 0.09, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`],
         // 螺旋通路を薄い線で描く
         K.CUE_GRID(`            {
                 if (!render.__spiral || render.__spiralN !== BOARD_SIZE) {

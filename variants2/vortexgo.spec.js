@@ -22,7 +22,67 @@ module.exports = {
                     if (band === 0) board[y * BOARD_SIZE + x] = 3;
                 }
             }`],
-        ...K.WALL_SPEC,
+        // 渦: 壁は深い藍の水流 — 暗い彫り込み + 渦方向の流線
+        [K.ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 渦腕: 深い藍の彫り込み面 + 渦に沿う流線 + 有効領域との境界線
+            {
+                const cc = (BOARD_SIZE - 1) / 2;
+                const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                const bcx = padding + cc * cellSize, bcy = padding + cc * cellSize;
+                const now = fxNow();
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (!isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, cellSize * 0.8);
+                    g.addColorStop(0, '#16233f'); g.addColorStop(1, '#0a1226');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    // 流線: 渦の接線方向に揺れる短い弧
+                    const a = Math.atan2(y - cc, x - cc);
+                    const r0 = Math.hypot(x - cc, y - cc) * cellSize;
+                    const ph = Math.sin(now / 800 + r0 / cellSize * 0.9) * 0.1;
+                    ctx.strokeStyle = 'rgba(110,160,230,' + (0.28 + ph) + ')';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.arc(bcx, bcy, Math.max(cellSize * 0.3, r0), a - 0.16, a + 0.16);
+                    ctx.stroke();
+                }
+                ctx.strokeStyle = 'rgba(130,170,230,0.45)';
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
+                ctx.beginPath();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    if (x > 0 && isV(x - 1, y)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
+                    if (x < BOARD_SIZE - 1 && isV(x + 1, y)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
+                    if (y > 0 && isV(x, y - 1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
+                    if (y < BOARD_SIZE - 1 && isV(x, y + 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
+                }
+                ctx.stroke();
+                ctx.restore();
+            }`],
+        ...K.WALL_GUARD_SPEC,
+        // 渦: 渦の目をゆっくり回る薄い水流の弧 (アンビエント)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const cc = (BOARD_SIZE - 1) / 2;
+            const bcx = pad + cc * cs, bcy = pad + cc * cs;
+            const rot = now / 2800;
+            ctx2.save();
+            for (let k = 0; k < 3; k++) {
+                const a = rot + k * (Math.PI * 2 / 3);
+                ctx2.strokeStyle = 'rgba(110,160,230,0.15)';
+                ctx2.lineWidth = Math.max(1, cs * 0.08);
+                ctx2.beginPath();
+                ctx2.arc(bcx, bcy, cs * (1.0 + k * 0.6), a, a + 1.6);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
         [K.ONE, K.RV_ALGO, K.rv([
             '中心の渦の目から4本の腕状の壁が渦を巻いて伸びる。',
             '壁に沿って石を進めれば、流れに乗って敵地へ潜り込める。',

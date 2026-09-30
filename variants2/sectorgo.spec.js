@@ -26,6 +26,28 @@ module.exports = {
                 }
             }`],
         ...K.EVENT_CHIP_SPEC(`'扇区: ' + (history.length % 8 + 1) + '/8'`),
+        // 回転扇: 許可扇区内をゆっくり掃引するレーダー線 (扇区が回転するルールを常時示す)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const c = (BOARD_SIZE - 1) / 2;
+            const cx = pad + c * cs, cy = pad + c * cs;
+            const rr = (c + 0.5) * cs;
+            const a = -Math.PI + (history.length % 8) * (Math.PI / 4)
+                + ((now % 2600) / 2600) * (Math.PI / 4);
+            ctx2.save();
+            const g = ctx2.createLinearGradient(cx, cy, cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+            g.addColorStop(0, 'rgba(90,110,170,0.02)');
+            g.addColorStop(1, 'rgba(90,110,170,0.4)');
+            ctx2.strokeStyle = g;
+            ctx2.lineWidth = Math.max(1.4, cs * 0.08);
+            ctx2.lineCap = 'round';
+            ctx2.beginPath();
+            ctx2.moveTo(cx, cy);
+            ctx2.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+            ctx2.stroke();
+            ctx2.restore();
+        });`],
         K.CUE_GRID(`            // 回転扇: 現在の許可扇区を扇形で照らす
             {
                 const c = (BOARD_SIZE - 1) / 2;

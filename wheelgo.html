@@ -1188,14 +1188,25 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // タイヤ盤: スポーク外をゴム質の暗い面で覆い、円周方向のトレッド溝と境界線を引く
             {
+                const cc = (BOARD_SIZE - 1) / 2;
                 const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                const bcx = padding + cc * cellSize, bcy = padding + cc * cellSize;
                 ctx.save();
-                ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.48);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    ctx.fillStyle = '#1b1917';
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    // トレッド溝: 中心回りの円周方向の短い弧
+                    const a = Math.atan2(y - cc, x - cc);
+                    const r0 = Math.hypot(x - cc, y - cc) * cellSize;
+                    ctx.strokeStyle = 'rgba(165,175,190,0.15)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.arc(bcx, bcy, Math.max(cellSize * 0.3, r0), a - 0.13, a + 0.13);
+                    ctx.stroke();
                 }
                 ctx.strokeStyle = currentTheme.lineColor;
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.05);

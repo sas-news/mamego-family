@@ -1195,6 +1195,33 @@ out('cyclogo.html', apply(ALGO, [
 `            シクロアルカン「碁クロ」を配置し合う変則囲碁<br>
             PC: クリックで配置 / 回転=Rキー・右クリック・ホイール / ホールド=Hキー<br>
             スマホ: 1タップ目プレビュー、2タップ目確定 (回転・ホールドはボタン)`],
+    // 碁クロ: 盤の四隅に環状分子 (ベンゼン環) の薄いモチーフを常時表示
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            const pts = [[pad * 0.5, pad * 0.5], [w - pad * 0.5, pad * 0.5],
+                [pad * 0.5, w - pad * 0.5], [w - pad * 0.5, w - pad * 0.5]];
+            const pulse = 0.28 + Math.sin(now / 1400) * 0.10;
+            ctx2.save();
+            ctx2.strokeStyle = alphaColor(currentTheme.lineColor, pulse);
+            ctx2.lineWidth = Math.max(0.8, cs * 0.035);
+            const r = cs * 0.2;
+            for (const [hx, hy] of pts) {
+                ctx2.beginPath();
+                for (let k = 0; k < 6; k++) {
+                    const a = Math.PI / 6 + k * Math.PI / 3;
+                    const px = hx + Math.cos(a) * r, py = hy + Math.sin(a) * r;
+                    if (k === 0) ctx2.moveTo(px, py); else ctx2.lineTo(px, py);
+                }
+                ctx2.closePath();
+                ctx2.stroke();
+                ctx2.beginPath();
+                ctx2.arc(hx, hy, r * 0.52, 0, Math.PI * 2);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
     [ALL, '碁カン', '碁クロ'],
 ], 'cyclogo'));
 
@@ -1959,9 +1986,12 @@ out('turngo.html', apply(ALGO, [
 `            // 回転ルール: 着手ごとに盤面全体を90°時計回りに回転
             {
                 const nb = new Array(board.length).fill(0);
-                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++)
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     nb[x * BOARD_SIZE + (BOARD_SIZE - 1 - y)] = board[y * BOARD_SIZE + x];
+                    if (board[y * BOARD_SIZE + x] !== 0) fxSlide(y * BOARD_SIZE + x, x * BOARD_SIZE + (BOARD_SIZE - 1 - y), 400);
+                }
                 board = nb;
+                fxShake(2, 160);
                 const rotP = p => ({ x: BOARD_SIZE - 1 - p.y, y: p.x });
                 pieces.forEach(pc => { pc.cells = pc.cells.map(rotP); });
                 if (lastMove) lastMove.cells = lastMove.cells.map(rotP);
@@ -3087,7 +3117,10 @@ out('orbitgo.html', apply(ALGO, [
             const idxs = ringPositions().map(([x, y]) => y * BOARD_SIZE + x);
             const vals = idxs.map(i => board[i]);
             vals.unshift(vals.pop());
-            idxs.forEach((i, k) => { board[i] = vals[k]; });
+            idxs.forEach((i, k) => {
+                board[i] = vals[k];
+                if (vals[k] !== 0) fxSlide(idxs[(k - 1 + idxs.length) % idxs.length], i, 380);
+            });
             const mapIdx = {};
             idxs.forEach((i, k) => { mapIdx[i] = idxs[(k + 1) % idxs.length]; });
             const shift = p => {
@@ -4299,7 +4332,9 @@ out('driftgo.html', apply(ALGO, [
 `        // 漂流: 全石を1マスランダム方向へ (衝突は移動しない)
         function applyDrift() {
             const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-            const [dx, dy] = dirs[(Math.random() * 4) | 0];
+            const arrows = ['\\u2192', '\\u2190', '\\u2193', '\\u2191'];
+            const di = (Math.random() * 4) | 0;
+            const [dx, dy] = dirs[di];
             const n = BOARD_SIZE;
             const order = [];
             for (let i = 0; i < n * n; i++)
@@ -4311,7 +4346,7 @@ out('driftgo.html', apply(ALGO, [
                 const x = i % n, y = (i / n) | 0, nx = x + dx, ny = y + dy;
                 if (nx < 0 || nx >= n || ny < 0 || ny >= n) return;
                 const ni = ny * n + nx;
-                if (board[ni] === 0) { board[ni] = board[i]; board[i] = 0; moved[i] = ni; }
+                if (board[ni] === 0) { board[ni] = board[i]; board[i] = 0; moved[i] = ni; fxSlide(i, ni, 380); }
             });
             pieces.forEach(pc => {
                 pc.cells = pc.cells.map(p => {
@@ -4325,6 +4360,11 @@ out('driftgo.html', apply(ALGO, [
                 return moved[i] === undefined ? p
                     : { x: moved[i] % BOARD_SIZE, y: (moved[i] / BOARD_SIZE) | 0 };
             }) };
+            if (Object.keys(moved).length) {
+                fxShake(2, 180);
+                const cc = Math.floor(n / 2) * n + Math.floor(n / 2);
+                fxText(cc, arrows[di], '#7dd3fc', 900);
+            }
             cleanUpPieces();
         }
 
@@ -5709,8 +5749,9 @@ out('chaoticgo.html', apply(ALGO, [
                 const x = i % n, y = (i / n) | 0, nx = x + dx, ny = y + dy;
                 if (nx < 0 || nx >= n || ny < 0 || ny >= n) return;
                 const ni = ny * n + nx;
-                if (board[ni] === 0) { board[ni] = board[i]; board[i] = 0; moved[i] = ni; }
+                if (board[ni] === 0) { board[ni] = board[i]; board[i] = 0; moved[i] = ni; fxSlide(i, ni, 380); }
             });
+            if (Object.keys(moved).length) fxShake(2, 180);
             pieces.forEach(pc => {
                 pc.cells = pc.cells.map(p => {
                     const i = p.y * BOARD_SIZE + p.x;
@@ -5726,8 +5767,12 @@ out('chaoticgo.html', apply(ALGO, [
             for (let i = 0; i < n; i++) {
                 [i, (n - 1) * n + i, i * n, i * n + n - 1].forEach(idx => {
                     board[idx] = tideHigh ? 3 : 0;
+                    if (tideHigh) fxSplash(idx, '#7dd3fc', 5);
                 });
             }
+            const cc = Math.floor(n / 2) * n + Math.floor(n / 2);
+            fxText(cc, tideHigh ? '\\u6e80\\u6f6e' : '\\u5e72\\u6f6e', '#7dd3fc', 1100);
+            if (tideHigh) fxShake(3, 220);
             pieces.forEach(pc => {
                 pc.cells = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
             });
@@ -5783,7 +5828,55 @@ out('chaoticgo.html', apply(ALGO, [
     [ONE, `            lastMove = data.lastMove || null;`,
 `            lastMove = data.lastMove || null;
             if (data.tideHigh !== undefined) tideHigh = data.tideHigh;`],
-    ...WALL_SPEC,
+    // 潮汐の壁は水面 — 深い青の彫り込み + ゆらぐ波紋
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 水没マス: 深い青 + ゆらぐ波紋で塗る (潮汐で現れる水面)
+            {
+                const now = fxNow();
+                const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (!isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, cellSize * 0.8);
+                    g.addColorStop(0, '#1a6fa8'); g.addColorStop(1, '#0b3d5f');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const ph = Math.sin(now / 600 + x * 0.8 + y * 1.1);
+                    ctx.strokeStyle = 'rgba(160,225,255,' + (0.4 + ph * 0.25) + ')';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.06);
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * (0.22 + ph * 0.1), 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                ctx.strokeStyle = 'rgba(140,200,240,0.45)';
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
+                ctx.beginPath();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    if (x > 0 && isV(x - 1, y)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
+                    if (x < BOARD_SIZE - 1 && isV(x + 1, y)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
+                    if (y > 0 && isV(x, y - 1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
+                    if (y < BOARD_SIZE - 1 && isV(x, y + 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
+                }
+                ctx.stroke();
+                ctx.restore();
+            }`],
+    ...WALL_GUARD_SPEC,
+    // 満潮時に薄い青の揺らめきを全面に敷く
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            if (!tideHigh) return;
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            ctx2.fillStyle = 'rgba(30,90,150,' + (0.06 + Math.sin(now / 900) * 0.03) + ')';
+            ctx2.fillRect(0, 0, w, w);
+            ctx2.restore();
+        });`],
     ...EVENT_CHIP_SPEC(`(() => { const e = [['漂流', 8], ['潮汐', 10], ['石雨', 9]].map(([l, p]) => [l, p - history.length % p]); e.sort((a, b) => a[1] - b[1]); return e[0][0] + e[0][1] + '手'; })()`),
     ...STONE_SPEC,
 ], 'chaoticgo'));

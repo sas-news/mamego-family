@@ -1781,8 +1781,13 @@
                     }
                     if (!ok) continue;
                     for (const i of g) board[i] = 0;
-                    for (const i of g) board[(Math.floor(i / N) + dy) * N + (i % N + dx)] = col;
+                    for (const i of g) {
+                        const j = (Math.floor(i / N) + dy) * N + (i % N + dx);
+                        board[j] = col;
+                        fxSlide(i, j, 400);
+                    }
                 }
+                fxShake(2, 150);
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
                     const dead = getCapturedStones(board, pl);

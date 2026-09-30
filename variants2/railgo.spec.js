@@ -31,6 +31,29 @@ module.exports = {
                 chev(midC, width - padding, 0, 1);
                 chev(padding, midC, -1, 0);
                 chev(width - padding, midC, 1, 0);`),
+        // 環状線: 外周をぐるぐる回る光の列車 (対辺が環状に繋がるルールを常時示す)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const N = BOARD_SIZE;
+            const per = 4 * (N - 1);
+            const head = (now / 65) % per;
+            ctx2.save();
+            for (let k = 0; k < 6; k++) {
+                const t = ((head - k) % per + per) % per;
+                let x, y;
+                if (t < N - 1) { x = t; y = 0; }
+                else if (t < 2 * (N - 1)) { x = N - 1; y = t - (N - 1); }
+                else if (t < 3 * (N - 1)) { x = 3 * (N - 1) - t; y = N - 1; }
+                else { x = 0; y = per - t; }
+                ctx2.globalAlpha = 0.4 * (1 - k / 6);
+                ctx2.fillStyle = '#7dd3fc';
+                ctx2.beginPath();
+                ctx2.arc(pad + x * cs, pad + y * cs, cs * 0.08, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`],
         [K.ONE, K.RV_ALGO, K.rv([
             '最外周の点だけが対辺と環状に繋がる (左端↔右端、上端↔下端)。',
             '連も呼吸も端を越えて伸びるので、隅が弱くない円環の碁。',

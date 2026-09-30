@@ -2081,7 +2081,9 @@
         // 漂流: 全石を1マスランダム方向へ (衝突は移動しない)
         function applyDrift() {
             const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-            const [dx, dy] = dirs[(Math.random() * 4) | 0];
+            const arrows = ['\u2192', '\u2190', '\u2193', '\u2191'];
+            const di = (Math.random() * 4) | 0;
+            const [dx, dy] = dirs[di];
             const n = BOARD_SIZE;
             const order = [];
             for (let i = 0; i < n * n; i++)
@@ -2093,7 +2095,7 @@
                 const x = i % n, y = (i / n) | 0, nx = x + dx, ny = y + dy;
                 if (nx < 0 || nx >= n || ny < 0 || ny >= n) return;
                 const ni = ny * n + nx;
-                if (board[ni] === 0) { board[ni] = board[i]; board[i] = 0; moved[i] = ni; }
+                if (board[ni] === 0) { board[ni] = board[i]; board[i] = 0; moved[i] = ni; fxSlide(i, ni, 380); }
             });
             pieces.forEach(pc => {
                 pc.cells = pc.cells.map(p => {
@@ -2107,6 +2109,11 @@
                 return moved[i] === undefined ? p
                     : { x: moved[i] % BOARD_SIZE, y: (moved[i] / BOARD_SIZE) | 0 };
             }) };
+            if (Object.keys(moved).length) {
+                fxShake(2, 180);
+                const cc = Math.floor(n / 2) * n + Math.floor(n / 2);
+                fxText(cc, arrows[di], '#7dd3fc', 900);
+            }
             cleanUpPieces();
         }
 
