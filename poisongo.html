@@ -1756,7 +1756,13 @@
                     }
                 }));
                 if (doomed.size > 0) {
-                    doomed.forEach(i => { board[i] = 0; });
+                    doomed.forEach(i => {
+                        board[i] = 0;
+                        // 毒死する演出: 毒の飛沫が染み出す
+                        fxSplash(i, '#84cc16', 8);
+                        fxBurst(i, '#4d7c0f', 5, 1.0);
+                    });
+                    fxText(captured[0], '毒', '#a3e635', 1000);
                     captures[opponent] += doomed.size;
                 }
                 soundManager.playCapture();

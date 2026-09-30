@@ -43,8 +43,16 @@ module.exports = {
                             getConnectedGroup(n, opponent).forEach(g => { seen.add(g); doomed.add(g); });
                         }
                     }));
-                    doomed.forEach(i => { board[i] = 0; });
+                    // 特攻演出: 突入点の大爆発 + 連鎖する火花 + 画面揺れ
+                    suicidal.forEach(i => {
+                        fxGlow(i, '#fbbf24', 800);
+                        fxBurst(i, '#ef4444', 12, 1.9);
+                        fxBurst(i, '#fbbf24', 6, 1.2);
+                    });
+                    doomed.forEach(i => { board[i] = 0; fxBurst(i, '#f97316', 7, 1.3); });
                     suicidal.forEach(i => { board[i] = 0; });
+                    fxText(suicidal[0], '特攻!', '#fbbf24', 1100);
+                    fxShake(8, 400);
                     captures[player] += doomed.size;
                     captures[opponent] += suicidal.length;
                     soundManager.playCapture();

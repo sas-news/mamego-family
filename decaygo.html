@@ -1744,7 +1744,12 @@
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== 0) {
                     ages[i]++;
-                    if (ages[i] > DECAY_LIMIT) { board[i] = 0; ages[i] = 0; decayed++; }
+                    if (ages[i] > DECAY_LIMIT) {
+                        board[i] = 0; ages[i] = 0; decayed++;
+                        // 風化して崩れる演出: 灰の粉塵が崩れ落ちる
+                        fxBurst(i, '#a8a29e', 6, 0.9);
+                        fxSplash(i, '#d6d3c0', 5);
+                    }
                 }
             }
             if (decayed > 0) cleanUpPieces();

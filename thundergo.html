@@ -882,6 +882,29 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 嵐: 薄い雲影が這い、ときどき遠雷が空を明るくする
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            // 這う雲影 (2枚の楕円が時間で流れる)
+            for (let k = 0; k < 2; k++) {
+                const t = now / (9000 + k * 4000) + k * 0.53;
+                const cx = w * (t - Math.floor(t)) * 1.4 - w * 0.2;
+                const cy = w * (0.25 + 0.5 * ((k * 0.37 + 0.2) % 1));
+                const g = ctx2.createRadialGradient(cx, cy, 0, cx, cy, w * 0.55);
+                g.addColorStop(0, 'rgba(30, 41, 59, 0.16)');
+                g.addColorStop(1, 'rgba(30, 41, 59, 0)');
+                ctx2.fillStyle = g;
+                ctx2.fillRect(0, 0, w, w);
+            }
+            // 遠雷: 約12秒周期の一拍だけ空が白む
+            const cyc = (now / 12000) % 1;
+            if (cyc < 0.012) {
+                ctx2.fillStyle = 'rgba(224, 242, 254, ' + (0.10 * (1 - cyc / 0.012)) + ')';
+                ctx2.fillRect(0, 0, w, w);
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -2091,7 +2114,16 @@
             }
             if (!groups.length) return;
             const group = groups[(Math.random() * groups.length) | 0];
-            group.forEach(i => { board[i] = 0; });
+            // 落雷演出: 打点の雷光 + 画面揺れ
+            const ti = group[0];
+            fxGlow(ti, '#fef08a', 800);
+            fxText(ti, '落雷!', '#fde047', 900);
+            fxShake(6, 320);
+            group.forEach(i => {
+                board[i] = 0;
+                fxBurst(i, '#fde047', 8, 1.7);
+                fxBurst(i, '#e0f2fe', 4, 1.2);
+            });
             cleanUpPieces();
             soundManager.playCapture();
         }

@@ -1218,6 +1218,26 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 血の装甲: 装甲のある石に深紅の内リング
+            for (const idx of vampArmor) {
+                const v = board[idx];
+                if (v !== 1 && v !== 2) continue;
+                const x = idx % BOARD_SIZE, y = Math.floor(idx / BOARD_SIZE);
+                const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(200, 30, 50, 0.9)';
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
+                ctx.beginPath();
+                ctx.arc(cx, cy, cellSize * 0.24, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;
@@ -1721,7 +1741,12 @@
                 // 装甲のある敵石は装甲が剥がれるだけで盤に残る
                 const removed = [];
                 captured.forEach(idx => {
-                    if (vampArmor.has(idx)) vampArmor.delete(idx);
+                    if (vampArmor.has(idx)) {
+                        vampArmor.delete(idx);
+                        // 装甲が砕けて剥がれる演出: 深紅の血飛沫
+                        fxBurst(idx, '#dc2626', 8, 1.3);
+                        fxText(idx, '装甲!', '#fca5a5', 800);
+                    }
                     else removed.push(idx);
                 });
                 removed.forEach(idx => { board[idx] = 0; });
@@ -1729,7 +1754,11 @@
                     captures[player] += removed.length;
                     // 吸血: 取った石に接した自石が血を得て装甲化する
                     removed.forEach(idx => getNeighbors(idx).forEach(n => {
-                        if (board[n] === player) vampArmor.add(n);
+                        if (board[n] === player) {
+                            vampArmor.add(n);
+                            // 血を得る演出: 紅の収束リング
+                            fxGlow(n, '#ef4444', 700);
+                        }
                     }));
                     soundManager.playCapture();
                     cleanUpPieces();

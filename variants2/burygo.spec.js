@@ -45,7 +45,16 @@ module.exports = {
                 cells: move.cells,
                 at: history.length,
                 buried: st.pcnt[player] % 4 === 0
-            });`],
+            });
+            // 埋蔵: 土が盛り上がる演出
+            if (st.pcnt[player] % 4 === 0) {
+                move.cells.forEach(p => {
+                    const bi = p.y * BOARD_SIZE + p.x;
+                    fxBurst(bi, '#8d6e63', 9, 1.0);
+                    fxBurst(bi, '#d7ccc8', 4, 0.7);
+                    fxText(bi, '埋蔵', '#a1887f', 900);
+                });
+            }`],
         // 埋蔵中は石を描かず土饅頭にする
         [K.ONE, '                drawPieceShape(alive, padding, cellSize, fill, stroke, isDead ? 0.35 : 1);',
 `                drawPieceShape(alive, padding, cellSize, fill, stroke, isDead ? 0.35 : (isBuried(pc) ? 0.05 : 1));`],

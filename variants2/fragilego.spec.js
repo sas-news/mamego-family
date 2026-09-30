@@ -20,13 +20,47 @@ module.exports = {
                 }
             }
             if (captured.length > 0) {
-                captured.forEach(idx => board[idx] = 0);
+                captured.forEach(idx => {
+                    board[idx] = 0;
+                    // 砕ける演出: ガラス質の破片が飛び散る
+                    fxBurst(idx, '#bae6fd', 7, 1.5);
+                    fxBurst(idx, '#e0f2fe', 4, 1.0);
+                });
+                fxText(captured[0], '砕', '#7dd3fc', 900);
+                if (captured.length >= 3) fxShake(3, 220);
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {
                 soundManager.playPlace();
             }`],
+        // 脆い敵連 (呼吸点2以下) にひびの予告マーク
+        K.CUE_STARS(`            // 脆碁: 呼吸点2以下の敵連は砕け前に白いひびが見える
+            {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(240, 249, 255, 0.75)';
+                ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                const seenF = new Set();
+                for (let i = 0; i < board.length; i++) {
+                    const v = board[i];
+                    if ((v !== 1 && v !== 2) || seenF.has(i)) continue;
+                    const grp = getConnectedGroup(i, v);
+                    grp.forEach(g => seenF.add(g));
+                    if (getLiberties(board, i) > 2) continue;
+                    for (const g of grp) {
+                        const x = g % BOARD_SIZE, y = Math.floor(g / BOARD_SIZE);
+                        const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                        ctx.beginPath();
+                        ctx.moveTo(cx - cellSize * 0.20, cy - cellSize * 0.22);
+                        ctx.lineTo(cx - cellSize * 0.02, cy - cellSize * 0.02);
+                        ctx.lineTo(cx - cellSize * 0.16, cy + cellSize * 0.10);
+                        ctx.moveTo(cx - cellSize * 0.02, cy - cellSize * 0.02);
+                        ctx.lineTo(cx + cellSize * 0.14, cy + cellSize * 0.16);
+                        ctx.stroke();
+                    }
+                }
+                ctx.restore();
+            }`),
         [K.ONE, K.RV_ALGO, K.rv(['脆い石: 着手後、呼吸点が2以下の敵連は全て砕けて取られる (通常は0のみ)。','常に呼吸点3以上を保たないと連が死ぬ。自分の連は従来通り0まで生きる。'])],
         ...K.STONE_SPEC,
     ],

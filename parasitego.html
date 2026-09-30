@@ -1729,7 +1729,13 @@
                 const anchor = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const bitten = getNeighbors(anchor).filter(n => board[n] === opponent);
                 if (bitten.length > 0) {
-                    bitten.forEach(i => { board[i] = player; });
+                    bitten.forEach(i => {
+                        board[i] = player;
+                        // 寄生する胞子が敵石を塗り替える演出
+                        fxGlow(i, '#a3e635', 700);
+                        fxBurst(i, '#65a30d', 8, 1.2);
+                    });
+                    fxText(anchor, '寄生', '#a3e635', 900);
                     captures[player] += bitten.length;
                 }
             }

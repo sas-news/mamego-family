@@ -519,7 +519,12 @@ out('decaygo.html', apply(ALGO, [
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== 0) {
                     ages[i]++;
-                    if (ages[i] > DECAY_LIMIT) { board[i] = 0; ages[i] = 0; decayed++; }
+                    if (ages[i] > DECAY_LIMIT) {
+                        board[i] = 0; ages[i] = 0; decayed++;
+                        // 風化して崩れる演出: 灰の粉塵が崩れ落ちる
+                        fxBurst(i, '#a8a29e', 6, 0.9);
+                        fxSplash(i, '#d6d3c0', 5);
+                    }
                 }
             }
             if (decayed > 0) cleanUpPieces();
@@ -2162,7 +2167,16 @@ out('blastgo.html', apply(ALGO, [
                     });
                 });
                 if (blasted.size > 0) {
-                    blasted.forEach(i => { board[i] = 0; });
+                    // 爆撃演出: 着点の衝撃波 + 破壊された連ごとの火花 + 画面揺れ
+                    const bi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                    fxGlow(bi, '#fbbf24', 750);
+                    fxText(bi, '爆撃!', '#fb923c', 1000);
+                    fxShake(6, 340);
+                    blasted.forEach(i => {
+                        board[i] = 0;
+                        fxBurst(i, '#f97316', 9, 1.6);
+                        fxBurst(i, '#fbbf24', 4, 1.1);
+                    });
                     captures[player] += blasted.size;
                     soundManager.playCapture();
                     cleanUpPieces();
@@ -2389,6 +2403,7 @@ out('crossgo.html', apply(ALGO, [
 // 38. LIVEGO (活石碁) — 地ではなく盤上の石数で勝負
 out('livego.html', apply(ALGO, [
     ...rb('LIVEGO', '活石碁', 'livego'),
+    ...EVENT_CHIP_SPEC(`'生 黒' + board.filter(v => v === 1).length + ' / 白' + board.filter(v => v === 2).length`),
     [ONE, RV_ALGO, rv([
         '得点は「地」ではなく盤上に残った自分の石の数。アゲハマも加算 (生き石+アゲハマ+コミ)。',
         '石を多く生き残らせることがそのまま得点になる。地の囲い込みは意味を持たない。',
@@ -2406,6 +2421,23 @@ out('livego.html', apply(ALGO, [
           `<div class="flex justify-between"><span>黒の生き石:</span> <strong>\${blackStones}</strong></div>`],
     [ONE, `<div class="flex justify-between"><span>白の地:</span> <strong>\${territory.white}</strong></div>`,
           `<div class="flex justify-between"><span>白の生き石:</span> <strong>\${whiteStones}</strong></div>`],
+    // 活石の鼓動: 盤上の石が微かに呼吸する (生存そのものが得点のルール感)
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== 1 && board[i] !== 2) continue;
+                const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
+                const ph = Math.sin(now / 900 + x * 0.9 + y * 0.7);
+                if (ph < 0.85) continue;
+                ctx2.fillStyle = board[i] === 1 ? 'rgba(148, 163, 184, 0.10)' : 'rgba(255, 255, 255, 0.12)';
+                ctx2.beginPath();
+                ctx2.arc(pad + x * cs, pad + y * cs, cs * 0.42 * (ph - 0.85) / 0.15, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`],
     ...STONE_SPEC,
 ], 'livego'));
 
@@ -2575,7 +2607,12 @@ out('reapgo.html', apply(ALGO, [
     [ONE, TURN_FLIP,
 `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            // 連取ルール: 取った場合のみ手番継続
+            // 連取ルール: 取った場合のみ手番継続 — 再手権が見える演出
+            if (captured.length > 0) {
+                const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                fxGlow(mi, '#facc15', 700);
+                fxText(mi, '連取!', '#fde047', 1000);
+            }
             if (captured.length === 0) turn = opponent;`],
     ...STONE_SPEC,
 ], 'reapgo'));
@@ -3135,7 +3172,14 @@ out('selfgo.html', apply(ALGO, [
             // 自爆: 着手の結果、呼吸点0になった自連も消滅 (相手のアゲハマ)
             const selfDead = getCapturedStones(board, player);
             if (selfDead.length > 0) {
-                selfDead.forEach(idx => board[idx] = 0);
+                selfDead.forEach(idx => {
+                    board[idx] = 0;
+                    // 自爆演出: 暗い炎の爆発
+                    fxBurst(idx, '#ef4444', 8, 1.4);
+                    fxBurst(idx, '#78716c', 4, 0.9);
+                });
+                fxText(selfDead[0], '自爆!', '#fbbf24', 950);
+                fxShake(4, 280);
                 captures[opponent] += selfDead.length;
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -3366,7 +3410,16 @@ out('thundergo.html', apply(ALGO, [
             }
             if (!groups.length) return;
             const group = groups[(Math.random() * groups.length) | 0];
-            group.forEach(i => { board[i] = 0; });
+            // 落雷演出: 打点の雷光 + 画面揺れ
+            const ti = group[0];
+            fxGlow(ti, '#fef08a', 800);
+            fxText(ti, '落雷!', '#fde047', 900);
+            fxShake(6, 320);
+            group.forEach(i => {
+                board[i] = 0;
+                fxBurst(i, '#fde047', 8, 1.7);
+                fxBurst(i, '#e0f2fe', 4, 1.2);
+            });
             cleanUpPieces();
             soundManager.playCapture();
         }
@@ -3381,6 +3434,32 @@ out('thundergo.html', apply(ALGO, [
             // 手数上限: 200手で自動終局
             if (history.length >= 200) { endGameByScore(); return; }`],
     ...EVENT_CHIP_SPEC(`'落雷' + (10 - history.length % 10) + '手'`),
+    // 雷雲の常時オーバーレイ: 盤を這う暗い雲影 + ときどき遠雷の閃き
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 嵐: 薄い雲影が這い、ときどき遠雷が空を明るくする
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            // 這う雲影 (2枚の楕円が時間で流れる)
+            for (let k = 0; k < 2; k++) {
+                const t = now / (9000 + k * 4000) + k * 0.53;
+                const cx = w * (t - Math.floor(t)) * 1.4 - w * 0.2;
+                const cy = w * (0.25 + 0.5 * ((k * 0.37 + 0.2) % 1));
+                const g = ctx2.createRadialGradient(cx, cy, 0, cx, cy, w * 0.55);
+                g.addColorStop(0, 'rgba(30, 41, 59, 0.16)');
+                g.addColorStop(1, 'rgba(30, 41, 59, 0)');
+                ctx2.fillStyle = g;
+                ctx2.fillRect(0, 0, w, w);
+            }
+            // 遠雷: 約12秒周期の一拍だけ空が白む
+            const cyc = (now / 12000) % 1;
+            if (cyc < 0.012) {
+                ctx2.fillStyle = 'rgba(224, 242, 254, ' + (0.10 * (1 - cyc / 0.012)) + ')';
+                ctx2.fillRect(0, 0, w, w);
+            }
+            ctx2.restore();
+        });`],
     ...STONE_SPEC,
 ], 'thundergo'));
 
@@ -4456,7 +4535,15 @@ out('chaingo.html', apply(ALGO, [
                 });
             }
             if (captured.length > 0) {
-                captured.forEach(idx => board[idx] = 0);
+                // 連鎖爆発演出: 取れた連から連鎖した全セルで火花が走る
+                captured.forEach(idx => {
+                    board[idx] = 0;
+                    fxBurst(idx, '#f97316', 6, 1.3);
+                });
+                if (captured.length > 1) {
+                    fxText(captured[0], '連鎖!', '#fb923c', 950);
+                    fxShake(4, 260);
+                }
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -5018,7 +5105,17 @@ out('grenadego.html', apply(ALGO, [
                 captured.forEach(idx => nbrs8(idx).forEach(n => {
                     if ((board[n] === 1 || board[n] === 2) && boom.size < 8) boom.add(n);
                 }));
-                boom.forEach(i => { board[i] = 0; });
+                if (boom.size > 0) {
+                    // 榴弾の誘爆: 取跡で連鎖する爆発 + 画面揺れ
+                    fxText(captured[0], '榴弾!', '#fb923c', 950);
+                    fxShake(6, 330);
+                }
+                boom.forEach(i => {
+                    board[i] = 0;
+                    fxGlow(i, '#fbbf24', 650);
+                    fxBurst(i, '#f97316', 8, 1.5);
+                    fxBurst(i, '#78716c', 4, 0.9);
+                });
                 captures[player] += captured.length + boom.size;
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -5056,6 +5153,12 @@ out('infectgo.html', apply(ALGO, [
                         if (board[n] === 3 - c0) flips.push([n, c0]);
                     });
                 }
+                // 感染演出: 胞子が広がり敵石を染める
+                flips.forEach(([n]) => {
+                    fxGlow(n, '#a3e635', 750);
+                    fxBurst(n, '#65a30d', 7, 1.2);
+                });
+                if (flips.length > 0) fxText(flips[0][0], '感染', '#a3e635', 950);
                 flips.forEach(([n]) => { board[n] = 0; });
                 pieces.forEach(pc => {
                     pc.cells = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
@@ -5096,7 +5199,12 @@ out('bondgo.html', apply(ALGO, [
                 captured.forEach(idx => getNeighbors(idx).forEach(n => {
                     if (board[n] === player) ownDead.add(n);
                 }));
-                ownDead.forEach(i => { board[i] = 0; });
+                ownDead.forEach(i => {
+                    board[i] = 0;
+                    // 道連れに散る演出: 淡い破片が飛び散る
+                    fxBurst(i, '#cbd5e1', 7, 1.2);
+                });
+                if (ownDead.size > 0) fxText(captured[0], '道連れ', '#e2e8f0', 950);
                 captures[opponent] += ownDead.size;
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -5263,17 +5371,28 @@ out('chargego.html', apply(ALGO, [
 `${RESET_HELD}
             passCharge = { 1: false, 2: false };
             armorUntil = {};`],
-    // パス時に溜める
+    // パス時に溜める — 溜まる瞬間の演出 (盤中央に稲光文字 + 微振動)
     [ONE, PASS_INC,
 `${PASS_INC}
-            passCharge[turn] = true; // 溜め`],
-    // 配置時: 溜めがあれば装甲付与
+            passCharge[turn] = true; // 溜め
+            {
+                const cc = ((BOARD_SIZE - 1) >> 1) * BOARD_SIZE + ((BOARD_SIZE - 1) >> 1);
+                fxText(cc, '⚡溜', '#fde047', 900);
+                fxShake(2, 140);
+            }`],
+    // 配置時: 溜めがあれば装甲付与 — 装甲生成の演出
     [ONE, PIECES_PUSH,
 `${PIECES_PUSH}
 
             if (passCharge[player]) {
                 passCharge[player] = false;
-                move.cells.forEach(p => { armorUntil[p.y * BOARD_SIZE + p.x] = history.length + 5; });
+                move.cells.forEach(p => {
+                    const ai = p.y * BOARD_SIZE + p.x;
+                    armorUntil[ai] = history.length + 5;
+                    fxGlow(ai, '#60a5fa', 900);
+                    fxBurst(ai, '#93c5fd', 8, 1.1);
+                    fxText(ai, '装甲!', '#bfdbfe', 1000);
+                });
             }`],
     // 装甲のある敵石は取れない
     [ONE, CAPTURE_BLOCK,

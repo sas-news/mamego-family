@@ -772,6 +772,7 @@ const STONE_MARKS_SPEC = (body) => [
             }
         }
 
+        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {`,
 `                    if (isDead) drawDeadMarker(cx, cy, r);
                 }
@@ -785,6 +786,7 @@ const STONE_MARKS_SPEC = (body) => [
 ${body}
         }
 
+        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {`],
 ];
 

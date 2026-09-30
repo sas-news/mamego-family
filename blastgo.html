@@ -1721,7 +1721,16 @@
                     });
                 });
                 if (blasted.size > 0) {
-                    blasted.forEach(i => { board[i] = 0; });
+                    // 爆撃演出: 着点の衝撃波 + 破壊された連ごとの火花 + 画面揺れ
+                    const bi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                    fxGlow(bi, '#fbbf24', 750);
+                    fxText(bi, '爆撃!', '#fb923c', 1000);
+                    fxShake(6, 340);
+                    blasted.forEach(i => {
+                        board[i] = 0;
+                        fxBurst(i, '#f97316', 9, 1.6);
+                        fxBurst(i, '#fbbf24', 4, 1.1);
+                    });
                     captures[player] += blasted.size;
                     soundManager.playCapture();
                     cleanUpPieces();

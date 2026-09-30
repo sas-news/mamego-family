@@ -1734,7 +1734,13 @@
                     if (board[n] === player) martyred.add(n);
                 }));
                 if (martyred.size > 0) {
-                    martyred.forEach(i => { board[i] = 0; });
+                    martyred.forEach(i => {
+                        board[i] = 0;
+                        // 道連れに散る演出: 怨嗟の紫煙
+                        fxBurst(i, '#c084fc', 8, 1.4);
+                        fxBurst(i, '#e9d5ff', 4, 0.9);
+                    });
+                    fxText(captured[0], '殉教', '#d8b4fe', 1000);
                     captures[opponent] += martyred.size;
                 }
                 soundManager.playCapture();

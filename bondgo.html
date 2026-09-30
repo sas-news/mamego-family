@@ -1720,7 +1720,12 @@
                 captured.forEach(idx => getNeighbors(idx).forEach(n => {
                     if (board[n] === player) ownDead.add(n);
                 }));
-                ownDead.forEach(i => { board[i] = 0; });
+                ownDead.forEach(i => {
+                    board[i] = 0;
+                    // 道連れに散る演出: 淡い破片が飛び散る
+                    fxBurst(i, '#cbd5e1', 7, 1.2);
+                });
+                if (ownDead.size > 0) fxText(captured[0], '道連れ', '#e2e8f0', 950);
                 captures[opponent] += ownDead.size;
                 soundManager.playCapture();
                 cleanUpPieces();
