@@ -1255,10 +1255,9 @@
             const u = (clientX - rect.left - padding) / cellSize;
             const v = (clientY - rect.top - padding) / cellSize;
 
-            // 当たり判定広め: 盤外タップも最寄りの端交点に吸着 (canvas上なら常に有効)
-            const cu = Math.max(-0.45, Math.min(BOARD_SIZE - 0.55, u));
-            const cv = Math.max(-0.45, Math.min(BOARD_SIZE - 0.55, v));
-            return { u: cu, v: cv };
+            // 盤面外過ぎる場合は除外
+            if (u < -1.5 || u > BOARD_SIZE + 0.5 || v < -1.5 || v > BOARD_SIZE + 0.5) return null;
+            return { u, v };
         }
 
         // (u, v) に現在のピースを置いたときの最適な平行移動を決める。
@@ -1324,18 +1323,11 @@
                 const x = Math.round((clientX - rect.left - padding) / cellSize);
                 const y = Math.round((clientY - rect.top - padding) / cellSize);
 
-                // 当たり判定広め: タップ点から近い石(半径1.0)を死に石選択
-                if (x >= -1 && x <= BOARD_SIZE && y >= -1 && y <= BOARD_SIZE) {
-                    const u = (clientX - rect.left - padding) / cellSize;
-                    const v = (clientY - rect.top - padding) / cellSize;
-                    let bi = -1, bd = 1.0;
-                    for (let i = 0; i < board.length; i++) {
-                        if (board[i] === 0) continue;
-                        const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
-                        const d = Math.hypot(u - sx, v - sy);
-                        if (d < bd) { bd = d; bi = i; }
+                if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE) {
+                    const idx = y * BOARD_SIZE + x;
+                    if (board[idx] !== 0) {
+                        toggleDeadGroup(idx);
                     }
-                    if (bi >= 0) toggleDeadGroup(bi);
                 }
                 return;
             }
@@ -1377,7 +1369,7 @@
             const rect = canvas.getBoundingClientRect();
             const u = (e.clientX - rect.left - padding) / cellSize;
             const v = (e.clientY - rect.top - padding) / cellSize;
-            return pv.cells.some(p => Math.hypot(u - p.x, v - p.y) <= 0.95);
+            return pv.cells.some(p => Math.hypot(u - p.x, v - p.y) <= 0.4);
         }
 
         function toggleDeadGroup(startIdx) {

@@ -515,17 +515,28 @@
         const searchInput = document.getElementById('gameSearch');
         const searchClear = document.getElementById('gameSearchClear');
         gameCountEl.textContent = `全${GAMES.length}種`;
+        // 曖昧検索: NFKC正規化(全角→半角・大小統一) + カタカナ→ひらがな + 空白区切り複数語AND + 各語は部分一致 or 部分列(文字飛ばし順序一致)でヒット
+        function normSearch(s) {
+            return (s || '').normalize('NFKC').toLowerCase()
+                .replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+        }
+        function subseqHit(term, text) {
+            let i = 0;
+            for (const ch of text) { if (ch === term[i]) { i++; if (i >= term.length) return true; } }
+            return false;
+        }
         function applyGameFilter(q) {
-            const query = q.trim().toLowerCase();
+            const terms = normSearch(q).split(/\s+/).filter(Boolean);
             let shown = 0;
             tiles.forEach(t => {
-                const hit = !query || t._hay.includes(query);
+                const hit = !terms.length || terms.every(term => t._hay.includes(term) || subseqHit(term, t._hay));
                 t.style.display = hit ? '' : 'none';
                 if (hit) shown++;
             });
+            const hasQuery = terms.length > 0;
             noResultsEl.classList.toggle('hidden', shown > 0);
-            searchClear.classList.toggle('hidden', !query);
-            gameCountEl.textContent = query ? `${shown}件 / 全${GAMES.length}種` : `全${GAMES.length}種`;
+            searchClear.classList.toggle('hidden', !hasQuery);
+            gameCountEl.textContent = hasQuery ? `${shown}件 / 全${GAMES.length}種` : `全${GAMES.length}種`;
         }
         searchInput.addEventListener('input', e => applyGameFilter(e.target.value));
         searchClear.addEventListener('click', () => { searchInput.value = ''; applyGameFilter(''); searchInput.focus(); });
@@ -550,7 +561,7 @@
             a.appendChild(cv); a.appendChild(body); a.appendChild(arrow);
             grid.appendChild(a);
             drawIcon(cv.getContext('2d'), v.kind, 56);
-            a._hay = `${v.name} ${v.jp} ${v.desc}`.toLowerCase();
+            a._hay = normSearch(`${v.name} ${v.jp} ${v.desc}`);
             tiles.push(a);
         });
 
