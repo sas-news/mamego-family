@@ -957,7 +957,7 @@
         }
 
         // 盤面差分の自動演出: 取られた石・色反転・壁の出現/消滅を全バリアントで可視化
-        let fxPrevBoard = null;
+        let fxPrevBoard = null, fxPrevMove = null;
         function fxBoardDiff() {
             if (!fxPrevBoard || fxPrevBoard.length !== board.length) { fxPrevBoard = board.slice(); return; }
             let changed = 0;
@@ -1221,9 +1221,38 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
         }
 
-        let fxPrevMove = null;
+        function drawStoneMarks(padding, cellSize) {
+            // 未発動の罠にかすかな光点、発動済みの罠に赤い環
+            {
+                ctx.save();
+                pieces.forEach(pc => {
+                    if (!pc.trap) return;
+                    pc.cells.forEach(p => {
+                        const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                        if (pc.sprung) {
+                            if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                            ctx.strokeStyle = 'rgba(239, 68, 68, 0.85)';
+                            ctx.lineWidth = Math.max(1.6, cellSize * 0.07);
+                            ctx.beginPath();
+                            ctx.arc(cx, cy, cellSize * 0.40, 0, Math.PI * 2);
+                            ctx.stroke();
+                        } else {
+                            ctx.fillStyle = 'rgba(250, 204, 21, 0.55)';
+                            ctx.beginPath();
+                            ctx.arc(cx + cellSize * 0.22, cy - cellSize * 0.22, cellSize * 0.07, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    });
+                });
+                ctx.restore();
+            }
+        }
+
         function drawLastMove(padding, cellSize) {
             if (!lastMove) { fxPrevMove = null; return; }
             if (lastMove !== fxPrevMove) { // 新しい着手 → 着地点に着地リング

@@ -959,7 +959,7 @@
         }
 
         // 盤面差分の自動演出: 取られた石・色反転・壁の出現/消滅を全バリアントで可視化
-        let fxPrevBoard = null;
+        let fxPrevBoard = null, fxPrevMove = null;
         function fxBoardDiff() {
             if (!fxPrevBoard || fxPrevBoard.length !== board.length) { fxPrevBoard = board.slice(); return; }
             let changed = 0;
@@ -1225,9 +1225,28 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 他層の石の位置を薄い菱形で表示 (上下の連・呼吸点が見えるように)
+            for (let z = 0; z < LAYERS; z++) {
+                if (z === activeLayer) continue;
+                for (let y = 0; y < BOARD_SIZE; y++) {
+                    for (let x = 0; x < BOARD_SIZE; x++) {
+                        const idx2 = z * layerCells() + y * BOARD_SIZE + x;
+                        const val = board[idx2];
+                        if (val === 0) continue;
+                        const s2 = cellSize * 0.16;
+                        ctx.save();
+                        ctx.globalAlpha = 0.28;
+                        ctx.fillStyle = val === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                        ctx.translate(padding + (x + 0.32) * cellSize, padding + (y - 0.32) * cellSize);
+                        ctx.rotate(Math.PI / 4);
+                        ctx.fillRect(-s2 / 2, -s2 / 2, s2, s2);
+                        ctx.restore();
+                    }
+                }
+            }
         }
 
-        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {
             if (!lastMove) { fxPrevMove = null; return; }
             if (lastMove !== fxPrevMove) { // 新しい着手 → 着地点に着地リング

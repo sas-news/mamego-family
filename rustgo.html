@@ -951,7 +951,7 @@
         }
 
         // 盤面差分の自動演出: 取られた石・色反転・壁の出現/消滅を全バリアントで可視化
-        let fxPrevBoard = null;
+        let fxPrevBoard = null, fxPrevMove = null;
         function fxBoardDiff() {
             if (!fxPrevBoard || fxPrevBoard.length !== board.length) { fxPrevBoard = board.slice(); return; }
             let changed = 0;
@@ -1215,9 +1215,28 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
         }
 
-        let fxPrevMove = null;
+        function drawStoneMarks(padding, cellSize) {
+            // 錆の兆候: 自連に1箇所しか繋がっていない「端」石に錆色の点
+            for (let i = 0; i < board.length; i++) {
+                const v = board[i];
+                if (v !== 1 && v !== 2) continue;
+                const fn = getNeighbors(i).filter(n => board[n] === v).length;
+                if (fn > 1) continue;
+                const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                ctx.save();
+                ctx.fillStyle = 'rgba(160, 90, 40, 0.85)';
+                ctx.beginPath();
+                ctx.arc(padding + x * cellSize + cellSize * 0.18, padding + y * cellSize + cellSize * 0.18, cellSize * 0.08, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
         function drawLastMove(padding, cellSize) {
             if (!lastMove) { fxPrevMove = null; return; }
             if (lastMove !== fxPrevMove) { // 新しい着手 → 着地点に着地リング

@@ -952,7 +952,7 @@
         }
 
         // 盤面差分の自動演出: 取られた石・色反転・壁の出現/消滅を全バリアントで可視化
-        let fxPrevBoard = null;
+        let fxPrevBoard = null, fxPrevMove = null;
         function fxBoardDiff() {
             if (!fxPrevBoard || fxPrevBoard.length !== board.length) { fxPrevBoard = board.slice(); return; }
             let changed = 0;
@@ -1222,9 +1222,31 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
         }
 
-        let fxPrevMove = null;
+        function drawStoneMarks(padding, cellSize) {
+            // 迷彩中の石にはごく薄い破線の輪 (よく見ると迷彩と分かる)
+            {
+                ctx.save();
+                ctx.setLineDash([cellSize * 0.09, cellSize * 0.09]);
+                ctx.strokeStyle = 'rgba(34, 197, 94, 0.55)';
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.045);
+                pieces.forEach(pc => {
+                    if (!isCamo(pc)) return;
+                    pc.cells.forEach(p => {
+                        if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                        ctx.beginPath();
+                        ctx.arc(padding + p.x * cellSize, padding + p.y * cellSize, cellSize * 0.44, 0, Math.PI * 2);
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
+            }
+        }
+
         function drawLastMove(padding, cellSize) {
             if (!lastMove) { fxPrevMove = null; return; }
             if (lastMove !== fxPrevMove) { // 新しい着手 → 着地点に着地リング

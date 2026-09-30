@@ -953,7 +953,7 @@
         }
 
         // 盤面差分の自動演出: 取られた石・色反転・壁の出現/消滅を全バリアントで可視化
-        let fxPrevBoard = null;
+        let fxPrevBoard = null, fxPrevMove = null;
         function fxBoardDiff() {
             if (!fxPrevBoard || fxPrevBoard.length !== board.length) { fxPrevBoard = board.slice(); return; }
             let changed = 0;
@@ -1217,9 +1217,29 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
         }
 
-        let fxPrevMove = null;
+        function drawStoneMarks(padding, cellSize) {
+            {
+                const px = pacPos % BOARD_SIZE, py = Math.floor(pacPos / BOARD_SIZE);
+                const cx = padding + px * cellSize, cy = padding + py * cellSize;
+                ctx.save();
+                ctx.fillStyle = '#ffd23f';
+                ctx.beginPath();
+                ctx.arc(cx, cy, cellSize * 0.32, 0.45, Math.PI * 2 - 0.45);
+                ctx.lineTo(cx, cy);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#9a7600';
+                ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
         function drawLastMove(padding, cellSize) {
             if (!lastMove) { fxPrevMove = null; return; }
             if (lastMove !== fxPrevMove) { // 新しい着手 → 着地点に着地リング

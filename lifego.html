@@ -159,7 +159,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + ライフゲーム<br>
-            ※配置のたびに空点がライフ誕生ルールで増殖 (3近傍・同色のみ)
+            ※配置のたびに盤面が1世代進化 (誕生B3・生存S23・8近傍)
         </p>
     </div>
 
@@ -502,9 +502,10 @@
             '双方が連続でパスすると終局。地の中の死に石を確認し、地の数 + アゲハマ数 (+白はコミ6.5目) で勝敗を決める。',
         ];
         const RULES_VARIANT = [
-            '着手ごとに盤面全体へライフゲームの誕生ルールを1世代分適用する (近傍=上下左右の4方向)。',
-            '空点はちょうど3個の同色の隣接石で誕生 (混色時は誕生しない)。石はライフでは死なず、取り・呼吸点は通常の囲碁通り。',
-            '誕生で呼吸点を失った連は両色とも除去される。',
+            '着手ごとに盤面全体が Conway のライフゲームを1世代進む (B3/S23・斜め含む8近傍)。',
+            '石は孤独(近傍<2)でも過密(>3)でも死滅する (置いたばかりの石はその世代は死なない)。空点はちょうど3個の同色近傍で誕生。',
+            'ライフ死滅はアゲハマにならない。世代交代で呼吸点を失った連は通常通り取られる。',
+            '累計200手で打ち切り終局して地計算 (無限対局を防ぐ安全装置)。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -950,7 +951,7 @@
         }
 
         // 盤面差分の自動演出: 取られた石・色反転・壁の出現/消滅を全バリアントで可視化
-        let fxPrevBoard = null;
+        let fxPrevBoard = null, fxPrevMove = null;
         function fxBoardDiff() {
             if (!fxPrevBoard || fxPrevBoard.length !== board.length) { fxPrevBoard = board.slice(); return; }
             let changed = 0;
@@ -1216,7 +1217,6 @@
             }
         }
 
-        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {
             if (!lastMove) { fxPrevMove = null; return; }
             if (lastMove !== fxPrevMove) { // 新しい着手 → 着地点に着地リング
@@ -1721,8 +1721,8 @@
                 soundManager.playPlace();
             }
 
-            // ライフゲーム世代交代: 着手ごとに盤面全体を1世代進める
-            applyLifeStep();
+            // ライフゲーム世代交代: 着手ごとに盤面全体を1世代進める (置いた石はこの世代は死なない)
+            applyLifeStep(new Set(move.cells.map(p => p.y * BOARD_SIZE + p.x)));
 
             // ネクストモードでは次のピースを供給
             if (pieceMode === 'next') {
@@ -1732,6 +1732,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 打ち切り終局: 累計200手で強制終局 (ライフの循環で無限対局になり得るため)
+            if (history.length >= 200) endGameByScore();
             updateUI();
 
             // オンライン同期
@@ -1753,30 +1755,43 @@
             );
         }
 
-        // 着手ごとに盤面全体を Conway のライフゲーム1世代進める。
-        // 誕生色は3近傍の単色のみ (混色なら誕生しない)。
+        // 着手ごとに盤面全体を Conway のライフゲーム1世代進める (B3/S23・斜め含む8近傍)。
+        // 誕生色は3近傍の単色のみ (混色なら誕生しない)。死滅は自然消滅 (アゲハマにならない)。
         // 世代交代の結果、呼吸点を失った連は両色とも取り除く。
-        function applyLifeStep() {
+        function applyLifeStep(immune) {
+            const n = BOARD_SIZE;
+            immune = immune || new Set(); // 置いたばかりの石はこの世代は死なない (新生児保護)
             const counts = new Array(board.length).fill(0);
             const tint = new Array(board.length).fill(0); // 0:未接触 / 1,2:単色 / -1:混色
-            for (let i = 0; i < board.length; i++) {
-                if (board[i] === 0) continue;
+            for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+                const i = y * n + x;
                 const c = board[i];
-                getNeighbors(i).forEach(n => {
-                    counts[n]++;
-                    tint[n] = tint[n] === 0 ? c : (tint[n] === c ? c : -1);
-                });
+                if (c !== 1 && c !== 2) continue;
+                for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+                    if (!dx && !dy) continue;
+                    const nx = x + dx, ny = y + dy;
+                    if (nx < 0 || ny < 0 || nx >= n || ny >= n) continue;
+                    const j = ny * n + nx;
+                    counts[j]++;
+                    tint[j] = tint[j] === 0 ? c : (tint[j] === c ? c : -1);
+                }
             }
             const next = [...board];
-            let changed = 0;
+            const born = [], died = [];
             for (let i = 0; i < board.length; i++) {
-                // 誕生のみ適用: 石はライフでは死なず、取り・呼吸点の処理に委ねる
-                if (board[i] === 0 && counts[i] === 3 && tint[i] !== -1) {
-                    next[i] = tint[i]; changed++;
+                if (board[i] === 1 || board[i] === 2) {
+                    // S23: 隣接同色・異色問わず2-3個で生存、それ以外は死滅 (新生児は免除)
+                    if (!immune.has(i) && (counts[i] < 2 || counts[i] > 3)) { next[i] = 0; died.push(i); }
+                } else if (board[i] === 0 && counts[i] === 3 && tint[i] !== -1) {
+                    // B3: 空点はちょうど3近傍・単色で誕生
+                    next[i] = tint[i]; born.push(i);
                 }
             }
             board = next;
-            if (changed > 0) cleanUpPieces();
+            // 誕生を緑に光らせ、死滅は小さく弾ける (数が多い場合は間引き)
+            born.slice(0, 24).forEach(i => fxGlow(i, 'rgba(74,222,128,0.9)', 520));
+            died.slice(0, 24).forEach(i => fxBurst(i, 'rgba(160,160,170,0.8)', 3, 0.6));
+            if (born.length + died.length > 0) cleanUpPieces();
             // 世代交代で呼吸点を失った連を両色とも除去 (安定するまで)
             for (let k = 0; k < 8; k++) {
                 const dead = [...getCapturedStones(board, 1), ...getCapturedStones(board, 2)];
