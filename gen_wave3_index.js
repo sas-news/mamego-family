@@ -31,7 +31,7 @@ if (fs.existsSync(iconsDir)) {
     }
 }
 const cases = Object.keys(iconBodies).sort().map(icon =>
-    `                case '${icon}':\n${iconBodies[icon]}\n                    break;`);
+    `                case '${icon}': {\n${iconBodies[icon]}\n                    break;\n                }`);
 const ICON_BEGIN = '                // == WAVE3 ICONS BEGIN ==';
 const ICON_END = '                // == WAVE3 ICONS END ==';
 const iconBlock = [ICON_BEGIN, cases.join('\n'), ICON_END].join('\n');

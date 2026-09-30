@@ -506,8 +506,7 @@
             { file: 'ziggo.html', name: 'ZIGGO', jp: '之字碁', desc: 'S字・Z字4連ピースだけを置く碁。ジグザグの連。', kind: 'stone', icon: 'ziggo' },
             { file: 'zipgo.html', name: 'ZIPGO', jp: '縞封碁', desc: '奇数手は前の手の列、偶数手は行になぞられて指される縞模様の碁。', kind: 'zip' },
             { file: 'zonego.html', name: 'ZONEGO', jp: '区域碁', desc: '盤は9区域。自分の石が相手より2個以上多い区域を「制圧」。5区域制圧で即勝ち。', kind: 'zone' },
-            // ==== WAVE2 GAMES END ====
-        ];
+                    ];
 
         const grid = document.getElementById('gameGrid');
         const tiles = [];
@@ -2422,6 +2421,827 @@
                     dot(1.3,4.6,'#fef3c7','#b45309',cell*0.45);
                     dot(4.9,4.6,P1,P1S,cell*0.32); seg(4.4,4.6,4.75,4.6,'rgba(62,34,17,0.5)',1.4);
                     break;
+                                // == WAVE3 ICONS BEGIN ==
+                case 'bingolinego': {
+        // 釣合(ビンゴ): 斜めの5連ライン
+        [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]].forEach(([x, y], i) => {
+            dot(x, y, i === 4 ? P2 : P1, i === 4 ? P2S : P1S);
+        });
+        c.strokeStyle = '#f59e0b'; c.lineWidth = 2; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(at(1, 1).x, at(1, 1).y); c.lineTo(at(5, 5).x, at(5, 5).y); c.stroke();
+        txt('B', 5, 1, '#f59e0b', cell * 0.8);
+    
+                    break;
+                }
+                case 'bluffgo': {
+        // 詐称: 大きく見せた石と看破マーク
+        dot(2, 3, P1, P1S, cell * 0.42);
+        ring(2, 3, cell * 0.85, '#f87171', 2);
+        txt('!', 2, 3, '#fef3c7', cell * 0.7);
+        // 見抜く目
+        c.strokeStyle = '#0ea5e9'; c.lineWidth = 1.8;
+        c.beginPath(); c.ellipse(at(4.4, 2.6).x, at(4.4, 2.6).y, cell * 0.7, cell * 0.42, 0, 0, Math.PI * 2); c.stroke();
+        dot(4.4, 2.6, '#0284c7', '#0369a1', cell * 0.2);
+        dot(4.4, 4.6, P2, P2S, cell * 0.3);
+    
+                    break;
+                }
+                case 'capsulego': {
+                    // カプセルと中身
+                    c.save();
+                    c.fillStyle = '#93c5fd'; c.strokeStyle = '#1d4ed8'; c.lineWidth = 1.4;
+                    // カプセル外形 (丸角長方形)
+                    c.beginPath();
+                    c.moveTo(at(2, 1.6).x, at(2, 1.6).y);
+                    c.arc(at(2, 2.6).x, at(2, 2.6).y, cell, -Math.PI / 2, Math.PI / 2, false);
+                    c.lineTo(at(4, 3.6).x, at(4, 3.6).y);
+                    c.arc(at(4, 2.6).x, at(4, 2.6).y, cell, Math.PI / 2, Math.PI * 1.5, false);
+                    c.closePath(); c.fill(); c.stroke();
+                    c.restore();
+                    dot(4, 2.6, P1, P1S, cell * 0.42);
+                    dot(1.4, 4.9, P1, P1S); dot(4.6, 5, P2, P2S, cell * 0.34);
+                    break;
+                }
+                case 'chainreact': {
+                    // 連鎖爆発: 繋がった石と爆発の火花
+                    bond(1.2, 4.4, 2.6, 4.4, '#57534e'); bond(2.6, 4.4, 4, 4.4, '#57534e');
+                    dot(1.2, 4.4, P2, P2S); dot(2.6, 4.4, P2, P2S); dot(4, 4.4, P2, P2S);
+                    // 爆発の火花 (上側)
+                    c.strokeStyle = '#fb923c'; c.lineWidth = 1.6;
+                    [[3, 1.6, 3, 0.7], [2.1, 2, 1.5, 1.2], [3.9, 2, 4.5, 1.2], [2.4, 2.7, 1.8, 2.4], [3.6, 2.7, 4.2, 2.4]]
+                        .forEach(([x1, y1, x2, y2]) => seg(x1, y1, x2, y2, '#fb923c', 1.6));
+                    dot(3, 3.1, '#fdba74', '#ea580c', cell * 0.4);
+                    break;
+                }
+                case 'chefgo': {
+        // 料理: 鍋と食材の石
+        dot(2, 2, P1, P1S); dot(4, 2, P2, P2S);
+        // フライパン
+        c.strokeStyle = '#78350f'; c.lineWidth = cell * 0.22; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(at(3.2, 4.2).x, at(3.2, 4.2).y); c.lineTo(at(4.8, 4.2).x, at(4.8, 4.2).y); c.stroke();
+        c.fillStyle = '#f97316'; c.strokeStyle = '#c2410c'; c.lineWidth = 1.5;
+        c.beginPath(); c.arc(at(2.8, 4).x, at(2.8, 4).y, cell * 0.9, 0, Math.PI * 2); c.fill(); c.stroke();
+        txt('♨', 2.8, 4, '#fef3c7', cell * 0.9);
+    
+                    break;
+                }
+                case 'circle2go': {
+                    // 環: 石の輪と内側の得点
+                    [[2, 1.6], [4, 1.6], [4.8, 2.6], [4.8, 4], [4, 4.8], [2, 4.8], [1.2, 4], [1.2, 2.6]]
+                        .forEach(([x, y]) => dot(x, y, P1, P1S, cell * 0.34));
+                    txt('+', 3, 3.2, '#8b5cf6', cell * 1.3);
+                    break;
+                }
+                case 'collidego': {
+                    // 衝突: 滑る石→衝突星→止まる石
+                    dot(0.9, 3, P1, P1S);
+                    seg(1.6, 3, 3, 3, '#57534e', 1.8);
+                    tri(3.15, 3, cell * 0.3, '#57534e', '#292524', 0);
+                    c.strokeStyle = '#fbbf24'; c.lineWidth = 1.5;
+                    [[4, 2.2, 4, 1.6], [4, 3.8, 4, 4.4], [3.2, 3, 2.6, 3], [4.8, 3, 5.4, 3], [3.5, 2.5, 3.1, 2.1], [4.5, 3.5, 4.9, 3.9]]
+                        .forEach(([x1, y1, x2, y2]) => seg(x1, y1, x2, y2, '#fbbf24', 1.4));
+                    dot(4, 3, P2, P2S, cell * 0.4);
+                    break;
+                }
+                case 'colonygo': {
+                    // 3x3区域グリッドと2色の領有
+                    c.strokeStyle = '#92610e'; c.lineWidth = 1.2;
+                    for (let i = 1; i < 3; i++) {
+                        seg(i * 2, 0.6, i * 2, 5.4, '#92610e', 1.2);
+                        seg(0.6, i * 2, 5.4, i * 2, '#92610e', 1.2);
+                    }
+                    dot(1.4, 1.4, P1, P1S, cell * 0.5); dot(0.8, 0.8, P1, P1S);
+                    dot(4.4, 1.4, P2, P2S, cell * 0.5); dot(5.2, 0.8, P2, P2S);
+                    dot(1.4, 4.6, P2, P2S); dot(4.4, 4.6, P1, P1S);
+                    break;
+                }
+                case 'crisisgo': {
+        dot(3, 3.2, P1, P1S);
+        tri(3, 1.6, cell * 0.5, '#f59e0b', '#b45309', -Math.PI / 2);
+        tri(2.2, 2.2, cell * 0.32, '#fbbf24', '#f59e0b', -Math.PI / 2);
+        tri(3.8, 2.2, cell * 0.32, '#fbbf24', '#f59e0b', -Math.PI / 2);
+        ring(3, 3.2, cell * 0.6, 'rgba(245,158,11,0.8)', 1.8);
+                    break;
+                }
+                case 'crown2go': {
+                    // 王冠
+                    c.fillStyle = '#facc15'; c.strokeStyle = '#a16207'; c.lineWidth = 1.4;
+                    c.beginPath();
+                    c.moveTo(at(1.4, 4.4).x, at(1.4, 4.4).y);
+                    c.lineTo(at(1.4, 2.4).x, at(1.4, 2.4).y);
+                    c.lineTo(at(2.5, 3.2).x, at(2.5, 3.2).y);
+                    c.lineTo(at(3, 1.8).x, at(3, 1.8).y);
+                    c.lineTo(at(3.5, 3.2).x, at(3.5, 3.2).y);
+                    c.lineTo(at(4.6, 2.4).x, at(4.6, 2.4).y);
+                    c.lineTo(at(4.6, 4.4).x, at(4.6, 4.4).y);
+                    c.closePath(); c.fill(); c.stroke();
+                    dot(1.4, 2.1, '#fde68a', '#a16207', cell * 0.16); dot(3, 1.5, '#fde68a', '#a16207', cell * 0.16); dot(4.6, 2.1, '#fde68a', '#a16207', cell * 0.16);
+                    dot(3, 5.1, P1, P1S, cell * 0.3);
+                    break;
+                }
+                case 'deckgo': {
+        // 山札: 扇状の3枚のカードと石
+        c.save();
+        [[-0.3, 2.2, 3.6], [0, 3, 3.4], [0.3, 3.8, 3.6]].forEach(([rot, x, y]) => {
+            const p = at(x, y);
+            c.save(); c.translate(p.x, p.y); c.rotate(rot);
+            c.fillStyle = '#fef3c7'; c.strokeStyle = '#92400e'; c.lineWidth = 1.4;
+            c.fillRect(-cell * 0.5, -cell * 0.8, cell, cell * 1.6);
+            c.strokeRect(-cell * 0.5, -cell * 0.8, cell, cell * 1.6);
+            c.restore();
+        });
+        c.restore();
+        txt('♠', 3, 3.4, '#1c1917', cell * 0.7);
+        dot(5, 1.4, P1, P1S, cell * 0.32); dot(1.2, 1.4, P2, P2S, cell * 0.32);
+    
+                    break;
+                }
+                case 'delaygo': {
+        dot(2, 3, P1, P1S, cell * 0.34, 0.45);
+        dot(4, 3, P1, P1S);
+        ring(4, 3, cell * 0.6, 'rgba(165,180,252,0.9)', 1.8);
+        seg(4, 3, 4, 1.6, '#a5b4fc', 1.8);
+        tri(4, 1.5, cell * 0.18, '#a5b4fc', '#6366f1', -Math.PI / 2);
+                    break;
+                }
+                case 'detectivego': {
+        // 推理: 虫眼鏡と?マーク
+        dot(2, 2, P1, P1S);
+        ring(3.8, 2.6, cell * 0.85, '#0ea5e9', 2.2);
+        seg(4.5, 3.4, 5.4, 4.3, '#0369a1', cell * 0.2);
+        txt('?', 3.8, 2.6, '#0284c7', cell * 0.9);
+        dot(2, 4.6, P2, P2S, cell * 0.3);
+    
+                    break;
+                }
+                case 'dicebuildgo': {
+        // 骰子建築: サイコロと積まれた石
+        const p = at(2, 2);
+        c.fillStyle = '#fef3c7'; c.strokeStyle = '#1c1917'; c.lineWidth = 1.6;
+        c.beginPath();
+        if (c.roundRect) c.roundRect(p.x - cell * 0.7, p.y - cell * 0.7, cell * 1.4, cell * 1.4, cell * 0.2); else c.rect(p.x - cell * 0.7, p.y - cell * 0.7, cell * 1.4, cell * 1.4);
+        c.fill(); c.stroke();
+        [[-0.35, -0.35], [0.35, -0.35], [0, 0], [-0.35, 0.35], [0.35, 0.35]].forEach(([ox, oy]) => {
+            c.fillStyle = '#1c1917';
+            c.beginPath(); c.arc(p.x + ox * cell, p.y + oy * cell, cell * 0.11, 0, Math.PI * 2); c.fill();
+        });
+        // 積まれた石
+        dot(4.4, 4.6, P1, P1S, cell * 0.3); dot(4.4, 3.7, P1, P1S, cell * 0.3); dot(4.4, 2.8, P2, P2S, cell * 0.3);
+    
+                    break;
+                }
+                case 'divego': {
+                    // 水面と潜る石
+                    c.strokeStyle = '#0ea5e9'; c.lineWidth = 2; c.lineCap = 'round';
+                    c.beginPath();
+                    for (let i = 0; i <= 6; i++) {
+                        const px = cell * (0.4 + i * 0.9);
+                        const py = cell * 2.2 + Math.sin(i * 1.4) * cell * 0.18;
+                        i ? c.lineTo(px, py) : c.moveTo(px, py);
+                    }
+                    c.stroke();
+                    dot(3, 3.8, P1, P1S, R, 0.55);
+                    dot(1.6, 1.2, P2, P2S);
+                    ring(3, 3.8, cell * 0.62, '#38bdf8', 1.4);
+                    break;
+                }
+                case 'dominiongo': {
+                    // 大きな連結領土 vs 小さな領土
+                    [[1.2, 1.6], [2.2, 1.6], [3.2, 1.6], [1.2, 2.6], [2.2, 2.6], [1.2, 3.6], [2.2, 3.6]]
+                        .forEach(([x, y]) => dot(x, y, P1, P1S));
+                    bond(1.2, 1.6, 3.2, 1.6, '#57534e'); bond(1.2, 1.6, 1.2, 3.6, '#57534e'); bond(1.2, 3.6, 2.2, 3.6, '#57534e');
+                    dot(4.4, 4.4, P2, P2S); dot(5, 4.4, P2, P2S, cell * 0.32);
+                    break;
+                }
+                case 'dominogo': {
+        // 骨牌: 倒れゆくドミノ3枚
+        [[1.2, 2.2, 0], [2.8, 2.6, 0.5], [4.4, 3.6, 1.1]].forEach(([x, y, rot]) => {
+            const p = at(x, y);
+            c.save(); c.translate(p.x, p.y); c.rotate(rot);
+            c.fillStyle = '#fef3c7'; c.strokeStyle = '#1c1917'; c.lineWidth = 1.4;
+            c.fillRect(-cell * 0.28, -cell * 1, cell * 0.56, cell * 2);
+            c.strokeRect(-cell * 0.28, -cell * 1, cell * 0.56, cell * 2);
+            c.beginPath(); c.moveTo(-cell * 0.28, 0); c.lineTo(cell * 0.28, 0); c.stroke();
+            c.restore();
+        });
+        dot(1.2, 1.4, P1, P1S, cell * 0.24); dot(5.4, 4.6, P2, P2S, cell * 0.24);
+    
+                    break;
+                }
+                case 'doubledown': {
+        dot(2.2, 2.6, P1, P1S);
+        dot(3.8, 2.6, P1, P1S);
+        txt('x2', 3, 4.4, '#fbbf24', cell * 1.0);
+        seg(1.8, 1.4, 4.2, 1.4, '#fbbf24', 2);
+        tri(4.2, 1.4, cell * 0.2, '#fbbf24', '#d97706', 0);
+                    break;
+                }
+                case 'dragon2go': {
+        // 竜巻: 渦を巻く竜巻と吹き飛ぶ石
+        c.strokeStyle = '#94a3b8'; c.lineWidth = cell * 0.26; c.lineCap = 'round';
+        c.beginPath();
+        for (let t = 0; t <= 1; t += 0.05) {
+            const r = 2.2 - t * 1.6;
+            const a = t * Math.PI * 3.4;
+            const x = 3 + Math.cos(a) * r * 0.6;
+            const y = 1 + t * 4;
+            t === 0 ? c.moveTo(at(x, y).x, at(x, y).y) : c.lineTo(at(x, y).x, at(x, y).y);
+        }
+        c.stroke();
+        dot(5, 2, P1, P1S, cell * 0.26); dot(5.2, 3.4, P2, P2S, cell * 0.26); dot(0.9, 1.4, P1, P1S, cell * 0.26);
+    
+                    break;
+                }
+                case 'dreamgo': {
+        // 夢幻: 二つの盤が入れ替わる + 月
+        c.strokeStyle = '#a78bfa'; c.lineWidth = 2;
+        c.strokeRect(at(1, 1).x - cell * 0.4, at(1, 1).y - cell * 0.4, cell * 2.4, cell * 2.4);
+        c.strokeStyle = 'rgba(167,139,250,0.45)'; c.setLineDash([3, 3]);
+        c.strokeRect(at(3.6, 3.4).x - cell * 0.4, at(3.6, 3.4).y - cell * 0.4, cell * 2.4, cell * 2.4);
+        c.setLineDash([]);
+        dot(2, 2, P1, P1S, cell * 0.34); dot(4.6, 4.6, P2, P2S, cell * 0.34);
+        // 交換の矢
+        c.strokeStyle = '#c4b5fd'; c.lineWidth = 1.8; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(at(2.6, 1.4).x, at(2.6, 1.4).y); c.quadraticCurveTo(at(4.6, 1).x, at(4.6, 1).y, at(5.4, 2.6).x, at(5.4, 2.6).y); c.stroke();
+        c.beginPath(); c.arc(at(1.2, 4.8).x, at(1.2, 4.8).y, cell * 0.55, 0.6, Math.PI * 1.7); c.stroke();
+    
+                    break;
+                }
+                case 'droughtgo': {
+        dot(3, 3, '#38bdf8', '#0284c7', cell * 0.34);
+        ring(3, 3, cell * 1.5, 'rgba(212,163,115,0.85)', 2);
+        seg(1.6, 4.4, 2.4, 4.0, '#d4a373', 1.8);
+        seg(2.4, 4.0, 3.0, 4.6, '#d4a373', 1.8);
+        seg(3.0, 4.6, 3.8, 4.1, '#d4a373', 1.8);
+        dot(4.6, 2.2, P1, P1S, cell * 0.26, 0.5);
+                    break;
+                }
+                case 'echo2go': {
+        dot(2.4, 2.4, P1, P1S);
+        ring(3.6, 3.6, cell * 0.5, 'rgba(56,189,248,0.8)', 2);
+        ring(3.6, 3.6, cell * 0.85, 'rgba(56,189,248,0.45)', 1.6);
+        ring(3.6, 3.6, cell * 1.2, 'rgba(56,189,248,0.25)', 1.2);
+                    break;
+                }
+                case 'eclipsego': {
+        ring(3, 2.8, cell * 0.85, '#f97316', 2.6);
+        dot(3.3, 2.8, '#1c1917', '#0c0a09', cell * 0.72);
+        dot(1.4, 4.4, P1, P1S, cell * 0.3);
+        dot(4.6, 4.4, P2, P2S, cell * 0.3);
+                    break;
+                }
+                case 'escapego2': {
+                    // 縦断する黒の一筋と白の妨害
+                    dot(3, 1, P1, P1S); dot(3, 2.2, P1, P1S); dot(3, 3.4, P1, P1S); dot(3, 4.6, P1, P1S);
+                    bond(3, 1, 3, 4.6, 3);
+                    dot(4.4, 2.6, P2, P2S);
+                    txt('↕', 1.4, 3, '#dc2626', cell * 1.4);
+                    break;
+                }
+                case 'flag2go': {
+                    // 3本の旗
+                    [1.4, 3, 4.6].forEach((fx, i) => {
+                        c.strokeStyle = '#57534e'; c.lineWidth = 1.6;
+                        c.beginPath(); c.moveTo(at(fx, 4.6).x, at(fx, 4.6).y); c.lineTo(at(fx, 1.8).x, at(fx, 1.8).y); c.stroke();
+                        tri(fx + 0.38, 2.0, cell * 0.34, i === 1 ? '#ef4444' : P1, i === 1 ? '#b91c1c' : P1S, Math.PI / 2);
+                    });
+                    dot(2, 4.9, P2, P2S);
+                    break;
+                }
+                case 'foggo2': {
+        dot(1.6, 3, P1, P1S);
+        dot(4.4, 3, P2, P2S, cell * 0.4, 0.35);
+        seg(3, 0.8, 3, 5, 'rgba(226,232,240,0.95)', 14);
+        seg(3.4, 1.2, 3.4, 4.8, 'rgba(148,163,184,0.5)', 2);
+        seg(2.7, 2, 3.3, 2, 'rgba(148,163,184,0.6)', 1.6);
+        seg(2.7, 3.6, 3.3, 3.6, 'rgba(148,163,184,0.6)', 1.6);
+                    break;
+                }
+                case 'glowgo': {
+        dot(3, 2.5, P1, P1S);
+        ring(3, 2.5, cell * 0.62, 'rgba(253,224,71,0.9)', 2.4);
+        ring(3, 2.5, cell * 0.88, 'rgba(253,224,71,0.5)', 1.6);
+        dot(1.2, 1.5, P1, P1S, cell * 0.3);
+        dot(4.8, 1.5, P2, P2S, cell * 0.3);
+                    break;
+                }
+                case 'handovergo': {
+        dot(1.8, 1.8, P1, P1S);
+        dot(4.2, 4.2, P2, P2S);
+        seg(2.4, 1.8, 3.9, 3.3, '#a78bfa', 2.2);
+        seg(3.6, 1.8, 2.1, 3.3, '#a78bfa', 2.2);
+        tri(3.9, 3.3, cell * 0.2, '#a78bfa', '#7c3aed', Math.PI * 0.75);
+        tri(2.1, 3.3, cell * 0.2, '#a78bfa', '#7c3aed', -Math.PI * 0.25);
+                    break;
+                }
+                case 'hurdlego': {
+        // 跳欄: 石を飛び越える軌跡
+        dot(1.4, 3.8, P1, P1S); dot(4.8, 3.8, P2, P2S);
+        // ハードル (中間の石)
+        blk(3.1, 3.8, '#fca5a5', '#b91c1c');
+        c.strokeStyle = '#38bdf8'; c.lineWidth = 2; c.lineCap = 'round';
+        c.setLineDash([4, 3]);
+        c.beginPath(); c.moveTo(at(1.4, 3.8).x, at(1.4, 3.8).y); c.quadraticCurveTo(at(3.1, 1.4).x, at(3.1, 1.4).y, at(4.8, 3.8).x, at(4.8, 3.8).y); c.stroke();
+        c.setLineDash([]);
+        tri(4.8, 3.4, cell * 0.3, '#38bdf8', '#0369a1', Math.PI / 2);
+    
+                    break;
+                }
+                case 'inkgo': {
+        // 墨染: 石の周りに滲みが広がる
+        const p = at(3, 3);
+        const g = c.createRadialGradient(p.x, p.y, cell * 0.2, p.x, p.y, cell * 2);
+        g.addColorStop(0, 'rgba(15,23,42,0.85)'); g.addColorStop(1, 'rgba(15,23,42,0)');
+        c.fillStyle = g;
+        c.beginPath(); c.arc(p.x, p.y, cell * 2, 0, Math.PI * 2); c.fill();
+        dot(3, 3, P1, P1S);
+        dot(1.2, 4.4, P2, P2S, cell * 0.34);
+        dot(4.8, 4.8, P1, P1S, cell * 0.3, 0.5);
+    
+                    break;
+                }
+                case 'jengago': {
+        // 抜積: 積み木の塔と抜き出し中の1個
+        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
+            if (x === 1 && y === 1) continue;
+            blk(1.6 + x * 1, 1.8 + y * 1, '#fcd34d', '#b45309');
+        }
+        const p = at(4.9, 2.8);
+        c.fillStyle = '#fbbf24'; c.strokeStyle = '#b45309'; c.lineWidth = 1.2;
+        c.fillRect(p.x - cell * 0.43, p.y - cell * 0.43, cell * 0.86, cell * 0.86);
+        c.strokeRect(p.x - cell * 0.43, p.y - cell * 0.43, cell * 0.86, cell * 0.86);
+        seg(3.7, 2.8, 4.4, 2.8, '#b45309', 2);
+    
+                    break;
+                }
+                case 'knight2go': {
+        // 跳馬: 桂馬の跳び筋と石
+        dot(1.6, 3.6, P1, P1S);
+        c.strokeStyle = '#34d399'; c.lineWidth = 2; c.lineCap = 'round';
+        c.setLineDash([4, 3]);
+        c.beginPath(); c.moveTo(at(1.6, 3.6).x, at(1.6, 3.6).y); c.lineTo(at(3.6, 2.6).x, at(3.6, 2.6).y); c.stroke();
+        c.setLineDash([]);
+        tri(3.6, 2.6, cell * 0.32, '#34d399', '#047857', Math.PI / 4);
+        dot(4.8, 1.6, P2, P2S, cell * 0.3);
+        txt('桂', 4.8, 4.6, '#047857', cell * 1.1);
+    
+                    break;
+                }
+                case 'levergo': {
+                    // 梃子: 支点の上の傾いた棒と両端の石
+                    tri(3, 3.4, cell * 0.7, '#d97706', '#92610e', Math.PI);
+                    seg(0.9, 2.1, 5.1, 3.5, '#78716c', 2.2);
+                    dot(0.9, 1.8, P1, P1S); dot(5.1, 3.8, P2, P2S);
+                    seg(0.7, 5, 5.3, 5, '#57534e', 1.6);
+                    break;
+                }
+                case 'lotterygo': {
+        // 宝籤: 福引きのガラポンと当たりの石
+        const p = at(3, 3);
+        c.fillStyle = '#fbbf24'; c.strokeStyle = '#b45309'; c.lineWidth = 1.6;
+        c.beginPath(); c.arc(p.x, p.y, cell * 1.3, 0, Math.PI * 2); c.fill(); c.stroke();
+        txt('吉', 3, 3, '#7c2d12', cell * 0.9);
+        dot(1.4, 5, P1, P1S, cell * 0.3); dot(4.6, 5, P2, P2S, cell * 0.3);
+        seg(4, 1.4, 5.2, 0.8, '#b45309', cell * 0.14);
+    
+                    break;
+                }
+                case 'lungego': {
+        // 突撃: 接する敵を押し返す
+        dot(2, 3, P1, P1S); dot(3, 3, P2, P2S);
+        c.strokeStyle = '#f97316'; c.lineWidth = 2.4; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(at(3.4, 3).x, at(3.4, 3).y); c.lineTo(at(5.2, 3).x, at(5.2, 3).y); c.stroke();
+        tri(5.3, 3, cell * 0.36, '#f97316', '#c2410c', Math.PI / 2);
+        dot(2, 1.6, P2, P2S, cell * 0.28); dot(1, 4.6, P1, P1S, cell * 0.28);
+    
+                    break;
+                }
+                case 'magnetstormgo': {
+        dot(2.2, 2.4, P1, P1S);
+        dot(2.2, 3.6, P2, P2S);
+        ring(3.9, 3, cell * 0.9, '#c084fc', 2.6);
+        seg(3.9, 2.1, 3.9, 3.9, '#c084fc', 2.6);
+        txt('±', 3.9, 0.9, '#c084fc', cell * 0.9);
+                    break;
+                }
+                case 'marblego': {
+                    // 転がる玉石と底に集まる玉
+                    c.strokeStyle = '#78716c'; c.lineWidth = 1.4; c.setLineDash([2, 2]);
+                    c.beginPath(); c.moveTo(at(1.4, 1).x, at(1.4, 1).y); c.lineTo(at(1.4, 4).x, at(1.4, 4).y); c.stroke();
+                    c.setLineDash([]);
+                    dot(1.4, 1, P2, P2S);
+                    dot(1.4, 4.5, P1, P1S); dot(3, 4.5, P1, P1S); dot(4.6, 4.5, P2, P2S);
+                    seg(0.5, 5.3, 5.5, 5.3, '#57534e', 1.8);
+                    break;
+                }
+                case 'mirage2go': {
+        dot(2.2, 3, P1, P1S);
+        dot(3.4, 3, P1, P1S, cell * 0.38, 0.35);
+        ring(3.4, 3, cell * 0.5, 'rgba(125,211,252,0.7)', 1.4);
+        dot(4.4, 1.8, P2, P2S, cell * 0.3);
+        dot(5.3, 1.8, P2, P2S, cell * 0.26, 0.3);
+                    break;
+                }
+                case 'mirrorstonego': {
+        dot(1.5, 2.5, P1, P1S);
+        dot(4.5, 2.5, P2, P2S);
+        seg(3, 0.8, 3, 4.2, 'rgba(186,230,253,0.9)', 2.5);
+        seg(2.6, 0.6, 3.4, 0.6, 'rgba(186,230,253,0.9)', 2);
+        ring(4.5, 2.5, cell * 0.62, 'rgba(125,211,252,0.7)', 1.4);
+                    break;
+                }
+                case 'monssoongo': {
+        dot(3, 1.6, P2, P2S);
+        seg(1.6, 2.8, 1.3, 3.8, '#3b82f6', 2.2);
+        seg(2.8, 2.8, 2.5, 3.8, '#3b82f6', 2.2);
+        seg(4.0, 2.8, 3.7, 3.8, '#3b82f6', 2.2);
+        blk(3, 4.6, 'rgba(59,130,246,0.5)', 'rgba(29,78,216,0.8)');
+                    break;
+                }
+                case 'mutatego': {
+                    // 変異体ブロブとDNAらしき渦
+                    c.fillStyle = '#a855f7'; c.strokeStyle = '#6b21a8'; c.lineWidth = 1.3;
+                    c.beginPath();
+                    for (let k = 0; k < 9; k++) {
+                        const a = (k / 9) * Math.PI * 2;
+                        const rr = cell * 1.5 * (1 + 0.16 * Math.sin(k * 3.1));
+                        const px = at(3, 3).x + Math.cos(a) * rr, py = at(3, 3).y + Math.sin(a) * rr;
+                        if (k === 0) c.moveTo(px, py); else c.lineTo(px, py);
+                    }
+                    c.closePath(); c.fill(); c.stroke();
+                    dot(2.6, 2.7, '#e9d5ff', '#6b21a8', cell * 0.22); dot(3.4, 3.3, '#e9d5ff', '#6b21a8', cell * 0.18);
+                    break;
+                }
+                case 'narrativego': {
+        // 物語: 開いた本と文字行
+        c.strokeStyle = '#92400e'; c.lineWidth = 1.8;
+        c.beginPath();
+        c.moveTo(at(1.2, 2).x, at(1.2, 2).y); c.quadraticCurveTo(at(3, 1.4).x, at(3, 1.4).y, at(3, 2).x, at(3, 2).y);
+        c.quadraticCurveTo(at(3, 1.4).x, at(3, 1.4).y, at(4.8, 2).x, at(4.8, 2).y);
+        c.lineTo(at(4.8, 4.6).x, at(4.8, 4.6).y); c.quadraticCurveTo(at(3, 4).x, at(3, 4).y, at(3, 4.6).x, at(3, 4.6).y);
+        c.quadraticCurveTo(at(3, 4).x, at(3, 4).y, at(1.2, 4.6).x, at(1.2, 4.6).y);
+        c.closePath(); c.stroke();
+        [[1.8, 2.6, 2.6], [1.8, 3.2, 2.6], [3.4, 2.6, 4.2], [3.4, 3.2, 4.2]].forEach(([x, y, x2]) => {
+            seg(x, y, x2, y, 'rgba(146,64,14,0.6)', 1.4);
+        });
+        dot(3, 0.9, P2, P2S, cell * 0.3);
+    
+                    break;
+                }
+                case 'oracle2go': {
+        // 神託: 輝く環 + 輝点
+        ring(3, 3, cell * 1.5, '#22d3ee', 2.2);
+        ring(3, 3, cell * 0.9, '#a5f3fc', 1.4);
+        dot(3, 3, '#0e7490', '#155e75', cell * 0.3);
+        dot(1.4, 1.4, P1, P1S, cell * 0.3);
+        dot(4.6, 4.6, P2, P2S, cell * 0.3);
+    
+                    break;
+                }
+                case 'orbit2go': {
+                    // 軌道リングと周回する2石
+                    c.strokeStyle = '#60a5fa'; c.lineWidth = 1.3; c.setLineDash([3, 2]);
+                    c.beginPath(); c.arc(at(3, 3).x, at(3, 3).y, cell * 1.9, 0, Math.PI * 2); c.stroke();
+                    c.setLineDash([]);
+                    dot(3, 3, '#fde68a', '#d97706', cell * 0.34);
+                    dot(4.9, 3, P1, P1S); dot(1.1, 3, P2, P2S);
+                    // 周回矢印
+                    c.strokeStyle = '#3b82f6'; c.lineWidth = 1.6;
+                    c.beginPath(); c.arc(at(3, 3).x, at(3, 3).y, cell * 1.9, -Math.PI * 0.28, Math.PI * 0.08); c.stroke();
+                    tri(4.78, 2.28, cell * 0.2, '#3b82f6', '#1d4ed8', Math.PI * 0.35);
+                    break;
+                }
+                case 'outlastgo': {
+        dot(3, 2.8, P1, P1S);
+        ring(3, 2.8, cell * 0.68, 'rgba(52,211,153,0.9)', 2.4);
+        seg(3, 2.1, 3, 3.5, 'rgba(52,211,153,0.9)', 2.2);
+        txt('Z', 4.6, 1.4, '#34d399', cell * 0.9);
+        txt('z', 5.1, 0.8, 'rgba(52,211,153,0.6)', cell * 0.6);
+                    break;
+                }
+                case 'paintergo': {
+        // 絵画: 筆の軌跡と2つの石
+        c.strokeStyle = '#7c3aed'; c.lineWidth = cell * 0.28; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(at(1, 4.6).x, at(1, 4.6).y); c.quadraticCurveTo(at(3, 4).x, at(3, 4).y, at(3.4, 2).x, at(3.4, 2).y); c.stroke();
+        c.strokeStyle = '#a78bfa'; c.lineWidth = cell * 0.16;
+        c.beginPath(); c.moveTo(at(1.6, 4.8).x, at(1.6, 4.8).y); c.quadraticCurveTo(at(4.4, 4.2).x, at(4.4, 4.2).y, at(4.8, 2.6).x, at(4.8, 2.6).y); c.stroke();
+        dot(1.8, 1.6, P1, P1S); dot(4.6, 1.2, P2, P2S);
+        tri(3.6, 1.6, cell * 0.4, '#c084fc', '#7e22ce');
+    
+                    break;
+                }
+                case 'pendulum2go': {
+                    // 振子: 支点から吊るした石と往復矢印
+                    seg(3, 0.9, 2, 3.4, '#78716c', 1.6);
+                    dot(3, 0.9, '#a8a29e', '#57534e', cell * 0.24);
+                    dot(2, 3.4, P1, P1S);
+                    c.strokeStyle = '#78716c'; c.lineWidth = 1.4; c.setLineDash([2, 2]);
+                    c.beginPath(); c.arc(at(3, 0.9).x, at(3, 0.9).y, cell * 2.55, Math.PI * 0.42, Math.PI * 0.58); c.stroke();
+                    c.setLineDash([]);
+                    txt('⇄', 3, 5.1, '#57534e', cell * 1.2);
+                    dot(4.4, 4.4, P2, P2S, cell * 0.34);
+                    break;
+                }
+                case 'pendulumgo': {
+        seg(3, 0.5, 3.9, 2.4, 'rgba(120,113,108,0.8)', 1.8);
+        dot(4.1, 2.7, P1, P1S);
+        dot(1.8, 4.0, P2, P2S, cell * 0.34);
+        seg(1.2, 4.0, 2.4, 4.0, 'rgba(167,139,250,0.8)', 2);
+        tri(2.4, 4.0, cell * 0.2, '#a78bfa', '#7c3aed', 0);
+        dot(3, 0.5, '#57534e', '#44403c', cell * 0.14);
+                    break;
+                }
+                case 'predatorgo': {
+                    // 捕食: 牙の生えた大きな石が小さな石を追う
+                    dot(2.4, 2.4, P1, P1S, cell * 0.62);
+                    c.fillStyle = '#fef2f2';
+                    [0, 1].forEach(k => {
+                        const fx = 2.4 + (k - 0.5) * 0.5;
+                        c.beginPath();
+                        c.moveTo(at(fx - 0.12, 2.72).x, at(fx - 0.12, 2.72).y);
+                        c.lineTo(at(fx + 0.12, 2.72).x, at(fx + 0.12, 2.72).y);
+                        c.lineTo(at(fx, 3.05).x, at(fx, 3.05).y);
+                        c.closePath(); c.fill();
+                    });
+                    dot(4.6, 4.4, P2, P2S, cell * 0.34);
+                    c.strokeStyle = '#fca5a5'; c.lineWidth = 1.3; c.setLineDash([2, 2]);
+                    c.beginPath(); c.moveTo(at(3.1, 3.1).x, at(3.1, 3.1).y); c.quadraticCurveTo(at(4.1, 3.4).x, at(4.1, 3.4).y, at(4.3, 4).x, at(4.3, 4).y); c.stroke();
+                    c.setLineDash([]);
+                    break;
+                }
+                case 'pulleygo': {
+                    // 滑車: 中央の輪と両端に吊るされた石
+                    ring(3, 1.3, '#d97706', cell * 0.5);
+                    seg(3, 1.3, 1.6, 3.6, '#a16207', 1.5); seg(3, 1.3, 4.4, 3.6, '#a16207', 1.5);
+                    dot(1.6, 3.9, P1, P1S); dot(4.4, 3.9, P2, P2S);
+                    txt('▼', 4.4, 5.1, '#57534e', cell * 0.8); txt('▲', 1.6, 2.4, '#57534e', cell * 0.8);
+                    break;
+                }
+                case 'puppetgo': {
+        seg(2.2, 0.6, 2.8, 2.2, 'rgba(203,213,225,0.9)', 1.6);
+        seg(3.8, 0.6, 3.2, 2.2, 'rgba(203,213,225,0.9)', 1.6);
+        dot(3, 2.8, P2, P2S);
+        seg(1.6, 0.5, 4.4, 0.5, 'rgba(148,163,184,0.9)', 2.4);
+        dot(1.4, 4.2, P1, P1S, cell * 0.3);
+                    break;
+                }
+                case 'pushrowgo': {
+        // 列推: 列に並ぶ石と押し出す矢
+        dot(3, 1.4, P2, P2S, cell * 0.34); dot(3, 2.6, P2, P2S, cell * 0.34);
+        dot(3, 4, P1, P1S);
+        c.strokeStyle = '#ef4444'; c.lineWidth = 2.2; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(at(3, 4.9).x, at(3, 4.9).y); c.lineTo(at(3, 1.1).x, at(3, 1.1).y); c.stroke();
+        tri(3, 0.9, cell * 0.34, '#ef4444', '#b91c1c');
+        dot(5, 4.6, P2, P2S, cell * 0.28);
+    
+                    break;
+                }
+                case 'pyramid2go': {
+                    // ピラミッドと頂点の石
+                    tri(3, 3.1, cell * 2.1, 'rgba(214,178,70,0.85)', '#92610e', Math.PI * 1.5);
+                    seg(1.05, 5.2, 3, 1.1, 'rgba(146,97,14,0.7)', 1.2);
+                    seg(3, 1.1, 4.95, 5.2, 'rgba(146,97,14,0.7)', 1.2);
+                    dot(3, 1.15, P1, P1S); dot(1.15, 5.05, P1, P1S); dot(4.85, 5.05, P1, P1S);
+                    break;
+                }
+                case 'rhythmgo': {
+        dot(1.2, 3.4, P1, P1S, cell * 0.3);
+        dot(2.4, 3.4, P1, P1S, cell * 0.3);
+        dot(3.6, 3.4, P1, P1S, cell * 0.3);
+        dot(4.8, 3.4, P1, P1S, cell * 0.42);
+        ring(4.8, 3.4, cell * 0.6, '#fb923c', 2);
+        txt('4', 4.8, 1.4, '#fb923c', cell * 0.9);
+                    break;
+                }
+                case 'roulette2go': {
+        // 回転盤: 4分割のルーレットと停止マーカー
+        const p = at(3, 3);
+        const colors = ['#ef4444', '#1c1917', '#ef4444', '#1c1917'];
+        for (let i = 0; i < 4; i++) {
+            c.fillStyle = colors[i];
+            c.beginPath(); c.moveTo(p.x, p.y);
+            c.arc(p.x, p.y, cell * 1.7, i * Math.PI / 2, (i + 1) * Math.PI / 2);
+            c.closePath(); c.fill();
+        }
+        c.strokeStyle = '#fef3c7'; c.lineWidth = 1.4;
+        c.beginPath(); c.arc(p.x, p.y, cell * 1.7, 0, Math.PI * 2); c.stroke();
+        tri(3, 0.7, cell * 0.4, '#fbbf24', '#b45309', Math.PI);
+        dot(3, 3, P2, P2S, cell * 0.3);
+    
+                    break;
+                }
+                case 'scrabblogo': {
+        // 文字碁: 文字タイル3枚で単語
+        [[1.4, 'ア'], [3, 'イ'], [4.6, 'ウ']].forEach(([x, ch]) => {
+            const p = at(x, 3);
+            c.fillStyle = '#fef3c7'; c.strokeStyle = '#78350f'; c.lineWidth = 1.4;
+            c.beginPath();
+            if (c.roundRect) c.roundRect(p.x - cell * 0.7, p.y - cell * 0.7, cell * 1.4, cell * 1.4, cell * 0.15); else c.rect(p.x - cell * 0.7, p.y - cell * 0.7, cell * 1.4, cell * 1.4);
+            c.fill(); c.stroke();
+            txt(ch, x, 3, '#78350f', cell * 0.8);
+        });
+        dot(1.4, 4.8, P1, P1S, cell * 0.26); dot(4.6, 4.8, P2, P2S, cell * 0.26);
+    
+                    break;
+                }
+                case 'sigilgo': {
+                    // 3x3の印章と朱枠
+                    for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) dot(1.6 + x, 1.6 + y, P1, P1S, cell * 0.36);
+                    c.strokeStyle = '#dc2626'; c.lineWidth = 2;
+                    c.strokeRect(at(0.95, 0.95).x, at(0.95, 0.95).y, cell * 4.1, cell * 4.1);
+                    txt('印', 4.7, 4.9, '#dc2626', cell * 1.1);
+                    break;
+                }
+                case 'snowgo': {
+        dot(2, 3, P1, P1S);
+        dot(4, 3.4, P2, P2S);
+        seg(0.8, 1.6, 5.2, 1.6, '#e0f2fe', 5);
+        seg(1.2, 1.2, 4.8, 1.2, 'rgba(186,230,253,0.8)', 3);
+        dot(1.6, 3.9, '#ffffff', '#bae6fd', cell * 0.16);
+        dot(4.4, 4.3, '#ffffff', '#bae6fd', cell * 0.14);
+                    break;
+                }
+                case 'sparrgo': {
+                    // ぶつかり合う二石と火花
+                    dot(2.2, 3, P1, P1S); dot(3.8, 3, P2, P2S);
+                    c.strokeStyle = '#f59e0b'; c.lineWidth = 2; c.lineCap = 'round';
+                    [[-0.5, -0.9], [0, -1.1], [0.5, -0.9], [-0.5, 0.9], [0.5, 0.9]].forEach(([dx, dy]) => {
+                        c.beginPath();
+                        c.moveTo(at(3 + dx * 0.6, 3 + dy * 0.6).x, at(3 + dx * 0.6, 3 + dy * 0.6).y);
+                        c.lineTo(at(3 + dx * 1.4, 3 + dy * 1.4).x, at(3 + dx * 1.4, 3 + dy * 1.4).y);
+                        c.stroke();
+                    });
+                    break;
+                }
+                case 'spearheadgo': {
+        // 矛先: 3連の石と突き出た矛
+        dot(1.4, 3.6, P1, P1S); dot(2.6, 3.6, P1, P1S); dot(3.8, 3.6, P1, P1S);
+        seg(4.3, 3.6, 5.4, 3.6, '#92400e', cell * 0.16);
+        tri(5.5, 3.6, cell * 0.42, '#d1d5db', '#4b5563', Math.PI / 2);
+        dot(5.4, 1.4, P2, P2S, cell * 0.28); dot(2, 1.2, P2, P2S, cell * 0.28);
+    
+                    break;
+                }
+                case 'splitturngo': {
+        dot(1.8, 2.8, P1, P1S);
+        dot(4.2, 2.8, P2, P2S);
+        seg(3.6, 2.2, 4.8, 3.4, '#ef4444', 2.4);
+        seg(4.8, 2.2, 3.6, 3.4, '#ef4444', 2.4);
+        seg(3, 1.2, 3, 4.6, 'rgba(120,113,108,0.7)', 1.6);
+                    break;
+                }
+                case 'springboardgo': {
+                    // トランポリンと跳ねる石
+                    c.strokeStyle = '#059669'; c.lineWidth = 1.6;
+                    for (let k = 0; k < 3; k++) {
+                        c.beginPath();
+                        c.arc(at(3, 4.6).x, at(3, 4.6).y - k * cell * 0.28, cell * 1.3 - k * cell * 0.28, Math.PI * 0.15, Math.PI * 0.85);
+                        c.stroke();
+                    }
+                    dot(3, 1.6, P1, P1S);
+                    c.strokeStyle = '#6ee7b7'; c.lineWidth = 1.3; c.setLineDash([2, 2]);
+                    c.beginPath(); c.moveTo(at(3, 4.4).x, at(3, 4.4).y); c.quadraticCurveTo(at(4.6, 3.4).x, at(4.6, 3.4).y, at(4.2, 2).x, at(4.2, 2).y); c.stroke();
+                    c.setLineDash([]);
+                    break;
+                }
+                case 'springgo': {
+        dot(2.6, 2.6, P1, P1S);
+        dot(3.4, 3.4, P1, P1S, cell * 0.28);
+        dot(3.6, 1.8, P1, P1S, cell * 0.2);
+        ring(1.2, 1.2, cell * 0.34, '#4ade80', 2);
+        ring(4.8, 1.2, cell * 0.34, '#fb923c', 2);
+        ring(1.2, 4.8, cell * 0.34, '#d97706', 2);
+        ring(4.8, 4.8, cell * 0.34, '#93c5fd', 2);
+                    break;
+                }
+                case 'stormgo': {
+        blk(1.6, 2.6, '#64748b', '#334155');
+        blk(2.6, 2.6, '#64748b', '#334155');
+        tri(4, 1.4, cell * 0.55, '#facc15', '#ca8a04', Math.PI * 0.25);
+        seg(4, 1.8, 4, 3.6, '#facc15', 2.6);
+        dot(1.6, 4.2, P2, P2S, cell * 0.3);
+                    break;
+                }
+                case 'swapstonego': {
+        dot(2.2, 2.5, P1, P1S);
+        dot(3.8, 2.5, P2, P2S);
+        seg(2.6, 1.2, 3.4, 1.2, '#f0abfc', 2.4);
+        tri(3.4, 1.2, cell * 0.22, '#f0abfc', '#d946ef', 0);
+        seg(3.4, 3.8, 2.6, 3.8, '#f0abfc', 2.4);
+        tri(2.6, 3.8, cell * 0.22, '#f0abfc', '#d946ef', Math.PI);
+                    break;
+                }
+                case 'tarotgo': {
+        // 占札: 1枚のタロットカードに月と星
+        const p = at(3, 3);
+        c.fillStyle = '#312e81'; c.strokeStyle = '#c4b5fd'; c.lineWidth = 1.6;
+        c.beginPath();
+        if (c.roundRect) c.roundRect(p.x - cell * 0.8, p.y - cell * 1.3, cell * 1.6, cell * 2.6, cell * 0.18); else c.rect(p.x - cell * 0.8, p.y - cell * 1.3, cell * 1.6, cell * 2.6);
+        c.fill(); c.stroke();
+        // 三日月
+        c.fillStyle = '#fde68a';
+        c.beginPath(); c.arc(at(3.2, 2.6).x, at(3.2, 2.6).y, cell * 0.45, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#312e81';
+        c.beginPath(); c.arc(at(3.5, 2.5).x, at(3.5, 2.5).y, cell * 0.4, 0, Math.PI * 2); c.fill();
+        txt('★', 2.7, 3.7, '#fde68a', cell * 0.55);
+        dot(5, 4.8, P1, P1S, cell * 0.28); dot(1, 1.2, P2, P2S, cell * 0.28);
+    
+                    break;
+                }
+                case 'templego': {
+                    // 寺院: 屋根と柱と囲む石
+                    tri(3, 1.6, cell * 1.15, '#b45309', '#78350f');
+                    c.fillStyle = '#d4af37'; c.fillRect(at(3, 3.4).x - cell * 0.55, at(3, 3.4).y - cell * 0.45, cell * 1.1, cell * 0.9);
+                    c.fillStyle = '#78350f';
+                    c.fillRect(at(3, 3.4).x - cell * 0.38, at(3, 3.4).y - cell * 0.38, cell * 0.14, cell * 0.76);
+                    c.fillRect(at(3, 3.4).x + cell * 0.24, at(3, 3.4).y - cell * 0.38, cell * 0.14, cell * 0.76);
+                    dot(1.4, 4.8, P1, P1S); dot(2.6, 5.1, P1, P1S); dot(3.8, 5.1, P1, P1S); dot(5, 4.8, P1, P1S);
+                    break;
+                }
+                case 'termitego': {
+        blk(1, 4.6, '#a16207', '#713f12');
+        blk(2, 4.6, '#a16207', '#713f12');
+        blk(3, 3.6, '#a16207', '#713f12');
+        blk(4, 3.6, '#a16207', '#713f12');
+        dot(4.8, 2.4, P1, P1S, cell * 0.34);
+        seg(4.4, 3.9, 4.9, 3.3, '#eab308', 2);
+                    break;
+                }
+                case 'tidepoolgo': {
+        dot(3, 2.2, P1, P1S);
+        blk(3, 4.6, 'rgba(56,189,248,0.55)', 'rgba(14,116,144,0.8)');
+        seg(0.8, 3.4, 5.2, 3.4, '#38bdf8', 2.4);
+        seg(1.2, 3.0, 2.0, 3.0, '#7dd3fc', 1.6);
+        seg(4.0, 3.0, 4.8, 3.0, '#7dd3fc', 1.6);
+                    break;
+                }
+                case 'trickgo': {
+        // 悪戯: インクの飛沫と笑い顔
+        const p = at(3, 2.6);
+        c.fillStyle = '#ec4899';
+        c.beginPath(); c.arc(p.x, p.y, cell * 0.7, 0, Math.PI * 2); c.fill();
+        [[-0.9, -0.6], [0.8, -0.9], [1, 0.7], [-0.7, 0.9]].forEach(([ox, oy]) => {
+            c.beginPath(); c.arc(p.x + ox * cell * 0.9, p.y + oy * cell * 0.9, cell * 0.22, 0, Math.PI * 2); c.fill();
+        });
+        // 目と口
+        c.fillStyle = '#fff';
+        c.beginPath(); c.arc(p.x - cell * 0.2, p.y - cell * 0.15, cell * 0.12, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(p.x + cell * 0.2, p.y - cell * 0.15, cell * 0.12, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = '#fff'; c.lineWidth = 1.6;
+        c.beginPath(); c.arc(p.x, p.y + cell * 0.15, cell * 0.3, 0.2, Math.PI - 0.2); c.stroke();
+        dot(1.2, 4.8, P1, P1S, cell * 0.3); dot(4.8, 4.8, P2, P2S, cell * 0.3);
+    
+                    break;
+                }
+                case 'volcango2': {
+        tri(3, 3.4, cell * 1.3, '#57534e', '#44403c', -Math.PI / 2);
+        dot(3, 2.2, '#ef4444', '#b91c1c', cell * 0.22);
+        dot(2.2, 1.4, '#f97316', '#c2410c', cell * 0.16);
+        dot(3.8, 1.2, '#f97316', '#c2410c', cell * 0.14);
+        dot(3, 0.8, '#fbbf24', '#d97706', cell * 0.12);
+                    break;
+                }
+                case 'vortex2go': {
+                    // 渦を巻く環流矢印と中心石
+                    c.strokeStyle = '#0891b2'; c.lineWidth = 2; c.lineCap = 'round';
+                    c.beginPath(); c.arc(at(3, 3).x, at(3, 3).y, cell * 1.7, -0.4, Math.PI * 1.55); c.stroke();
+                    tri(4.62, 1.62, cell * 0.22, '#0891b2', '#0e7490', Math.PI * 0.85);
+                    dot(3, 3, P1, P1S);
+                    dot(1.4, 4.5, P2, P2S); dot(4.6, 4.5, P1, P1S);
+                    break;
+                }
+                case 'wave2go': {
+                    // 波動: 中心石と同心波
+                    dot(3, 3, P1, P1S);
+                    c.strokeStyle = '#38bdf8'; c.lineWidth = 1.4;
+                    [0.9, 1.6, 2.3].forEach(r => {
+                        c.beginPath(); c.arc(at(3, 3).x, at(3, 3).y, cell * r, -Math.PI * 0.3, Math.PI * 0.3); c.stroke();
+                        c.beginPath(); c.arc(at(3, 3).x, at(3, 3).y, cell * r, Math.PI * 0.7, Math.PI * 1.3); c.stroke();
+                    });
+                    dot(4.9, 1.1, P2, P2S, cell * 0.34);
+                    break;
+                }
+                case 'wriggle': {
+        // 蠕動: S字に這う石の列
+        [[1.4, 4.2], [2.3, 3.8], [3.2, 3.4], [4, 2.6], [4.6, 1.6]].forEach(([x, y], i) => {
+            dot(x, y, i === 4 ? P2 : P1, i === 4 ? P2S : P1S, cell * 0.34);
+            if (i) bond([[1.4, 4.2], [2.3, 3.8], [3.2, 3.4], [4, 2.6], [4.6, 1.6]][i - 1][0], [[1.4, 4.2], [2.3, 3.8], [3.2, 3.4], [4, 2.6], [4.6, 1.6]][i - 1][1], x, y, 2.5);
+        });
+        txt('〜', 1.6, 1.2, '#34d399', cell);
+    
+                    break;
+                }
+                case 'zigguratgo': {
+                    // ジッグラト: 階段ピラミッドと頂点の光
+                    c.fillStyle = '#d6b246'; c.strokeStyle = '#92610e'; c.lineWidth = 1.2;
+                    [[0.9, 4.6, 4.2, 1.0], [1.4, 3.5, 3.2, 1.0], [1.9, 2.4, 2.2, 1.0], [2.4, 1.3, 1.2, 1.0]].forEach(([x, y, w, h]) => {
+                        c.fillRect(at(x, y).x, at(x, y).y, w * cell, h * cell);
+                        c.strokeRect(at(x, y).x, at(x, y).y, w * cell, h * cell);
+                    });
+                    dot(3, 0.85, '#fde68a', '#d97706', cell * 0.3);
+                    break;
+                }
+                // == WAVE3 ICONS END ==
                 default: // 未定義kind: 石+スパークル (wave2汎用)
                     dot(3, 3, P1, P1S);
                     c.strokeStyle = '#f59e0b'; c.lineWidth = 2; c.lineCap = 'round';
