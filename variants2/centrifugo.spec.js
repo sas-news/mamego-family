@@ -5,7 +5,7 @@ module.exports = {
     en: 'CENTRIFUGO',
     jp: '遠心碁',
     prefix: 'centrifugo',
-    desc: '遠心力で全石が外へ放られる。盤端から飛び出した石はアゲハマに。',
+    desc: '遠心力で全石が外へ放られる。盤端に渋滞した石は呼吸を失いやすい。',
     kind: 'stone',
     spec: [
         ...K.rb('CENTRIFUGO', '遠心碁', 'centrifugo'),
@@ -14,10 +14,9 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 遠心ルール: 全石が中心から遠ざかる向きに1マス放たれる。
-            //             盤外へ飛び出した石は相手のアゲハマになる。真ん中の石は均衡で静止。
+            //             盤端に着いた石はこれ以上飛び出せず渋滞して留まる。真ん中の石は均衡で静止。
             {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
-                const lost = { 1: 0, 2: 0 };
                 // 外側から処理して追い越しを防ぐ
                 const idxs = [...board.keys()].sort((a, b) => {
                     const da = Math.max(Math.abs(a % N - c), Math.abs(Math.floor(a / N) - c));
@@ -33,13 +32,11 @@ module.exports = {
                     for (const [tx2, ty2] of tries) {
                         if (tx2 === 0 && ty2 === 0) continue;
                         const nx = x + tx2, ny = y + ty2;
-                        if (nx < 0 || nx >= N || ny < 0 || ny >= N) { lost[board[i]]++; board[i] = 0; break; }
+                        if (nx < 0 || nx >= N || ny < 0 || ny >= N) continue; // 盤端では外へ出られず留まる
                         const j = ny * N + nx;
                         if (board[j] === 0) { board[j] = board[i]; board[i] = 0; break; }
                     }
                 }
-                captures[1] += lost[2];
-                captures[2] += lost[1];
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
                     const dead = getCapturedStones(board, pl);
@@ -49,6 +46,12 @@ module.exports = {
                     }
                 }
                 cleanUpPieces();
+            }
+
+            // 遠心渋滞で盤が埋まるのが遅いため、240手で自動的に点数計算して終局
+            if (history.length >= 240 && !gameOver) {
+                endGameByScore();
+                return;
             }
 
             turn = opponent;`],
@@ -71,7 +74,8 @@ module.exports = {
             }`),
         [K.ONE, K.RV_ALGO, K.rv([
             '盤が回る遠心機: 着手ごとに全石が中心から遠ざかる向きへ1マス放たれる。',
-            '盤外へ飛び出した石は相手のアゲハマに。中心真ん中の石だけ均衡で動かない。',
+            '盤端に追い込まれた石はこれ以上飛び出せず渋滞して留まる。中心真ん中の石だけ均衡で動かない。',
+            '240手に達したら自動的に点数計算して終局。',
         ])],
         ...K.STONE_SPEC,
     ],
@@ -79,9 +83,8 @@ module.exports = {
         assert('起動', typeof executeMove === 'function');
         const c = Math.floor(BOARD_SIZE / 2);
         board.fill(0);
-        const w0 = captures[2];
         executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
-        assert('隅の石は即座に放出される', board[0] === 0 && captures[2] === w0 + 1);
+        assert('隅の石は盤端で留まる', board[0] === 1);
         board.fill(0);
         executeMove({ cells: [{ x: c, y: c }] }, 1);
         assert('中心の石は均衡で動かない', board[c * BOARD_SIZE + c] === 1);
@@ -89,5 +92,9 @@ module.exports = {
         board[c * BOARD_SIZE + c - 1] = 1;
         executeMove({ cells: [{ x: 1, y: 1 }] }, 2);
         assert('中心脇の石は外へ1マス', board[c * BOARD_SIZE + c - 2] === 1 && board[c * BOARD_SIZE + c - 1] === 0);
+        // 手数上限で自動終局
+        history = new Array(239).fill(null); gameOver = false;
+        executeMove({ cells: [{ x: 3, y: 3 }] }, 1);
+        assert('240手で自動終局', gameOver === true);
     `,
 };

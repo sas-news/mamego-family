@@ -506,6 +506,7 @@
             '打った石に隣接する敵石は、その方向へ空きマスの続く限り滑っていく。',
             '滑った石は他の石の手前で止まる。盤外に撞き出せばアゲハマ得点になる。',
             '敵石の隣に寄せる一手がそのまま撞き手になる — 玉突きのように連鎖させよう。',
+            '240手に達したら自動的に点数計算して終局。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1560,6 +1561,12 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+
+            if (history.length >= 240 && !gameOver) {
+                endGameByScore();
+                return;
+            }
+
             turn = opponent;
             updateUI();
 
