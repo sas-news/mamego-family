@@ -42,7 +42,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '着手した石から上下左右の4方向を見て、自分の石で挟んだ敵石の列は全て自分の色に裏返る。',
             '裏返しの後にも通常の呼吸・取り判定は働く。盤面が激しく入れ替わる高速な陣取り合戦。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -55,5 +57,9 @@ module.exports = {
         board[5] = 2; board[6] = 2;
         executeMove({ cells: [{ x: 7, y: 0 }] }, 1);
         assert('先が空なら返らない', board[5] === 2 && board[6] === 2);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

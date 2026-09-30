@@ -51,7 +51,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '取った連は猛毒: 敵連を取ると、その取跡に接していた自分の連が全て毒死する。',
             '大きな連で囲むと道連れが甚大。小さな石で切り離して取るのが安全。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -65,5 +67,9 @@ module.exports = {
         board.fill(0); pieces = []; captures[1] = 0; captures[2] = 0;
         executeMove({ cells: [{ x: 3, y: 3 }] }, 1);
         assert('通常着手は毒なし', board[3 * BOARD_SIZE + 3] === 1);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

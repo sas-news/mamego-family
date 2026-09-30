@@ -93,7 +93,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '敵連を取った跡地に鉱石 (金のダイヤ) が出現する。',
             '鉱石のある空点に石を置くと拾って1目得点。終局は 地+アゲハマ+鉱石 の合計。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -107,5 +109,9 @@ module.exports = {
         assert('置いた石は残る', board[5 * BOARD_SIZE + 5] === 2);
         endGameByScore();
         assert('結果詳細に鉱石', gameResultData.details.includes('鉱石'));
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

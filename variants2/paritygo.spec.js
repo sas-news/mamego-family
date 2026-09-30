@@ -27,7 +27,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '奇数手は x+y が奇数の交点、偶数手は偶数の交点にのみ着手できる。',
             '黒白どちらの手番でも手数で許可領域が決まる。打てる点が尽きたらパス。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -41,5 +43,9 @@ module.exports = {
         // 2手目(偶数手): x+y が偶数の点のみ
         assert('偶数手は偶数点', isValidPlacement([{ x: 1, y: 1 }], 2) === true);
         assert('偶数手に奇数点は不可', isValidPlacement([{ x: 2, y: 1 }], 2) === false);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

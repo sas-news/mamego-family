@@ -34,7 +34,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '最外周の点だけが対辺と環状に繋がる (左端↔右端、上端↔下端)。',
             '連も呼吸も端を越えて伸びるので、隅が弱くない円環の碁。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -48,5 +50,9 @@ module.exports = {
         assert('端を越えて囲めば取れる', getCapturedStones(board, 1).includes(0));
         board.fill(0);
         assert('起動して通常着手可', isValidPlacement([{ x: 0, y: 0 }], 1) === true);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

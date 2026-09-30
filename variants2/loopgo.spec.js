@@ -54,7 +54,9 @@ module.exports = {
             '初手は最外周 (環0) にのみ着手できる。',
             '石が存在する最も深い環の1つ内側まで着手可能になる。同心円状に内へ侵攻する。',
             '最深部の石が取られると侵攻深度も後退する。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -68,5 +70,9 @@ module.exports = {
         assert('環2はまだ不可', isValidPlacement([{ x: 2, y: 2 }], 2) === false);
         board[1 * N + 4] = 2; // 環1に石
         assert('環1の石で環2が解放', isValidPlacement([{ x: 2, y: 2 }], 1) === true);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

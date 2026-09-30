@@ -23,7 +23,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '盤中央に大きな池が広がる。池には置けず呼吸にもならない。',
             '池を囲む環状の庭が唯一の戦場。回遊するように地を取れ。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -34,5 +36,9 @@ module.exports = {
         let w = 0;
         for (const v of board) if (v === 3) w++;
         assert('池は大きい', w >= (2 * k + 1) * (2 * k + 1));
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

@@ -507,6 +507,7 @@
             '石価は着手のたび1〜5で変動する (ヘッダのチップで確認)。',
             '各石には購入時の価格が刻まれ、終局時に盤上の自石の価格総額が資産得点になる。',
             '高値の時に置き、安値の時は取りに回れ。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1491,6 +1492,13 @@
         }
 
         function executeMove(move, player) {
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }
             // 1手戻る用に着手前の状態を退避
             history.push({
                 board: [...board],

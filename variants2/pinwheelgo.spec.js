@@ -23,7 +23,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '四隅を回転対称に削った風車形の盤。',
             '欠けた隅で呼吸点が偏り、辺ごとに異なる戦い方を強いられる。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -35,5 +37,9 @@ module.exports = {
         assert('4つのノッチ分の壁', w >= 30);
         assert('羽根の部分は置ける', isValidPlacement([{ x: 0, y: 6 }], 1) === true);
         assert('中央は普通に置ける', isValidPlacement([{ x: 6, y: 6 }], 1) === true);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

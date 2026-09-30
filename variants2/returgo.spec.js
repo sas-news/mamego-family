@@ -59,7 +59,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '取られた石は相手のアゲハマに加わると同時に自分の手元にも戻る。',
             '次に着手したとき、戻り石があれば打った石の隣の空点に1個自動で補充配置される。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -71,5 +73,9 @@ module.exports = {
         assert('取られた側の手元に戻る', retStock[2] === 1);
         executeMove({ cells: [{ x: 8, y: 8 }] }, 2);
         assert('戻り石が隣に再打される', retStock[2] === 0 && getNeighbors(8 * BOARD_SIZE + 8).some(n => board[n] === 2));
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

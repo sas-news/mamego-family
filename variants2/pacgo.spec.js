@@ -49,7 +49,9 @@ module.exports = {
             '毎手番、中立のパックマンが斜め方向に1区画進む (盤全体を巡回)。',
             'パックマンが止まった点に石があれば、色に関係なく食べられる (得点にもならない)。',
             '巡回路を読んで石を避けるか、わざと食べさせるかも戦略になる。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -64,5 +66,9 @@ module.exports = {
         const before = pacPos;
         executeMove({ cells: [{ x: 1, y: 0 }] }, 1);
         assert('空き地でも巡回する', pacPos === (before + BOARD_SIZE + 2) % board.length);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

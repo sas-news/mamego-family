@@ -507,6 +507,7 @@
             '盤上には常に「次の隕石落下点」が照準で示されている (落下は15の倍数手の後)。',
             '落下点の3x3の石は全て消し飛ぶ — 敵石は着手側のアゲハマに、自分の石はただ消える。',
             '隕石圏内に固めない / 敵を追い込む — 天災を読みに組み込む戦い。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1513,6 +1514,13 @@
         }
 
         function executeMove(move, player) {
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }
             // 1手戻る用に着手前の状態を退避
             history.push({
                 board: [...board],

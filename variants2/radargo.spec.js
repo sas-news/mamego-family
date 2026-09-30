@@ -44,7 +44,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '相手の石は薄い影でしか見えない (自分の石は常にはっきり見える)。',
             '3手ごとの着手直後にレーダーが走り、その局面だけ敵石が全て可視化される。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -59,5 +61,9 @@ module.exports = {
         executeMove({ cells: [{ x: 2, y: 2 }] }, 2);
         assert('4手目でOFFに戻る', isRadarOn() === false);
         assert('OFF時の敵石は薄い', fogAlphaFor(2) === 0.10);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

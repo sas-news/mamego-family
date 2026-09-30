@@ -62,7 +62,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '6手ごとに大地震が起き、全石がそれぞれバラバラの方向へ1マス散らされる。',
             '揺れで連が分断され、せっかくの包囲も崩れる。次の地震は右上のチップで確認。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -78,5 +80,9 @@ module.exports = {
         assert('散り先は決定論的 (左へ)', board[4 * BOARD_SIZE + 3] === 1);
         board.fill(0);
         assert('盤はリセットできる', board.every(v => v === 0));
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

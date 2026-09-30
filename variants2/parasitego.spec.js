@@ -31,7 +31,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '着手した石に接する敵石は寄生で自分の色に変わる。',
             '敵連に打ち込むと端から侵食していく。奪った石はアゲハマにも計上される。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -44,5 +46,9 @@ module.exports = {
         board.fill(0); pieces = []; captures[1] = 0;
         executeMove({ cells: [{ x: 3, y: 3 }] }, 1);
         assert('敵に接しない着手は通常', board[3 * BOARD_SIZE + 3] === 1 && captures[1] === 0);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

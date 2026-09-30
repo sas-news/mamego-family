@@ -691,6 +691,27 @@ const LEGAL_DOTS_SPEC = [
     [ONE, `            // 直前に配置したピースのハイライト(緑系)`, LEGAL_DOTS],
 ];
 
+// ============================================================
+// MOVE_CAP_SPEC: 打ち切り手数による自動終局 (viability 安全装置)
+//   変則ルールで石が動き続け盤面が埋まらず、連続パスに至らない
+//   対局でも、交点数の1.4倍の手数を超えた時点で死に石選択へ移行し
+//   必ず終局できるようにする。
+//   spec配列の任意位置に ...K.MOVE_CAP_SPEC を挿入して使う。
+//   ※ executeMove 自体を置換するバリアントは同じチェックを自前で
+//     組み込むこと (このアンカーは既に消費されているため)。
+// ============================================================
+const MOVE_CAP_SPEC = [
+    [ONE, `        function executeMove(move, player) {`,
+`        function executeMove(move, player) {
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }`],
+];
+
 // 周期イベントまでの残り手数をステータスカードのチップに表示する
 // chipExpr: updateUI 内で評価される文字列式 (gameOver 時は空)
 const EVENT_CHIP_SPEC = (chipExpr) => [
@@ -848,6 +869,7 @@ module.exports = {
     CIRCLE_DRAW,
     LEGAL_DOTS,
     LEGAL_DOTS_SPEC,
+    MOVE_CAP_SPEC,
     EVENT_CHIP_SPEC,
     wrapMarks,
     WRAP_MARKS_SPEC,

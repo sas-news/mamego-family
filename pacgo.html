@@ -506,6 +506,7 @@
             '毎手番、中立のパックマンが斜め方向に1区画進む (盤全体を巡回)。',
             'パックマンが止まった点に石があれば、色に関係なく食べられる (得点にもならない)。',
             '巡回路を読んで石を避けるか、わざと食べさせるかも戦略になる。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1508,6 +1509,13 @@
         }
 
         function executeMove(move, player) {
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }
             // 1手戻る用に着手前の状態を退避
             history.push({
                 board: [...board],

@@ -34,7 +34,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '7手ごとに隕石が落下し、十字形のクレーター(壁)が穿たれる。直撃した石は消滅する。',
             'クレーターは壁となり、呼吸点も地も失う。落下位置は手数で決まり読める。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -52,5 +54,9 @@ module.exports = {
         for (const v of board) if (v === 3) w++;
         assert('十字に壁ができる', w >= 3);
         assert('壁には置けない', isValidPlacement([{ x: mx, y: my }], 1) === false);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

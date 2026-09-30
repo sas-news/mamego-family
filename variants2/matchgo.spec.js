@@ -53,7 +53,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '着手後、縦横に3連以上つながった同色の石は全て消滅し、着手者のアゲハマ得点になる。',
             '相手の列を伸ばして消すか、自分の3連を収穫して得点にするか — 長い連は危険な財産。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -66,5 +68,9 @@ module.exports = {
         board[0] = 1; board[1] = 1;
         executeMove({ cells: [{ x: 3, y: 0 }] }, 1);
         assert('2連は残る', board[0] === 1 && board[1] === 1 && captures[1] === 0);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

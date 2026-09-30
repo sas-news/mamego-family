@@ -23,7 +23,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '中央の郭を取り囲む環状の堀。橋はなく内外は完全に分断。',
             '城内と外野は別々の戦場。どちらを制するかの配分勝負。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -38,5 +40,9 @@ module.exports = {
             getNeighbors(i).forEach(n => { if (board[n] === 0 && !seen.has(n)) { seen.add(n); qq.push(n); } });
         }
         assert('内側から外へ出られない', !seen.has(0) && seen.size <= (2 * k - 1) * (2 * k - 1));
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

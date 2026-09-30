@@ -505,6 +505,7 @@
         const RULES_VARIANT = [
             '全ての石に、その連の呼吸点数が数字で表示される (同色の連は同じ数)。',
             '呼吸1の連は赤く警告される。アタリ・取り掛けの読み違いがなくなる計算補助碁。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1508,6 +1509,13 @@
         }
 
         function executeMove(move, player) {
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }
             // 1手戻る用に着手前の状態を退避
             history.push({
                 board: [...board],
