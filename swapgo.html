@@ -1719,6 +1719,11 @@
                 captured.forEach(idx => { board[idx] = player; });
                 mine.forEach(idx => { board[idx] = opponent; });
                 captures[player] += captured.length;
+                // 入替演出: 反転した全セルを双方の色で光らせ、盤を揺らす
+                captured.forEach(idx => fxGlow(idx, player === 1 ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.95)', 700));
+                mine.forEach(idx => fxGlow(idx, opponent === 1 ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.95)', 700));
+                fxText(anchor, '\u5165\u66ff!', '#e879f9', 1200);
+                fxShake(4, 240);
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {

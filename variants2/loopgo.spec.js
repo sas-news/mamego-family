@@ -50,6 +50,28 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
+        // 周回: 侵攻フロントの環が外へ向かって脈動する (1環ずつ内へ攻めるルール)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const ringOf = (x, y) => Math.min(x, y, BOARD_SIZE - 1 - x, BOARD_SIZE - 1 - y);
+            let mR = -1;
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] === 0) continue;
+                const r = ringOf(i % BOARD_SIZE, Math.floor(i / BOARD_SIZE));
+                if (r > mR) mR = r;
+            }
+            const front = mR + 1;
+            if (front * 2 >= BOARD_SIZE) return;
+            const t = (now % 1600) / 1600;
+            const e = t * 0.45;
+            ctx2.save();
+            ctx2.strokeStyle = alphaColor(currentTheme.lineColor, 0.5 * (1 - t));
+            ctx2.lineWidth = Math.max(1.6, cs * 0.09);
+            ctx2.strokeRect(pad + (front - 0.5 - e) * cs, pad + (front - 0.5 - e) * cs,
+                (BOARD_SIZE - 2 * front + 2 * e) * cs, (BOARD_SIZE - 2 * front + 2 * e) * cs);
+            ctx2.restore();
+        });`],
         [K.ONE, K.RV_ALGO, K.rv([
             '初手は最外周 (環0) にのみ着手できる。',
             '石が存在する最も深い環の1つ内側まで着手可能になる。同心円状に内へ侵攻する。',

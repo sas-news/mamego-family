@@ -1775,6 +1775,10 @@
                     const vals = cs.map(([x, y]) => board[y * N + x]);
                     cs.forEach(([x, y], k) => {
                         board[y * N + x] = vals[(k + 1) % vals.length];
+                        if (board[y * N + x] !== 0) {
+                            const [sx, sy] = cs[(k + 1) % vals.length];
+                            fxSlide(sy * N + sx, y * N + x, 400);
+                        }
                     });
                 }
                 // 変動後処理: 呼吸のなくなった連を両色について除去

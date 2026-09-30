@@ -2116,7 +2116,10 @@
             const idxs = ringPositions().map(([x, y]) => y * BOARD_SIZE + x);
             const vals = idxs.map(i => board[i]);
             vals.unshift(vals.pop());
-            idxs.forEach((i, k) => { board[i] = vals[k]; });
+            idxs.forEach((i, k) => {
+                board[i] = vals[k];
+                if (vals[k] !== 0) fxSlide(idxs[(k - 1 + idxs.length) % idxs.length], i, 380);
+            });
             const mapIdx = {};
             idxs.forEach((i, k) => { mapIdx[i] = idxs[(k + 1) % idxs.length]; });
             const shift = p => {

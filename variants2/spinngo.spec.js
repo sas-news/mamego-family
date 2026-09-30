@@ -20,7 +20,9 @@ module.exports = {
                 const nb = board.slice();
                 for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
                     board[x * N + (N - 1 - y)] = nb[y * N + x];
+                    if (nb[y * N + x] !== 0) fxSlide(y * N + x, x * N + (N - 1 - y), 400);
                 }
+                fxShake(2, 160);
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
                     const dead = getCapturedStones(board, pl);

@@ -1746,9 +1746,12 @@
             // 回転ルール: 着手ごとに盤面全体を90°時計回りに回転
             {
                 const nb = new Array(board.length).fill(0);
-                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++)
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     nb[x * BOARD_SIZE + (BOARD_SIZE - 1 - y)] = board[y * BOARD_SIZE + x];
+                    if (board[y * BOARD_SIZE + x] !== 0) fxSlide(y * BOARD_SIZE + x, x * BOARD_SIZE + (BOARD_SIZE - 1 - y), 400);
+                }
                 board = nb;
+                fxShake(2, 160);
                 const rotP = p => ({ x: BOARD_SIZE - 1 - p.y, y: p.x });
                 pieces.forEach(pc => { pc.cells = pc.cells.map(rotP); });
                 if (lastMove) lastMove.cells = lastMove.cells.map(rotP);

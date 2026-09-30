@@ -881,6 +881,21 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const cc = (BOARD_SIZE - 1) / 2;
+            const bcx = pad + cc * cs, bcy = pad + cc * cs;
+            const rot = now / 2800;
+            ctx2.save();
+            for (let k = 0; k < 3; k++) {
+                const a = rot + k * (Math.PI * 2 / 3);
+                ctx2.strokeStyle = 'rgba(110,160,230,0.15)';
+                ctx2.lineWidth = Math.max(1, cs * 0.08);
+                ctx2.beginPath();
+                ctx2.arc(bcx, bcy, cs * (1.0 + k * 0.6), a, a + 1.6);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1177,16 +1192,31 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // 渦腕: 深い藍の彫り込み面 + 渦に沿う流線 + 有効領域との境界線
             {
+                const cc = (BOARD_SIZE - 1) / 2;
                 const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                const bcx = padding + cc * cellSize, bcy = padding + cc * cellSize;
+                const now = fxNow();
                 ctx.save();
-                ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.48);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, cellSize * 0.8);
+                    g.addColorStop(0, '#16233f'); g.addColorStop(1, '#0a1226');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    // 流線: 渦の接線方向に揺れる短い弧
+                    const a = Math.atan2(y - cc, x - cc);
+                    const r0 = Math.hypot(x - cc, y - cc) * cellSize;
+                    const ph = Math.sin(now / 800 + r0 / cellSize * 0.9) * 0.1;
+                    ctx.strokeStyle = 'rgba(110,160,230,' + (0.28 + ph) + ')';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.arc(bcx, bcy, Math.max(cellSize * 0.3, r0), a - 0.16, a + 0.16);
+                    ctx.stroke();
                 }
-                ctx.strokeStyle = currentTheme.lineColor;
+                ctx.strokeStyle = 'rgba(130,170,230,0.45)';
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
                 ctx.beginPath();
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {

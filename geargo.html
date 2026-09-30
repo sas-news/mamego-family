@@ -1762,11 +1762,14 @@
                 const rot = (cells, dir) => {
                     const vals = cells.map(i => board[i]);
                     for (let i = 0; i < cells.length; i++) {
+                        const src = cells[(i + dir + cells.length) % cells.length];
                         board[cells[i]] = vals[(i + dir + cells.length) % cells.length];
+                        if (board[cells[i]] !== 0) fxSlide(src, cells[i], 380);
                     }
                 };
                 rot(ringCells(0), 1);          // 外リング: 逆回り
                 if (N >= 5) rot(ringCells(1), -1); // 内リング: 順回り
+                fxShake(2, 180);
             }
 
             turn = opponent;

@@ -900,6 +900,30 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            const pts = [[pad * 0.5, pad * 0.5], [w - pad * 0.5, pad * 0.5],
+                [pad * 0.5, w - pad * 0.5], [w - pad * 0.5, w - pad * 0.5]];
+            const pulse = 0.28 + Math.sin(now / 1400) * 0.10;
+            ctx2.save();
+            ctx2.strokeStyle = alphaColor(currentTheme.lineColor, pulse);
+            ctx2.lineWidth = Math.max(0.8, cs * 0.035);
+            const r = cs * 0.2;
+            for (const [hx, hy] of pts) {
+                ctx2.beginPath();
+                for (let k = 0; k < 6; k++) {
+                    const a = Math.PI / 6 + k * Math.PI / 3;
+                    const px = hx + Math.cos(a) * r, py = hy + Math.sin(a) * r;
+                    if (k === 0) ctx2.moveTo(px, py); else ctx2.lineTo(px, py);
+                }
+                ctx2.closePath();
+                ctx2.stroke();
+                ctx2.beginPath();
+                ctx2.arc(hx, hy, r * 0.52, 0, Math.PI * 2);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 

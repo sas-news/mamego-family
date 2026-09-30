@@ -1747,6 +1747,9 @@
                         board[from] = 0;
                         const pc = pieces[pieces.length - 1];
                         if (pc && pc.player === player) pc.cells = [{ x: cx, y: cy }];
+                        const dist = Math.abs(cx - p.x) + Math.abs(cy - p.y);
+                        fxSlide(from, cy * BOARD_SIZE + cx, 260 + dist * 55);
+                        if (Math.abs(cx - hc) + Math.abs(cy - hc) <= 1) fxGlow(cy * BOARD_SIZE + cx, '#93c5fd', 700);
                     }
                 });
             }

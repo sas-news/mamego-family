@@ -35,6 +35,24 @@ module.exports = {
                     cellSize, padding * 2 + BOARD_SIZE * cellSize);
                 ctx.restore();
             }`),
+        // 極軸: 中心から4方向へエネルギーの玉が流れる (十字軸から陣地が広がるルール)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const c = (BOARD_SIZE - 1) / 2;
+            const cx = pad + c * cs, cy = pad + c * cs;
+            const t = (now % 1500) / 1500;
+            ctx2.save();
+            ctx2.fillStyle = 'rgba(250,204,21,0.45)';
+            const r = cs * 0.08;
+            [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+                const d = t * (c + 0.5) * cs;
+                ctx2.beginPath();
+                ctx2.arc(cx + dx * d, cy + dy * d, Math.max(0.8, r * (1 - t * 0.4)), 0, Math.PI * 2);
+                ctx2.fill();
+            });
+            ctx2.restore();
+        });`],
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は中央の十字線 (極軸) 上か、自分の石に直交隣接する点のみ。',
