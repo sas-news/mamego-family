@@ -296,6 +296,8 @@
             { file: 'jumpgo.html', name: 'JUMPGO',   jp: '跳躍碁',       desc: '自石からちょうど距離2の点にしか打てない', kind: 'jump' },
             { file: 'nokogo.html', name: 'NOKOGO',   jp: '劫無碁',       desc: 'コウ禁止がない — 再現は自由', kind: 'noko' },
             { file: 'chaoticgo.html', name: 'CHAOTICGO', jp: '混沌碁',   desc: '漂流・潮汐・壁落下が周期的に襲う', kind: 'chaos' },
+            // ==== WAVE2 GAMES BEGIN ====
+            // ==== WAVE2 GAMES END ====
         ];
 
         const grid = document.getElementById('gameGrid');
@@ -1005,6 +1007,15 @@
                         c.beginPath(); c.moveTo(at(x,y).x, at(x,y).y);
                         const t = at(3 + (3-x)*0.25, 3 + (3-y)*0.25);
                         c.lineTo(t.x, t.y); c.stroke();
+                    });
+                    break;
+                default: // 未定義kind: 石+スパークル (wave2汎用)
+                    dot(3, 3, P1, P1S);
+                    c.strokeStyle = '#f59e0b'; c.lineWidth = 2; c.lineCap = 'round';
+                    const sx = at(4.4, 1.6).x, sy = at(4.4, 1.6).y, r = cell * 0.42;
+                    [[0, -r], [0, r], [-r, 0], [r, 0]].forEach(([dx, dy]) => {
+                        c.beginPath(); c.moveTo(sx + dx * 0.35, sy + dy * 0.35);
+                        c.lineTo(sx + dx, sy + dy); c.stroke();
                     });
                     break;
             }
