@@ -9,12 +9,12 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('FLOATGO', '浮遊碁', 'floatgo'),
-        // 着手ごと、上に行き場のある連がまるごと1マス浮上
+        // 3手ごと、上に行き場のある連がまるごと1マス浮上
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 浮遊ルール: 各連について全セルの真上が空(または連内)なら連ごと1マス浮く
-            {
+            // 浮遊ルール: 3手ごとに、各連について全セルの真上が空(または連内)なら連ごと1マス浮く
+            if (history.length % 3 === 0) {
                 const N = BOARD_SIZE;
                 const seen = new Uint8Array(N * N);
                 for (let s = 0; s < board.length; s++) {
@@ -65,23 +65,24 @@ module.exports = {
                 ctx.restore();
             }`),
         [K.ONE, K.RV_ALGO, K.rv([
-            '盤には浮力がある: 連の上が空いていれば着手ごとに連ごと1マス浮かび上がる。',
+            '盤には浮力がある: 連の上が空いていれば3手ごとに連ごと1マス浮かび上がる。',
             '天井や他の石に頭を押さえられた連は浮けない。石を置く位置も置く時も流される。',
         ])],
         ...K.STONE_SPEC,
     ],
     test: `
         assert('起動', typeof executeMove === 'function');
-        board.fill(0);
-        executeMove({ cells: [{ x: 4, y: 4 }] }, 1);
+        board.fill(0); history.length = 2;
+        executeMove({ cells: [{ x: 4, y: 4 }] }, 1); // 3手目で浮上
         assert('宙石が上へ浮く', board[3 * BOARD_SIZE + 4] === 1 && board[4 * BOARD_SIZE + 4] === 0);
+        history.length = 2;
         executeMove({ cells: [{ x: 0, y: 8 }] }, 2);
         assert('次の手でもさらに浮く', board[2 * BOARD_SIZE + 4] === 1);
-        board.fill(0);
+        board.fill(0); history.length = 2;
         board[0 * BOARD_SIZE + 5] = 1;
         executeMove({ cells: [{ x: 8, y: 8 }] }, 2);
         assert('天井の石は浮けない', board[0 * BOARD_SIZE + 5] === 1);
-        board.fill(0);
+        board.fill(0); history.length = 2;
         // 天井に接した敵の柱で頭を押さえられた連は浮けない
         for (let y = 0; y <= 4; y++) board[y * BOARD_SIZE + 3] = 2;
         board[5 * BOARD_SIZE + 3] = 1;
