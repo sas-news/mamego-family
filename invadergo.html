@@ -884,6 +884,16 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            const g = ctx2.createLinearGradient(0, 0, 0, w * 0.4);
+            g.addColorStop(0, 'rgba(80,160,60,0.16)');
+            g.addColorStop(1, 'rgba(80,160,60,0)');
+            ctx2.fillStyle = g;
+            ctx2.fillRect(0, 0, w, w * 0.4);
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1180,27 +1190,30 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // 侵攻ブロック: 暗緑の装甲と瞬く眼
             {
-                const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                const now = fxNow();
                 ctx.save();
-                ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.48);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
-                }
-                ctx.strokeStyle = currentTheme.lineColor;
-                ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
-                ctx.beginPath();
-                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if (isV(x, y)) continue;
+                    const i = y * BOARD_SIZE + x;
+                    if (board[i] !== 3) continue;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
-                    if (x > 0 && isV(x - 1, y)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
-                    if (x < BOARD_SIZE - 1 && isV(x + 1, y)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
-                    if (y > 0 && isV(x, y - 1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
-                    if (y < BOARD_SIZE - 1 && isV(x, y + 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
+                    const g = ctx.createLinearGradient(cx, cy - hh, cx, cy + hh);
+                    g.addColorStop(0, '#1c3a1c'); g.addColorStop(1, '#0a140a');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    ctx.strokeStyle = 'rgba(120,200,80,0.55)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.strokeRect(cx - hh, cy - hh, cellSize, cellSize);
+                    // 複眼: セルごとに位相をずらして瞬く
+                    const blink = Math.sin(now / 900 + i * 1.7) > -0.85;
+                    ctx.fillStyle = blink ? '#a3e635' : '#2c4a12';
+                    [-0.18, 0.18].forEach(dx0 => {
+                        ctx.beginPath();
+                        ctx.arc(cx + dx0 * cellSize, cy, cellSize * 0.08, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
                 }
-                ctx.stroke();
                 ctx.restore();
             }
 
@@ -1766,13 +1779,19 @@
                     if (y + 1 < BOARD_SIZE && board[ii + BOARD_SIZE] === 0) {
                         board[ii + BOARD_SIZE] = 3;
                         board[ii] = 0;
+                        fxSlide(ii, ii + BOARD_SIZE, 300); // 降下の実際の経路
                     }
                 }
             }
             if (moveCount % 4 === 0) {
                 const tops = [];
                 for (let x = 0; x < BOARD_SIZE; x++) if (board[x] === 0) tops.push(x);
-                if (tops.length > 0) board[tops[Math.floor(Math.random() * tops.length)]] = 3;
+                if (tops.length > 0) {
+                    const ti = tops[Math.floor(Math.random() * tops.length)];
+                    board[ti] = 3;
+                    fxGlow(ti, '#a3e635', 800);
+                    fxText(ti, '侵攻!', '#a3e635', 1000);
+                }
             }
 
             turn = opponent;

@@ -83,19 +83,34 @@ module.exports = {
             }
             return true;
         }`],
-        ...K.STONE_MARKS_SPEC(`            // 橋: 各ピースの3セルを繋ぐ帯を薄く描く
+        ...K.STONE_MARKS_SPEC(`            // 橋: 3セルを繋ぐ反ったアーチ + 中点が自石なら橋桁を下ろす
             {
                 ctx.save();
-                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.5);
-                ctx.lineWidth = Math.max(1.5, cellSize * 0.12);
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.6);
                 ctx.lineCap = 'round';
                 pieces.forEach(pc => {
                     const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
                     if (alive.length < 2) return;
+                    const ax = padding + alive[0].x * cellSize, ay = padding + alive[0].y * cellSize;
+                    const bx = padding + alive[alive.length - 1].x * cellSize, by = padding + alive[alive.length - 1].y * cellSize;
+                    const mx = (ax + bx) / 2, my = (ay + by) / 2;
+                    const horiz = alive[0].y === alive[alive.length - 1].y;
+                    const lift = cellSize * 0.55;
+                    // アーチ本体: 弦から持ち上げた2次曲線
+                    ctx.lineWidth = Math.max(1.6, cellSize * 0.12);
                     ctx.beginPath();
-                    ctx.moveTo(padding + alive[0].x * cellSize, padding + alive[0].y * cellSize);
-                    ctx.lineTo(padding + alive[alive.length - 1].x * cellSize, padding + alive[alive.length - 1].y * cellSize);
+                    ctx.moveTo(ax, ay);
+                    ctx.quadraticCurveTo(horiz ? mx : mx - lift, horiz ? my - lift : my, bx, by);
                     ctx.stroke();
+                    // 橋桁: 中点の自石からアーチへ下ろす支柱
+                    const mid = alive[1];
+                    if (mid) {
+                        ctx.lineWidth = Math.max(1.2, cellSize * 0.06);
+                        ctx.beginPath();
+                        ctx.moveTo(mx, my);
+                        ctx.lineTo(horiz ? mx : mx - lift * 0.72, horiz ? my - lift * 0.72 : my);
+                        ctx.stroke();
+                    }
                 });
                 ctx.restore();
             }`),

@@ -24,6 +24,10 @@ module.exports = {
                         if (qx < 0 || qx >= BOARD_SIZE || qy < 0 || qy >= BOARD_SIZE) {
                             board[ai] = 0;
                             captures[player]++;
+                            // ポケットイン: 縁の手前まで滑らせてから白い弾けと得点表示
+                            fxSlide(ai, ty * BOARD_SIZE + tx, 260);
+                            fxBurst(ty * BOARD_SIZE + tx, '#f8fafc', 9, 1.5);
+                            fxText(ty * BOARD_SIZE + tx, '+1', '#facc15', 1000);
                             return;
                         }
                         if (board[qy * BOARD_SIZE + qx] !== 0) break;
@@ -32,6 +36,7 @@ module.exports = {
                     if (tx !== ax || ty !== ay) {
                         board[ty * BOARD_SIZE + tx] = opponent;
                         board[ai] = 0;
+                        fxSlide(ai, ty * BOARD_SIZE + tx, 280); // 撞かれた玉が滑る
                         cleanUpPieces();
                     }
                 });

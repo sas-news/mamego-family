@@ -39,7 +39,13 @@ module.exports = {
             {
                 const c = Math.floor(BOARD_SIZE / 2);
                 const p = move.cells[0];
-                if (Math.abs(p.x - c) <= 1 && Math.abs(p.y - c) <= 1) goals[player]++;
+                if (Math.abs(p.x - c) <= 1 && Math.abs(p.y - c) <= 1) {
+                    goals[player]++;
+                    const gi = p.y * BOARD_SIZE + p.x;
+                    fxGlow(gi, '#4ade80', 900);
+                    fxBurst(gi, '#4ade80', 10, 1.5);
+                    fxText(gi, 'GOAL!', '#4ade80', 1200);
+                }
             }
 
             turn = opponent;`],

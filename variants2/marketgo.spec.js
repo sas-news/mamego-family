@@ -45,6 +45,13 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 相場ルール: 着手のたび石価が1〜5の間で変動する
+            {
+                const last = pieces[pieces.length - 1];
+                if (last && last.mv) {
+                    const p = move.cells[0];
+                    fxText(p.y * BOARD_SIZE + p.x, '¥' + last.mv, last.mv >= 4 ? '#facc15' : '#cbd5e1', 1000);
+                }
+            }
             market = 1 + ((history.length * 7 + 3) % 5);
 
             turn = opponent;`],
@@ -72,6 +79,23 @@ module.exports = {
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の石資産:</span> <strong>\${marketValue(2)}</strong></div>`],
         ...K.EVENT_CHIP_SPEC(`'石価:' + market`),
+        // 資産価格の刻印: 各石に購入時価格を小さく刻む
+        ...K.STONE_MARKS_SPEC(`            {
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold ' + Math.round(cellSize * 0.30) + 'px sans-serif';
+                pieces.forEach(pc => {
+                    const mv = pc.mv || 1;
+                    pc.cells.forEach(p => {
+                        if (board[p.y * BOARD_SIZE + p.x] !== pc.player) return;
+                        const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                        ctx.fillStyle = pc.player === 1 ? 'rgba(255,255,255,0.85)' : 'rgba(15,15,15,0.72)';
+                        ctx.fillText('¥' + mv, cx, cy + cellSize * 0.02);
+                    });
+                });
+                ctx.restore();
+            }`),
         [K.ONE, K.RV_ALGO, K.rv([
             '石価は着手のたび1〜5で変動する (ヘッダのチップで確認)。',
             '各石には購入時の価格が刻まれ、終局時に盤上の自石の価格総額が資産得点になる。',

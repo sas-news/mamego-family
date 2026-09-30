@@ -1247,6 +1247,29 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            {
+                ctx.save();
+                for (let i = 0; i < board.length; i++) {
+                    const v = board[i];
+                    if (v !== 1 && v !== 2) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
+                    ctx.strokeStyle = v === 1 ? 'rgba(255,255,255,0.38)' : 'rgba(30,30,30,0.38)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.27, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.14, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;

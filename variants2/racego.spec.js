@@ -10,16 +10,16 @@ module.exports = {
     spec: [
         ...K.rb('RACEGO', '競走碁', 'racego'),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
-        // 自色の連が対辺(上下or左右)を結んでいればtrue
+        // 自色の連が対辺(上下or左右)を結んでいればその連のidx配列を返す
         function connectedOppositeEdges(player) {
             const visited = Array(board.length).fill(false);
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== player || visited[i]) continue;
                 let minX = BOARD_SIZE, maxX = -1, minY = BOARD_SIZE, maxY = -1;
-                const queue = [i];
+                const queue = [i]; const comp = [];
                 visited[i] = true;
                 while (queue.length > 0) {
-                    const cur = queue.shift();
+                    const cur = queue.shift(); comp.push(cur);
                     const cx = cur % BOARD_SIZE, cy = Math.floor(cur / BOARD_SIZE);
                     if (cx < minX) minX = cx; if (cx > maxX) maxX = cx;
                     if (cy < minY) minY = cy; if (cy > maxY) maxY = cy;
@@ -27,9 +27,9 @@ module.exports = {
                         if (board[n] === player && !visited[n]) { visited[n] = true; queue.push(n); }
                     });
                 }
-                if ((minY === 0 && maxY === BOARD_SIZE - 1) || (minX === 0 && maxX === BOARD_SIZE - 1)) return true;
+                if ((minY === 0 && maxY === BOARD_SIZE - 1) || (minX === 0 && maxX === BOARD_SIZE - 1)) return comp;
             }
-            return false;
+            return null;
         }
 
         function endGameByScore() {`],
@@ -37,7 +37,12 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 競走ルール: 着手した側の連が対辺を結べば即勝ち (縦横どちらでも)
-            if (connectedOppositeEdges(player)) {
+            const chain = connectedOppositeEdges(player);
+            if (chain) {
+                // 勝ち筋の連を金光でなぞる
+                chain.forEach(i => fxGlow(i, '#facc15', 1100));
+                fxShake(6, 400);
+                fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, 'GOAL!', '#facc15', 1500);
                 winByRule(player, '対辺連結勝ち', '自分の石で対辺を結びました'); return;
             }
 

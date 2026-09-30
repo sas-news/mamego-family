@@ -24,6 +24,19 @@ module.exports = {
             else winnerTitle = '引き分け';`],
         [K.ONE, `                title: \`\${winnerTitle} (\${diff} 目差)\`,`,
 `                title: winnerTitle,`],
+        // 条約違反: 取った手には赤い警告が立つ (平和維持が破れた合図)
+        [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                captures[player] += captured.length;
+                const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                fxGlow(ci, '#ef4444', 900);
+                fxText(ci, '条約違反!', '#ef4444', 1200);
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
         [K.ONE, K.RV_ALGO, K.rv([
             '平和条約: 一度も相手の石を取らなかった側が勝つ (両者取った、または両者無血なら通常採点)。',
             '取ると条約違反 — でも取らなければ地取りでは不利かもしれない。駆け引きの碁。',

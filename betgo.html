@@ -1222,6 +1222,24 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            if (pendingBet && board[pendingBet.idx] === pendingBet.owner) {
+                const i = pendingBet.idx;
+                const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
+                ctx.save();
+                ctx.fillStyle = '#f5c542';
+                ctx.strokeStyle = '#92600a';
+                ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                ctx.beginPath();
+                ctx.arc(cx + cellSize * 0.26, cy - cellSize * 0.26, cellSize * 0.13, 0, Math.PI * 2);
+                ctx.fill(); ctx.stroke();
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;
@@ -1741,11 +1759,16 @@
 
             // 賭碁ルール: 相手の直前の石がこの一手を生き延びた → 相手の賭け的中
             if (pendingBet && pendingBet.owner !== player) {
-                if (board[pendingBet.idx] === pendingBet.owner) betScore[pendingBet.owner]++;
+                if (board[pendingBet.idx] === pendingBet.owner) {
+                    betScore[pendingBet.owner]++;
+                    fxGlow(pendingBet.idx, '#fbbf24', 900);
+                    fxText(pendingBet.idx, '+1 的中!', '#fbbf24', 1200);
+                }
                 pendingBet = null;
             }
             // 自分の着手にも賭けが乗る
             pendingBet = { idx: move.cells[0].y * BOARD_SIZE + move.cells[0].x, owner: player };
+            fxGlow(pendingBet.idx, '#cbd5e1', 600);
 
             turn = opponent;
             updateUI();

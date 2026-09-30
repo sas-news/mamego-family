@@ -1094,6 +1094,24 @@
             ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
             ctx.globalAlpha = 1;
 
+            // 微細盤: 盤の縁に目盛りを刻む
+            {
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.55);
+                ctx.lineWidth = Math.max(1, cellSize * 0.035);
+                const x0 = padding - cellSize * 0.5, y0 = padding - cellSize * 0.5;
+                const x1 = padding + (BOARD_SIZE - 0.5) * cellSize, y1 = padding + (BOARD_SIZE - 0.5) * cellSize;
+                for (let i = 0; i < BOARD_SIZE; i++) {
+                    const pos = padding + i * cellSize;
+                    const len = i % 2 === 0 ? cellSize * 0.16 : cellSize * 0.09;
+                    ctx.beginPath(); ctx.moveTo(pos, y0); ctx.lineTo(pos, y0 + len); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(pos, y1 - len); ctx.lineTo(pos, y1); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(x0, pos); ctx.lineTo(x0 + len, pos); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(x1 - len, pos); ctx.lineTo(x1, pos); ctx.stroke();
+                }
+                ctx.restore();
+            }
+
             // 星 (天元・星の点)
             const starPoints = getStarPoints(BOARD_SIZE);
             ctx.fillStyle = currentTheme.starColor;

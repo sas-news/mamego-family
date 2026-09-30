@@ -1767,8 +1767,12 @@
 
             // 喰碁: パックマンが斜めに巡回し、止まった点の石を色問わず食べる
             {
+                const prev = pacPos;
                 pacPos = (pacPos + BOARD_SIZE + 2) % board.length;
+                fxSlide(prev, pacPos, 360); // ワカワカ進む経路
                 if (board[pacPos] === 1 || board[pacPos] === 2) {
+                    fxBurst(pacPos, '#ffd23f', 10, 1.5);
+                    fxText(pacPos, 'パクッ!', '#ffd23f', 1000);
                     board[pacPos] = 0;
                     cleanUpPieces();
                 }

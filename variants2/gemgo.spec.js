@@ -11,7 +11,13 @@ module.exports = {
         ...K.rb('GEMGO', '宝石碁', 'gemgo'),
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
-                captured.forEach(idx => board[idx] = 3); // 宝石化: 取られた石は壁として残る
+                captured.forEach(idx => {
+                    board[idx] = 3; // 宝石化: 取られた石は壁として残る
+                    fxBurst(idx, '#7dd3fc', 8, 1.2);
+                    fxGlow(idx, '#7dd3fc', 800);
+                });
+                const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                fxText(ci, '結晶!', '#7dd3fc', 1100);
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -47,6 +53,24 @@ module.exports = {
                 }
                 ctx.restore();
             }`],
+        // 宝石の瞬き: 結晶の上を光がゆっくり巡る (再描画を駆動するオーバーレイ)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== 3) continue;
+                const tw = Math.sin(now / 600 + i * 1.9);
+                if (tw <= 0.55) continue;
+                const cx = pad + (i % BOARD_SIZE) * cs, cy = pad + Math.floor(i / BOARD_SIZE) * cs;
+                ctx2.globalAlpha = (tw - 0.55) * 0.8;
+                ctx2.fillStyle = '#ffffff';
+                ctx2.beginPath();
+                ctx2.arc(cx - cs * 0.10, cy - cs * 0.12, cs * 0.09, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`],
         // 宝石は石として描かない & 死に石選択から除外
         [K.ONE, K.FALLBACK_SKIP,
 `                    if (val !== 1 && val !== 2) continue; // 空点・宝石は石として描かない`],

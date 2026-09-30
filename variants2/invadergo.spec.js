@@ -23,18 +23,67 @@ module.exports = {
                     if (y + 1 < BOARD_SIZE && board[ii + BOARD_SIZE] === 0) {
                         board[ii + BOARD_SIZE] = 3;
                         board[ii] = 0;
+                        fxSlide(ii, ii + BOARD_SIZE, 300); // 降下の実際の経路
                     }
                 }
             }
             if (moveCount % 4 === 0) {
                 const tops = [];
                 for (let x = 0; x < BOARD_SIZE; x++) if (board[x] === 0) tops.push(x);
-                if (tops.length > 0) board[tops[Math.floor(Math.random() * tops.length)]] = 3;
+                if (tops.length > 0) {
+                    const ti = tops[Math.floor(Math.random() * tops.length)];
+                    board[ti] = 3;
+                    fxGlow(ti, '#a3e635', 800);
+                    fxText(ti, '侵攻!', '#a3e635', 1000);
+                }
             }
 
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC('moveCount % 4 >= 2 ? "あと" + (4 - moveCount % 4) + "手で侵攻" : ""'),
-        ...K.WALL_SPEC,
+        // 侵攻ブロック: 暗緑の装甲面に瞬く複眼 (侵攻らしい質感)
+        [K.ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 侵攻ブロック: 暗緑の装甲と瞬く眼
+            {
+                const now = fxNow();
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const i = y * BOARD_SIZE + x;
+                    if (board[i] !== 3) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    const g = ctx.createLinearGradient(cx, cy - hh, cx, cy + hh);
+                    g.addColorStop(0, '#1c3a1c'); g.addColorStop(1, '#0a140a');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    ctx.strokeStyle = 'rgba(120,200,80,0.55)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.strokeRect(cx - hh, cy - hh, cellSize, cellSize);
+                    // 複眼: セルごとに位相をずらして瞬く
+                    const blink = Math.sin(now / 900 + i * 1.7) > -0.85;
+                    ctx.fillStyle = blink ? '#a3e635' : '#2c4a12';
+                    [-0.18, 0.18].forEach(dx0 => {
+                        ctx.beginPath();
+                        ctx.arc(cx + dx0 * cellSize, cy, cellSize * 0.08, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+                ctx.restore();
+            }`],
+        ...K.WALL_GUARD_SPEC,
+        // 侵攻の気配: 上端から緑の侵食が滲む常時オーバーレイ
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            const g = ctx2.createLinearGradient(0, 0, 0, w * 0.4);
+            g.addColorStop(0, 'rgba(80,160,60,0.16)');
+            g.addColorStop(1, 'rgba(80,160,60,0)');
+            ctx2.fillStyle = g;
+            ctx2.fillRect(0, 0, w, w * 0.4);
+            ctx2.restore();
+        });`],
         [K.ONE, K.INFO_ALGO, `            侵攻碁: 上端から敵ブロックが降下し盤面を侵食していく<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

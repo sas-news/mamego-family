@@ -1790,7 +1790,14 @@
             // 擲碁: 打った石に隣接するピンは倒れ、1本1点になる
             move.cells.forEach(p => {
                 getNeighbors(p.y * BOARD_SIZE + p.x).forEach(n => {
-                    if (board[n] === 3) { board[n] = 0; captures[player]++; }
+                    if (board[n] === 3) {
+                        board[n] = 0; captures[player]++;
+                        // ピンが弾け倒れて得点になる
+                        fxBurst(n, '#f2f0e4', 10, 1.6);
+                        fxGlow(n, '#fca5a5', 700);
+                        fxText(n, '+1', '#facc15', 1000);
+                        fxShake(3, 200);
+                    }
                 });
             });
 

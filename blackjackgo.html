@@ -1737,7 +1737,13 @@
             {
                 const card = 1 + Math.floor(Math.random() * 11);
                 cardTotal[player] += card;
+                const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                fxText(ci, '+' + card, '#93c5fd', 1000); // 引いた札を開示
+                if (cardTotal[player] === 21) fxGlow(ci, '#facc15', 1000); // 21は金色
                 if (cardTotal[player] > 21) {
+                    fxBurst(ci, '#ef4444', 16, 2.0);
+                    fxShake(8, 420);
+                    fxText(ci, 'バースト!', '#ef4444', 1400);
                     winByRule(opponent, 'バースト勝ち', '相手のカード合計が21を超えました (' + cardTotal[player] + ')');
                     return;
                 }

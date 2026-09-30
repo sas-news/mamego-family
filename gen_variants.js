@@ -1368,6 +1368,13 @@ out('pengo.html', apply(ALGO, [
         // すべて4原子以上なので「4マス未満の窒息領域」ルールがそのまま機能する。`,
 `        // ペントミノ (5連結マス) を分子として描画する。原子=碁石、結合=連結。
         // すべて5マスなので「5マス未満の窒息領域」ルールが機能する。`],
+    // 碁ペンの顔: 原子球を角丸正方形ブロックに差し替え
+    [ONE, `                ctx.beginPath();
+                ctx.arc(cx, cy, R, 0, Math.PI * 2);
+                ctx.fill();`,
+`                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(cx - R, cy - R, R * 2, R * 2, R * 0.22); else ctx.rect(cx - R, cy - R, R * 2, R * 2);
+                ctx.fill();`],
     [ALL, '碁カン', '碁ペン'],
     [ALL, '全7種1巡', '全12種1巡'],
     [ALL, '7種1巡', '12種1巡'],
@@ -2717,6 +2724,13 @@ out('mamego.html', apply(ALGO, [
     [ONE, '登場アルカン', '登場碁豆'],
     [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
 `碁豆は2連のドミノ形のみ。孤立した1マスの空領域は窒息領域になります。`],
+    // 豆の顔: 原子球を楕円の豆に差し替え (斜め交互で並木感)
+    [ONE, `                ctx.beginPath();
+                ctx.arc(cx, cy, R, 0, Math.PI * 2);
+                ctx.fill();`,
+`                ctx.beginPath();
+                ctx.ellipse(cx, cy, R, R * 0.72, ((p.x + p.y) % 2 === 0 ? 1 : -1) * Math.PI / 4, 0, Math.PI * 2);
+                ctx.fill();`],
     ...SIZE_91319,
     [ALL, '碁カン', '碁豆'],
     [ALL, '全7種1巡', '補充なし'],
@@ -3804,6 +3818,19 @@ out('stargo.html', apply(ALGO, [
     [ONE, '登場アルカン', '登場碁ホシ'],
     [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
 `碁ホシは十字形5連結のみ。四方向すべてに腕が伸びます。`],
+    // 星の顔: 原子球を四隅星の輝き形に差し替え
+    [ONE, `                ctx.beginPath();
+                ctx.arc(cx, cy, R, 0, Math.PI * 2);
+                ctx.fill();`,
+`                ctx.beginPath();
+                for (let k = 0; k < 8; k++) {
+                    const a = k * Math.PI / 4 - Math.PI / 2;
+                    const rr = k % 2 === 0 ? R * 1.15 : R * 0.5;
+                    const sx = cx + Math.cos(a) * rr, sy = cy + Math.sin(a) * rr;
+                    if (k === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+                }
+                ctx.closePath();
+                ctx.fill();`],
     ...SIZE_91319,
     [ALL, '碁カン', '碁ホシ'],
     [ALL, '全7種1巡', '補充なし'],
@@ -3830,6 +3857,13 @@ out('biggo.html', apply(ALGO, [
     [ONE, '登場アルカン', '登場碁オオ'],
     [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
 `碁オオは3×3の正方形のみ (9連結)。9マス未満の空領域は全て窒息領域です。`],
+    // 巨大碁の顔: 原子球を巨石の角柱に差し替え
+    [ONE, `                ctx.beginPath();
+                ctx.arc(cx, cy, R, 0, Math.PI * 2);
+                ctx.fill();`,
+`                ctx.beginPath();
+                ctx.rect(cx - R * 1.0, cy - R * 1.0, R * 2, R * 2);
+                ctx.fill();`],
     ...SIZE_91319,
     [ALL, '碁カン', '碁オオ'],
     [ALL, '全7種1巡', '補充なし'],
@@ -6816,6 +6850,27 @@ out('microgo.html', apply(ALGO, [
             if (size === 7) return [{x:3,y:3}];
             return [{x:4,y:4}];
         }`],
+    // 微細盤の顔: 外枠の外側に目盛線 (ルーペのスケール)
+    [ONE, `            // 星 (天元・星の点)`,
+`            // 微細盤: 盤の縁に目盛りを刻む
+            {
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.55);
+                ctx.lineWidth = Math.max(1, cellSize * 0.035);
+                const x0 = padding - cellSize * 0.5, y0 = padding - cellSize * 0.5;
+                const x1 = padding + (BOARD_SIZE - 0.5) * cellSize, y1 = padding + (BOARD_SIZE - 0.5) * cellSize;
+                for (let i = 0; i < BOARD_SIZE; i++) {
+                    const pos = padding + i * cellSize;
+                    const len = i % 2 === 0 ? cellSize * 0.16 : cellSize * 0.09;
+                    ctx.beginPath(); ctx.moveTo(pos, y0); ctx.lineTo(pos, y0 + len); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(pos, y1 - len); ctx.lineTo(pos, y1); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(x0, pos); ctx.lineTo(x0 + len, pos); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(x1 - len, pos); ctx.lineTo(x1, pos); ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            // 星 (天元・星の点)`],
 ], 'microgo'));
 
 // 106. JUMPGO (跳躍碁) — 自石からちょうど距離2の点にしか打てない

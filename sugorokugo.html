@@ -1765,8 +1765,17 @@
             // 双六碁: 着手ごとに1〜3マス進み、中央のゴールへ先に上がれば勝ち
             {
                 if (sugoPath.length !== board.length) sugoPath = buildSugoPath(BOARD_SIZE);
-                sugoPos[player] += 1 + Math.floor(Math.random() * 3);
+                const prevPos = sugoPos[player];
+                const step = 1 + Math.floor(Math.random() * 3);
+                sugoPos[player] += step;
+                // 駒の進み: 旧升目から新升目へ滑らせる
+                const fromIdx = sugoPath[Math.min(prevPos, sugoPath.length - 1)];
+                const toIdx = sugoPath[Math.min(sugoPos[player], sugoPath.length - 1)];
+                fxSlide(fromIdx, toIdx, 420);
+                fxText(toIdx, '+' + step, '#40b0f0', 900);
                 if (sugoPos[player] >= sugoPath.length - 1) {
+                    fxShake(6, 340);
+                    fxText(toIdx, '上がり!', '#facc15', 1400);
                     winByRule(player, '上がり勝ち', '双六の升目を先に上がりました');
                     return;
                 }

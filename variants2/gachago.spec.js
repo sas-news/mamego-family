@@ -27,12 +27,24 @@ module.exports = {
                 at: history.length
             });`],
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
+            const gi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+            // レア供給の開示: R/SSRの手は着地点が輝き、取りなら倍率を告げる
+            if (rarityOf() > 1) {
+                const col = rarityOf() === 3 ? '#facc15' : '#38bdf8';
+                fxGlow(gi, col, 900);
+                if (rarityOf() === 3) fxBurst(gi, col, 10, 1.4);
+            }
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length * rarityOf();
+                if (rarityOf() > 1) {
+                    captured.forEach(idx => fxGlow(idx, '#facc15', 700));
+                    fxText(gi, rarityName(rarityOf()) + ' ×' + rarityOf() + '!', rarityOf() === 3 ? '#facc15' : '#38bdf8', 1200);
+                }
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {
+                if (rarityOf() > 1) fxText(gi, rarityName(rarityOf()) + '!', rarityOf() === 3 ? '#facc15' : '#38bdf8', 1000);
                 soundManager.playPlace();
             }`],
         ...K.STONE_MARKS_SPEC(`            // レア石にジェム印 (R=青、SSR=金)

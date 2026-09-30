@@ -880,6 +880,21 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            for (let k = 0; k < 14; k++) {
+                const t = (now / 2600 + k * 0.77) % 1;
+                const px = (k * 139.7 + now * 0.008) % w;
+                const py = (k * 61.3) % w;
+                ctx2.globalAlpha = 0.28 * Math.sin(t * Math.PI);
+                ctx2.fillStyle = '#ffd668';
+                ctx2.beginPath();
+                ctx2.arc(px, py, cs * 0.05, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1176,27 +1191,36 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // 蜂の巣: 壁セルを琥珀色の六角巣房として描く
             {
-                const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                const now = fxNow();
                 ctx.save();
-                ctx.fillStyle = "#8a6a20";
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                    if (board[y * BOARD_SIZE + x] !== 3) continue;
+                    const i = y * BOARD_SIZE + x;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, r = cellSize * 0.5;
+                    const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r * 1.1);
+                    g.addColorStop(0, '#d9a832'); g.addColorStop(1, '#7a5210');
+                    ctx.fillStyle = g;
+                    ctx.beginPath();
+                    for (let k = 0; k < 6; k++) {
+                        const a = k * Math.PI / 3 - Math.PI / 2;
+                        const hx = cx + Math.cos(a) * r, hy = cy + Math.sin(a) * r;
+                        if (k === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(60,40,5,0.7)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                    ctx.stroke();
+                    // 蜜の煌めき
+                    if (Math.sin(now / 700 + i * 2.3) > 0.86) {
+                        ctx.fillStyle = 'rgba(255,240,160,0.75)';
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cellSize * 0.09, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                 }
-                ctx.strokeStyle = currentTheme.lineColor;
-                ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
-                ctx.beginPath();
-                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if (isV(x, y)) continue;
-                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
-                    if (x > 0 && isV(x - 1, y)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
-                    if (x < BOARD_SIZE - 1 && isV(x + 1, y)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
-                    if (y > 0 && isV(x, y - 1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
-                    if (y < BOARD_SIZE - 1 && isV(x, y + 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
-                }
-                ctx.stroke();
                 ctx.restore();
             }
 
