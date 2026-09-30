@@ -159,7 +159,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 無コウルール<br>
-            ※コウ禁止なし — 同一盤面の再現も合法
+            ※コウ禁止なし — 同一盤面の再現も合法。200手で自動終局
         </p>
     </div>
 
@@ -504,6 +504,7 @@
         const RULES_VARIANT = [
             '無コウルール: コウ禁止が存在しない。直前の盤面と同じ形に戻る着手も合法。',
             'コウ争いが即座に繰り返せるため、単劫は互いに取り合い続ける膠着になる。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する (劫争いの無限継続を防ぐ)。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1529,6 +1530,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限: 200手で自動終局 (劫ループの膠着を防ぐ)
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

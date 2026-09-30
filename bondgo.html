@@ -159,7 +159,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 結合ルール<br>
-            ※敵連を取ると接触していた自連も全て道連れ (相手のアゲハマ)
+            ※敵連を取ると接触していた自石も全て道連れ (相手のアゲハマ)。200手で自動終局
         </p>
     </div>
 
@@ -502,8 +502,9 @@
             '双方が連続でパスすると終局。地の中の死に石を確認し、地の数 + アゲハマ数 (+白はコミ6.5目) で勝敗を決める。',
         ];
         const RULES_VARIANT = [
-            '結合ルール: 敵連を取ると、その連に隣接していた自分の連も全て道連れに消える (相手のアゲハマになる)。',
+            '結合ルール: 敵連を取ると、その連に隣接していた自分の石も道連れに消える (相手のアゲハマになる)。',
             '取りは必ず相打ち。囲んだ側も犠牲を払う特攻的な碁。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1518,11 +1519,10 @@
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
-                // 結合の代償: 取った連に隣接する自分の連も全て道連れ
+                // 結合の代償: 取った連に隣接する自分の石も全て道連れ
                 const ownDead = new Set();
                 captured.forEach(idx => getNeighbors(idx).forEach(n => {
-                    if (board[n] === player && !ownDead.has(n))
-                        getConnectedGroup(n, player).forEach(g => ownDead.add(g));
+                    if (board[n] === player) ownDead.add(n);
                 }));
                 ownDead.forEach(i => { board[i] = 0; });
                 captures[opponent] += ownDead.size;
@@ -1540,6 +1540,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

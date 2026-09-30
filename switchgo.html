@@ -160,7 +160,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 転換ルール<br>
-            ※12手ごとに盤上の全石の色が黒⇔白に反転
+            ※12手ごとに盤上の全石の色が黒⇔白に反転。200手で自動終局
         </p>
     </div>
 
@@ -505,6 +505,7 @@
         const RULES_VARIANT = [
             '転換ルール: 合計12手ごとに盤上の全ての石の色が反転する (黒⇔白)。',
             '節目直前の配置で形成した形が相手のものになる — 反転を意識した布石が肝心。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1536,6 +1537,8 @@
             turn = opponent;
             // 転換: 12手ごとに全石が反転
             if (history.length % 12 === 0) applySwitch();
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
