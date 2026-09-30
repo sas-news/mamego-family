@@ -6,7 +6,7 @@ REPO = "sas-news/mamego-family"
 BRANCH = "devin/wave4"
 DOC = "/home/ubuntu/repos/mamego-family/ideas-wave4.md"
 
-# ---- ideas-wave4.md から採用100件を抽出 ----
+# ---- ideas-wave4.md から採用90件を抽出 ----
 doc = open(DOC).read()
 info = {}  # file -> (jp, rule)
 for m in re.finditer(r'【W4B(\d)/([a-z0-9_]+)\.html】([^\s—\-]+)\s*[—\-]\s*(.+)', doc):
@@ -15,7 +15,7 @@ for m in re.finditer(r'【W4B(\d)/([a-z0-9_]+)\.html】([^\s—\-]+)\s*[—\-]\s
 
 # バッチ構成は冒頭の選定リストから
 batches = {}
-for m in re.finditer(r'\*\*W4B(\d) [^*]+(30)\*\*: ([a-z0-9_, ]+)', doc):
+for m in re.finditer(r'\*\*W4B(\d) [^*]+\(30\)\*\*: ([a-z0-9_, ]+)', doc):
     batches[m.group(1)] = [s.strip() for s in m.group(2).split(',')]
 
 SCHEMA = {
@@ -45,7 +45,7 @@ def prompt_for(b, files):
 5. `node gen_wave3.js` が ALL OK になり、`node test-wave3.js` で自分の30ファイルの行が全て PASS になるまで繰り返す (他バッチの spec が混在していたらその失敗は無視してよい)。
 6. 各バリアントについて `node tools/sim-game.js --plies 200 <file>` を実行し `ended=gameOver` が出ること (勝負がつかない・クラッシュはNG — その場合は強制終局ルールかバランスを調整して再確認)。
 7. `git add variants3/<自分の30個の*.spec.js> variants3/icons/<自分の30個の*.icon.js> <対応する30個の*.html>` のみ add — 絶対に `git add -A` や他バッチのファイルを add しない。index.html, gen_kit.js, algo.html, gen_wave3*.js, test-wave3.js, docs/ 等は編集禁止。
-8. `git commit -m "wave3 W4B{b}: 30 variants"` → `git pull --rebase origin {BRANCH}` → `git push origin {BRANCH}`。push が rejected されたら rebase して再 push を最大10回繰り返す。
+8. `git commit -m "wave4 W4B{b}: 30 variants"` → `git pull --rebase origin {BRANCH}` → `git push origin {BRANCH}`。push が rejected されたら rebase して再 push を最大10回繰り返す。
 
 ## 対象バリアント (file名 | 日本語名 — ルール概要)
 {rows}
