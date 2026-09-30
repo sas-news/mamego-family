@@ -664,12 +664,19 @@ const CIRCLE_DRAW = `            const covered = new Set(); // ピース描画�
 // 着手可能点を薄いドットで示す (render() 内、ラスト着手ハイライトの直前に挿入)
 const LEGAL_DOTS = `            // 着手可能な点を薄いドットで表示
             if (!gameOver && gamePhase === 'playing' && isMyTurn()) {
+                const legalKey = history.length + ':' + turn;
+                if (render.__legalKey !== legalKey) {
+                    render.__legalKey = legalKey;
+                    render.__legalDots = [];
+                    for (let dy = 0; dy < BOARD_SIZE; dy++) for (let dx = 0; dx < BOARD_SIZE; dx++) {
+                        if (board[dy * BOARD_SIZE + dx] !== 0) continue;
+                        if (isValidPlacement([{ x: dx, y: dy }], turn)) render.__legalDots.push([dx, dy]);
+                    }
+                }
                 ctx.save();
                 ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.40);
                 const dr = Math.max(2, cellSize * 0.09);
-                for (let dy = 0; dy < BOARD_SIZE; dy++) for (let dx = 0; dx < BOARD_SIZE; dx++) {
-                    if (board[dy * BOARD_SIZE + dx] !== 0) continue;
-                    if (!isValidPlacement([{ x: dx, y: dy }], turn)) continue;
+                for (const [dx, dy] of render.__legalDots) {
                     ctx.beginPath();
                     ctx.arc(padding + dx * cellSize, padding + dy * cellSize, dr, 0, Math.PI * 2);
                     ctx.fill();
@@ -3454,18 +3461,20 @@ out('halfgo.html', apply(ALGO, [
                 const hmid = Math.floor(BOARD_SIZE / 2);
                 const y0 = padding - cellSize * 0.5, y1 = padding + (BOARD_SIZE - 0.5) * cellSize;
                 const x0 = padding - cellSize * 0.5, x1 = padding + (BOARD_SIZE - 0.5) * cellSize;
-                const bx = padding + hmid * cellSize;
+                const bx = padding + hmid * cellSize, bh = cellSize * 0.5;
                 ctx.save();
                 ctx.fillStyle = alphaColor(currentTheme.p1Stroke, 0.05);
-                ctx.fillRect(x0, y0, bx - x0, y1 - y0);
+                ctx.fillRect(x0, y0, bx - bh - x0, y1 - y0);
                 ctx.fillStyle = alphaColor(currentTheme.p2Fill, 0.16);
-                ctx.fillRect(bx, y0, x1 - bx, y1 - y0);
+                ctx.fillRect(bx + bh, y0, x1 - bx - bh, y1 - y0);
                 ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.4);
                 ctx.lineWidth = 1;
                 ctx.setLineDash([cellSize * 0.16, cellSize * 0.12]);
                 ctx.beginPath();
-                ctx.moveTo(bx, padding);
-                ctx.lineTo(bx, width - padding);
+                ctx.moveTo(bx - bh, y0);
+                ctx.lineTo(bx - bh, y1);
+                ctx.moveTo(bx + bh, y0);
+                ctx.lineTo(bx + bh, y1);
                 ctx.stroke();
                 ctx.restore();
             }`),
