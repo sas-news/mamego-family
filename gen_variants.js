@@ -3623,6 +3623,20 @@ out('darkgo.html', apply(ALGO, [
     [ONE, `            const alive = lastMove.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === lastMove.player);`,
 `            const alive = lastMove.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === lastMove.player)
                 .filter(p => lastMove.player === fogViewer() || isFogVisible(p.y * BOARD_SIZE + p.x));`],
+    // 霧表現: 視界外のマスを暗いベールで覆う (石の描画より先に敷く)
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 視界外のマスを暗いベールで覆う (自石周辺のみ明るい)
+            {
+                ctx.save();
+                ctx.fillStyle = 'rgba(16,20,34,0.30)';
+                for (let fy = 0; fy < BOARD_SIZE; fy++) for (let fx = 0; fx < BOARD_SIZE; fx++) {
+                    if (isFogVisible(fy * BOARD_SIZE + fx)) continue;
+                    ctx.fillRect(padding + (fx - 0.5) * cellSize, padding + (fy - 0.5) * cellSize, cellSize, cellSize);
+                }
+                ctx.restore();
+            }`],
     ...STONE_SPEC,
 ], 'darkgo'));
 
