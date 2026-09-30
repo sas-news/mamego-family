@@ -2421,7 +2421,14 @@
                     dot(1.3,4.6,'#fef3c7','#b45309',cell*0.45);
                     dot(4.9,4.6,P1,P1S,cell*0.32); seg(4.4,4.6,4.75,4.6,'rgba(62,34,17,0.5)',1.4);
                     break;
-                                                // == WAVE3 ICONS BEGIN ==
+                                                                // == WAVE3 ICONS BEGIN ==
+                case 'batterygo': {
+        dot(2.2, 3, P1, P1S);
+        blk(4, 1.6, "#facc15", "#a16207");
+        blk(4, 2.8, "#facc15", "#a16207");
+        seg(4.5, 1.2, 4.5, 0.7, "#facc15", 2);
+                    break;
+                }
                 case 'bingolinego': {
         // 釣合(ビンゴ): 斜めの5連ライン
         [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]].forEach(([x, y], i) => {
@@ -2492,6 +2499,13 @@
                     txt('+', 3, 3.2, '#8b5cf6', cell * 1.3);
                     break;
                 }
+                case 'cloudgo': {
+        dot(1.7, 2.4, "#f0f9ff", "#7dd3fc", cell * 0.75);
+        dot(4.3, 2.2, "#f0f9ff", "#7dd3fc", cell * 0.75);
+        dot(3, 4.4, "#f0f9ff", "#7dd3fc", cell * 0.75);
+        seg(2.4, 2.3, 3.6, 2.2, "#94a3b8", 1.2);
+                    break;
+                }
                 case 'collidego': {
                     // 衝突: 滑る石→衝突星→止まる石
                     dot(0.9, 3, P1, P1S);
@@ -2513,6 +2527,12 @@
                     dot(1.4, 1.4, P1, P1S, cell * 0.5); dot(0.8, 0.8, P1, P1S);
                     dot(4.4, 1.4, P2, P2S, cell * 0.5); dot(5.2, 0.8, P2, P2S);
                     dot(1.4, 4.6, P2, P2S); dot(4.4, 4.6, P1, P1S);
+                    break;
+                }
+                case 'covego': {
+        tri(2, 3.6, cell * 0.55, "#38bdf8", "#0369a1");
+        ring(3.4, 4.2, 1.1, "#38bdf8", 1.4);
+        dot(4.2, 2.4, P1, P1S);
                     break;
                 }
                 case 'crisisgo': {
@@ -2537,6 +2557,18 @@
                     c.closePath(); c.fill(); c.stroke();
                     dot(1.4, 2.1, '#fde68a', '#a16207', cell * 0.16); dot(3, 1.5, '#fde68a', '#a16207', cell * 0.16); dot(4.6, 2.1, '#fde68a', '#a16207', cell * 0.16);
                     dot(3, 5.1, P1, P1S, cell * 0.3);
+                    break;
+                }
+                case 'crowngo2': {
+        tri(1.7, 2.4, cell * 0.55, "#fbbf24", "#b45309");
+        tri(3, 1.9, cell * 0.55, "#fbbf24", "#b45309");
+        tri(4.3, 2.4, cell * 0.55, "#fbbf24", "#b45309");
+        blk(1.5, 3.4, "#fbbf24", "#b45309");
+                    break;
+                }
+                case 'crystalgo': {
+        mol([[3, 1.3], [1.4, 3], [4.6, 3], [3, 4.7]], "#67e8f9", "#0891b2");
+        ring(3, 3, 2.5, "rgba(34,211,238,0.45)", 1.4);
                     break;
                 }
                 case 'deckgo': {
@@ -2603,6 +2635,12 @@
                     dot(3, 3.8, P1, P1S, R, 0.55);
                     dot(1.6, 1.2, P2, P2S);
                     ring(3, 3.8, cell * 0.62, '#38bdf8', 1.4);
+                    break;
+                }
+                case 'domgo': {
+        blk(1, 4.4, "#92400e", "#451a03");
+        ring(3, 3.4, 1.6, "#fdba74", 1.6);
+        dot(3, 3, P1, P1S);
                     break;
                 }
                 case 'dominiongo': {
@@ -2676,6 +2714,12 @@
         dot(4.6, 2.2, P1, P1S, cell * 0.26, 0.5);
                     break;
                 }
+                case 'dungo': {
+        dot(3, 2, P1, P1S);
+        seg(3, 2.7, 3, 3.9, "#78716c", 1.4);
+        dot(3, 4.5, "#44403c", "#292524", cell * 0.7);
+                    break;
+                }
                 case 'echo2go': {
         dot(2.4, 2.4, P1, P1S);
         ring(3.6, 3.6, cell * 0.5, 'rgba(56,189,248,0.8)', 2);
@@ -2688,6 +2732,12 @@
         dot(3.3, 2.8, '#1c1917', '#0c0a09', cell * 0.72);
         dot(1.4, 4.4, P1, P1S, cell * 0.3);
         dot(4.6, 4.4, P2, P2S, cell * 0.3);
+                    break;
+                }
+                case 'embergo': {
+        dot(3, 3.6, P1, P1S);
+        tri(3, 2.2, cell * 0.5, "#f97316", "#c2410c");
+        dot(4.3, 4.4, "#fb923c", "#9a3412", cell * 0.28);
                     break;
                 }
                 case 'escapego2': {
@@ -2715,6 +2765,19 @@
         seg(3.4, 1.2, 3.4, 4.8, 'rgba(148,163,184,0.5)', 2);
         seg(2.7, 2, 3.3, 2, 'rgba(148,163,184,0.6)', 1.6);
         seg(2.7, 3.6, 3.3, 3.6, 'rgba(148,163,184,0.6)', 1.6);
+                    break;
+                }
+                case 'forkgo': {
+        seg(3, 4.8, 3, 3.1, "#57534e", 2);
+        seg(3, 3.1, 1.6, 1.4, "#57534e", 2);
+        seg(3, 3.1, 4.4, 1.4, "#57534e", 2);
+        dot(3, 3.1, "#f59e0b", "#b45309", cell * 0.5);
+                    break;
+                }
+                case 'ghostgo2': {
+        ring(3, 3, 1.7, "rgba(168,85,247,0.85)", 2.4);
+        dot(3, 3, "rgba(196,181,253,0.55)", "#a855f7");
+        dot(3.7, 4.4, "rgba(216,180,254,0.7)", "#a855f7", cell * 0.3);
                     break;
                 }
                 case 'glowgo': {
@@ -2787,6 +2850,13 @@
     
                     break;
                 }
+                case 'layergo': {
+        blk(1.1, 1.3, "#fef3c7", "#a8a29e");
+        blk(1.55, 2.5, "#d6d3d1", "#78716c");
+        blk(2, 3.7, "#a8a29e", "#57534e");
+        dot(2.4, 2.4, P1, P1S);
+                    break;
+                }
                 case 'levergo': {
                     // 梃子: 支点の上の傾いた棒と両端の石
                     tri(3, 3.4, cell * 0.7, '#d97706', '#92610e', Math.PI);
@@ -2816,6 +2886,13 @@
     
                     break;
                 }
+                case 'magnetgo2': {
+        dot(1.7, 3, "#ef4444", "#7f1d1d");
+        txt("N", 1.7, 3, "#fff", cell * 0.9);
+        dot(4.3, 3, "#3b82f6", "#1e3a8a");
+        txt("S", 4.3, 3, "#fff", cell * 0.9);
+                    break;
+                }
                 case 'magnetstormgo': {
         dot(2.2, 2.4, P1, P1S);
         dot(2.2, 3.6, P2, P2S);
@@ -2842,6 +2919,12 @@
         dot(5.3, 1.8, P2, P2S, cell * 0.26, 0.3);
                     break;
                 }
+                case 'mirrorgo': {
+        seg(3, 1, 3, 5, "#94a3b8", 1.4);
+        dot(1.8, 3, P1, P1S);
+        dot(4.2, 3, P1, P1S);
+                    break;
+                }
                 case 'mirrorstonego': {
         dot(1.5, 2.5, P1, P1S);
         dot(4.5, 2.5, P2, P2S);
@@ -2856,6 +2939,12 @@
         seg(2.8, 2.8, 2.5, 3.8, '#3b82f6', 2.2);
         seg(4.0, 2.8, 3.7, 3.8, '#3b82f6', 2.2);
         blk(3, 4.6, 'rgba(59,130,246,0.5)', 'rgba(29,78,216,0.8)');
+                    break;
+                }
+                case 'mummgo': {
+        dot(3, 3, "#d6d3d1", "#78716c");
+        seg(1.9, 2.5, 4.1, 2.5, "#a8a29e", 1.5);
+        seg(1.9, 3.5, 4.1, 3.5, "#a8a29e", 1.5);
                     break;
                 }
                 case 'mutatego': {
@@ -2951,6 +3040,11 @@
         dot(3, 0.5, '#57534e', '#44403c', cell * 0.14);
                     break;
                 }
+                case 'petalgo': {
+        mol([[3, 1.2], [4.6, 2.2], [4.6, 3.8], [3, 4.8], [1.4, 3.8], [1.4, 2.2]], "#f9a8d4", "#db2777");
+        dot(3, 3, "#facc15", "#a16207", cell * 0.4);
+                    break;
+                }
                 case 'predatorgo': {
                     // 捕食: 牙の生えた大きな石が小さな石を追う
                     dot(2.4, 2.4, P1, P1S, cell * 0.62);
@@ -3004,6 +3098,12 @@
                     dot(3, 1.15, P1, P1S); dot(1.15, 5.05, P1, P1S); dot(4.85, 5.05, P1, P1S);
                     break;
                 }
+                case 'raftgo': {
+        blk(0.8, 1, "#b45309", "#78350f");
+        blk(4, 4, "#b45309", "#78350f");
+        seg(1.8, 2, 4, 4, "#fbbf24", 1.4);
+                    break;
+                }
                 case 'rhythmgo': {
         dot(1.2, 3.4, P1, P1S, cell * 0.3);
         dot(2.4, 3.4, P1, P1S, cell * 0.3);
@@ -3044,12 +3144,37 @@
     
                     break;
                 }
+                case 'seedgo': {
+        dot(3, 3.6, P1, P1S);
+        seg(3, 3.2, 3, 1.8, "#16a34a", 2);
+        tri(3.5, 1.9, cell * 0.3, "#4ade80", "#15803d");
+                    break;
+                }
+                case 'shadowgo': {
+        tri(1.1, 1.1, cell * 0.4, "#fde047", "#eab308");
+        dot(2.6, 2.6, P1, P1S);
+        blk(3.4, 3.4, "rgba(0,0,0,0.28)", "rgba(0,0,0,0.45)");
+                    break;
+                }
+                case 'shrinkgo': {
+        ring(3, 3, 2.6, "#78716c", 2);
+        dot(3, 3, P1, P1S);
+        tri(5.4, 3, cell * 0.3, "#ef4444", "#991b1b", Math.PI);
+        tri(0.6, 3, cell * 0.3, "#ef4444", "#991b1b", 0);
+                    break;
+                }
                 case 'sigilgo': {
                     // 3x3の印章と朱枠
                     for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) dot(1.6 + x, 1.6 + y, P1, P1S, cell * 0.36);
                     c.strokeStyle = '#dc2626'; c.lineWidth = 2;
                     c.strokeRect(at(0.95, 0.95).x, at(0.95, 0.95).y, cell * 4.1, cell * 4.1);
                     txt('印', 4.7, 4.9, '#dc2626', cell * 1.1);
+                    break;
+                }
+                case 'slimego': {
+        dot(3, 2.2, P1, P1S);
+        dot(2.2, 4.2, "#22c55e", "#15803d", cell * 0.42);
+        dot(3.8, 4.4, "#22c55e", "#15803d", cell * 0.5);
                     break;
                 }
                 case 'snowgo': {
@@ -3090,6 +3215,13 @@
         seg(3, 1.2, 3, 4.6, 'rgba(120,113,108,0.7)', 1.6);
                     break;
                 }
+                case 'spokego': {
+        seg(3, 3, 5.4, 3, "#57534e", 1.6);
+        seg(3, 3, 3, 0.6, "#57534e", 1.6);
+        seg(3, 3, 1.4, 1.4, "#57534e", 1.6);
+        dot(3, 3, "#f59e0b", "#b45309", cell * 0.5);
+                    break;
+                }
                 case 'springboardgo': {
                     // トランポリンと跳ねる石
                     c.strokeStyle = '#059669'; c.lineWidth = 1.6;
@@ -3114,12 +3246,24 @@
         ring(4.8, 4.8, cell * 0.34, '#93c5fd', 2);
                     break;
                 }
+                case 'stickygo': {
+        dot(1.9, 3, P1, P1S);
+        dot(4.1, 3, P2, P2S);
+        dot(3, 3, "#fbbf24", "#b45309", cell * 0.4);
+                    break;
+                }
                 case 'stormgo': {
         blk(1.6, 2.6, '#64748b', '#334155');
         blk(2.6, 2.6, '#64748b', '#334155');
         tri(4, 1.4, cell * 0.55, '#facc15', '#ca8a04', Math.PI * 0.25);
         seg(4, 1.8, 4, 3.6, '#facc15', 2.6);
         dot(1.6, 4.2, P2, P2S, cell * 0.3);
+                    break;
+                }
+                case 'stripgo': {
+        blk(0.5, 2, "#44403c", "#292524");
+        blk(0.5, 3.2, "#44403c", "#292524");
+        tri(5.2, 2.6, cell * 0.4, "#38bdf8", "#0369a1", Math.PI / 2);
                     break;
                 }
                 case 'swapstonego': {
@@ -3193,6 +3337,12 @@
     
                     break;
                 }
+                case 'tunnelgo': {
+        tri(1.6, 3, cell * 0.6, "#92400e", "#451a03");
+        seg(2.6, 3, 4.4, 3, "#f59e0b", 1.8);
+        tri(4.8, 3, cell * 0.35, "#f59e0b", "#b45309", Math.PI / 2);
+                    break;
+                }
                 case 'volcango2': {
         tri(3, 3.4, cell * 1.3, '#57534e', '#44403c', -Math.PI / 2);
         dot(3, 2.2, '#ef4444', '#b91c1c', cell * 0.22);
@@ -3208,6 +3358,12 @@
                     tri(4.62, 1.62, cell * 0.22, '#0891b2', '#0e7490', Math.PI * 0.85);
                     dot(3, 3, P1, P1S);
                     dot(1.4, 4.5, P2, P2S); dot(4.6, 4.5, P1, P1S);
+                    break;
+                }
+                case 'wafergo': {
+        blk(1.3, 1.4, "#e7e5e4", "#a8a29e");
+        blk(1.9, 2.7, "#78716c", "#57534e");
+        dot(2.6, 3.4, P1, P1S);
                     break;
                 }
                 case 'wave2go': {
