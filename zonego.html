@@ -1179,7 +1179,8 @@
             // 静的層スナップショット (揺れ中は歪むので撮らない): エフェクトフレームの貼り付け元
             if (fxN0 >= fxShakeUntil) {
                 if (!fxStaticCv) { fxStaticCv = document.createElement('canvas'); fxStaticCtx = fxStaticCv.getContext('2d'); }
-                if (fxStaticCv.width !== width) fxStaticCv.width = fxStaticCv.height = width;
+                // バッキングストア解像度で複写する (CSSpxではない。ずれると貼り戻し時に拡大表示される)
+                if (fxStaticCv.width !== canvas.width || fxStaticCv.height !== canvas.height) { fxStaticCv.width = canvas.width; fxStaticCv.height = canvas.height; }
                 fxStaticCtx.drawImage(canvas, 0, 0);
                 fxStaticW = width;
             }
@@ -1201,7 +1202,8 @@
                 render();
                 return;
             }
-            ctx.drawImage(fxStaticCv, 0, 0);
+            // デバイスpxのスナップショットをCSSpx領域へ縮小貼り付け (ctxのdpr変換込みで等倍になる)
+            ctx.drawImage(fxStaticCv, 0, 0, width, width);
             drawFx(now, padding, cellSize);
             if (fxActive() && typeof requestAnimationFrame === 'function') {
                 requestAnimationFrame(() => { try { fxFrame(); } catch (e) { fxList = []; } });
