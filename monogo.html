@@ -1021,6 +1021,29 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 取れるのは孤立単石のみ — 孤立石に小さな角□を刻む
+            {
+                const seen = new Set();
+                ctx.save();
+                ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                for (let i = 0; i < board.length; i++) {
+                    const v = board[i];
+                    if (v !== 1 && v !== 2 || seen.has(i)) continue;
+                    const g = getConnectedGroup(i, v);
+                    g.forEach(j => seen.add(j));
+                    if (g.length !== 1) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + ((i / BOARD_SIZE) | 0) * cellSize, s = cellSize * 0.09;
+                    ctx.strokeStyle = v === 1 ? 'rgba(240,235,220,0.85)' : 'rgba(50,40,25,0.8)';
+                    ctx.strokeRect(cx - s, cy - s, s * 2, s * 2);
+                }
+                ctx.restore();
+            }
         }
 
         function drawLastMove(padding, cellSize) {

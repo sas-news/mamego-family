@@ -891,6 +891,28 @@
             ctx.fillRect(0, 0, width, width);
             ctx.restore();
 
+            // 課税域の地色分け (上=白に+1の着手域, 下=黒に+1の着手域)
+            {
+                const mid = Math.ceil(BOARD_SIZE / 2);
+                const y0 = padding - cellSize * 0.5, y1 = padding + (BOARD_SIZE - 0.5) * cellSize;
+                const x0 = padding - cellSize * 0.5, x1 = padding + (BOARD_SIZE - 0.5) * cellSize;
+                const t1 = padding + (BOARD_SIZE - mid - 0.5) * cellSize;
+                const t2 = padding + (mid - 0.5) * cellSize;
+                ctx.save();
+                ctx.fillStyle = alphaColor(currentTheme.p1Stroke, 0.07);
+                ctx.fillRect(x0, y0, x1 - x0, t1 - y0);
+                ctx.fillStyle = alphaColor(currentTheme.p2Fill, 0.15);
+                ctx.fillRect(x0, t2, x1 - x0, y1 - t2);
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.4);
+                ctx.lineWidth = 1;
+                ctx.setLineDash([cellSize * 0.16, cellSize * 0.12]);
+                ctx.beginPath();
+                ctx.moveTo(x0, t1); ctx.lineTo(x1, t1);
+                ctx.moveTo(x0, t2); ctx.lineTo(x1, t2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
             // 格子線
             ctx.strokeStyle = currentTheme.lineColor;
             ctx.lineWidth = Math.max(1, cellSize * 0.028);

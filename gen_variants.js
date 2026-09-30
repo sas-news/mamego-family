@@ -852,6 +852,29 @@ out('diago.html', apply(ALGO, [
             }
             return neighbors;
         }`],
+    // 8方向連: 斜めに隣接する同色石を細線で結ぶ (石の下に敷く)
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 斜め連結の補助線
+            {
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.3);
+                ctx.lineWidth = Math.max(1, cellSize * 0.06);
+                ctx.beginPath();
+                for (let dy = 0; dy < BOARD_SIZE - 1; dy++) for (let dx = 0; dx < BOARD_SIZE - 1; dx++) {
+                    const v = board[dy * BOARD_SIZE + dx];
+                    if (v !== 1 && v !== 2) continue;
+                    if (board[(dy + 1) * BOARD_SIZE + (dx + 1)] === v) { ctx.moveTo(padding + dx * cellSize, padding + dy * cellSize); ctx.lineTo(padding + (dx + 1) * cellSize, padding + (dy + 1) * cellSize); }
+                }
+                for (let dy = 0; dy < BOARD_SIZE - 1; dy++) for (let dx = 1; dx < BOARD_SIZE; dx++) {
+                    const v = board[dy * BOARD_SIZE + dx];
+                    if (v !== 1 && v !== 2) continue;
+                    if (board[(dy + 1) * BOARD_SIZE + (dx - 1)] === v) { ctx.moveTo(padding + dx * cellSize, padding + dy * cellSize); ctx.lineTo(padding + (dx - 1) * cellSize, padding + (dy + 1) * cellSize); }
+                }
+                ctx.stroke();
+                ctx.restore();
+            }`],
     ...STONE_SPEC,
 ], 'diago'));
 
@@ -2712,6 +2735,7 @@ out('nogo.html', apply(ALGO, [
 ${STALEMATE_CHECK}`],
     [ONE, `        function endGameByScore() {`, WIN_BY_RULE_FN + `
         function endGameByScore() {`],
+    ...LEGAL_DOTS_SPEC,
     ...STONE_SPEC,
 ], 'nogo'));
 
@@ -2731,6 +2755,7 @@ out('limitgo.html', apply(ALGO, [
 ${STALEMATE_CHECK}`],
     [ONE, `        function endGameByScore() {`, WIN_BY_RULE_FN + `
         function endGameByScore() {`],
+    ...LEGAL_DOTS_SPEC,
     ...STONE_SPEC,
 ], 'limitgo'));
 
@@ -3686,6 +3711,30 @@ out('orbitgo.html', apply(ALGO, [
             turn = opponent;
             // 周回: 外周リングが1マス進む
             applyOrbit();`],
+    // 外周リングの回転方向 (時計回り) を枠外の矢印で示す
+    CUE_STARS(`            // 外周リングの回転方向を示す矢印
+            {
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.55);
+                ctx.lineWidth = Math.max(1.3, cellSize * 0.05);
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                const ah = cellSize * 0.11, al = cellSize * 0.18;
+                const arrow = (cx, cy, dx, dy) => {
+                    ctx.beginPath();
+                    ctx.moveTo(cx - dx * al - dy * ah, cy - dy * al + dx * ah);
+                    ctx.lineTo(cx, cy);
+                    ctx.lineTo(cx - dx * al + dy * ah, cy - dy * al - dx * ah);
+                    ctx.stroke();
+                };
+                const mc = padding + (BOARD_SIZE - 1) / 2 * cellSize;
+                const e0 = padding * 0.5, e1 = width - padding * 0.5;
+                arrow(mc, e0, 1, 0);
+                arrow(e1, mc, 0, 1);
+                arrow(mc, e1, -1, 0);
+                arrow(e0, mc, 0, -1);
+                ctx.restore();
+            }`),
     ...STONE_SPEC,
 ], 'orbitgo'));
 
@@ -3878,6 +3927,7 @@ out('centgo.html', apply(ALGO, [
             }
 
             // 星 (天元・星の点)`],
+    ...EVENT_CHIP_SPEC(`'拡大' + (6 - history.length % 6) + '手'`),
     ...STONE_SPEC,
 ], 'centgo'));
 
@@ -4149,6 +4199,23 @@ out('monogo.html', apply(ALGO, [
                     if (!hasLiberty && group.length === 1) {
                         captured.push(...group);
                     }`],
+    ...STONE_MARKS_SPEC(`            // 取れるのは孤立単石のみ — 孤立石に小さな角□を刻む
+            {
+                const seen = new Set();
+                ctx.save();
+                ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                for (let i = 0; i < board.length; i++) {
+                    const v = board[i];
+                    if (v !== 1 && v !== 2 || seen.has(i)) continue;
+                    const g = getConnectedGroup(i, v);
+                    g.forEach(j => seen.add(j));
+                    if (g.length !== 1) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + ((i / BOARD_SIZE) | 0) * cellSize, s = cellSize * 0.09;
+                    ctx.strokeStyle = v === 1 ? 'rgba(240,235,220,0.85)' : 'rgba(50,40,25,0.8)';
+                    ctx.strokeRect(cx - s, cy - s, s * 2, s * 2);
+                }
+                ctx.restore();
+            }`),
     ...STONE_SPEC,
 ], 'monogo'));
 
@@ -4185,6 +4252,7 @@ out('reggo.html', apply(ALGO, [
                 if (grp.size > 3) return false;
             }
             return true;`],
+    ...LEGAL_DOTS_SPEC,
     ...STONE_SPEC,
 ], 'reggo'));
 
@@ -4729,6 +4797,7 @@ ${PIECES_PUSH}`],
     [ONE, `            lastMove = data.lastMove || null;`,
 `            lastMove = data.lastMove || null;
             if (data.fuel) fuel = { ...data.fuel };`],
+    ...LEGAL_DOTS_SPEC,
     ...STONE_SPEC,
 ], 'fuelgo'));
 
@@ -5095,6 +5164,25 @@ out('swampgo.html', apply(ALGO, [
 `            lastMove = data.lastMove || null;
             if (data.swamp) swamp = new Set(data.swamp);
             if (data.swampSink) swampSink = { ...data.swampSink };`],
+    ...STONE_MARKS_SPEC(`            // 沼の上の石は沈む — 小さな▽を刻む
+            {
+                ctx.save();
+                ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                ctx.lineJoin = 'round';
+                for (const i of swamp) {
+                    const v = board[i];
+                    if (v !== 1 && v !== 2) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + ((i / BOARD_SIZE) | 0) * cellSize, s = cellSize * 0.09;
+                    ctx.strokeStyle = v === 1 ? 'rgba(240,235,220,0.85)' : 'rgba(50,40,25,0.8)';
+                    ctx.beginPath();
+                    ctx.moveTo(cx - s, cy - s * 0.6);
+                    ctx.lineTo(cx, cy + s);
+                    ctx.lineTo(cx + s, cy - s * 0.6);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }`),
     ...STONE_SPEC,
 ], 'swampgo'));
 
@@ -5295,6 +5383,7 @@ out('recyclego.html', apply(ALGO, [
     [ONE, `            lastMove = data.lastMove || null;`,
 `            lastMove = data.lastMove || null;
             if (Array.isArray(data.returnQueue)) returnQueue = data.returnQueue.map(q => ({ ...q }));`],
+    ...EVENT_CHIP_SPEC(`(returnQueue.length ? '復活' + (Math.min(...returnQueue.map(q => q.due)) - history.length) + '手' : '')`),
     ...STONE_SPEC,
 ], 'recyclego'));
 
@@ -5492,6 +5581,7 @@ out('infectgo.html', apply(ALGO, [
                     });
                 });
             }`],
+    ...EVENT_CHIP_SPEC(`'変色' + (7 - history.length % 7) + '手'`),
     ...STONE_SPEC,
 ], 'infectgo'));
 
@@ -5858,6 +5948,28 @@ out('taxgo.html', apply(ALGO, [
     [ONE, `            lastMove = data.lastMove || null;`,
 `            lastMove = data.lastMove || null;
             if (data.toll) toll = { ...data.toll };`],
+    // 関税: 上下の課税域 (上半分=白が課税/下半分=黒が課税) を薄く色分けし境界を破線で示す
+    CUE_GRID(`            // 課税域の地色分け (上=白に+1の着手域, 下=黒に+1の着手域)
+            {
+                const mid = Math.ceil(BOARD_SIZE / 2);
+                const y0 = padding - cellSize * 0.5, y1 = padding + (BOARD_SIZE - 0.5) * cellSize;
+                const x0 = padding - cellSize * 0.5, x1 = padding + (BOARD_SIZE - 0.5) * cellSize;
+                const t1 = padding + (BOARD_SIZE - mid - 0.5) * cellSize;
+                const t2 = padding + (mid - 0.5) * cellSize;
+                ctx.save();
+                ctx.fillStyle = alphaColor(currentTheme.p1Stroke, 0.07);
+                ctx.fillRect(x0, y0, x1 - x0, t1 - y0);
+                ctx.fillStyle = alphaColor(currentTheme.p2Fill, 0.15);
+                ctx.fillRect(x0, t2, x1 - x0, y1 - t2);
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.4);
+                ctx.lineWidth = 1;
+                ctx.setLineDash([cellSize * 0.16, cellSize * 0.12]);
+                ctx.beginPath();
+                ctx.moveTo(x0, t1); ctx.lineTo(x1, t1);
+                ctx.moveTo(x0, t2); ctx.lineTo(x1, t2);
+                ctx.stroke();
+                ctx.restore();
+            }`),
     ...STONE_SPEC,
 ], 'taxgo'));
 
@@ -5895,6 +6007,7 @@ out('greedgo.html', apply(ALGO, [
 
             // 強欲: この手で取れず、他に取れる手があれば非合法
             if (captured.length === 0 && canCaptureMove(player)) return false;`],
+    ...LEGAL_DOTS_SPEC,
     ...STONE_SPEC,
 ], 'greedgo'));
 

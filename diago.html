@@ -984,6 +984,26 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
+            // 斜め連結の補助線
+            {
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.3);
+                ctx.lineWidth = Math.max(1, cellSize * 0.06);
+                ctx.beginPath();
+                for (let dy = 0; dy < BOARD_SIZE - 1; dy++) for (let dx = 0; dx < BOARD_SIZE - 1; dx++) {
+                    const v = board[dy * BOARD_SIZE + dx];
+                    if (v !== 1 && v !== 2) continue;
+                    if (board[(dy + 1) * BOARD_SIZE + (dx + 1)] === v) { ctx.moveTo(padding + dx * cellSize, padding + dy * cellSize); ctx.lineTo(padding + (dx + 1) * cellSize, padding + (dy + 1) * cellSize); }
+                }
+                for (let dy = 0; dy < BOARD_SIZE - 1; dy++) for (let dx = 1; dx < BOARD_SIZE; dx++) {
+                    const v = board[dy * BOARD_SIZE + dx];
+                    if (v !== 1 && v !== 2) continue;
+                    if (board[(dy + 1) * BOARD_SIZE + (dx - 1)] === v) { ctx.moveTo(padding + dx * cellSize, padding + dy * cellSize); ctx.lineTo(padding + (dx - 1) * cellSize, padding + (dy + 1) * cellSize); }
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
             // ピースごとに融合描画 (盤上に残っているセルのみ)
             pieces.forEach(pc => {
                 const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
