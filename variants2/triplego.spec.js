@@ -43,6 +43,10 @@ module.exports = {
                 deadStones: [...deadStones],`],
         [K.ONE, K.ONLINE_RECV, `            holdUsed = !!data.holdUsed;
             if (typeof data.stonesLeftInTurn === 'number') stonesLeftInTurn = data.stonesLeftInTurn;`],
+        // パスは残り手を放棄して交代するのでカウンタを初期化
+        [K.ONE, `                turn = turn === 1 ? 2 : 1;`,
+`                turn = turn === 1 ? 2 : 1;
+                stonesLeftInTurn = 3; // パスは残り手を放棄して交代`],
         // 手番表示に残り石数を出す
         [K.ONE, K.TURN_LINE, `            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + ' ×残り' + stonesLeftInTurn + '石';`],
         [K.ONE, K.RV_ALGO, K.rv([

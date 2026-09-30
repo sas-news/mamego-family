@@ -45,7 +45,17 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '各着手でスロットの役が決まる: 7の倍数手はBARで取り点3倍、3の倍数手はCHERRYで2倍。',
             'ハズレ手は通常の1倍 — 大きな取りを役の手に合わせて放つのがコツ。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
+        // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
+            turn = opponent;`],
         ...K.STONE_SPEC,
     ],
     test: `

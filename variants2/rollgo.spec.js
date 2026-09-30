@@ -13,6 +13,12 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
             // 転がりルール: 盤は中央が谷底のV字斜面 (高さ=中心からの横距離)。
             //               石は1手ごとに低い方へ1マス転がる。谷底や渋滞では止まる。
             {
@@ -59,6 +65,7 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '盤は中央が谷底のV字斜面: 着手ごとに石は低い方へ1マス転がる。',
             '谷底や前を塞がれた石は止まる。転がり続ける石を読んで形を作る。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],
