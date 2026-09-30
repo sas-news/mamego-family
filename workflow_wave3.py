@@ -62,7 +62,7 @@ META = {
     "name": "wave3-variants-fanout",
     "description": "4バッチ×25の新変則碁を子セッションで並行実装し devin/wave3 にpush (アイコン+バランス検証付き)",
     "product": "sas-news/mamego-family",
-    "soft_time_limit_minutes": 70,
+    "soft_time_limit_minutes": 60,
     "phases": [
         {"title": "implement", "detail": "各バッチ25バリアントを spec+icon 実装→生成→sim検証→push",
          "count": len(batches),
