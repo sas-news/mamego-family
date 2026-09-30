@@ -160,7 +160,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 混沌ルール<br>
-            ※8手で全石漂流 / 10手で外周潮汐 / 9手で壁降下 — 全部同時
+            ※8手で全石漂流 / 10手で外周潮汐 / 9手で壁降下 — 全部同時。200手で自動終局
         </p>
     </div>
 
@@ -506,6 +506,7 @@
             '混沌ルール: 盤面が常に変化する全乗せモード。',
             '・8手ごとに全石がランダム方向へ漂流 / ・10手ごとに外周が水没↔復活 (潮汐) / ・9手ごとにランダムな空点へ壁が降る (石雨)',
             '陣形も盤面も維持できない。最終的に地+アゲハマ+コミで勝敗。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1571,6 +1572,8 @@
                 for (let i = 0; i < board.length; i++) if (board[i] === 0) empties.push(i);
                 if (empties.length) board[empties[(Math.random() * empties.length) | 0]] = 3;
             }
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

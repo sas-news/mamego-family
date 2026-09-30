@@ -159,7 +159,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 縞盤<br>
-            ※奇数行は壁。偶数行のレーン上でのみ戦う
+            ※奇数行は壁。偶数行のレーン上でのみ戦う。200手で自動終局
         </p>
     </div>
 
@@ -504,6 +504,7 @@
         const RULES_VARIANT = [
             '縞盤ルール: 奇数行は全て壁 (使用不能)。石は偶数行のレーン上でのみ戦う。',
             '上下の呼吸点が無いため、各レーンは事実上1次元の取り合い。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1556,6 +1557,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限: 200手で自動終局 (レーン上の追跡膠着を防ぐ)
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

@@ -159,7 +159,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 有限ルール<br>
-            ※各プレイヤーの石は最大12個。超過すると最古の石が消える
+            ※各プレイヤーの石は最大12個。超過すると最古の石が消える。200手で自動終局
         </p>
     </div>
 
@@ -504,6 +504,7 @@
         const RULES_VARIANT = [
             '有限ルール: 各プレイヤーが盤上に持てる石は最大12個。13個目を置くと最も古い石が消える。',
             '消えた石はアゲハマにならない。取り合いに加えて「どの石を残すか」の管理が要る。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1542,6 +1543,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

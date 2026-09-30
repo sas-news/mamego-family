@@ -159,7 +159,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 分裂ルール<br>
-            ※着手後、自分の7石以上の連は半分が敵色に変わる
+            ※着手後、自分の7石以上の連は半分が敵色に変わる。200手で自動終局
         </p>
     </div>
 
@@ -504,6 +504,7 @@
         const RULES_VARIANT = [
             '分裂ルール: 着手後、自分の7石以上の連は分裂 — 半分の石が敵色に変わる。',
             '大きな連は作れない。半分を敵に取られるかどうかは連鎖捕捉の後に判定。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1546,6 +1547,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
