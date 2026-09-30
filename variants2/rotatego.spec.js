@@ -30,6 +30,9 @@ module.exports = {
                     const vals = cs.map(([x, y]) => board[y * N + x]);
                     cs.forEach(([x, y], k) => {
                         board[y * N + x] = vals[(k - dir + vals.length) % vals.length];
+                        // 移動した石を出発点→到着点のスライドで表示 (実際の流れを可視化)
+                        const [sx, sy] = cs[(k - dir + vals.length) % vals.length];
+                        if (board[y * N + x] !== 0) fxSlide(sy * N + sx, y * N + x, 420);
                     });
                 };
                 spin(ring(0), 1);

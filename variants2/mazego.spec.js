@@ -32,7 +32,9 @@ module.exports = {
                     stack.push([nx, ny]);
                 }
             }`],
-        ...K.WALL_SPEC,
+        // 迷路の壁は苔むした石壁
+        [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_MOSS)],
+        ...K.WALL_GUARD_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '迷路のように掘り抜かれた盤。通路は1マス幅で行き止まりも多い。',
             '通路を押さえれば連を分断できる。袋小路の逃げ込みに注意。',

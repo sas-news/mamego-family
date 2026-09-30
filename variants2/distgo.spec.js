@@ -32,7 +32,7 @@ module.exports = {
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の距離点:</span> <strong>\${distScore(2)}</strong></div>`],
         // 自陣帯: 上端=黒陣(暗), 下端=白陣(明)
-        K.CUE_GRID(`            // 自陣帯: 上=黒本陣, 下=白本陣
+        K.CUE_GRID(`            // 自陣帯と進軍方向: 上=黒本陣(▼で下へ進軍), 下=白本陣(▲で上へ進軍)
             {
                 const bw = width - padding * 2;
                 const t = cellSize * 0.30;
@@ -41,6 +41,23 @@ module.exports = {
                 ctx.fillRect(padding, padding - t / 2, bw, t);
                 ctx.fillStyle = 'rgba(255,255,255,0.45)';
                 ctx.fillRect(padding, width - padding - t / 2, bw, t);
+                // 進軍勾配: 黒の目的地(下)ほど暗く、白の目的地(上)ほど明るい
+                const g = ctx.createLinearGradient(0, padding, 0, width - padding);
+                g.addColorStop(0, 'rgba(255,255,255,0.10)');
+                g.addColorStop(1, 'rgba(30,30,30,0.10)');
+                ctx.fillStyle = g;
+                ctx.fillRect(padding, padding, bw, width - padding * 2);
+                // 両端の進軍矢印 (左=黒▼, 右=白▲)
+                ctx.font = 'bold ' + Math.round(cellSize * 0.40) + 'px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                for (let k = 0; k < 3; k++) {
+                    const ay = padding + (BOARD_SIZE - 1) / 2 * cellSize + (k - 1) * cellSize * 2;
+                    ctx.fillStyle = 'rgba(30,30,30,0.5)';
+                    ctx.fillText('▼', padding - cellSize * 0.55, ay);
+                    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                    ctx.fillText('▲', width - padding + cellSize * 0.55, ay);
+                }
                 ctx.restore();
             }`),
         [K.ONE, K.RV_ALGO, K.rv([

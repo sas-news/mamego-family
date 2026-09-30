@@ -34,6 +34,27 @@ module.exports = {
         [K.ONE, `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の的ボーナス:</span> <strong>\${dartScore(2)}</strong></div>`],
+        // 命中表示: 的の中に刺さった石は即座に得点を告げる
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            {
+                const cc = Math.floor(BOARD_SIZE / 2);
+                move.cells.forEach(p => {
+                    const d = Math.abs(p.x - cc) + Math.abs(p.y - cc);
+                    if (d > 2) return;
+                    const i = p.y * BOARD_SIZE + p.x;
+                    if (d === 0) {
+                        fxGlow(i, '#facc15', 1000);
+                        fxBurst(i, '#fca5a5', 10, 1.4);
+                        fxText(i, 'BULL!', '#facc15', 1300);
+                    } else {
+                        fxText(i, '+' + (3 - d), '#fca5a5', 1000);
+                    }
+                });
+            }
+
+            turn = opponent;`],
         // 的の同心円を描く
         K.CUE_STARS(`            {
                 const cc = Math.floor(BOARD_SIZE / 2);

@@ -30,6 +30,42 @@ module.exports = {
                 if (!_allow.includes(_cur)) return false;
             }`],
         [K.ONE, K.RV_ALGO, K.rv(['着手は中央が空いた3x3の環 (8石) ピースのみ。','環の中心に敵石があれば包囲して取れる。8マス未満の空領域は窒息領域。'])],
+        // === FX: 環リング駒 ===
+        [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
+
+        // 8石の環を発光リングに繋がった珠として描く
+        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
+            if (!cellsAbs || cellsAbs.length === 0) return;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            const xs = cellsAbs.map(p => p.x), ys = cellsAbs.map(p => p.y);
+            const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+            if (cellsAbs.length >= 4 && maxX > minX && maxY > minY) {
+                const ccx = padding + (minX + maxX) / 2 * cellSize, ccy = padding + (minY + maxY) / 2 * cellSize;
+                ctx.strokeStyle = alphaColor(fill, 0.5);
+                ctx.lineWidth = cellSize * 0.17;
+                ctx.beginPath();
+                ctx.ellipse(ccx, ccy, (maxX - minX) / 2 * cellSize, (maxY - minY) / 2 * cellSize, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.strokeStyle = alphaColor(stroke || fill, 0.9);
+                ctx.lineWidth = cellSize * 0.05;
+                ctx.stroke();
+            }
+            cellsAbs.forEach(p => {
+                const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                const R = cellSize * 0.32;
+                const g = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.1, cx, cy, R);
+                g.addColorStop(0, shiftColor(fill, 0.55));
+                g.addColorStop(0.65, fill);
+                g.addColorStop(1, shiftColor(fill, -0.25));
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(cx, cy, R, 0, Math.PI * 2);
+                ctx.fill();
+                if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = Math.max(1, cellSize * 0.04); ctx.stroke(); }
+            });
+            ctx.restore();
+        }`],
         ...K.STONE_SPEC,
     ],
     test: `

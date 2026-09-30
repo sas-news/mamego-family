@@ -15,7 +15,38 @@ module.exports = {
                 const top = Math.max(0, (BOARD_SIZE - 1) - Math.floor(x / 2) * 2);
                 if (y < top) board[y * BOARD_SIZE + x] = 3;
             }`],
-        ...K.WALL_SPEC,
+        // 階段の質感: 石段ブロック (段の小口を明るい踏面で示す)
+        [K.ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 壁セル: 石段の質感 (グレー石 + 目地 + 最上段は踏面ハイライト)
+            {
+                const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (!isV(x, y)) continue;
+                    const px = padding + (x - 0.5) * cellSize, py = padding + (y - 0.5) * cellSize;
+                    const g = ctx.createLinearGradient(px, py, px, py + cellSize);
+                    g.addColorStop(0, '#6d6a63'); g.addColorStop(0.25, '#55534d'); g.addColorStop(1, '#3c3a36');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(px, py, cellSize, cellSize);
+                    // 石の目地
+                    ctx.strokeStyle = 'rgba(30,28,25,0.55)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.strokeRect(px + 0.5, py + 0.5, cellSize - 1, cellSize - 1);
+                    ctx.beginPath();
+                    ctx.moveTo(px, py + cellSize * 0.55);
+                    ctx.lineTo(px + cellSize, py + cellSize * 0.55);
+                    ctx.stroke();
+                    // 段の小口 (直下が有効面なら明るい踏面)
+                    if (y + 1 < BOARD_SIZE && !isV(x, y + 1)) {
+                        ctx.fillStyle = 'rgba(200,196,185,0.85)';
+                        ctx.fillRect(px, py + cellSize * 0.72, cellSize, cellSize * 0.28);
+                    }
+                }
+                ctx.restore();
+            }`],
+        ...K.WALL_GUARD_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '盤は右へ2列ごとに1段高くなる階段状。削れた部分には置けない。',
             '低い段から高い段へ石を進めていく立体的な攻防。',

@@ -77,12 +77,42 @@ module.exports = {
 
             // 請負ルール: 着手した側の秘密目標が達成されていれば即勝ち
             if (contractOf[player] && contractMet(player)) {
+                const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                fxGlow(ci, 'rgba(168,85,247,0.95)', 900);
+                fxShake(5, 320);
+                fxText(ci, '請負達成!', '#c084fc', 1200);
                 winByRule(player, '請負達成勝ち', '請負目標「' + CONTRACT_TYPES[contractOf[player]].name + '」を達成しました'); return;
             }
 
             turn = opponent;`],
         // 自分の請負内容をヘッダチップに表示 (ローカルでは両者見える)
         ...K.EVENT_CHIP_SPEC(`'請負 黒:' + (contractOf[1] ? CONTRACT_TYPES[contractOf[1]].name : '?') + ' 白:' + (contractOf[2] ? CONTRACT_TYPES[contractOf[2]].name : '?')`),
+        // 請負目標の座標を盤上に破線表示 (手番側の目標のみ)
+        ...K.CUE_STARS(`            // 請負: 手番側の請負目標セルを破線で示す
+            {
+                const t = contractOf[turn];
+                if (t && !gameOver) {
+                    const m = BOARD_SIZE - 1;
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(168,85,247,0.8)';
+                    ctx.setLineDash([cellSize * 0.14, cellSize * 0.10]);
+                    ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
+                    const ring = (x, y) => {
+                        ctx.beginPath();
+                        ctx.arc(padding + x * cellSize, padding + y * cellSize, cellSize * 0.42, 0, Math.PI * 2);
+                        ctx.stroke();
+                    };
+                    if (t === 'corners') [[0,0],[m,0],[0,m],[m,m]].forEach(([x,y]) => ring(x,y));
+                    else if (t === 'stars') getStarPoints(BOARD_SIZE).forEach(pt => ring(pt.x, pt.y));
+                    else {
+                        // 辺制覇: 四辺を一周する破線
+                        const o = cellSize * 0.45;
+                        ctx.strokeRect(padding - o, padding - o,
+                            (BOARD_SIZE - 1) * cellSize + o * 2, (BOARD_SIZE - 1) * cellSize + o * 2);
+                    }
+                    ctx.restore();
+                }
+            }`),
         [K.ONE, K.RV_ALGO, K.rv([
             '各プレイヤーにランダムな請負目標が割り当てられる: 「四隅3箇所」「星3箇所」「四辺制覇」のいずれか。',
             '自分の目標を先に達成した側が即勝ち (チップに目標を表示)。達成できなければ通常の地取り勝負。',

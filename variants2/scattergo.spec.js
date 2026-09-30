@@ -28,6 +28,31 @@ module.exports = {
                 }
                 if (hasOwn && !sown) return false;
             }`],
+        // 散布: 種を撒いた自石を光らせ、着地点に種の飛沫を散らす
+        [K.ONE, K.CAPTURE_BLOCK, `            // 散布: 距離3の帯上にある種元の自石を光らせ、着地点に種の飛沫
+            {
+                const mc = move.cells[0];
+                const mi = mc.y * BOARD_SIZE + mc.x;
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== player || i === mi) continue;
+                    const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
+                    if (Math.max(Math.abs(mc.x - sx), Math.abs(mc.y - sy)) === 3) {
+                        fxGlow(i, '#a3e635', 650);
+                        break;
+                    }
+                }
+                fxSplash(mi, '#bef264', 6);
+            }
+
+            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                captures[player] += captured.length;
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
         K.CUE_GRID(`            // 散布: 各自石の距離3環状帯の角を薄く示す
             {
                 ctx.save();

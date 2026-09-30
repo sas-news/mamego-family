@@ -37,6 +37,8 @@ module.exports = {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
                 spongeBonus[player] = 1; // 海綿: 取ったらもう1手
+                captured.forEach(idx => fxGlow(idx, '#2dd4bf', 550));
+                fxText(captured[0], 'もう1手!', '#5eead4', 1000);
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {

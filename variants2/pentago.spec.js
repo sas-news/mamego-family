@@ -10,7 +10,7 @@ module.exports = {
     spec: [
         ...K.rb('PENTAGO', '五連碁', 'pentago'),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
-        // 5連判定: 任意方向に自石が5連続していればtrue
+        // 5連判定: 任意方向に自石が5連続していればその連のidx配列を返す
         function hasFiveInARow(player) {
             const dirs = [[1, 0], [0, 1], [1, 1], [1, -1]];
             const isP = (x, y) => x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE
@@ -21,10 +21,14 @@ module.exports = {
                     if (isP(x - dx, y - dy)) continue; // 起点のみ走査
                     let run = 0;
                     while (isP(x + dx * run, y + dy * run)) run++;
-                    if (run >= 5) return true;
+                    if (run >= 5) {
+                        const cells = [];
+                        for (let k = 0; k < run; k++) cells.push((y + dy * k) * BOARD_SIZE + (x + dx * k));
+                        return cells;
+                    }
                 }
             }
-            return false;
+            return null;
         }
 
         function endGameByScore() {`],
@@ -32,7 +36,11 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 五連ルール: 着手した側が5連を作れば即勝ち
-            if (hasFiveInARow(player)) {
+            const five = hasFiveInARow(player);
+            if (five) {
+                five.slice(0, 5).forEach(i => fxGlow(i, '#facc15', 1000));
+                fxText(five[Math.min(2, five.length - 1)], '五連!', '#facc15', 1500);
+                fxShake(6, 380);
                 winByRule(player, '五連勝ち', '自分の石を5個連続で並べました'); return;
             }
 

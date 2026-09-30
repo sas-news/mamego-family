@@ -14,9 +14,61 @@ module.exports = {
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 if ((x + y) % 5 === 0 || (x - y + 2 * BOARD_SIZE) % 5 === 0) board[y * BOARD_SIZE + x] = 3;
             }`],
-        // 巣房っぽく蜂蜜色の壁
-        [K.ONE, '            const covered = new Set(); // ピース描画でカバー済みのマス', K.voidDraw('"#8a6a20"')],
+        // 巣房っぽく蜂蜜色の壁: 蜂の巣の六角巣房として描く
+        [K.ONE, '            const covered = new Set(); // ピース描画でカバー済みのマス',
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 蜂の巣: 壁セルを琥珀色の六角巣房として描く
+            {
+                const now = fxNow();
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (board[y * BOARD_SIZE + x] !== 3) continue;
+                    const i = y * BOARD_SIZE + x;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, r = cellSize * 0.5;
+                    const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r * 1.1);
+                    g.addColorStop(0, '#d9a832'); g.addColorStop(1, '#7a5210');
+                    ctx.fillStyle = g;
+                    ctx.beginPath();
+                    for (let k = 0; k < 6; k++) {
+                        const a = k * Math.PI / 3 - Math.PI / 2;
+                        const hx = cx + Math.cos(a) * r, hy = cy + Math.sin(a) * r;
+                        if (k === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(60,40,5,0.7)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                    ctx.stroke();
+                    // 蜜の煌めき
+                    if (Math.sin(now / 700 + i * 2.3) > 0.86) {
+                        ctx.fillStyle = 'rgba(255,240,160,0.75)';
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cellSize * 0.09, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                ctx.restore();
+            }`],
         ...K.WALL_GUARD_SPEC,
+        // 蜂の巣の雰囲気: 盤上を漂う金色の微粒子
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            for (let k = 0; k < 14; k++) {
+                const t = (now / 2600 + k * 0.77) % 1;
+                const px = (k * 139.7 + now * 0.008) % w;
+                const py = (k * 61.3) % w;
+                ctx2.globalAlpha = 0.28 * Math.sin(t * Math.PI);
+                ctx2.fillStyle = '#ffd668';
+                ctx2.beginPath();
+                ctx2.arc(px, py, cs * 0.05, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`],
         [K.ONE, K.RV_ALGO, K.rv([
             '斜めに交差する壁がハニカム状の巣房を作る。',
             '巣房を隔てる薄い隔壁をめぐって小さな殺し合いが連続する。',

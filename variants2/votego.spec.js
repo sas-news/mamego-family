@@ -72,6 +72,29 @@ module.exports = {
             });
             return { black, white };
         }`],
+        // 区勢速報: 各区の現在の多数派の色で区全体を薄く染める
+        K.CUE_GRID(`            {
+                const zw = Math.ceil(BOARD_SIZE / 3), zh = Math.ceil(BOARD_SIZE / 3);
+                const zc = [];
+                for (let z = 0; z < 9; z++) zc.push({ b: 0, w: 0 });
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const v = board[y * BOARD_SIZE + x];
+                    if (v === 1) zc[districtOf(x, y)].b++;
+                    else if (v === 2) zc[districtOf(x, y)].w++;
+                }
+                ctx.save();
+                for (let zy = 0; zy < 3; zy++) for (let zx = 0; zx < 3; zx++) {
+                    const z = zc[zy * 3 + zx];
+                    if (z.b === z.w) continue;
+                    ctx.fillStyle = z.b > z.w ? 'rgba(15,15,15,0.12)' : 'rgba(255,255,255,0.20)';
+                    const x0 = padding + (zx * zw - 0.5) * cellSize;
+                    const y0 = padding + (zy * zh - 0.5) * cellSize;
+                    const w = (Math.min(BOARD_SIZE, (zx + 1) * zw) - zx * zw) * cellSize;
+                    const h = (Math.min(BOARD_SIZE, (zy + 1) * zh) - zy * zh) * cellSize;
+                    ctx.fillRect(x0, y0, w, h);
+                }
+                ctx.restore();
+            }`),
         // 区画境界を太線で描く
         K.CUE_STARS(`            {
                 const zw = Math.ceil(BOARD_SIZE / 3);

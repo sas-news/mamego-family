@@ -45,6 +45,9 @@ module.exports = {
                     if (grp.some(g => medMark.has(g))) {
                         grp.forEach(g => medMark.delete(g));
                         finalRemove.push(grp[0]);
+                        // 治癒発動: 1石だけ散り連が耐える
+                        grp.slice(1).forEach(g => fxGlow(g, 'rgba(40,200,110,0.9)', 820));
+                        fxText(grp[0], '耐えた', '#34d399', 1000);
                     } else {
                         finalRemove.push(...grp);
                     }
@@ -65,7 +68,9 @@ module.exports = {
                 move.cells.forEach(p => {
                     const pi = p.y * BOARD_SIZE + p.x;
                     getNeighbors(pi).forEach(n => {
-                        if (board[n] === player) getConnectedGroup(n, player).forEach(g => medMark.add(g));
+                        if (board[n] === player) getConnectedGroup(n, player).forEach(g => {
+                            if (!medMark.has(g)) { medMark.add(g); fxGlow(g, 'rgba(40,200,110,0.75)', 560); }
+                        });
                     });
                 });
             }

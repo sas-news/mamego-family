@@ -38,7 +38,10 @@ module.exports = {
                     }
                     if (!ok) continue;
                     g.sort((a, b) => a - b);
-                    for (const i of g) { board[i - N] = board[i]; board[i] = 0; }
+                    for (const i of g) {
+                        board[i - N] = board[i]; board[i] = 0;
+                        fxSlide(i, i - N, 460); // 浮き上がる軌跡
+                    }
                 }
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
@@ -68,6 +71,26 @@ module.exports = {
             '盤には浮力がある: 連の上が空いていれば3手ごとに連ごと1マス浮かび上がる。',
             '天井や他の石に頭を押さえられた連は浮けない。石を置く位置も置く時も流される。',
         ])],
+        // 浮力: 盤全体をゆっくり昇る泡 (常時)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(170,215,255,0.35)';
+            ctx2.lineWidth = Math.max(1, cs * 0.035);
+            for (let k = 0; k < 14; k++) {
+                const t = ((now / 3200) + k * 0.13) % 1;
+                const px = ((k * 61.7) % 1) * w;
+                const py = w * (1 - t);
+                ctx2.globalAlpha = 0.5 * Math.sin(t * Math.PI);
+                ctx2.beginPath();
+                ctx2.arc(px + Math.sin(now / 900 + k) * cs * 0.15, py,
+                    cs * (0.05 + (k % 3) * 0.025), 0, Math.PI * 2);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

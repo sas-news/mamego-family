@@ -33,7 +33,11 @@ module.exports = {
                         const tx = x - dx, ty = y - dy;
                         if (tx < 0 || tx >= N || ty < 0 || ty >= N) continue;
                         const t = ty * N + tx;
-                        if (board[t] === 0) { board[t] = v; board[i] = 0; moved.add(t); break; }
+                        if (board[t] === 0) {
+                            board[t] = v; board[i] = 0; moved.add(t);
+                            fxSlide(i, t, 330); // 反発で離れる
+                            break;
+                        }
                     }
                 }
                 // 引寄
@@ -48,6 +52,7 @@ module.exports = {
                         const mid = my * N + mx, far = fy * N + fx;
                         if (board[mid] === 0 && board[far] === v && !moved.has(far)) {
                             board[mid] = v; board[far] = 0; moved.add(mid);
+                            fxSlide(far, mid, 330); // 同色に引き寄せられる
                             break;
                         }
                     }

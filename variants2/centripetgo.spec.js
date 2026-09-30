@@ -31,7 +31,8 @@ module.exports = {
                         if (board[j] === 0) { pulls.push([i, j]); break; }
                     }
                 }
-                pulls.forEach(([i, j]) => { if (board[j] === 0) { board[j] = board[i]; board[i] = 0; } });
+                pulls.forEach(([i, j]) => { if (board[j] === 0) { board[j] = board[i]; board[i] = 0; fxSlide(i, j, 380); } });
+                if (pulls.length) fxShake(2, 160);
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
                     const dead = getCapturedStones(board, pl);

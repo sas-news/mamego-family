@@ -31,6 +31,20 @@ module.exports = {
                     padding * 2 + BOARD_SIZE * cellSize, cellSize);
                 ctx.restore();
             }`),
+        // 行進: 左余白に対象行を指す脈動する矢印 (対象行が1手ごとに下へ進むルール)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const tRow = history.length % BOARD_SIZE;
+            ctx2.save();
+            ctx2.globalAlpha = 0.55 + Math.sin(now / 320) * 0.3;
+            ctx2.fillStyle = 'rgba(90,110,170,0.9)';
+            ctx2.font = 'bold ' + Math.round(cs * 0.4) + 'px sans-serif';
+            ctx2.textAlign = 'center';
+            ctx2.textBaseline = 'middle';
+            ctx2.fillText('\\u25b6', pad * 0.45, pad + tRow * cs);
+            ctx2.restore();
+        });`],
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は現在の対象行のみ。対象行は1手ごとに上から下へ1行ずつ行進する。',

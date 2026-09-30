@@ -40,6 +40,24 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
+        // 孤点に小さな菱形 (斜めだけに繋がる点の目印)
+        K.CUE_STARS(`            {
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.45);
+                ctx.lineWidth = Math.max(1, cellSize * 0.035);
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if ((x + y) % 2 !== 0) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, r = cellSize * 0.13;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy - r);
+                    ctx.lineTo(cx + r, cy);
+                    ctx.lineTo(cx, cy + r);
+                    ctx.lineTo(cx - r, cy);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }`),
         [K.ONE, K.RV_ALGO, K.rv([
             '市松の半分は「孤点」で、斜め方向にだけ繋がる。',
             '残り半分は通常の直交格子。2種類の連の在り方が交錯する。',

@@ -31,6 +31,14 @@ module.exports = {
                 BOARD_SIZE = N2;
                 board = nb;
                 pieces.forEach(pc => pc.cells.forEach(p => { p.x += 1; p.y += 1; }));
+                // 拡大の瞬間: 盤が揺れ、新生リングが光る
+                fxShake(5, 320);
+                for (let y = 0; y < N2; y++) for (let x = 0; x < N2; x++) {
+                    if (x === 0 || x === N2 - 1 || y === 0 || y === N2 - 1) {
+                        fxGlow(y * N2 + x, 'rgba(150,220,160,0.8)', 700);
+                    }
+                }
+                fxText(Math.floor(N2 / 2) * N2 + Math.floor(N2 / 2), '拡大！', 'rgba(120,200,140,0.95)', 1100);
             }
 
             turn = opponent;`],

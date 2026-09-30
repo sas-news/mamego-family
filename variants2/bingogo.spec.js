@@ -31,6 +31,11 @@ module.exports = {
 
             // ビンゴルール: 着手した側がラインを完成させれば即勝ち
             if (bingoWin(player)) {
+                const ln = bingoLines().find(l => l.every(i => board[i] === player));
+                if (ln) ln.forEach(i => fxGlow(i, '#facc15', 1000));
+                const cc = Math.floor(BOARD_SIZE / 2);
+                fxShake(6, 380);
+                fxText(cc * BOARD_SIZE + cc, 'BINGO!', '#facc15', 1500);
                 winByRule(player, 'ビンゴ勝ち', '中央のビンゴラインを完成させました'); return;
             }
 
@@ -50,6 +55,27 @@ module.exports = {
                 ctx.fillRect(-len / 2 - cellSize * 0.15, -th / 2, len + cellSize * 0.3, th);
                 ctx.rotate(-Math.PI / 2);
                 ctx.fillRect(-len / 2 - cellSize * 0.15, -th / 2, len + cellSize * 0.3, th);
+                ctx.restore();
+            }`),
+        // リーチ表示: あと1個でビンゴのラインは空き点に警戒点を打つ
+        ...K.STONE_MARKS_SPEC(`            {
+                ctx.save();
+                bingoLines().forEach(ln => {
+                    [1, 2].forEach(pl => {
+                        const filled = ln.filter(i => board[i] === pl);
+                        const empty = ln.filter(i => board[i] === 0);
+                        if (filled.length === 4 && empty.length === 1) {
+                            const i = empty[0];
+                            const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
+                            ctx.fillStyle = pl === 1 ? 'rgba(245,208,96,0.9)' : 'rgba(64,176,240,0.9)';
+                            ctx.strokeStyle = 'rgba(220,60,60,0.9)';
+                            ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
+                            ctx.beginPath();
+                            ctx.arc(cx, cy, cellSize * 0.16, 0, Math.PI * 2);
+                            ctx.fill(); ctx.stroke();
+                        }
+                    });
+                });
                 ctx.restore();
             }`),
         [K.ONE, K.RV_ALGO, K.rv([

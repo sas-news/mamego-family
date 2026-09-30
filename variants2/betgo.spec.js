@@ -45,11 +45,16 @@ module.exports = {
 
             // 賭碁ルール: 相手の直前の石がこの一手を生き延びた → 相手の賭け的中
             if (pendingBet && pendingBet.owner !== player) {
-                if (board[pendingBet.idx] === pendingBet.owner) betScore[pendingBet.owner]++;
+                if (board[pendingBet.idx] === pendingBet.owner) {
+                    betScore[pendingBet.owner]++;
+                    fxGlow(pendingBet.idx, '#fbbf24', 900);
+                    fxText(pendingBet.idx, '+1 的中!', '#fbbf24', 1200);
+                }
                 pendingBet = null;
             }
             // 自分の着手にも賭けが乗る
             pendingBet = { idx: move.cells[0].y * BOARD_SIZE + move.cells[0].x, owner: player };
+            fxGlow(pendingBet.idx, '#cbd5e1', 600);
 
             turn = opponent;`],
         [K.ONE, `            const blackTotal = territory.black + captures[1];
@@ -63,6 +68,19 @@ module.exports = {
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の賭け的中:</span> <strong>\${betScore[2]}</strong></div>`],
         ...K.EVENT_CHIP_SPEC(`'賭 黒:' + betScore[1] + ' 白:' + betScore[2]`),
+        // 賭け石: 賭けの乗った石には金貨が載っている
+        ...K.STONE_MARKS_SPEC(`            if (pendingBet && board[pendingBet.idx] === pendingBet.owner) {
+                const i = pendingBet.idx;
+                const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
+                ctx.save();
+                ctx.fillStyle = '#f5c542';
+                ctx.strokeStyle = '#92600a';
+                ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                ctx.beginPath();
+                ctx.arc(cx + cellSize * 0.26, cy - cellSize * 0.26, cellSize * 0.13, 0, Math.PI * 2);
+                ctx.fill(); ctx.stroke();
+                ctx.restore();
+            }`),
         [K.ONE, K.RV_ALGO, K.rv([
             '着手するたびその石に「次の一手を生き延びる」賭けが自動で乗る。',
             '相手の手番を越えて石が残っていれば的中で+1点。終局は 地+アゲハマ+賭け点 の合計。',

@@ -21,6 +21,12 @@ module.exports = {
 
             // 球碁: 旗マスを自分の石で押さえればホールインワン
             if (holeIdx >= 0 && board[holeIdx] === player) {
+                // カップイン: 紙吹雪と歓声の表示
+                fxGlow(holeIdx, '#facc15', 1000);
+                fxBurst(holeIdx, '#86efac', 12, 1.6);
+                fxBurst(holeIdx, '#facc15', 8, 1.2);
+                fxShake(5, 340);
+                fxText(holeIdx, 'IN ONE!', '#facc15', 1500);
                 winByRule(player, 'ホールインワン', '旗を' + history.length + '打で制しました');
                 return;
             }

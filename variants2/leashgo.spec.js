@@ -46,6 +46,31 @@ module.exports = {
                     ctx.restore();
                 }
             }`),
+        // 繋留: アンカー石に金環 + 破線の係留圏
+        ...K.STONE_MARKS_SPEC(`            {
+                let anc = null;
+                for (const pc of pieces) {
+                    if (pc.player !== turn) continue;
+                    const c0 = pc.cells[0];
+                    if (board[c0.y * BOARD_SIZE + c0.x] === turn) { anc = c0; break; }
+                }
+                if (anc) {
+                    const ax = padding + anc.x * cellSize, ay = padding + anc.y * cellSize;
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(212,160,23,0.85)';
+                    ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
+                    ctx.setLineDash([cellSize * 0.2, cellSize * 0.14]);
+                    ctx.beginPath();
+                    ctx.arc(ax, ay, cellSize * 3.45, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.lineWidth = Math.max(1.8, cellSize * 0.07);
+                    ctx.beginPath();
+                    ctx.arc(ax, ay, cellSize * 0.52, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }`),
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は盤上に残っている最も古い自分の石から3マス以内のみ。',

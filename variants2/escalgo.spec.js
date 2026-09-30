@@ -18,8 +18,12 @@ module.exports = {
             if (history.length % 3 === 0) {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
                 const first = board[c];
-                for (let y = 0; y < N - 1; y++) board[y * N + c] = board[(y + 1) * N + c];
+                for (let y = 0; y < N - 1; y++) {
+                    board[y * N + c] = board[(y + 1) * N + c];
+                    if (board[y * N + c] !== 0) fxSlide((y + 1) * N + c, y * N + c, 420); // 昇る石
+                }
                 board[(N - 1) * N + c] = first;
+                if (first === 1 || first === 2) fxSlide(c, (N - 1) * N + c, 560); // 天辺→最下の循環
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
                     const dead = getCapturedStones(board, pl);
@@ -53,6 +57,24 @@ module.exports = {
             '中央列は循環するエスカレーター: 3手ごとに列の全セルが1マス上へ運ばれる。',
             '最上段に達した石は最下段へ回ってくる。乗せた石は毎手動き続ける。',
         ])],
+        // エスカレーターの縁ラインが上へ流れ続ける
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const c = Math.floor(BOARD_SIZE / 2);
+            const x0 = pad + (c - 0.5) * cs, x1 = pad + (c + 0.5) * cs;
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(110,130,150,0.4)';
+            ctx2.lineWidth = Math.max(1.2, cs * 0.055);
+            ctx2.lineCap = 'round';
+            ctx2.setLineDash([cs * 0.20, cs * 0.28]);
+            ctx2.lineDashOffset = (now / 28) % (cs * 0.48); // 上へ流れる
+            ctx2.beginPath();
+            ctx2.moveTo(x0, pad - cs * 0.5); ctx2.lineTo(x0, pad + (BOARD_SIZE - 0.5) * cs);
+            ctx2.moveTo(x1, pad - cs * 0.5); ctx2.lineTo(x1, pad + (BOARD_SIZE - 0.5) * cs);
+            ctx2.stroke();
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

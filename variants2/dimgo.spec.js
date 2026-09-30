@@ -46,6 +46,27 @@ module.exports = {
             '盤の中央1/2領域だけが明るい。外周の薄暮エリアの石は薄く霞んで見える。',
             '隅での細かい戦いは薄暮の中 — 地取りは中央が読みやすく、隅は肌感覚が物を言う。',
         ])],
+        // 薄暮エリアを舞う蛍火 — 「ここは霞んでいる」ことを常時演出
+        [K.ONE, '        let obstaclePainter = null;',
+`        let obstaclePainter = null;
+        // 薄暮碁: 外周の薄暮に蛍火が漂い、夕日の残照が境界で揺れる
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            for (let k = 0; k < 14; k++) {
+                const ph = now / 3000 + k * 2.39;
+                const x = (Math.sin(ph * 0.71 + k * 3.1) * 0.5 + 0.5) * (BOARD_SIZE - 1);
+                const y = (Math.sin(ph * 0.97 + k * 1.7) * 0.5 + 0.5) * (BOARD_SIZE - 1);
+                if (!isDim(x, y)) continue;
+                const tw = Math.sin(ph * 3.3 + k);
+                if (tw < 0.1) continue;
+                ctx2.globalAlpha = 0.10 + tw * 0.22;
+                ctx2.fillStyle = '#fdba74';
+                ctx2.beginPath();
+                ctx2.arc(pad + x * cs, pad + y * cs, cs * 0.07, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

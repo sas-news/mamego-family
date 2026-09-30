@@ -11,10 +11,10 @@ module.exports = {
         ...K.rb('SURVEYGO', '測量碁', 'surveygo'),
         // 測量矩形ヘルパー (終局時加算)
         [K.ONE, `        function endGameByScore() {`, `
-        // 自石の辺で囲まれた最大矩形の面積 (外周の石が全て同色)
-        function surveyRect(player) {
+        // 自石の辺で囲まれた最大矩形 (外周の石が全て同色) — 面積と座標を返す
+        function surveyBest(player) {
             const isP = (x, y) => board[y * BOARD_SIZE + x] === player;
-            let best = 0;
+            let best = 0, br = null;
             for (let r1 = 0; r1 < BOARD_SIZE; r1++) for (let r2 = r1 + 1; r2 < BOARD_SIZE; r2++) {
                 for (let c1 = 0; c1 < BOARD_SIZE; c1++) for (let c2 = c1 + 1; c2 < BOARD_SIZE; c2++) {
                     const area = (r2 - r1 + 1) * (c2 - c1 + 1);
@@ -22,11 +22,12 @@ module.exports = {
                     let ok = true;
                     for (let x = c1; x <= c2 && ok; x++) ok = isP(x, r1) && isP(x, r2);
                     for (let y = r1; y <= r2 && ok; y++) ok = isP(c1, y) && isP(c2, y);
-                    if (ok) best = area;
+                    if (ok) { best = area; br = { area, r1, r2, c1, c2 }; }
                 }
             }
-            return best;
+            return br || { area: 0 };
         }
+        function surveyRect(player) { return surveyBest(player).area; }
 
         function endGameByScore() {`],
         [K.ONE, `            const blackTotal = territory.black + captures[1];
@@ -44,6 +45,28 @@ module.exports = {
             '矩形の内部は空でも敵石でもよい。大きく囲うほど高得点の測量勝負。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
+        // 測量: 両陣営の現時点の最大矩形を破線で示す
+        K.CUE_STARS(`            // 測量: 現時点の最大矩形を破線で示す (着手毎に再計算)
+            {
+                const skey = 'survey' + history.length;
+                if (render.__rectKey !== skey) {
+                    render.__rectKey = skey;
+                    render.__rects = [surveyBest(1), surveyBest(2)];
+                }
+                ctx.save();
+                ctx.setLineDash([cellSize * 0.14, cellSize * 0.10]);
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.055);
+                render.__rects.forEach((rc, pi) => {
+                    if (!rc || !rc.area) return;
+                    ctx.strokeStyle = pi === 0 ? 'rgba(30,30,30,0.7)' : 'rgba(255,255,255,0.85)';
+                    ctx.strokeRect(
+                        padding + (rc.c1 - 0.45) * cellSize,
+                        padding + (rc.r1 - 0.45) * cellSize,
+                        (rc.c2 - rc.c1 + 0.9) * cellSize,
+                        (rc.r2 - rc.r1 + 0.9) * cellSize);
+                });
+                ctx.restore();
+            }`),
         // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る

@@ -37,8 +37,16 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 前哨ルール: 着手した側が現在占拠している星点数を累積
-            outpostScore[player] += getStarPoints(BOARD_SIZE)
-                .filter(pt => board[pt.y * BOARD_SIZE + pt.x] === player).length;
+            {
+                const held = getStarPoints(BOARD_SIZE).filter(pt => board[pt.y * BOARD_SIZE + pt.x] === player);
+                outpostScore[player] += held.length;
+                if (held.length > 0) {
+                    held.forEach(pt => fxGlow(pt.y * BOARD_SIZE + pt.x, '#fbbf24', 600));
+                    if (lastMove && lastMove.cells[0]) {
+                        fxText(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, '前哨+' + held.length, '#fbbf24', 1100);
+                    }
+                }
+            }
 
             turn = opponent;`],
         // 前哨点を終局スコアに加算
@@ -70,6 +78,29 @@ module.exports = {
             '終局時に 地 + アゲハマ + 前哨点 の合計で勝敗を決める。星を取り合って長く保持せよ。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        // 前哨旗: 占拠中の星点に小旗を立てる
+        ...K.STONE_MARKS_SPEC(`            getStarPoints(BOARD_SIZE).forEach(pt => {
+                const v = board[pt.y * BOARD_SIZE + pt.x];
+                if (v !== 1 && v !== 2) return;
+                const px = padding + pt.x * cellSize, py = padding + pt.y * cellSize;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(120,80,30,0.9)';
+                ctx.lineWidth = Math.max(1, cellSize * 0.035);
+                ctx.beginPath();
+                ctx.moveTo(px + cellSize * 0.3, py - cellSize * 0.45);
+                ctx.lineTo(px + cellSize * 0.3, py - cellSize * 0.1);
+                ctx.stroke();
+                ctx.fillStyle = v === 1 ? '#374151' : '#f8fafc';
+                ctx.strokeStyle = 'rgba(60,60,60,0.6)';
+                ctx.beginPath();
+                ctx.moveTo(px + cellSize * 0.3, py - cellSize * 0.45);
+                ctx.lineTo(px + cellSize * 0.54, py - cellSize * 0.38);
+                ctx.lineTo(px + cellSize * 0.3, py - cellSize * 0.31);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            });`),
         ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],

@@ -19,7 +19,10 @@ module.exports = {
                 for (let x = N - 2; x >= 0; x--) {
                     const i = by * N + x;
                     if (board[i] !== 1 && board[i] !== 2) continue;
-                    if (board[i + 1] === 0) { board[i + 1] = board[i]; board[i] = 0; }
+                    if (board[i + 1] === 0) {
+                        board[i + 1] = board[i]; board[i] = 0;
+                        fxSlide(i, i + 1, 340); // ベルトで運ばれる軌跡
+                    }
                 }
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
@@ -54,6 +57,24 @@ module.exports = {
             '中央行は右へ流れるベルトコンベア。着手ごとに上の石が1マス右へ運ばれる。',
             '右端に達した石はベルトを降りて留まる。詰まった石は動かない。',
         ])],
+        // ベルトの回転: 縁の破線が右へ流れ続ける
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const by = Math.floor(BOARD_SIZE / 2);
+            const y0 = pad + (by - 0.5) * cs, y1 = pad + (by + 0.5) * cs;
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(110,130,150,0.4)';
+            ctx2.lineWidth = Math.max(1.2, cs * 0.055);
+            ctx2.lineCap = 'round';
+            ctx2.setLineDash([cs * 0.20, cs * 0.28]);
+            ctx2.lineDashOffset = -(now / 28) % (cs * 0.48);
+            ctx2.beginPath();
+            ctx2.moveTo(pad - cs * 0.5, y0); ctx2.lineTo(pad + (BOARD_SIZE - 0.5) * cs, y0);
+            ctx2.moveTo(pad - cs * 0.5, y1); ctx2.lineTo(pad + (BOARD_SIZE - 0.5) * cs, y1);
+            ctx2.stroke();
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

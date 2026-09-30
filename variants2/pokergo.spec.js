@@ -51,6 +51,47 @@ module.exports = {
             '横一線に並べる強欲さと、地を確保する堅実さのバランスが問われる。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        // トランプの顔: 全石をカードに見立て (黒=♠ / 白=♥)、行の同色の並び2連以上に金縁
+        ...K.STONE_MARKS_SPEC(`            {
+                ctx.save();
+                const suitPos = [[1, 0]];
+                for (let i = 0; i < board.length; i++) {
+                    const v = board[i];
+                    if (v !== 1 && v !== 2) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
+                    const w = cellSize * 0.78, h = cellSize * 0.92;
+                    ctx.fillStyle = v === 1 ? '#1d2333' : '#faf6ec';
+                    ctx.strokeStyle = v === 1 ? '#0a0d16' : '#9a8f6a';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.beginPath();
+                    ctx.roundRect(cx - w / 2, cy - h / 2, w, h, w * 0.14);
+                    ctx.fill(); ctx.stroke();
+                    // スートマーク
+                    ctx.fillStyle = v === 1 ? '#e8ecff' : '#c93030';
+                    ctx.font = 'bold ' + Math.round(cellSize * 0.34) + 'px serif';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(v === 1 ? '♠' : '♥', cx, cy + cellSize * 0.02);
+                }
+                // 行の同色2連以上のカードに金の下線 (役の予兆)
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const v = board[y * BOARD_SIZE + x];
+                    if (v !== 1 && v !== 2) continue;
+                    for (const [dx] of suitPos) {
+                        const px = x - dx;
+                        if (px >= 0 && board[y * BOARD_SIZE + px] === v) continue;
+                        let run = 1;
+                        while (x + dx * run < BOARD_SIZE && board[y * BOARD_SIZE + (x + dx * run)] === v) run++;
+                        if (run < 2) continue;
+                        ctx.strokeStyle = run >= 4 ? '#f5c542' : 'rgba(245,197,66,0.55)';
+                        ctx.lineWidth = Math.max(1.4, cellSize * 0.07);
+                        ctx.beginPath();
+                        ctx.moveTo(padding + (x - 0.4) * cellSize, padding + y * cellSize + cellSize * 0.38);
+                        ctx.lineTo(padding + (x + dx * (run - 1) + 0.4) * cellSize, padding + y * cellSize + cellSize * 0.38);
+                        ctx.stroke();
+                    }
+                }
+                ctx.restore();
+            }`),
         ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],

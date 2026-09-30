@@ -35,7 +35,13 @@ module.exports = {
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 // 城塞: 取跡が自分の城壁 (壁=3) になる
-                captured.forEach(idx => { board[idx] = 3; fortMap[idx] = player; });
+                captured.forEach(idx => {
+                    board[idx] = 3;
+                    fortMap[idx] = player;
+                    fxGlow(idx, player === 1 ? '#94a3b8' : '#e2e8f0', 550);
+                });
+                fxText(captured[0], '築城!', '#facc15', 1050);
+                fxShake(3, 240);
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();

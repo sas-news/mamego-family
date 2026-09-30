@@ -34,9 +34,10 @@ module.exports = {
                         const nx = x + tx2, ny = y + ty2;
                         if (nx < 0 || nx >= N || ny < 0 || ny >= N) continue; // 盤端では外へ出られず留まる
                         const j = ny * N + nx;
-                        if (board[j] === 0) { board[j] = board[i]; board[i] = 0; break; }
+                        if (board[j] === 0) { board[j] = board[i]; board[i] = 0; fxSlide(i, j, 380); break; }
                     }
                 }
+                fxShake(2, 160);
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
                     const dead = getCapturedStones(board, pl);

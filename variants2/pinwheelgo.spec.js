@@ -19,7 +19,45 @@ module.exports = {
                     if (notch) board[y * BOARD_SIZE + x] = 3;
                 }
             }`],
-        ...K.WALL_SPEC,
+        // 風車: 削れた隅は「風に切られた斜面」— 暗い彫り込み + 渦方向の風筋
+        [K.ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 風車の切れ込み: 暗い彫り込み面 + 中心を軸にした接線方向の風筋 + 境界線
+            {
+                const cc = (BOARD_SIZE - 1) / 2;
+                const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                const bcx = padding + cc * cellSize, bcy = padding + cc * cellSize;
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (!isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.52);
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    // 風筋: 中心回りの接線方向へ流れる短い弧 (風車の回転方向を示唆)
+                    const a = Math.atan2(y - cc, x - cc);
+                    const r0 = Math.hypot(x - cc, y - cc) * cellSize;
+                    ctx.strokeStyle = 'rgba(190,205,225,0.26)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                    ctx.beginPath();
+                    ctx.arc(bcx, bcy, Math.max(cellSize * 0.3, r0), a - 0.15, a + 0.15);
+                    ctx.stroke();
+                }
+                ctx.strokeStyle = currentTheme.lineColor;
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
+                ctx.beginPath();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    if (x > 0 && isV(x - 1, y)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
+                    if (x < BOARD_SIZE - 1 && isV(x + 1, y)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
+                    if (y > 0 && isV(x, y - 1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
+                    if (y < BOARD_SIZE - 1 && isV(x, y + 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
+                }
+                ctx.stroke();
+                ctx.restore();
+            }`],
+        ...K.WALL_GUARD_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '四隅を回転対称に削った風車形の盤。',
             '欠けた隅で呼吸点が偏り、辺ごとに異なる戦い方を強いられる。',

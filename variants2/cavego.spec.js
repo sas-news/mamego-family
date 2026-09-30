@@ -16,7 +16,9 @@ module.exports = {
                 if (wx === 0 || wy === 0 || wx === BOARD_SIZE - 1 || wy === BOARD_SIZE - 1) continue;
                 if ((wx * 7 + wy * 13) % 17 < 2) board[i] = 3;
             }`],
-        ...K.WALL_SPEC,
+        // 岩壁は暗い洞窟の岩肌 + 結晶の瞬き
+        [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_CAVE)],
+        ...K.WALL_GUARD_SPEC,
         // 洞窟の暗がり: 石から遠いマスを薄暗く覆う
         ...K.STONE_MARKS_SPEC(`            ctx.save();
             ctx.fillStyle = 'rgba(8,10,24,0.30)';
@@ -41,6 +43,18 @@ module.exports = {
             '石の周囲3マスだけ灯りが届き、遠くは薄暗い — 探検するように盤を明かしていこう。',
             '区画の分断を活かして地を作るか、洞窟奥深くへ敵を誘い込むか。',
         ])],
+        // 洞窟の薄暗さ: ヴィネットがゆっくり呼吸する
+        [K.ONE, K.FX_BOOT, K.FX_BOOT + `
+        fxAmbient((ctx2, now, pad, cs) => {
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            const vg = ctx2.createRadialGradient(w / 2, w / 2, w * 0.3, w / 2, w / 2, w * 0.75);
+            vg.addColorStop(0, 'rgba(0,0,0,0)');
+            vg.addColorStop(1, 'rgba(2,4,12,' + (0.16 + 0.05 * Math.sin(now / 800)) + ')');
+            ctx2.fillStyle = vg;
+            ctx2.fillRect(0, 0, w, w);
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

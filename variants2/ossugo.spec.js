@@ -34,7 +34,7 @@ module.exports = {
             boneMap = (data.boneMap && typeof data.boneMap === 'object') ? { ...data.boneMap } : {};`],
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
-                captured.forEach(idx => { board[idx] = 4; boneMap[idx] = 3; }); // 白骨化 (置けない障害物)
+                captured.forEach(idx => { board[idx] = 4; boneMap[idx] = 3; fxGlow(idx, '#e7e5d4', 650); }); // 白骨化 (置けない障害物)
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -52,7 +52,12 @@ module.exports = {
                     boneMap[idx]--;
                     if (boneMap[idx] <= 0) {
                         delete boneMap[idx];
-                        if (board[idx] === 4) { board[idx] = 0; gone++; }
+                        if (board[idx] === 4) {
+                            board[idx] = 0; gone++;
+                            // 風化して崩れる演出: 骨の粉塵が散る
+                            fxSplash(idx, '#d6d3c0', 7);
+                            fxBurst(idx, '#a8a29e', 4, 0.8);
+                        }
                     }
                 }
                 if (gone > 0) cleanUpPieces();

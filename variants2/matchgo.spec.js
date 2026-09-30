@@ -40,9 +40,17 @@ module.exports = {
                     }
                 }
                 if (vanish.size > 0) {
-                    vanish.forEach(i => { board[i] = 0; });
+                    vanish.forEach(i => {
+                        const c = board[i];
+                        board[i] = 0;
+                        fxBurst(i, c === 1 ? '#6b7280' : '#f9fafb', 10, 1.6);
+                        fxBurst(i, c === 1 ? '#374151' : '#e5e7eb', 6, 1.1);
+                    });
                     captures[player] += vanish.size;
                     cleanUpPieces();
+                    const vi = vanish.values().next().value;
+                    fxText(vi, vanish.size + '連消!', '#f472b6', 1200);
+                    fxShake(Math.min(6, 2 + vanish.size), 300);
                 }
             }
 

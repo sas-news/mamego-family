@@ -19,9 +19,16 @@ module.exports = {
                 const N = BOARD_SIZE, n = history.length;
                 const mx = (n * 5 + 2) % N, my = (n * 7 + 3) % N;
                 const crater = [[mx, my], [mx - 1, my], [mx + 1, my], [mx, my - 1], [mx, my + 1]];
+                // 着弾演出: 衝撃波リング + 画面揺れ + 各クレーターの火砕
+                const ci = my * N + mx;
+                fxGlow(ci, '#fdba74', 800);
+                fxText(ci, '隕石!', '#fb923c', 1000);
+                fxShake(7, 380);
                 for (const [x, y] of crater) {
                     if (x < 0 || x >= N || y < 0 || y >= N) continue;
                     const i = y * N + x;
+                    fxBurst(i, '#f97316', 9, 1.5);
+                    fxBurst(i, '#78716c', 5, 1.0);
                     if (board[i] === 1 || board[i] === 2) captures[board[i] === 1 ? 2 : 1]++;
                     board[i] = 3;
                 }
@@ -29,7 +36,41 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.WALL_SPEC,
+        // クレーター専用テクスチャ: 黒焦げの岩盤 + 脈動する残り火
+        [K.ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // クレーター (壁セル): 黒焦げの岩盤とくすぶる残り火
+            {
+                const now = fxNow();
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (board[y * BOARD_SIZE + x] !== 3) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    const g = ctx.createRadialGradient(cx, cy, cellSize * 0.05, cx, cy, cellSize * 0.75);
+                    g.addColorStop(0, '#1c1917');
+                    g.addColorStop(0.65, '#292524');
+                    g.addColorStop(1, '#44403c');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    // クレーター縁の焦げた環
+                    ctx.strokeStyle = 'rgba(120, 113, 108, 0.8)';
+                    ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.34, 0, Math.PI * 2);
+                    ctx.stroke();
+                    // 残り火: セルごとに位相の違う赤い脈動
+                    const em = Math.sin(now / 400 + x * 2.3 + y * 1.9);
+                    if (em > 0.25) {
+                        ctx.fillStyle = 'rgba(249, 115, 22,' + ((em - 0.25) * 0.75) + ')';
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cellSize * 0.13, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                ctx.restore();
+            }`],
+        ...K.WALL_GUARD_SPEC,
         ...K.EVENT_CHIP_SPEC(`'隕石まで ' + (7 - history.length % 7) + ' 手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '7手ごとに隕石が落下し、十字形のクレーター(壁)が穿たれる。直撃した石は消滅する。',

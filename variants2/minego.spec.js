@@ -46,11 +46,17 @@ module.exports = {
             // 採掘: 鉱石の上に置くと拾って得点化
             move.cells.forEach(p => {
                 const oi = p.y * BOARD_SIZE + p.x;
-                if (oreCells.has(oi)) { oreCells.delete(oi); oreScore[player]++; }
+                if (oreCells.has(oi)) {
+                    oreCells.delete(oi); oreScore[player]++;
+                    // 採掘演出: 金の粒が飛び散り得点が浮かぶ
+                    fxBurst(oi, '#fbbf24', 9, 1.3);
+                    fxBurst(oi, '#fde68a', 5, 0.9);
+                    fxText(oi, '+1目', '#fbbf24', 1000);
+                }
             });`],
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
-                captured.forEach(idx => { board[idx] = 0; oreCells.add(idx); }); // 取跡に鉱石出現
+                captured.forEach(idx => { board[idx] = 0; oreCells.add(idx); fxGlow(idx, '#fbbf24', 700); }); // 取跡に鉱石出現
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -64,7 +70,12 @@ module.exports = {
                     if (board[idx] !== 0) continue;
                     const x = idx % BOARD_SIZE, y = Math.floor(idx / BOARD_SIZE);
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
-                    const rr = cellSize * 0.22;
+                    const rr = cellSize * (0.20 + 0.05 * Math.sin(fxNow() / 350 + idx));
+                    // 鉱石のきらめき (背後の淡い光輪)
+                    ctx.fillStyle = 'rgba(253, 224, 71, 0.18)';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
                     ctx.fillStyle = 'rgba(235, 185, 40, 0.95)';
                     ctx.strokeStyle = 'rgba(160, 110, 10, 0.9)';
                     ctx.lineWidth = Math.max(1.1, cellSize * 0.04);

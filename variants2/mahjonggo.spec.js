@@ -57,6 +57,45 @@ module.exports = {
             '並びを作る形と地取りを両立させる牌理の碁。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        // 牌の顔: 全石を角丸の麻雀牌に見立て、3連以上の牌に金の役印を捺す
+        ...K.STONE_MARKS_SPEC(`            {
+                ctx.save();
+                for (let i = 0; i < board.length; i++) {
+                    const v = board[i];
+                    if (v !== 1 && v !== 2) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
+                    const w = cellSize * 0.86, h = cellSize * 0.70;
+                    ctx.fillStyle = v === 1 ? '#20405c' : '#f4efe0';
+                    ctx.strokeStyle = v === 1 ? '#0c1f30' : '#8a7a55';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                    ctx.beginPath();
+                    ctx.roundRect(cx - w / 2, cy - h / 2, w, h, w * 0.16);
+                    ctx.fill(); ctx.stroke();
+                    ctx.fillStyle = v === 1 ? '#8fd3a8' : '#20405c';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.13, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const v = board[y * BOARD_SIZE + x];
+                    if (v !== 1 && v !== 2) continue;
+                    for (const [dx, dy] of [[1, 0], [0, 1]]) {
+                        const px = x - dx, py = y - dy;
+                        if (px >= 0 && py >= 0 && board[py * BOARD_SIZE + px] === v) continue;
+                        let run = 1;
+                        while (x + dx * run < BOARD_SIZE && y + dy * run < BOARD_SIZE && board[(y + dy * run) * BOARD_SIZE + (x + dx * run)] === v) run++;
+                        if (run < 3) continue;
+                        for (let k = 0; k < run; k++) {
+                            const cx = padding + (x + dx * k) * cellSize, cy = padding + (y + dy * k) * cellSize;
+                            ctx.fillStyle = '#f5c542';
+                            ctx.beginPath();
+                            ctx.arc(cx + cellSize * 0.30, cy - cellSize * 0.30, cellSize * 0.09, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                }
+                ctx.restore();
+            }`),
         ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],

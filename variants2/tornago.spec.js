@@ -36,6 +36,10 @@ module.exports = {
                 const vals = cells.map(([x, y]) => board[y * N + x]);
                 cells.forEach(([x, y], k) => {
                     board[y * N + x] = vals[(k - 2 + vals.length) % vals.length];
+                    if (board[y * N + x] !== 0) {
+                        const [sx, sy] = cells[(k - 2 + vals.length) % vals.length];
+                        fxSlide(sy * N + sx, y * N + x, 380);
+                    }
                 });
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
@@ -56,8 +60,8 @@ module.exports = {
             }
 
             turn = opponent;`],
-        // 竜巻の描画: 現在位置に渦巻きマーク
-        K.CUE_STARS(`            // 竜巻: 現在位置に渦のマーク
+        // 竜巻の描画: 巡回コースの点線 + 現在位置で常時回転する渦腕
+        K.CUE_STARS(`            // 竜巻: 巡回コースを薄い点で示す
             {
                 const N = BOARD_SIZE;
                 const ring = (d) => {
@@ -70,19 +74,45 @@ module.exports = {
                     return cs;
                 };
                 const orbit = ring(Math.max(1, Math.floor(N / 2) - 2));
-                const pos = orbit[(history.length * 2) % orbit.length];
-                const cx = padding + pos[0] * cellSize, cy = padding + pos[1] * cellSize;
                 ctx.save();
-                ctx.strokeStyle = 'rgba(90,90,120,0.85)';
-                ctx.lineWidth = Math.max(1.6, cellSize * 0.07);
-                ctx.beginPath();
-                ctx.arc(cx, cy, cellSize * 0.30, Math.PI * 0.2, Math.PI * 1.7);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.arc(cx, cy, cellSize * 0.16, Math.PI * 1.1, Math.PI * 2.6);
-                ctx.stroke();
+                ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.20);
+                for (let k = 0; k < orbit.length; k += 2) {
+                    ctx.beginPath();
+                    ctx.arc(padding + orbit[k][0] * cellSize, padding + orbit[k][1] * cellSize, Math.max(1, cellSize * 0.05), 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 ctx.restore();
             }`),
+        // 竜巻本体: 現在位置で常時回転する渦腕 (アンビエント)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const N = BOARD_SIZE;
+            const ring = (d) => {
+                const cs2 = [];
+                const lo = d, hi = N - 1 - d;
+                for (let x = lo; x <= hi; x++) cs2.push([x, lo]);
+                for (let y = lo + 1; y <= hi; y++) cs2.push([hi, y]);
+                for (let x = hi - 1; x >= lo; x--) cs2.push([x, hi]);
+                for (let y = hi - 1; y > lo; y--) cs2.push([lo, y]);
+                return cs2;
+            };
+            const orbit = ring(Math.max(1, Math.floor(N / 2) - 2));
+            const pos = orbit[(history.length * 2) % orbit.length];
+            const cx = pad + pos[0] * cs, cy = pad + pos[1] * cs;
+            const rot = now / 230;
+            ctx2.save();
+            for (let k = 0; k < 3; k++) {
+                const a = rot + k * (Math.PI * 2 / 3);
+                ctx2.strokeStyle = 'rgba(100,100,140,' + (0.6 - k * 0.15) + ')';
+                ctx2.lineWidth = Math.max(1.4, cs * (0.11 - k * 0.025));
+                ctx2.lineCap = 'round';
+                ctx2.beginPath();
+                ctx2.arc(cx, cy, cs * (0.55 - k * 0.16), a, a + 1.9);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
         [K.ONE, K.RV_ALGO, K.rv([
             '竜巻が内側の環状コースを1手に2マス巡回する。竜巻の周囲8マスの石は2マス分旋回する。',
             '竜巻の位置は手数で決まるので予測できる。巻き上げられた石は隣へ運ばれる。',

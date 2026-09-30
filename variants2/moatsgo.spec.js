@@ -17,9 +17,11 @@ module.exports = {
                     if (Math.max(Math.abs(x - c), Math.abs(y - c)) === k) board[y * BOARD_SIZE + x] = 3;
                 }
             }`],
-        // 堀は水色
-        [K.ONE, '            const covered = new Set(); // ピース描画でカバー済みのマス', K.voidDraw('"#2b4a63"')],
+        // 堀は揺れる水面
+        [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_WATER('#1b5e8a', '#0a3049'))],
         ...K.WALL_GUARD_SPEC,
+        // 堀の水面のきらめき
+        [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_WATER],
         [K.ONE, K.RV_ALGO, K.rv([
             '中央の郭を取り囲む環状の堀。橋はなく内外は完全に分断。',
             '城内と外野は別々の戦場。どちらを制するかの配分勝負。',

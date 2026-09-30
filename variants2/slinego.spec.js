@@ -30,6 +30,48 @@ module.exports = {
                 if (!_allow.includes(_cur)) return false;
             }`],
         [K.ONE, K.RV_ALGO, K.rv(['着手は1x3の直線3連ピースのみ (回転=Rキー・右クリック・ホイールで向き変更)。','ピースが入らない3マス未満の連結空領域は窒息領域 (呼吸点にも地にもならない)。'])],
+        // 1x3は「1枚の棹」: ピース全体を囲むカプセル輪郭
+        [K.ONE, `                    if (isDead) drawDeadMarker(cx, cy, r);
+                }
+            }
+        }
+
+        let fxPrevMove = null;`,
+`                    if (isDead) drawDeadMarker(cx, cy, r);
+                }
+            }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // ピースごとにカプセル輪郭 (棹/短冊として読めるように)
+            pieces.forEach(pc => {
+                const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
+                if (alive.length < 2) return;
+                const xs = alive.map(p => p.x), ys = alive.map(p => p.y);
+                const x0 = Math.min(...xs), x1 = Math.max(...xs);
+                const y0 = Math.min(...ys), y1 = Math.max(...ys);
+                const px = padding + (x0 - 0.5) * cellSize, py = padding + (y0 - 0.5) * cellSize;
+                const w = (x1 - x0 + 1) * cellSize, h = (y1 - y0 + 1) * cellSize;
+                const rad = Math.min(w, h) * 0.44;
+                ctx.save();
+                ctx.strokeStyle = pc.player === 1 ? 'rgba(255,255,255,0.30)' : 'rgba(0,0,0,0.30)';
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                ctx.beginPath();
+                ctx.moveTo(px + rad, py);
+                ctx.arcTo(px + w, py, px + w, py + h, rad);
+                ctx.arcTo(px + w, py + h, px, py + h, rad);
+                ctx.arcTo(px, py + h, px, py, rad);
+                ctx.arcTo(px, py, px + w, py, rad);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.restore();
+            });
+        }
+
+        let fxPrevMove = null;`],
         ...K.STONE_SPEC,
     ],
     test: `

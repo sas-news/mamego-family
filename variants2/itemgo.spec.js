@@ -40,6 +40,10 @@ module.exports = {
                 const ic = move.cells[0];
                 if (Math.max(Math.abs(ic.x - st.item % BOARD_SIZE), Math.abs(ic.y - Math.floor(st.item / BOARD_SIZE))) <= 1) {
                     captures[player] += 1;
+                    // 拾得: 金の飛沫と +1目
+                    fxBurst(st.item, '#facc15', 12, 1.7);
+                    fxGlow(st.item, '#fde047', 650);
+                    fxText(st.item, '+1目', '#fde047', 1000);
                     st.item = -1;
                 }
             }
@@ -49,6 +53,11 @@ module.exports = {
                 for (let k = 0; k < board.length; k++) {
                     const j = (seed + k) % board.length;
                     if (board[j] === 0) { st.item = j; break; }
+                }
+                // アイテム出現のキラリ
+                if (st.item >= 0) {
+                    fxGlow(st.item, '#facc15', 900);
+                    fxBurst(st.item, '#fde047', 8, 1.2);
                 }
             }
 

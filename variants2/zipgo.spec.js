@@ -51,6 +51,38 @@ module.exports = {
             '偶数手は直前の着手と同じ行、奇数手は同じ列にのみ着手できる (初手は自由)。',
             '互いの手をなぞり合い、盤面は横縞と縦縞のジグザグに封じ込められていく。',
         ])],
+        // 有効な行/列を往復走査する光の筋 (常時)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            if (!lastMove || !lastMove.cells || lastMove.cells.length === 0) return;
+            const mv2 = history.length + 1;
+            const tg = lastMove.cells[0];
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            const t = (now % 1400) / 1400;
+            const p = t < 0.5 ? t * 2 : (1 - t) * 2; // 往復
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(160,230,190,0.55)';
+            ctx2.lineWidth = Math.max(1.5, cs * 0.08);
+            ctx2.lineCap = 'round';
+            const span = cs * 1.6;
+            if (mv2 % 2 === 0) {
+                const y = pad + tg.y * cs;
+                const px = pad - cs * 0.5 + p * (w - cs * 0);
+                ctx2.beginPath();
+                ctx2.moveTo(Math.max(0, px - span), y);
+                ctx2.lineTo(Math.min(w, px), y);
+                ctx2.stroke();
+            } else {
+                const x = pad + tg.x * cs;
+                const py = pad - cs * 0.5 + p * (w - cs * 0);
+                ctx2.beginPath();
+                ctx2.moveTo(x, Math.max(0, py - span));
+                ctx2.lineTo(x, Math.min(w, py));
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

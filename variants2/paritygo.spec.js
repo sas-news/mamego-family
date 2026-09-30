@@ -22,6 +22,19 @@ module.exports = {
                     if (evenMove !== evenPoint) return false;
                 }
             }`],
+        // 偶奇: 現在打てる側の市松を緑のブロブで染める
+        K.CUE_GRID(`            {
+                const evenMove = (history.length + 1) % 2 === 0;
+                ctx.save();
+                ctx.fillStyle = 'rgba(90,190,110,0.13)';
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (((x + y) % 2 === 0) !== evenMove) continue;
+                    ctx.beginPath();
+                    ctx.arc(padding + x * cellSize, padding + y * cellSize, cellSize * 0.34, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }`),
         ...K.EVENT_CHIP_SPEC(`'着点: ' + ((history.length + 1) % 2 === 0 ? '偶数点' : '奇数点')`),
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([

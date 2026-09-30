@@ -54,6 +54,7 @@ module.exports = {
                         if (cx !== np.x || cy2 !== np.y) {
                             board[cy2 * N + cx] = player;
                             board[np.y * N + np.x] = 0;
+                            fxSlide(np.y * N + np.x, cy2 * N + cx, 180 + Math.hypot(cx - np.x, cy2 - np.y) * 80); // 滑走の軌跡
                         }
                     }
                 }
@@ -84,6 +85,23 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
+        // 氷のきらめき: 盤上に小さな霜の光が瞬く
+        [K.ONE, K.FX_BOOT, K.FX_BOOT + `
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            ctx2.fillStyle = '#dff1ff';
+            for (let k = 0; k < 14; k++) {
+                const tw = Math.sin(now / 420 + k * 1.7);
+                if (tw <= 0.55) continue;
+                const sx = pad + ((k * 37) % BOARD_SIZE) * cs + Math.sin(now / 900 + k) * cs * 0.3;
+                const sy = pad + ((k * 53) % BOARD_SIZE) * cs;
+                ctx2.globalAlpha = (tw - 0.55) * 1.3;
+                ctx2.beginPath();
+                ctx2.arc(sx, sy, cs * 0.045, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`],
         [K.ONE, K.RV_ALGO, K.rv([
             '盤面は氷。打った石は直前の自分の着手点からこの着手点への向きに滑り続ける。',
             '石や盤端に当たるまで止まらない。初手は滑る先が無いのでその場に留まる。',

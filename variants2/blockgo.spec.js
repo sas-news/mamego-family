@@ -30,6 +30,41 @@ module.exports = {
                 if (!_allow.includes(_cur)) return false;
             }`],
         [K.ONE, K.RV_ALGO, K.rv(['着手は自由形の4連ピース (テトロミノ19向き)。Rキー・右クリック・ホイールで形を巡回する。','ピースが入らない4マス未満の連結空領域は窒息領域。'])],
+        // テトロミノ質感: 隙間のない融合タイルで描く (外郭稜線+上面ハイライト)
+        [K.ONE, `        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
+            if (!cellsAbs || cellsAbs.length === 0) return;`,
+`        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
+            if (!cellsAbs || cellsAbs.length === 0) return;
+            if (cellsAbs.length > 1) {
+                const tileSet = new Set(cellsAbs.map(p => p.y * BOARD_SIZE + p.x));
+                const ins = cellSize * 0.47;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = fill;
+                cellsAbs.forEach(p => {
+                    const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                    ctx.fillRect(cx - ins, cy - ins, ins * 2, ins * 2);
+                });
+                ctx.strokeStyle = shiftColor(fill, -0.3);
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                cellsAbs.forEach(p => {
+                    const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                    if (!tileSet.has(p.y * BOARD_SIZE + p.x - 1)) { ctx.moveTo(cx - ins, cy - ins); ctx.lineTo(cx + ins, cy - ins); }
+                    if (!tileSet.has(p.y * BOARD_SIZE + p.x + 1)) { ctx.moveTo(cx + ins, cy - ins); ctx.lineTo(cx + ins, cy + ins); }
+                    if (!tileSet.has((p.y + 1) * BOARD_SIZE + p.x)) { ctx.moveTo(cx + ins, cy + ins); ctx.lineTo(cx - ins, cy + ins); }
+                    if (!tileSet.has((p.y - 1) * BOARD_SIZE + p.x)) { ctx.moveTo(cx - ins, cy + ins); ctx.lineTo(cx - ins, cy - ins); }
+                });
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(255,255,255,0.22)';
+                cellsAbs.forEach(p => {
+                    const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                    if (!tileSet.has((p.y - 1) * BOARD_SIZE + p.x)) ctx.fillRect(cx - ins, cy - ins, ins * 2, cellSize * 0.10);
+                });
+                ctx.restore();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

@@ -27,7 +27,13 @@ module.exports = {
                     const j = ny * N + nx;
                     if (board[j] === 0) scat.push([i, j]);
                 }
-                scat.forEach(([i, j]) => { if (board[j] === 0) { board[j] = board[i]; board[i] = 0; } });
+                // 散る移動を実際にアニメ化: 出発点→到着点のスライドで「どこへ飛んだか」が見える
+                scat.forEach(([i, j]) => {
+                    if (board[j] === 0) { board[j] = board[i]; board[i] = 0; fxSlide(i, j, 380); }
+                });
+                // 地震自体: 盤面全体が揺れ、中心に警告文字
+                fxShake(7, 380);
+                fxText((((N - 1) >> 1) * N + ((N - 1) >> 1)), '地震!', '#fdba74', 800);
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
                     const dead = getCapturedStones(board, pl);

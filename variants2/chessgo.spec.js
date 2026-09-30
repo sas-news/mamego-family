@@ -19,8 +19,14 @@ module.exports = {
             // 騎士碁: 初手の石が王になる。王が取られれば即負け
             if (kingIdx[player] < 0 && move.cells.length > 0) {
                 kingIdx[player] = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                // 戴冠式: 王の誕生を金の輪で告げる
+                fxGlow(kingIdx[player], '#f5d060', 1000);
+                fxText(kingIdx[player], '王', '#f5d060', 1300);
             }
             if (kingIdx[opponent] >= 0 && board[kingIdx[opponent]] !== opponent) {
+                fxBurst(kingIdx[opponent], '#f5d060', 18, 2.0);
+                fxShake(8, 440);
+                fxText(kingIdx[opponent], '王手詰み!', '#ef4444', 1500);
                 winByRule(player, '王手詰み勝ち', '相手の王を捕らえました');
                 return;
             }
@@ -28,6 +34,25 @@ module.exports = {
             turn = opponent;`],
         // チェック表示チップ
         ...K.EVENT_CHIP_SPEC('kingIdx[turn] >= 0 && board[kingIdx[turn]] === turn && getLiberties(board, kingIdx[turn]) === 1 ? "チェック!" : ""'),
+        // チェック警報: 呼吸点1の王は赤く脈動し続ける
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            [1, 2].forEach(pl => {
+                const ki = kingIdx[pl];
+                if (ki < 0 || board[ki] !== pl || gameOver) return;
+                if (getLiberties(board, ki) !== 1) return;
+                const cx = pad + (ki % BOARD_SIZE) * cs, cy = pad + Math.floor(ki / BOARD_SIZE) * cs;
+                ctx2.save();
+                ctx2.globalAlpha = 0.35 + 0.3 * Math.sin(now / 230);
+                ctx2.strokeStyle = '#ef4444';
+                ctx2.lineWidth = Math.max(1.6, cs * 0.07);
+                ctx2.beginPath();
+                ctx2.arc(cx, cy, cs * 0.44, 0, Math.PI * 2);
+                ctx2.stroke();
+                ctx2.restore();
+            });
+        });`],
         // 王冠マーク
         ...K.STONE_MARKS_SPEC(`            [1, 2].forEach(pl => {
                 const ki = kingIdx[pl];

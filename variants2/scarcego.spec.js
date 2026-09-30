@@ -25,6 +25,27 @@ module.exports = {
                 }
             }`],
         ...K.EVENT_CHIP_SPEC(`'行の石上限: 4'`),
+        // 寡占: 各行の石数カウンタ (右端) と満杯行の閉鎖色
+        K.CUE_GRID(`            {
+                const rowCount = new Array(BOARD_SIZE).fill(0);
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== 0) rowCount[Math.floor(i / BOARD_SIZE)]++;
+                }
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) {
+                    const cy = padding + y * cellSize;
+                    if (rowCount[y] >= 4) {
+                        ctx.fillStyle = 'rgba(200,60,60,0.15)';
+                        ctx.fillRect(padding - cellSize * 0.5, cy - cellSize * 0.5, width - padding * 2 + cellSize, cellSize);
+                    }
+                    ctx.fillStyle = rowCount[y] >= 4 ? '#c0392b' : alphaColor(currentTheme.lineColor, 0.7);
+                    ctx.font = 'bold ' + (cellSize * 0.27).toFixed(1) + 'px sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(rowCount[y] + '/4', width - padding + cellSize * 0.32, cy);
+                }
+                ctx.restore();
+            }`),
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '1つの行に置ける石は黒白合わせて4個まで。満杯の行にはもう置けない。',

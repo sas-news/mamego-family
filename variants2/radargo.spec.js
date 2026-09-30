@@ -46,6 +46,47 @@ module.exports = {
             '3手ごとの着手直後にレーダーが走り、その局面だけ敵石が全て可視化される。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        // レーダー照射の瞬間: 全敵石が発光し、中央にソナーのピンが立つ
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            // 探知碁: 3の倍数手でレーダー照射 → 敵石が光って見える合図
+            if (history.length % 3 === 0) {
+                board.forEach((v, i) => { if (v === opponent) fxGlow(i, '#38bdf8', 700); });
+                const mc = move.cells[0];
+                if (mc) fxText(mc.y * BOARD_SIZE + mc.x, 'レーダー', '#7dd3fc', 1100);
+            }
+
+            turn = opponent;`],
+        // 常に回るレーダースコープの掃引線 — 「この盤は探知機の中」を演出
+        [K.ONE, '        let obstaclePainter = null;',
+`        let obstaclePainter = null;
+        // 探知碁: 盤中央から回るレーダー掃引線 + 微かな同心円 (常時オーバーレイ)
+        fxAmbient((ctx2, now, pad, cs) => {
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            const cx = w / 2, cy = w / 2;
+            ctx2.save();
+            ctx2.globalAlpha = 0.10;
+            ctx2.strokeStyle = '#38bdf8';
+            ctx2.lineWidth = Math.max(1, cs * 0.03);
+            [0.25, 0.5, 0.75].forEach(rr => {
+                ctx2.beginPath();
+                ctx2.arc(cx, cy, w * 0.5 * rr, 0, Math.PI * 2);
+                ctx2.stroke();
+            });
+            const ang = now / 2400 * Math.PI * 2;
+            const g = ctx2.createLinearGradient(cx, cy, cx + Math.cos(ang) * w * 0.6, cy + Math.sin(ang) * w * 0.6);
+            g.addColorStop(0, 'rgba(56,189,248,0.35)');
+            g.addColorStop(1, 'rgba(56,189,248,0)');
+            ctx2.globalAlpha = isRadarOn() ? 0.55 : 0.18;
+            ctx2.strokeStyle = g;
+            ctx2.lineWidth = Math.max(1.5, cs * 0.06);
+            ctx2.beginPath();
+            ctx2.moveTo(cx, cy);
+            ctx2.lineTo(cx + Math.cos(ang) * w * 0.6, cy + Math.sin(ang) * w * 0.6);
+            ctx2.stroke();
+            ctx2.restore();
+        });`],
         ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],

@@ -21,6 +21,31 @@ module.exports = {
                     if (Math.abs(p.x - c) > 2 || Math.abs(p.y - c) > 2) return false;
                 }
             }`],
+        // 内核の鼓動: 核の縁を巡る脈動リングと内部に漂う光の粒
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const cc = (BOARD_SIZE - 1) / 2;
+            const cx = pad + cc * cs, cy = pad + cc * cs;
+            ctx2.save();
+            // 核の縁の脈動リング
+            ctx2.globalAlpha = 0.30 + 0.18 * Math.sin(now / 520);
+            ctx2.strokeStyle = '#67e8f9';
+            ctx2.lineWidth = Math.max(1.4, cs * 0.08);
+            ctx2.strokeRect(pad + (cc - 2.5) * cs, pad + (cc - 2.5) * cs, cs * 5, cs * 5);
+            // 内部に漂う光の粒
+            for (let k = 0; k < 10; k++) {
+                const t = now / 3000 + k * 0.61;
+                const px = cx + Math.sin(t * 2.1 + k) * cs * 2.0;
+                const py = cy + Math.cos(t * 1.7 + k * 2) * cs * 2.0;
+                ctx2.globalAlpha = 0.10 + 0.07 * Math.sin(now / 400 + k);
+                ctx2.fillStyle = '#a5f3fc';
+                ctx2.beginPath();
+                ctx2.arc(px, py, cs * 0.07, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`],
         K.CUE_GRID(`            // 内核: 中央5x5の外側を暗く沈め、核を照らす
             {
                 const cc = (BOARD_SIZE - 1) / 2;

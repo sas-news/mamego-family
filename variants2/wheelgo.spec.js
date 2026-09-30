@@ -43,7 +43,45 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             }`),
-        ...K.WALL_SPEC,
+        // 車輪: スポーク外はタイヤ面 — 黒い彫り込み + 円周方向のトレッド溝
+        [K.ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // タイヤ盤: スポーク外をゴム質の暗い面で覆い、円周方向のトレッド溝と境界線を引く
+            {
+                const cc = (BOARD_SIZE - 1) / 2;
+                const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                const bcx = padding + cc * cellSize, bcy = padding + cc * cellSize;
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (!isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    ctx.fillStyle = '#1b1917';
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    // トレッド溝: 中心回りの円周方向の短い弧
+                    const a = Math.atan2(y - cc, x - cc);
+                    const r0 = Math.hypot(x - cc, y - cc) * cellSize;
+                    ctx.strokeStyle = 'rgba(165,175,190,0.15)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.arc(bcx, bcy, Math.max(cellSize * 0.3, r0), a - 0.13, a + 0.13);
+                    ctx.stroke();
+                }
+                ctx.strokeStyle = currentTheme.lineColor;
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
+                ctx.beginPath();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    if (x > 0 && isV(x - 1, y)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
+                    if (x < BOARD_SIZE - 1 && isV(x + 1, y)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
+                    if (y > 0 && isV(x, y - 1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
+                    if (y < BOARD_SIZE - 1 && isV(x, y + 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
+                }
+                ctx.stroke();
+                ctx.restore();
+            }`],
+        ...K.WALL_GUARD_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '十字・斜め2線・中央ハブだけが残った車輪盤。',
             '連も呼吸もスポークに沿って伸びる。ハブを巡る攻防が全て。',

@@ -29,6 +29,17 @@ module.exports = {
                 if (bw > 0) ctx.fillRect(bx, bx, bw, bw);
                 ctx.restore();
             }`),
+        // 死域の境界を這う警告線 (マーチングアリ)
+        [K.ONE, K.FX_BOOT, K.FX_BOOT + `
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            ctx2.setLineDash([cs * 0.22, cs * 0.16]);
+            ctx2.lineDashOffset = -now / 55;
+            ctx2.strokeStyle = 'rgba(235,90,70,0.55)';
+            ctx2.lineWidth = Math.max(1.5, cs * 0.07);
+            ctx2.strokeRect(pad + 1.5 * cs, pad + 1.5 * cs, (BOARD_SIZE - 3) * cs, (BOARD_SIZE - 3) * cs);
+            ctx2.restore();
+        });`],
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は盤の端から2マス以内の帯状領域のみ。中央は暗い死域。',

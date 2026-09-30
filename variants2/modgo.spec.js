@@ -23,15 +23,17 @@ module.exports = {
             }`],
         ...K.EVENT_CHIP_SPEC(`'許可帯: x+y ≡ ' + (history.length % 3) + ' (mod 3)'`),
         ...K.LEGAL_DOTS_SPEC,
-        K.CUE_GRID(`            // 剰余帯: 現在許可の対角帯を薄く帯色で示す
+        K.CUE_GRID(`            // 剰余帯: 3色の対角帯 (現在許可の帯は明るく大きく)
             {
                 const band = history.length % 3;
+                const cols = ['rgba(110,160,235,', 'rgba(235,180,90,', 'rgba(190,130,225,'];
                 ctx.save();
-                ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.10);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if ((x + y) % 3 !== band) continue;
+                    const b = (x + y) % 3;
+                    const cur = b === band;
+                    ctx.fillStyle = cols[b] + (cur ? '0.30)' : '0.09)');
                     ctx.beginPath();
-                    ctx.arc(padding + x * cellSize, padding + y * cellSize, cellSize * 0.30, 0, Math.PI * 2);
+                    ctx.arc(padding + x * cellSize, padding + y * cellSize, cur ? cellSize * 0.32 : cellSize * 0.22, 0, Math.PI * 2);
                     ctx.fill();
                 }
                 ctx.restore();

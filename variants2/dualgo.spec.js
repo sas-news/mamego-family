@@ -43,6 +43,12 @@ module.exports = {
             }
             // 敵の王のどちらかが消えた → 王取り勝ち
             if (kingIdx[opponent].some(i => board[i] !== opponent)) {
+                const dead = kingIdx[opponent].find(i => board[i] !== opponent);
+                if (dead !== undefined) {
+                    fxBurst(dead, '#facc15', 20, 2.2);
+                    fxText(dead, '王取り!', '#facc15', 1500);
+                }
+                fxShake(7, 420);
                 winByRule(player, '王取り勝ち', '敵の王の一方を取りました'); return;
             }
 
@@ -54,7 +60,8 @@ module.exports = {
                     const kx = ki % BOARD_SIZE, ky = Math.floor(ki / BOARD_SIZE);
                     const cx = padding + kx * cellSize, cy = padding + ky * cellSize;
                     ctx.save();
-                    ctx.strokeStyle = '#d4a017';
+                    ctx.fillStyle = '#f5c518';
+                    ctx.strokeStyle = '#8a6a00';
                     ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
                     const w = cellSize * 0.24, h = cellSize * 0.18;
                     ctx.beginPath();
@@ -66,6 +73,7 @@ module.exports = {
                     ctx.lineTo(cx + w, cy - h * 0.4);
                     ctx.lineTo(cx + w, cy + h * 0.5);
                     ctx.closePath();
+                    ctx.fill();
                     ctx.stroke();
                     ctx.restore();
                 }

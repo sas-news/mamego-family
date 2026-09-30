@@ -22,6 +22,14 @@ module.exports = {
                 captured.forEach(idx => board[idx] = 0);
                 const slot = slotOf();
                 captures[player] += captured.length * slot.mult;
+                // 役が揃った取り: 役名と倍率がネオンに光る
+                if (slot.mult > 1) {
+                    const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                    const col = slot.mult === 3 ? '#facc15' : '#f472b6';
+                    captured.forEach(idx => fxGlow(idx, col, 800));
+                    fxShake(4, 260);
+                    fxText(ci, slot.name + ' ×' + slot.mult + '!', col, 1300);
+                }
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {
