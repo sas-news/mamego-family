@@ -49,17 +49,27 @@ module.exports = {
             if (!st.used[player] && st.pcnt[player] >= 4) {
                 st.used[player] = true;
                 const bc = move.cells[0];
+                const ci = bc.y * BOARD_SIZE + bc.x;
+                // 爆発演出: 衝撃波リング + 全セルで火花 + 画面揺れ
+                fxGlow(ci, '#fbbf24', 700);
+                fxShake(8, 380);
+                fxText(ci, 'BOOM!', '#fb923c', 900);
                 for (let dy = -1; dy <= 1; dy++) {
                     for (let dx = -1; dx <= 1; dx++) {
                         const nx = bc.x + dx, ny = bc.y + dy;
                         if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) continue;
                         const i0 = ny * BOARD_SIZE + nx;
+                        fxBurst(i0, '#f97316', 10, 1.8);
+                        fxBurst(i0, '#fbbf24', 5, 1.2);
                         if (board[i0] === opponent) captures[player]++;
                         board[i0] = 0;
                     }
                 }
                 st.blasts.push({ x: bc.x, y: bc.y });
                 cleanUpPieces();
+            } else if (!st.used[player] && st.pcnt[player] === 3) {
+                // 次の一手が爆弾 — 警告の点滅
+                fxGlow(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '#ef4444', 800);
             }
 
             turn = opponent;`],

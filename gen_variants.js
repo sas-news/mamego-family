@@ -2695,10 +2695,11 @@ out('lavago.html', apply(ALGO, [
             // 溶岩で呼吸点0になった連は消滅 (相手のアゲハマ)
             [1, 2].forEach(pl => {
                 const dead = getCapturedStones(board, pl);
-                dead.forEach(i => { board[i] = 0; });
+                dead.forEach(i => { board[i] = 0; fxBurst(i, '#ff6d00', 10, 1.2); });
                 if (dead.length) captures[pl === 1 ? 2 : 1] += dead.length;
             });
             cleanUpPieces();
+            if (changed) fxShake(5, 300); // 大地が沈む感触
             if (lavaDepth >= Math.ceil(n / 2)) endGameByScore();
         }
 
@@ -2716,12 +2717,36 @@ out('lavago.html', apply(ALGO, [
 `            prevBoard = snap.prevBoard;
             lastMove = snap.lastMove;
             lavaDepth = snap.lavaDepth || 0;`],
-    [ONE, TURN_FLIP,
-`            consecutivePasses = 0;
-            holdUsed = false; // 着手でホールド権利が戻る
-            turn = opponent;
-            // 溶岩: LAVA_EVERY手ごとに外周が沈む
-            if (history.length % LAVA_EVERY === 0) applyLava();`],
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 溶岩: 泡立つ光彩と舞い上がる火の粉を常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            const n = BOARD_SIZE;
+            ctx2.save();
+            for (let i = 0; i < n * n; i++) {
+                if (board[i] !== 3) continue;
+                const x = i % n, y = Math.floor(i / n);
+                const cx = pad + x * cs, cy = pad + y * cs;
+                const ph = Math.sin(now / 420 + x * 1.7 + y * 2.3);
+                if (ph > 0.55) { // ゆらめく溶岩の輝点
+                    ctx2.globalAlpha = (ph - 0.55) * 0.9;
+                    ctx2.fillStyle = '#ffb347';
+                    ctx2.beginPath();
+                    ctx2.arc(cx + Math.sin(now / 700 + y) * cs * 0.18, cy + Math.cos(now / 800 + x) * cs * 0.18, cs * 0.13, 0, Math.PI * 2);
+                    ctx2.fill();
+                }
+            }
+            // 沈降予告リングの縁を熱く光らせる
+            if (lavaDepth < Math.ceil(n / 2)) {
+                const d = lavaDepth, pulse = 0.25 + 0.2 * Math.sin(now / 300);
+                ctx2.globalAlpha = pulse;
+                ctx2.strokeStyle = '#ff5722';
+                ctx2.lineWidth = Math.max(2, cs * 0.12);
+                const inset = pad + (d - 0.5) * cs, sz = (n - 2 * d + 1) * cs;
+                ctx2.strokeRect(inset, inset, sz, sz);
+            }
+            ctx2.restore();
+        });`],
     [ONE, `                    prevBoard,
                     lastMove,
                     history`,
@@ -2747,8 +2772,53 @@ out('lavago.html', apply(ALGO, [
     [ONE, `            lastMove = data.lastMove || null;`,
 `            lastMove = data.lastMove || null;
             lavaDepth = data.lavaDepth || 0;`],
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;
+            // 溶岩: LAVA_EVERY手ごとに外周が沈む
+            if (history.length % LAVA_EVERY === 0) {
+                // 沈むリングを先に赤く点滅させてから溶岩化
+                {
+                    const n = BOARD_SIZE, d = lavaDepth;
+                    for (let y = d; y < n - d; y++) for (let x = d; x < n - d; x++) {
+                        if (x !== d && x !== n - 1 - d && y !== d && y !== n - 1 - d) continue;
+                        const i = y * n + x;
+                        if (board[i] === 0) fxGlow(i, '#ff5722', 700);
+                    }
+                }
+                applyLava();
+            }`],
     // 沈んだリングは焦土色。次に沈むリングを微かな熱気で示す
-    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`, voidDraw(`'rgba(64,32,20,0.92)'`) + `
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`, `            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 溶岩セルの表面: 玄武岩 + 脈動する灼熱の亀裂
+            {
+                const now = fxNow();
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const i = y * BOARD_SIZE + x;
+                    if (board[i] !== 3) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, cellSize * 0.9);
+                    g.addColorStop(0, '#3d2314'); g.addColorStop(1, '#1a0e08');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    // 灼熱の亀裂 (セルごとの位相で脈動)
+                    const ph = Math.sin(now / 480 + x * 2.1 + y * 1.3);
+                    ctx.strokeStyle = 'rgba(255,' + Math.round(80 + ph * 60) + ',20,' + (0.5 + ph * 0.3) + ')';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.07);
+                    ctx.beginPath();
+                    const s1 = Math.sin(i * 12.9898) * 0.5 + 0.5, s2 = Math.sin(i * 78.233) * 0.5 + 0.5;
+                    ctx.moveTo(cx - hh + s1 * cellSize, cy - hh);
+                    ctx.lineTo(cx + (s2 - 0.5) * cellSize * 0.4, cy);
+                    ctx.lineTo(cx - hh + s2 * cellSize, cy + hh);
+                    ctx.moveTo(cx + hh, cy - hh + s1 * cellSize * 0.6);
+                    ctx.lineTo(cx + (s1 - 0.5) * cellSize * 0.3, cy + (s2 - 0.5) * cellSize * 0.3);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
             // 次に沈むリングを微かな熱気で示す
             {
                 const d = lavaDepth;
