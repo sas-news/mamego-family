@@ -14,8 +14,16 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+
             // 無手碁: 5手ごとのワイルド手は手番が変わらず、同じ側がもう1手打てる
             moveCount++;
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
             if (moveCount % 5 !== 0) turn = opponent;`],
         ...K.EVENT_CHIP_SPEC('moveCount % 5 === 4 ? "次はワイルド手!" : ""'),
         [K.ONE, K.INFO_ALGO, `            無手碁: 5手ごとのワイルド手は同じ側が続けてもう1手<br>
@@ -25,6 +33,7 @@ module.exports = {
             '5手ごとのワイルド手では手番が交代せず、同じプレイヤーが続けてもう1手打てる。',
             'ワイルド手を取れるのは着手した側 — 4手目の布石でワイルドを誰が拾うかが読みどころ。',
             '連続2手での囲み・取り・反撃が通常碁にはない爆発力を生む。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],

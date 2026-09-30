@@ -76,7 +76,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '敵連を取った跡地は疫地 (黄緑の斑点) となる。',
             '疫地にも置けるが、置いた石はその手番の終わりに蝕まれて消え、相手のアゲハマになる。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -91,5 +93,9 @@ module.exports = {
         assert('蝕まれた分は相手の取り', captures[1] === 2);
         executeMove({ cells: [{ x: 3, y: 3 }] }, 2);
         assert('疫地以外は安全', board[3 * BOARD_SIZE + 3] === 2);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

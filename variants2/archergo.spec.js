@@ -39,7 +39,18 @@ module.exports = {
                     cleanUpPieces();
                 }
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['置いた石は矢を放つ: 上下左右の4方向、3マス以内に最初に遇った敵石を1本ずつ射抜く。','途中に石 (自石含む) があれば矢はそこで止まる。射抜きは包囲取りと同じ手に両方起きる。'])],
+        [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
+        function endGameByScore() {`],
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            // 弓兵の決闘: 先にアゲハマ20個を取った側は即勝ち (射抜き合戦が無限に続かないよう)
+            if (captures[player] >= 20) {
+                winByRule(player, '先取勝ち', '20個のアゲハマを先に取りました'); return;
+            }
+
+            turn = opponent;`],
+        [K.ONE, K.RV_ALGO, K.rv(['置いた石は矢を放つ: 上下左右の4方向、3マス以内に最初に遇った敵石を1本ずつ射抜く。','途中に石 (自石含む) があれば矢はそこで止まる。射抜きは包囲取りと同じ手に両方起きる。','先にアゲハマ20個を取った側は即勝ち。'])],
         ...K.STONE_SPEC,
     ],
     test: `
@@ -57,6 +68,10 @@ module.exports = {
         board[2 * BOARD_SIZE + 3] = 1; board[2 * BOARD_SIZE + 5] = 2; // 自石が盾
         executeMove({ cells: [{ x: 2, y: 2 }] }, 1);
         assert('自石が盾になり敵は無事', board[2 * BOARD_SIZE + 5] === 2);
+        board.fill(0); captures = { 1: 19, 2: 0 }; gameOver = false;
+        board[2 * BOARD_SIZE + 5] = 2;
+        executeMove({ cells: [{ x: 2, y: 2 }] }, 1);
+        assert('20アゲハマで先取勝ち', gameOver === true && captures[1] === 20);
     
     `,
 };

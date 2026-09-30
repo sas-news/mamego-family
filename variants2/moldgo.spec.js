@@ -51,7 +51,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '自分の着手の終わりに、孤立した自石 (同連の隣石なし) が黴となり隣の空点へ1つ増殖する。',
             '孤立させるほど増える — 連に繋げば増殖は止まる。放置すると一面が黴だらけになる。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -67,5 +69,9 @@ module.exports = {
         executeMove({ cells: [{ x: 9, y: 9 }] }, 1);
         assert('包囲された孤立石は増えない', board[0] === 1 && board[1] === 2 && board[BOARD_SIZE] === 2);
         assert('増殖先がないと増えない', getNeighbors(0).every(n => board[n] !== 1));
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

@@ -28,6 +28,11 @@ module.exports = {
                 cleanUpPieces();
             }
 
+            // 燃え尽きで強制終局: 火面が全盤を覆った時点で死に石確認フェーズへ
+            if (history.length >= 2 * (BOARD_SIZE - 1)) {
+                startDeadStoneSelectionPhase();
+            }
+
             turn = opponent;`],
         // 燃焼域の描画
         K.CUE_GRID(`            // 燎原: 燃え広がる炎の帯
@@ -46,7 +51,7 @@ module.exports = {
         ...K.EVENT_CHIP_SPEC(`'燃焼域 ' + Math.min(history.length, 2 * BOARD_SIZE - 2) + ' 歩'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '左上隅の火点から1手ごとに火が斜め1マスずつ燃え広がる (x+yが手数以下の領域)。',
-            '燃焼域の石は焼けて相手のアゲハマになる。盤が全て燃え尽きる前に決着を。',
+            '燃焼域の石は焼けて相手のアゲハマになる。全盤が燃え尽きた時点で終局となる。',
         ])],
         ...K.STONE_SPEC,
     ],
@@ -63,5 +68,8 @@ module.exports = {
         const c2 = captures[2];
         executeMove({ cells: [{ x: 0, y: 0 }] }, 1); // 火点上は即燃える
         assert('火点に置くと即座に焼ける', board[0] === 0 && captures[2] === c2 + 1);
+        board.fill(0); history.length = 2 * (BOARD_SIZE - 1) - 1;
+        executeMove({ cells: [{ x: 6, y: 6 }] }, 1); // この着手で火面が全盤を覆う
+        assert('燃え尽きで終局フェーズへ', gamePhase === 'dead_stone_selection' || gameOver);
     `,
 };

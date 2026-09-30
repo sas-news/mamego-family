@@ -13,6 +13,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+
             // 地殻ルール: 中央の断層を境に左プレートは下・右プレートは上へ1マスずれる。
             //             端から沈み込んだ石は相手のアゲハマになる。
             {
@@ -45,6 +46,13 @@ module.exports = {
                 cleanUpPieces();
             }
 
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
             turn = opponent;`],
         // 断層線とずれ方向の矢印
         K.CUE_GRID(`            // 地殻断層: 中央のずれ線と上下の流れ矢印
@@ -73,6 +81,7 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '盤の中央に地殻断層がある: 左半分の石は1手ごとに下へ、右半分は上へずれていく。',
             '盤端から沈み込んだ石は相手のアゲハマになる。断層を越えて戦線がねじれる。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],

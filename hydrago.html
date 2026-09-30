@@ -159,7 +159,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + ヒドラルール<br>
-            ※取られた石は隣のランダムな空点に復活する
+            ※取られた石は隣のランダムな空点に1回だけ復活。200手で自動終局
         </p>
     </div>
 
@@ -503,7 +503,8 @@
         ];
         const RULES_VARIANT = [
             'ヒドラルール: 取られた石は隣のランダムな空点に1つずつ復活する (復活先がなければ消える)。',
-            '取っても取っても生えてくる — 完全に包囲して初めて取り切れる。',
+            'ただし復活は各石1回だけ — 再生した石をもう一度取れば完全に取り切れる。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -562,6 +563,7 @@
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
         let komi = 6.5;
+        let hydraUsed = new Set(); // 復活済みの石 (二度目は消える)
         let consecutivePasses = 0;
         let gameOver = false;
         let gameResultData = null;
@@ -617,6 +619,7 @@
                     deadStones: [...deadStones],
                     prevBoard,
                     lastMove,
+                    hydraUsed: [...hydraUsed],
                     history,
                     pieceMode,
                     currentPieceType,
@@ -656,6 +659,7 @@
             deadStones = new Set(s.deadStones || []);
             prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
             lastMove = s.lastMove || null;
+            hydraUsed = new Set(s.hydraUsed || []);
             history = Array.isArray(s.history) ? s.history : [];
             pieceMode = ['free', 'next'].includes(s.pieceMode) ? s.pieceMode : 'next';
             currentPieceType = PIECE_TYPES.includes(s.currentPieceType) ? s.currentPieceType : 'STONE';
@@ -1493,6 +1497,7 @@
                 consecutivePasses,
                 prevBoard,
                 lastMove,
+                hydraUsed: [...hydraUsed],
                 currentPieceType,
                 pieceQueue: [...pieceQueue],
                 heldPieces: { ...heldPieces },
@@ -1519,10 +1524,15 @@
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
                 soundManager.playCapture();
-                // ヒドラ: 取られた石は隣の空点にランダム復活
+                // ヒドラ: 取られた石は隣の空点に1回だけランダム復活
                 captured.forEach(idx => {
+                    if (hydraUsed.has(idx)) { hydraUsed.delete(idx); return; }
                     const cand = getNeighbors(idx).filter(i => board[i] === 0);
-                    if (cand.length) board[cand[(Math.random() * cand.length) | 0]] = opponent;
+                    if (cand.length) {
+                        const ni = cand[(Math.random() * cand.length) | 0];
+                        board[ni] = opponent;
+                        hydraUsed.add(ni);
+                    }
                 });
                 cleanUpPieces();
             } else {
@@ -1537,6 +1547,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
@@ -1766,6 +1778,7 @@
             consecutivePasses = snap.consecutivePasses;
             prevBoard = snap.prevBoard;
             lastMove = snap.lastMove;
+            hydraUsed = new Set(snap.hydraUsed || []);
             if (snap.currentPieceType) currentPieceType = snap.currentPieceType;
             if (snap.pieceQueue) pieceQueue = snap.pieceQueue;
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
@@ -2145,6 +2158,7 @@
             gamePhase = data.gamePhase || 'playing';
             prevBoard = data.prevBoard || null;
             lastMove = data.lastMove || null;
+            if (Array.isArray(data.hydraUsed)) hydraUsed = new Set(data.hydraUsed);
             if (data.pieceMode) pieceMode = data.pieceMode;
             if (data.currentPieceType) currentPieceType = data.currentPieceType;
             if (data.pieceQueue) pieceQueue = data.pieceQueue;
@@ -2183,6 +2197,7 @@
                 gamePhase,
                 prevBoard,
                 lastMove,
+                hydraUsed: [...hydraUsed],
                 pieceMode,
                 currentPieceType,
                 pieceQueue,
@@ -2413,6 +2428,7 @@
         function resetGame() {
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            hydraUsed = new Set();
             pieces = [];
             turn = 1;
             captures = { 1: 0, 2: 0 };

@@ -94,7 +94,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '石は磁石: 敵石と隣接した石は反発して1マス離れる (行き場がなければ留まる)。',
             '同色からちょうど2マス離れた石は1マス引き寄せられる。磁力で連が伸縮する。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -115,5 +117,9 @@ module.exports = {
         board[2 * BOARD_SIZE + 0] = 1; // 白を上下で挟んで退路を塞ぐ
         executeMove({ cells: [{ x: 6, y: 6 }] }, 1);
         assert('押し出し先がなければ留まる', board[1 * BOARD_SIZE + 0] === 2);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

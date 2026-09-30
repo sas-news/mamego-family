@@ -1,11 +1,11 @@
-// GEARGO — 歯車碁: 着手ごとに外リングと内リングが逆回転
+// GEARGO — 歯車碁: 3手ごとに外リングと内リングが逆回転
 const K = require('../gen_kit.js');
 module.exports = {
     file: 'geargo.html',
     en: 'GEARGO',
     jp: '歯車碁',
     prefix: 'geargo',
-    desc: '着手のたび外輪が順回り・内輪が逆回りに1コマ回転する歯車盤。',
+    desc: '3手ごとに外輪が順回り・内輪が逆回りに1コマ回転する歯車盤。',
     kind: 'stone',
     spec: [
         ...K.rb('GEARGO', '歯車碁', 'geargo'),
@@ -13,8 +13,8 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 歯車機構: 外リングは進行方向へ、内リングは逆へ1コマ回転
-            {
+            // 歯車機構: 3手ごとに外リングは進行方向へ、内リングは逆へ1コマ回転
+            if (history.length % 3 === 0) {
                 const N = BOARD_SIZE;
                 const ringCells = (k) => {
                     const cells = [];
@@ -54,20 +54,20 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC('\'歯車が回る\''),
         [K.ONE, K.RV_ALGO, K.rv([
-            '着手するたびに盤の最外周リングが1コマ逆回転、1つ内側のリングが1コマ順回転する。',
+            '3手ごとに盤の最外周リングが1コマ逆回転、1つ内側のリングが1コマ順回転する。',
             '置いた石は盤と一緒に動く。連の分断・接続が毎手変わる流動的な碁。',
         ])],
         ...K.STONE_SPEC,
     ],
     test: `
-        board.fill(0);
-        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        board.fill(0); history.length = 2;
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1); // 3手目で回転
         const N = BOARD_SIZE;
         assert('外リングが1コマ回転', board[N] === 1 && board[0] === 0);
-        board.fill(0);
+        board.fill(0); history.length = 2;
         executeMove({ cells: [{ x: 1, y: 1 }] }, 2);
         assert('内リングは逆向きに回転', board[N + 2] === 2);
-        board.fill(0);
+        board.fill(0); history.length = 2;
         executeMove({ cells: [{ x: 4, y: 4 }] }, 1);
         assert('内部の石は動かない', board[4 * N + 4] === 1);
         assert('手番が進む', turn === 2);

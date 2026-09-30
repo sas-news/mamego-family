@@ -159,7 +159,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 強欲ルール<br>
-            ※敵連がアタリ状態なら取る手しか打てない
+            ※敵連がアタリ状態なら取る手しか打てない。200手で自動終局
         </p>
     </div>
 
@@ -504,6 +504,7 @@
         const RULES_VARIANT = [
             '強欲ルール: 敵連の呼吸点が1つだけ残っている (アタリ) 場合、その呼吸点を取る手しか打てない。',
             '取れるなら取れ。逃げる猶予がない即断の碁。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1557,6 +1558,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

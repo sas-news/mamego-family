@@ -63,7 +63,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '全石は衛星: 着手ごとに中心からの距離ごとの軌道リングを反時計回りに1マス公転する。',
             '中心の石だけは動かない。同じ軌道上では追いつかれない。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -79,5 +81,9 @@ module.exports = {
         board[2 * BOARD_SIZE + 2] = 1; // 距離2の軌道
         executeMove({ cells: [{ x: 9, y: 9 }] }, 2);
         assert('内側の軌道も1歩公転', board[3 * BOARD_SIZE + 2] === 1 && board[2 * BOARD_SIZE + 2] === 0);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

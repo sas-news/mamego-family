@@ -159,7 +159,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 連鎖爆発ルール<br>
-            ※取った空点の8方向にある敵石も連鎖して取られる
+            ※取った空点の8方向にある敵石も連鎖して取られる (最大8石)。200手で自動終局
         </p>
     </div>
 
@@ -502,8 +502,9 @@
             '双方が連続でパスすると終局。地の中の死に石を確認し、地の数 + アゲハマ数 (+白はコミ6.5目) で勝敗を決める。',
         ];
         const RULES_VARIANT = [
-            '連鎖爆発ルール: 敵連を取ると、空いたマスの周囲8方向 (斜め含む) にある敵石も連鎖して取られる。',
+            '連鎖爆発ルール: 敵連を取ると、空いたマスの周囲8方向 (斜め含む) にある敵石も連鎖して取られる (連鎖分は最大8石)。',
             '斜めの接触が爆発を伝える高火力碁。取り合いがドミノ式に広がる。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1514,11 +1515,12 @@
 
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;
-            // 連鎖爆発: 呼吸点0の敵連を取り、空いたマスの8方向の敵石も再帰的に取る
+            // 連鎖爆発: 呼吸点0の敵連を取り、空いたマスの8方向の敵石も再帰的に取る (連鎖分は最大8石)
             const captured = [];
             const done = new Set();
             const queue = [...getCapturedStones(board, opponent)];
-            while (queue.length) {
+            const chainCap = queue.length + 8;
+            while (queue.length && captured.length < chainCap) {
                 const cur = queue.shift();
                 if (done.has(cur) || board[cur] !== opponent) continue;
                 done.add(cur); captured.push(cur);
@@ -1543,6 +1545,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

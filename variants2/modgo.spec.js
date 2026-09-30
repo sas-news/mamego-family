@@ -39,7 +39,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '着手点は (x+y) mod 3 が許可帯と一致する交点のみ。許可帯は着手ごとに 0→1→2→0… と巡回する。',
             'パスは帯を進めない。打てる点が無い帯の番ではパスを選ぶしかない。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -52,5 +54,9 @@ module.exports = {
         executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
         assert('帯1へ巡回: x+y=1が有効', isValidPlacement([{ x: 1, y: 0 }], 2) === true);
         assert('帯1: x+y=0は不可', isValidPlacement([{ x: 3, y: 0 }], 2) === false);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

@@ -46,6 +46,16 @@ module.exports = {
             } else {
                 soundManager.playPlace();
             }`],
+        // 玉突きで盤面が繰り返し崩れて盤が埋まらないため、240手で自動的に点数計算して終局
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            if (history.length >= 240 && !gameOver) {
+                endGameByScore();
+                return;
+            }
+
+            turn = opponent;`],
         [K.ONE, K.INFO_ALGO, `            撞球碁: 隣の敵石を撞き飛ばし、盤外に出せばアゲハマ<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
@@ -53,6 +63,7 @@ module.exports = {
             '打った石に隣接する敵石は、その方向へ空きマスの続く限り滑っていく。',
             '滑った石は他の石の手前で止まる。盤外に撞き出せばアゲハマ得点になる。',
             '敵石の隣に寄せる一手がそのまま撞き手になる — 玉突きのように連鎖させよう。',
+            '240手に達したら自動的に点数計算して終局。',
         ])],
         ...K.STONE_SPEC,
     ],
@@ -69,5 +80,9 @@ module.exports = {
         board[5 * BOARD_SIZE + 5] = 1;
         executeMove({ cells: [{ x: 4, y: 5 }] }, 1);
         assert('味方は撞かない', board[5 * BOARD_SIZE + 5] === 1);
+        // 手数上限で自動終局
+        board.fill(0); history = new Array(239).fill(null); gameOver = false;
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('240手で自動終局', gameOver === true);
     `,
 };

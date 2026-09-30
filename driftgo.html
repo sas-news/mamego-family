@@ -160,7 +160,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 漂流ルール<br>
-            ※8手ごとに全石がランダム方向へ1マス流される
+            ※8手ごとに全石がランダム方向へ1マス流される。200手で自動終局
         </p>
     </div>
 
@@ -505,6 +505,7 @@
         const RULES_VARIANT = [
             '漂流ルール: 合計8手ごとに盤上の全石がランダムな方向 (上下左右) に1マス流される。',
             '行き先が塞がっている石は動かない。陣形が不定期に流される混沌碁。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1536,6 +1537,8 @@
             turn = opponent;
             // 漂流: 8手ごとに全石が流れる
             if (history.length % 8 === 0) applyDrift();
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

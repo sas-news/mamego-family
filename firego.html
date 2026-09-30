@@ -505,7 +505,7 @@
         ];
         const RULES_VARIANT = [
             '左上隅の火点から1手ごとに火が斜め1マスずつ燃え広がる (x+yが手数以下の領域)。',
-            '燃焼域の石は焼けて相手のアゲハマになる。盤が全て燃え尽きる前に決着を。',
+            '燃焼域の石は焼けて相手のアゲハマになる。全盤が燃え尽きた時点で終局となる。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1562,6 +1562,11 @@
                     }
                 }
                 cleanUpPieces();
+            }
+
+            // 燃え尽きで強制終局: 火面が全盤を覆った時点で死に石確認フェーズへ
+            if (history.length >= 2 * (BOARD_SIZE - 1)) {
+                startDeadStoneSelectionPhase();
             }
 
             turn = opponent;

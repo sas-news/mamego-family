@@ -1,4 +1,4 @@
-// ESCALGO — 昇降碁: 中央列が循環するエスカレーター (上から最下へ戻る)
+// ESCALGO — 昇降碁: 中央列が3手ごとに循環するエスカレーター (上から最下へ戻る)
 const K = require('../gen_kit.js');
 module.exports = {
     file: 'escalgo.html',
@@ -9,13 +9,13 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('ESCALGO', '昇降碁', 'escalgo'),
-        // 着手ごと、中央列の中身が丸ごと1マス上へ循環
+        // 3手ごと、中央列の中身が丸ごと1マス上へ循環
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 昇降ルール: 中央列は循環エスカレーター。列の全セルが1マス上へ動き、
+            // 昇降ルール: 中央列は3手ごとに循環するエスカレーター。列の全セルが1マス上へ動き、
             //             最上段の内容は最下段へ回る。
-            {
+            if (history.length % 3 === 0) {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
                 const first = board[c];
                 for (let y = 0; y < N - 1; y++) board[y * N + c] = board[(y + 1) * N + c];
@@ -50,7 +50,7 @@ module.exports = {
                 ctx.restore();
             }`),
         [K.ONE, K.RV_ALGO, K.rv([
-            '中央列は循環するエスカレーター: 着手ごとに列の全セルが1マス上へ運ばれる。',
+            '中央列は循環するエスカレーター: 3手ごとに列の全セルが1マス上へ運ばれる。',
             '最上段に達した石は最下段へ回ってくる。乗せた石は毎手動き続ける。',
         ])],
         ...K.STONE_SPEC,
@@ -58,14 +58,14 @@ module.exports = {
     test: `
         assert('起動', typeof executeMove === 'function');
         const c = Math.floor(BOARD_SIZE / 2);
-        board.fill(0);
-        executeMove({ cells: [{ x: c, y: 6 }] }, 1);
+        board.fill(0); history.length = 2;
+        executeMove({ cells: [{ x: c, y: 6 }] }, 1); // 3手目で循環
         assert('エスカレーターで昇る', board[5 * BOARD_SIZE + c] === 1 && board[6 * BOARD_SIZE + c] === 0);
-        board.fill(0);
+        board.fill(0); history.length = 2;
         board[0 * BOARD_SIZE + c] = 1;
         executeMove({ cells: [{ x: 0, y: 0 }] }, 2);
         assert('天辺から最下へ循環する', board[(BOARD_SIZE - 1) * BOARD_SIZE + c] === 1 && board[0 * BOARD_SIZE + c] === 0);
-        board.fill(0);
+        board.fill(0); history.length = 2;
         executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
         assert('列の外の石は動かない', board[0] === 1);
     `,

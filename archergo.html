@@ -505,6 +505,7 @@
         const RULES_VARIANT = [
             '置いた石は矢を放つ: 上下左右の4方向、3マス以内に最初に遇った敵石を1本ずつ射抜く。',
             '途中に石 (自石含む) があれば矢はそこで止まる。射抜きは包囲取りと同じ手に両方起きる。',
+            '先にアゲハマ20個を取った側は即勝ち。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1553,6 +1554,12 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+
+            // 弓兵の決闘: 先にアゲハマ20個を取った側は即勝ち (射抜き合戦が無限に続かないよう)
+            if (captures[player] >= 20) {
+                winByRule(player, '先取勝ち', '20個のアゲハマを先に取りました'); return;
+            }
+
             turn = opponent;
             updateUI();
 
@@ -1895,6 +1902,19 @@
             if (gameMode === 'online' && onlineRoomId) {
                 syncOnlineState();
             }
+            saveState();
+        }
+
+
+        // ルール勝ち: 地集計を待たず即終局
+        function winByRule(player, reason, details) {
+            gameOver = true;
+            const name = player === 1 ? '黒' : '白';
+            gameResultData = { title: `${name}の${reason}`, details };
+            updateUI();
+            soundManager.playWin();
+            showResultModal();
+            if (gameMode === 'online' && onlineRoomId) syncOnlineState();
             saveState();
         }
 

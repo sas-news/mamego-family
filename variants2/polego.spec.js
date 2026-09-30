@@ -39,7 +39,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は中央の十字線 (極軸) 上か、自分の石に直交隣接する点のみ。',
             '初手は必ず極軸上。そこから自石に連なるように陣地を広げていく。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -52,5 +54,9 @@ module.exports = {
         assert('自石の隣なら軸外でも置ける', isValidPlacement([{ x: c - 1, y: c - 1 }], 1) === true);
         board[(c - 2) * BOARD_SIZE + (c + 1)] = 2; // (c+1, c-2)に白
         assert('敵石の隣では広がらない', isValidPlacement([{ x: c + 1, y: c - 3 }], 1) === false);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

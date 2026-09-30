@@ -9,12 +9,12 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('FALLGO', '落下碁', 'fallgo'),
-        // 着手ごと、各列の石が底へ向かって落下し積み上がる
+        // 3手ごと、各列の石が底へ向かって落下し積み上がる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 落下ルール: 各列の石は下へ落ち、順序を保ったまま底に積み上がる
-            {
+            // 落下ルール: 3手ごとに、各列の石は下へ落ち、順序を保ったまま底に積み上がる
+            if (history.length % 3 === 0) {
                 const N = BOARD_SIZE;
                 for (let x = 0; x < N; x++) {
                     let w = N - 1;
@@ -52,19 +52,20 @@ module.exports = {
                 ctx.restore();
             }`),
         [K.ONE, K.RV_ALGO, K.rv([
-            '盤には重力がある: 着手ごとに各列の石が底へ落ち、順序を保って積み上がる。',
+            '盤には重力がある: 3手ごとに各列の石が底へ落ち、順序を保って積み上がる。',
             '上の盤面はいつも空くため、戦いは自然と下辺に集まる。積み上がった石は連として扱う。',
         ])],
         ...K.STONE_SPEC,
     ],
     test: `
         assert('起動', typeof executeMove === 'function');
-        board.fill(0);
-        executeMove({ cells: [{ x: 4, y: 4 }] }, 1);
+        board.fill(0); history.length = 2;
+        executeMove({ cells: [{ x: 4, y: 4 }] }, 1); // 3手目で落下
         assert('宙石は底へ落ちる', board[(BOARD_SIZE - 1) * BOARD_SIZE + 4] === 1 && board[4 * BOARD_SIZE + 4] === 0);
+        history.length = 2;
         executeMove({ cells: [{ x: 4, y: 2 }] }, 2);
         assert('同じ列の上に積み上がる', board[(BOARD_SIZE - 2) * BOARD_SIZE + 4] === 2 && board[(BOARD_SIZE - 1) * BOARD_SIZE + 4] === 1);
-        board.fill(0);
+        board.fill(0); history.length = 2;
         executeMove({ cells: [{ x: 0, y: BOARD_SIZE - 1 }] }, 1);
         assert('底に置けば動かない', board[(BOARD_SIZE - 1) * BOARD_SIZE + 0] === 1);
     `,

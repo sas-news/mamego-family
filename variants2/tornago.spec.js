@@ -13,6 +13,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+
             // 竜巻ルール: 竜巻は中心から2つ内側の環状コースを1手に2マス進む。
             //             竜巻の周囲8マスの石は2マス分だけ時計回りに旋回する。
             {
@@ -47,6 +48,13 @@ module.exports = {
                 cleanUpPieces();
             }
 
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
             turn = opponent;`],
         // 竜巻の描画: 現在位置に渦巻きマーク
         K.CUE_STARS(`            // 竜巻: 現在位置に渦のマーク
@@ -78,6 +86,7 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '竜巻が内側の環状コースを1手に2マス巡回する。竜巻の周囲8マスの石は2マス分旋回する。',
             '竜巻の位置は手数で決まるので予測できる。巻き上げられた石は隣へ運ばれる。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],

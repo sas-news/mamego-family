@@ -37,7 +37,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '外郭・中段・頂の3層に溝で分かれたピラミッド盤。',
             '層の間は行き来できない。各層で独立した地取り合戦になる。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -46,5 +48,9 @@ module.exports = {
         assert('層間の溝は置けない', board[2 * N + 2] === 3 && isValidPlacement([{ x: 2, y: 2 }], 1) === false);
         assert('もう1本の溝も置けない', board[4 * N + 4] === 3);
         assert('外郭は置ける', isValidPlacement([{ x: 0, y: 0 }], 1) === true);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

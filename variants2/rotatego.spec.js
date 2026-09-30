@@ -13,6 +13,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+
             // 環流ルール: 外周リングは時計回り、内周リングは反時計回りに石が1マス回る
             {
                 const N = BOARD_SIZE;
@@ -44,6 +45,13 @@ module.exports = {
                 cleanUpPieces();
             }
 
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
             turn = opponent;`],
         // 環流方向の表示
         K.CUE_STARS(`            // 環流: 外↻内↺ の回転記号
@@ -61,6 +69,7 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '外周リングは時計回り、内周リングは反時計回りに、着手ごと全石が1マス環流する。',
             '中央部は動かない。環流で石が運ばれ、囲いも崩れもする。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],

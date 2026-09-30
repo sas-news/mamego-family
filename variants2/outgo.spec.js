@@ -68,7 +68,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '星点は前哨基地。自分の手番終了時に占拠している星点1つにつき1点が累積される。',
             '終局時に 地 + アゲハマ + 前哨点 の合計で勝敗を決める。星を取り合って長く保持せよ。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -82,5 +84,9 @@ module.exports = {
         assert('白は星を取っていない', outpostScore[2] === 0);
         endGameByScore();
         assert('結果詳細に前哨点が出る', gameResultData.details.includes('前哨'));
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

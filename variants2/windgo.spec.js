@@ -13,6 +13,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+
             // 風ルール: 全石が風向きに1マス流れる。風は 東→南→西→北 の順に巡る
             {
                 const N = BOARD_SIZE;
@@ -43,6 +44,13 @@ module.exports = {
                 cleanUpPieces();
             }
 
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'風 ' + '東南西北'[history.length % 4] + ' ' + '→↓←↑'[history.length % 4]`),
         // 盤隅に風向きの矢印を表示
@@ -59,6 +67,7 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '着手ごとに盤上の全石が風向きに1マス流される。風は東→南→西→北と1手ごとに向きを変える。',
             '盤端や他の石に詰まった石は流されない。風読みが勝負を分ける。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],

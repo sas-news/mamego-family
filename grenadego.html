@@ -159,7 +159,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 榴弾ルール<br>
-            ※取られた連は爆発し周囲8方向の石 (両色) を道連れ
+            ※取られた連は爆発し周囲8方向の石 (両色・最大8個) を道連れ。200手で自動終局
         </p>
     </div>
 
@@ -502,8 +502,9 @@
             '双方が連続でパスすると終局。地の中の死に石を確認し、地の数 + アゲハマ数 (+白はコミ6.5目) で勝敗を決める。',
         ];
         const RULES_VARIANT = [
-            '榴弾ルール: 取られた連は爆発し、周囲8方向の石 (両色) も道連れに消える。',
+            '榴弾ルール: 取られた連は爆発し、周囲8方向の石 (両色・最大8個) も道連れに消える。',
             '爆発に巻き込まれた自分の石もアゲハマに加算される。囲みすぎると自爆する攻撃的碁。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1517,10 +1518,10 @@
             const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
-                // 榴弾: 取られたマスの8方向の石 (両色) も爆発で消える
+                // 榴弾: 取られたマスの8方向の石 (両色・最大8個) も爆発で消える
                 const boom = new Set();
                 captured.forEach(idx => nbrs8(idx).forEach(n => {
-                    if (board[n] === 1 || board[n] === 2) boom.add(n);
+                    if ((board[n] === 1 || board[n] === 2) && boom.size < 8) boom.add(n);
                 }));
                 boom.forEach(i => { board[i] = 0; });
                 captures[player] += captured.length + boom.size;
@@ -1538,6 +1539,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

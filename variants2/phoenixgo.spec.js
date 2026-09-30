@@ -28,7 +28,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '取られた連は不死鳥のように半分だけ散り、残り半分がその場で即復活する。',
             '大きな連ほど復活力が高い。1石の連は復活できず通常通り散る。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -48,5 +50,9 @@ module.exports = {
         board[5 * BOARD_SIZE + 4] = 1; board[4 * BOARD_SIZE + 5] = 1; board[5 * BOARD_SIZE + 6] = 1;
         executeMove({ cells: [{ x: 5, y: 6 }] }, 1);
         assert('1石は復活せず散る', board[5 * BOARD_SIZE + 5] === 0 && captures[1] === 1);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

@@ -160,7 +160,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 雷ルール<br>
-            ※10手ごとにランダムな連が雷で消滅 (アゲハマにならない)
+            ※10手ごとに小さな連が雷で消滅 (アゲハマにならない)。200手で自動終局
         </p>
     </div>
 
@@ -503,8 +503,9 @@
             '双方が連続でパスすると終局。地の中の死に石を確認し、地の数 + アゲハマ数 (+白はコミ6.5目) で勝敗を決める。',
         ];
         const RULES_VARIANT = [
-            '雷ルール: 合計10手ごとにランダムな石連が雷に打たれて消滅する (アゲハマにはならない)。',
-            '大きな連も一撃で消えることがある — 盤面の運要素が大きい祭り碁。',
+            '雷ルール: 合計10手ごとに6石以下のランダムな石連が雷に打たれて消滅する (アゲハマにはならない)。',
+            '小さな連も一撃で消えることがある — 盤面の運要素が大きい祭り碁。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1536,6 +1537,8 @@
             turn = opponent;
             // 雷: 10手ごとにランダムな連が消滅
             if (history.length % 10 === 0) applyThunder();
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
@@ -1880,13 +1883,18 @@
             saveState();
         }
 
-        // 雷: ランダムな連を1つ消滅させる
+        // 雷: ランダムな小さな連(6石以下)を1つ消滅させる
         function applyThunder() {
-            const occupied = [];
-            board.forEach((v, i) => { if (v === 1 || v === 2) occupied.push(i); });
-            if (!occupied.length) return;
-            const start = occupied[(Math.random() * occupied.length) | 0];
-            const group = getConnectedGroup(start, board[start]);
+            const seen = new Set(), groups = [];
+            for (let i = 0; i < board.length; i++) {
+                const v = board[i];
+                if ((v !== 1 && v !== 2) || seen.has(i)) continue;
+                const g = getConnectedGroup(i, v);
+                g.forEach(x => seen.add(x));
+                if (g.length <= 6) groups.push(g);
+            }
+            if (!groups.length) return;
+            const group = groups[(Math.random() * groups.length) | 0];
             group.forEach(i => { board[i] = 0; });
             cleanUpPieces();
             soundManager.playCapture();

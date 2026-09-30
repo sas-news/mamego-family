@@ -504,7 +504,7 @@
         ];
         const RULES_VARIANT = [
             '硝子の石: 取られた石は砕け、隣接する石 (敵味方問わず) も連鎖して割れる。',
-            '連鎖は石が触れ合う所を辿って広がる。割れた敵石は自分のアゲハマ、割れた自石は相手のアゲハマ。',
+            '連鎖は石が触れ合う所を辿って、取跡から2段まで広がる。割れた敵石は自分のアゲハマ、割れた自石は相手のアゲハマ。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1517,18 +1517,22 @@
             const opponent = player === 1 ? 2 : 1;
             const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
-                // 硝子碁: 砕けた石に隣接する石 (色問わず) も連鎖して割れる
-                const shattered = new Set(captured);
+                // 硝子碁: 砕けた石に隣接する石 (色問わず) も連鎖して割れる。
+                // 連鎖は取跡から2段まで — 盤全体が瓦解して収束しないのを防ぐ。
+                const SHATTER_DEPTH = 2;
+                const depth = new Map(captured.map(i => [i, 0]));
                 const queue = [...captured];
                 while (queue.length > 0) {
                     const c = queue.shift();
+                    if (depth.get(c) >= SHATTER_DEPTH) continue;
                     getNeighbors(c).forEach(n => {
-                        if (!shattered.has(n) && board[n] !== 0) {
-                            shattered.add(n);
+                        if (!depth.has(n) && board[n] !== 0) {
+                            depth.set(n, depth.get(c) + 1);
                             queue.push(n);
                         }
                     });
                 }
+                const shattered = [...depth.keys()];
                 shattered.forEach(idx => {
                     const v = board[idx];
                     board[idx] = 0;

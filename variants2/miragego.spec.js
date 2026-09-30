@@ -13,7 +13,19 @@ module.exports = {
 `        // 蜃気楼碁: 置いてから3手未満の石は蜃気楼 (未確定)
         function isMirage(pc) { return pc.at !== undefined && (history.length - pc.at) < 3; }
 
-        function executeMove(move, player) {`],
+        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 新規対局 (履歴空) で打ち切りを再武装
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            // (1局につき1回のみ発火。死に石選択を取り消して続行する場合は再発火しない)
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+                moveCapFired = true;
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }`],
         [K.ONE, K.PIECES_PUSH, `            pieces.push({
                 id: Date.now() + Math.random(),
                 player: player,
@@ -75,6 +87,7 @@ module.exports = {
             '置いたばかりの石は3手の間「蜃気楼」(点線の輪郭)。3手経てば実体化する。',
             '蜃気楼の敵石の直交隣に着手すると、その石は幻だったと判明して消える。',
             '呼吸や取りは蜃気楼の間も普通に働く — 消される前に囲み切れるかが勝負。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
         ...K.STONE_SPEC,
     ],
@@ -92,5 +105,9 @@ module.exports = {
         executeMove({ cells: [{ x: 0, y: 8 }] }, 2);
         assert('3手後に実体化', isMirage(pieces[0]) === false);
         assert('実体化後は消えない', board[2 * BOARD_SIZE + 2] === 1);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

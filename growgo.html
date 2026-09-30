@@ -503,7 +503,7 @@
         ];
         const RULES_VARIANT = [
             '増殖ルール: 着手ごとに、石に隣接する空点のうち約30%へ同じ色の石が増殖する。',
-            '増殖で呼吸点を失った連は両色とも除去される。',
+            '増殖はどの連の最後の呼吸点も埋めない (増殖だけでは石は取られないが、アタリまで追い込める)。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -600,11 +600,19 @@
             const used = new Set();
             cand.forEach(([i, adj]) => {
                 if (used.has(i) || Math.random() > GROW_RATE) return;
+                // 増殖先がどの連の最後の呼吸点でもある場合は増殖しない (増殖による連鎖全滅を防ぐ)
+                const chokes = getNeighbors(i).some(n => {
+                    const c = board[n];
+                    if (c === 0) return false;
+                    const libs = new Set();
+                    getConnectedGroup(n, c).forEach(cell =>
+                        getNeighbors(cell).forEach(m => { if (board[m] === 0) libs.add(m); }));
+                    return libs.size === 1 && libs.has(i);
+                });
+                if (chokes) return;
                 const s = adj[(Math.random() * adj.length) | 0];
                 board[i] = board[s]; used.add(i);
             });
-            // 増殖で呼吸点を失った連を除去
-            [1, 2].forEach(pl => getCapturedStones(board, pl).forEach(i => { board[i] = 0; }));
             cleanUpPieces();
         }
 

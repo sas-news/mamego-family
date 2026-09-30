@@ -1,19 +1,20 @@
-// CRUMBGO — 崩落碁: 手番ごとに全ての連 (2石以上) が端から1石ずつ崩れていく
+// CRUMBGO — 崩落碁: 3手ごとに全ての連 (2石以上) が端から1石ずつ崩れていく
 const K = require('../gen_kit.js');
 module.exports = {
     file: 'crumbgo.html',
     en: 'CRUMBGO',
     jp: '崩落碁',
     prefix: 'crumbgo',
-    desc: '全ての連は手番ごとに端から1石ずつ崩れていく。盤は常に崩壊中。',
+    desc: '全ての連は3手ごとに端から1石ずつ崩れていく。240手で自動終局。',
     kind: 'stone',
     spec: [
         ...K.rb('CRUMBGO', '崩落碁', 'crumbgo'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 崩落: 全ての連 (2石以上) が最も露出した端から1石ずつ崩れる
-            {
+            // 崩落: 3手ごとに全ての連 (2石以上) が最も露出した端から1石ずつ崩れる。
+            //       (着手より崩れの方が遅いので盤は少しずつ埋まり終盤へ進む)
+            if (history.length % 3 === 0) {
                 const snapB = [...board];
                 const seen = new Set();
                 const groups = [];
@@ -41,6 +42,12 @@ module.exports = {
                 if (fell > 0) cleanUpPieces();
             }
 
+            // 崩落が盤を決して満たさないため、240手で自動的に点数計算して終局 (無期限の延命を防ぐ)
+            if (history.length >= 240 && !gameOver) {
+                endGameByScore();
+                return;
+            }
+
             turn = opponent;`],
         ...K.STONE_MARKS_SPEC(`            // 崩れる端: 自連に1箇所しか繋がっていない石に亀裂点
             for (let i = 0; i < board.length; i++) {
@@ -60,8 +67,9 @@ module.exports = {
                 ctx.restore();
             }`),
         [K.ONE, K.RV_ALGO, K.rv([
-            '着手するたび、盤上の全ての連 (2石以上) が最も露出した端から1石ずつ崩れる。',
+            '3手ごとに、盤上の全ての連 (2石以上) が最も露出した端から1石ずつ崩れる。',
             '崩れた石は誰の取り分にもならずただ消える。大きな連を保つには絶えず修復が要る。',
+            '240手に達したら自動的に点数計算して終局。',
         ])],
         ...K.STONE_SPEC,
     ],
@@ -69,11 +77,17 @@ module.exports = {
         board.fill(0); pieces = [];
         board[5 * BOARD_SIZE + 5] = 1; board[5 * BOARD_SIZE + 6] = 1; board[5 * BOARD_SIZE + 7] = 1;
         board[9 * BOARD_SIZE + 9] = 2;
-        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
-        assert('黒の3連が端から崩れる', board.filter(v => v === 1).length === 3); // 3連-1 + 着手1
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1); // 1手目: 崩落なし
+        assert('1手目は崩れない', board.filter(v => v === 1).length === 4); // 3連 + 着手1
+        executeMove({ cells: [{ x: 0, y: 1 }] }, 2); // 2手目: 崩落なし
+        assert('2手目も崩れない', board.filter(v => v === 1).length === 4);
+        executeMove({ cells: [{ x: 0, y: 2 }] }, 1); // 3手目: 崩落
+        assert('3手目に3連が端から崩れる', board.filter(v => v === 1).length === 4); // 3連-1 + 着手2
         assert('白単石は崩れない', board[9 * BOARD_SIZE + 9] === 2);
-        executeMove({ cells: [{ x: 1, y: 1 }] }, 2);
-        assert('白の手番でも黒が崩れる', board.filter(v => v === 1).length === 2); // 2連がさらに1石崩れ
         assert('崩れた石は誰の取りにもならない', captures[1] === 0 && captures[2] === 0);
+        // 手数上限で自動終局
+        history = new Array(239).fill(null); gameOver = false;
+        executeMove({ cells: [{ x: 3, y: 3 }] }, 1);
+        assert('240手で自動終局', gameOver === true);
     `,
 };

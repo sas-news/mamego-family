@@ -49,11 +49,19 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+
             // 透視碁: 各側2手目の着手でX線 — その時点の全敵石の位置を記録
             if (st.pcnt[player] === 2) {
                 board.forEach((v, i) => {
                     if (v === opponent && !st.seen[player].includes(i)) st.seen[player].push(i);
                 });
+            }
+
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
             }
 
             turn = opponent;`],
@@ -89,6 +97,7 @@ module.exports = {
             '相手の石は不可視。各プレイヤーの2手目の着手でX線が走り、',
             'その時点の敵石全てがあなたにだけ「記録」されて以後ずっと見える。',
             'X線後に置かれた敵石は再び闇の中 — 一度きりの透視をどこで使うか。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],

@@ -49,7 +49,9 @@ module.exports = {
             '終局時、各行の自分色の並びがポーカーの役になる (最も強い役だけ加算)。',
             'ワンペア+2/ツーペア+4/スリーカード+6/フルハウス+10/フォーカード+12/ファイブカード+20目。',
             '横一線に並べる強欲さと、地を確保する堅実さのバランスが問われる。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -60,5 +62,9 @@ module.exports = {
         board[3] = 1; board[4] = 1; board[5] = 1;
         assert('フルハウス', pokerBonus(1) === 10);
         assert('白は役なし', pokerBonus(2) === 0);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

@@ -504,6 +504,7 @@
         const RULES_VARIANT = [
             '爆撃ルール: 置いた石に隣接する敵石の「連」は呼吸点に関係なくすべて破壊・取られる。',
             '通常の取り判定も有効。爆撃で取った石もアゲハマに数えられる。',
+            '爆撃で盤面が埋まり切らないため、盤面マス数と同じ手数で自動終了して地集計に入る。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1551,6 +1552,7 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            if (history.length >= BOARD_SIZE * BOARD_SIZE) endGameByScore();
             updateUI();
 
             // オンライン同期

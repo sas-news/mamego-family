@@ -32,7 +32,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '全ての石に、その連の呼吸点数が数字で表示される (同色の連は同じ数)。',
             '呼吸1の連は赤く警告される。アタリ・取り掛けの読み違いがなくなる計算補助碁。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -43,5 +45,9 @@ module.exports = {
         assert('2連の呼吸は6', getLiberties(board, 4 * BOARD_SIZE + 4) === 6);
         assert('連の端からでも同じ呼吸数', getLiberties(board, 4 * BOARD_SIZE + 5) === 6);
         assert('起動して通常着手可', isValidPlacement([{ x: 0, y: 0 }], 2) === true);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

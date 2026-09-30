@@ -45,6 +45,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+
             // 罠碁: 未発動の罠の隣に敵石があると起動し、隣の敵石1個を道連れにする
             {
                 let sprung = false;
@@ -61,6 +62,13 @@ module.exports = {
                     sprung = true;
                 });
                 if (sprung) cleanUpPieces();
+            }
+
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
             }
 
             turn = opponent;`],
@@ -99,6 +107,7 @@ module.exports = {
             '各プレイヤーの6・12・18…手目の着手は「罠石」— 盤上には置かれるが空点に見える。',
             '罠の直交隣に敵石が置かれると発動し、その敵石1個を道連れにして本来の石に戻る。',
             '罠を跨いだ取り・囲みも通常通り — 見えない石が盤を歪める。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],

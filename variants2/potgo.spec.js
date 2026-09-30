@@ -51,7 +51,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '取った石は自分のアゲハマではなく共有の「壺」に溜まる。',
             '1手で3個以上を取った (大取) 側が壺の中身を全て奪う。壺を狙って大きく刈れ。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -71,5 +73,9 @@ module.exports = {
         board[3 * BOARD_SIZE + 1] = 1; board[0 * BOARD_SIZE + 2] = 1; board[2 * BOARD_SIZE + 2] = 1;
         executeMove({ cells: [{ x: 2, y: 1 }] }, 1);
         assert('大取で壺ごと獲得', captures[1] === 8 && pot === 0);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

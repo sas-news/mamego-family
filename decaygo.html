@@ -506,6 +506,7 @@
         const RULES_VARIANT = [
             '碁石に寿命がある: 配置から8手 (自分+相手の着手計) 経過した石は崩壊して消える。',
             '崩壊した石はアゲハマにならない。石は古くなるほど薄く表示される。',
+            '崩壊で盤面が埋まり切らないため、盤面マス数と同じ手数で自動終了して地集計に入る。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1560,6 +1561,7 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            if (history.length >= BOARD_SIZE * BOARD_SIZE) endGameByScore();
             updateUI();
 
             // オンライン同期

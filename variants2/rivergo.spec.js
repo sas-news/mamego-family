@@ -13,6 +13,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+
             // 大河ルール: 中央2行を流れる川。川筋の石は1手ごとに1マス下流(右)へ運ばれ、
             //             右端の石は流れ落ちて相手のアゲハマになる。
             {
@@ -45,6 +46,13 @@ module.exports = {
                 cleanUpPieces();
             }
 
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
             turn = opponent;`],
         // 川面の描画
         K.CUE_GRID(`            // 大河: 中央2行を青い流れで描く
@@ -72,6 +80,7 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '盤の中央2行を大河が流れる。川筋の石は着手ごとに1マス下流へ運ばれる。',
             '右端まで運ばれた石は流れ落ちて相手のアゲハマになる。乗るなら早めに降りよ。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],

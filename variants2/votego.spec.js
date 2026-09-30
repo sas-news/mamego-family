@@ -95,7 +95,17 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '盤は3×3の9選挙区。終局時に各区で石数が多い側がその区の空点を全て獲得する。',
             '囲む必要はなく、区の中に石を多く置いた側の勝ち。取り・アゲハマ・コミは通常通り。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
+        // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
+            turn = opponent;`],
         ...K.STONE_SPEC,
     ],
     test: `

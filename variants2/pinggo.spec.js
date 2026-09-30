@@ -63,7 +63,9 @@ module.exports = {
             '毎手番、赤いボールが斜めに1マス進む。盤端で反射して跳ね回り続ける。',
             'ボールが石に当たると、その石を進行方向へ1マス押し出し、自身は跳ね返る。',
             '押し出しで連が切れたり呼吸点が変わったりする — 軌道を先読みしよう。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -77,5 +79,9 @@ module.exports = {
         ballPos = 0; ballDx = 1; ballDy = 0;
         executeMove({ cells: [{ x: 6, y: 6 }] }, 1);
         assert('空き地ならボールが進む', ballPos === 1);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

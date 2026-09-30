@@ -45,17 +45,26 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+
             // 海綿: 追打ち権があれば手番を維持してもう1手
             if (spongeBonus[player] > 0) {
                 spongeBonus[player]--;
                 turn = player;
             } else {
-                turn = opponent;
+    
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
+            turn = opponent;
             }`],
         ...K.EVENT_CHIP_SPEC(`spongeBonus[turn] > 0 ? '追打ち!' : ''`),
         [K.ONE, K.RV_ALGO, K.rv([
             '敵連を取るとスポンジのように息を吸い、そのままもう1手打てる。',
             '追打ちでさらに取れば連打が続く。取る局面が一気に優勢になる。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],

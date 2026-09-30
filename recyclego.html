@@ -160,7 +160,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 再生ルール<br>
-            ※取られた石は10手後に元の持ち主の石としてランダム復活
+            ※取られた石は10手後に元の持ち主の石として1回だけ復活。200手で自動終局
         </p>
     </div>
 
@@ -504,7 +504,8 @@
         ];
         const RULES_VARIANT = [
             '再生ルール: 取られた石は10手後に元の持ち主の色でランダムな空点に復活する。',
-            'アゲハマは通常通り計上されるが、石が盤に戻ってくるので勢力が保たれる。',
+            'ただし再生は各石1回だけ — 再生した石をもう一度取れば完全に取り切れる。アゲハマは通常通り計上。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -564,6 +565,7 @@
         let captures = { 1: 0, 2: 0 };
         let komi = 6.5;
         let returnQueue = []; // { player, due } — 再生待ちの石
+        let revivedUsed = new Set(); // 再生済みの石 (二度目は消える)
         let consecutivePasses = 0;
         let gameOver = false;
         let gameResultData = null;
@@ -620,6 +622,7 @@
                     prevBoard,
                     lastMove,
                     returnQueue: returnQueue.map(q => ({ ...q })),
+                    revivedUsed: [...revivedUsed],
                     history,
                     pieceMode,
                     currentPieceType,
@@ -660,6 +663,7 @@
             prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
             lastMove = s.lastMove || null;
             returnQueue = Array.isArray(s.returnQueue) ? s.returnQueue.map(q => ({ ...q })) : [];
+            revivedUsed = new Set(s.revivedUsed || []);
             history = Array.isArray(s.history) ? s.history : [];
             pieceMode = ['free', 'next'].includes(s.pieceMode) ? s.pieceMode : 'next';
             currentPieceType = PIECE_TYPES.includes(s.currentPieceType) ? s.currentPieceType : 'STONE';
@@ -1499,6 +1503,7 @@
                 prevBoard,
                 lastMove,
                 returnQueue: returnQueue.map(q => ({ ...q })),
+                revivedUsed: [...revivedUsed],
                 currentPieceType,
                 pieceQueue: [...pieceQueue],
                 heldPieces: { ...heldPieces },
@@ -1524,8 +1529,9 @@
             if (captured.length > 0) {
                 captured.forEach(idx => {
                     board[idx] = 0;
-                    // 再生: 10手後に元の持ち主の色で復活
-                    returnQueue.push({ player: opponent, due: history.length + 10 });
+                    // 再生: 10手後に元の持ち主の色で復活 (各石1回だけ)
+                    if (revivedUsed.has(idx)) revivedUsed.delete(idx);
+                    else returnQueue.push({ player: opponent, due: history.length + 10 });
                 });
                 captures[player] += captured.length;
                 soundManager.playCapture();
@@ -1542,7 +1548,7 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
-            // 再生: 期限到来の石をランダムな空点に復活
+            // 再生: 期限到来の石をランダムな空点に復活 (復活した石は再生済み)
             returnQueue = returnQueue.filter(q => {
                 if (q.due > history.length) return true;
                 const empties = [];
@@ -1550,12 +1556,15 @@
                 if (!empties.length) return true;
                 const ni = empties[(Math.random() * empties.length) | 0];
                 board[ni] = q.player;
+                revivedUsed.add(ni);
                 pieces.push({
                     id: Date.now() + Math.random(), player: q.player, type: 'STONE', rot: 0,
                     cells: [{ x: ni % BOARD_SIZE, y: (ni / BOARD_SIZE) | 0 }]
                 });
                 return false;
             });
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
@@ -1786,6 +1795,7 @@
             prevBoard = snap.prevBoard;
             lastMove = snap.lastMove;
             returnQueue = snap.returnQueue ? snap.returnQueue.map(q => ({ ...q })) : returnQueue;
+            revivedUsed = new Set(snap.revivedUsed || []);
             if (snap.currentPieceType) currentPieceType = snap.currentPieceType;
             if (snap.pieceQueue) pieceQueue = snap.pieceQueue;
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
@@ -2166,6 +2176,7 @@
             prevBoard = data.prevBoard || null;
             lastMove = data.lastMove || null;
             if (Array.isArray(data.returnQueue)) returnQueue = data.returnQueue.map(q => ({ ...q }));
+            if (Array.isArray(data.revivedUsed)) revivedUsed = new Set(data.revivedUsed);
             if (data.pieceMode) pieceMode = data.pieceMode;
             if (data.currentPieceType) currentPieceType = data.currentPieceType;
             if (data.pieceQueue) pieceQueue = data.pieceQueue;
@@ -2205,6 +2216,7 @@
                 prevBoard,
                 lastMove,
                 returnQueue: returnQueue.map(q => ({ ...q })),
+                revivedUsed: [...revivedUsed],
                 pieceMode,
                 currentPieceType,
                 pieceQueue,
@@ -2441,6 +2453,7 @@
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             returnQueue = [];
+            revivedUsed = new Set();
             pieces = [];
             turn = 1;
             captures = { 1: 0, 2: 0 };

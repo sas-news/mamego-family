@@ -159,7 +159,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + 跳躍ルール<br>
-            ※自石から距離ちょうど2の点のみ (初手は自由)
+            ※自石から距離ちょうど2の点のみ (距離2の空点が無ければ自由)。200手で自動終局
         </p>
     </div>
 
@@ -503,7 +503,8 @@
         ];
         const RULES_VARIANT = [
             '跳躍ルール: 自分の石からマンハッタン距離ちょうど2の点にしか置けない (初手のみ自由)。',
-            '隣には置けない — 常に飛び石になる展開碁。取り合いは間接的に進む。',
+            'ただし距離2の空点が盤上に1つも無い場合は制約解除 — どこにでも置ける。',
+            '安全装置: 合計200手に達すると自動終局し得点計算する。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1484,9 +1485,10 @@
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
             }
 
-            // 跳躍ルール: 自石から距離ちょうど2のみ (自石が無ければ自由)
+            // 跳躍ルール: 自石から距離ちょうど2のみ (自石が無い、または距離2の空点が無ければ自由)
             {
-                let hasOwn = false, best = Infinity;
+                const JOFF = [[2,0],[-2,0],[0,2],[0,-2],[1,1],[1,-1],[-1,1],[-1,-1]];
+                let hasOwn = false, best = Infinity, anyJump = false;
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] !== player) continue;
                     hasOwn = true;
@@ -1494,8 +1496,13 @@
                     cells.forEach(p => {
                         best = Math.min(best, Math.abs(p.x - bx) + Math.abs(p.y - by));
                     });
+                    if (!anyJump) JOFF.forEach(([dx, dy]) => {
+                        const nx = bx + dx, ny = by + dy;
+                        if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE && board[ny * BOARD_SIZE + nx] === 0)
+                            anyJump = true;
+                    });
                 }
-                if (hasOwn && best !== 2) return false;
+                if (hasOwn && anyJump && best !== 2) return false;
             }
 
             // 仮配置
@@ -1568,6 +1575,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限: 200手で自動終局
+            if (history.length >= 200) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

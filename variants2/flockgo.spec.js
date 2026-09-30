@@ -1,21 +1,21 @@
-// FLOCKGO — 群行碁: 連はまとまって移動する。着手ごと全連が中心へ1マス進む
+// FLOCKGO — 群行碁: 連はまとまって移動する。3手ごと全連が中心へ1マス進む
 const K = require('../gen_kit.js');
 module.exports = {
     file: 'flockgo.html',
     en: 'FLOCKGO',
     jp: '群行碁',
     prefix: 'flockgo',
-    desc: '連は鳥の群れ。着手ごと全連がまるごと1マス、盤の中心へ向かって進む。',
+    desc: '連は鳥の群れ。3手ごと全連がまるごと1マス、盤の中心へ向かって進む。',
     kind: 'stone',
     spec: [
         ...K.rb('FLOCKGO', '群行碁', 'flockgo'),
-        // 着手ごと、全連が重心の向きで中心へ1マスまとまって進む
+        // 3手ごと、全連が重心の向きで中心へ1マスまとまって進む
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 群行ルール: 各連が重心を計算し、中心方向へ1マスまるごと平行移動する。
+            // 群行ルール: 3手ごとに各連が重心を計算し、中心方向へ1マスまるごと平行移動する。
             //             行き先が塞がっていたらその連は動けない。
-            {
+            if (history.length % 3 === 0) {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
                 const seen = new Uint8Array(N * N);
                 const groups = [];
@@ -81,24 +81,24 @@ module.exports = {
                 ctx.restore();
             }`),
         [K.ONE, K.RV_ALGO, K.rv([
-            '連は群れで動く: 着手ごとに全連が重心を計算し、盤の中心方向へ1マスまとまって進む。',
+            '連は群れで動く: 3手ごとに全連が重心を計算し、盤の中心方向へ1マスまとまって進む。',
             '行き先が盤端や他の石で塞がれた連は動けない。群れ同士の衝突に注意。',
         ])],
         ...K.STONE_SPEC,
     ],
     test: `
         assert('起動', typeof executeMove === 'function');
-        board.fill(0);
+        board.fill(0); history.length = 2;
         board[2 * BOARD_SIZE + 2] = 1;
         board[2 * BOARD_SIZE + 3] = 1; // 横2連
-        executeMove({ cells: [{ x: 8, y: 8 }] }, 2);
+        executeMove({ cells: [{ x: 8, y: 8 }] }, 2); // 3手目で群行
         assert('連がまとまって中心へ', board[3 * BOARD_SIZE + 3] === 1 && board[3 * BOARD_SIZE + 4] === 1 && board[2 * BOARD_SIZE + 2] === 0 && board[2 * BOARD_SIZE + 3] === 0);
-        board.fill(0);
+        board.fill(0); history.length = 2;
         const c = Math.floor(BOARD_SIZE / 2);
         board[c * BOARD_SIZE + c] = 1;
         executeMove({ cells: [{ x: 8, y: 8 }] }, 2);
         assert('中心の連は動かない', board[c * BOARD_SIZE + c] === 1);
-        board.fill(0);
+        board.fill(0); history.length = 2;
         board[4 * BOARD_SIZE + 4] = 1;
         board[5 * BOARD_SIZE + 5] = 2; // 敵石が移動先を塞ぐ
         executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
