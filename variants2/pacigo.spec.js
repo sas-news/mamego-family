@@ -1,0 +1,46 @@
+// PACIGO — 平和碁: 一度も石を取らなかった側が勝つ (両者取った場合のみ通常採点)
+const K = require('../gen_kit.js');
+module.exports = {
+    file: 'pacigo.html',
+    en: 'PACIGO',
+    jp: '平和碁',
+    prefix: 'pacigo',
+    desc: '一度も取らなかった側が勝つ。取り合いになると通常の地取り勝負に戻る。',
+    kind: 'peace',
+    spec: [
+        ...K.rb('PACIGO', '平和碁', 'pacigo'),
+        // 平和判定を endGameByScore 内に組み込む: 勝者決定部を差替
+        [K.ONE, `            let winnerTitle = '';
+            if (blackTotal > whiteTotal) winnerTitle = '黒の勝ち';
+            else if (whiteTotal > blackTotal) winnerTitle = '白の勝ち';
+            else winnerTitle = '引き分け';`,
+`            let winnerTitle = '';
+            const bPeace = captures[1] === 0, wPeace = captures[2] === 0;
+            if (bPeace !== wPeace) {
+                // 平和ルール: 一度も取らなかった側が無条件勝ち
+                winnerTitle = (bPeace ? '黒' : '白') + 'の平和勝ち';
+            } else if (blackTotal > whiteTotal) winnerTitle = \`黒の勝ち (\${diff} 目差)\`;
+            else if (whiteTotal > blackTotal) winnerTitle = \`白の勝ち (\${diff} 目差)\`;
+            else winnerTitle = '引き分け';`],
+        [K.ONE, `                title: \`\${winnerTitle} (\${diff} 目差)\`,`,
+`                title: winnerTitle,`],
+        [K.ONE, K.RV_ALGO, K.rv([
+            '平和条約: 一度も相手の石を取らなかった側が勝つ (両者取った、または両者無血なら通常採点)。',
+            '取ると条約違反 — でも取らなければ地取りでは不利かもしれない。駆け引きの碁。',
+        ])],
+        ...K.STONE_SPEC,
+    ],
+    test: `
+        board.fill(0);
+        captures[1] = 0; captures[2] = 5;
+        endGameByScore();
+        assert('取らなかった黒の平和勝ち', gameResultData.title.includes('平和') && gameResultData.title.includes('黒'));
+        captures[1] = 3; captures[2] = 5;
+        endGameByScore();
+        assert('両者取れば通常採点', !gameResultData.title.includes('平和'));
+        captures[1] = 0; captures[2] = 0;
+        endGameByScore();
+        assert('両者無血も通常採点', !gameResultData.title.includes('平和'));
+        assert('起動着手可', isValidPlacement([{ x: 0, y: 0 }], 1) === true);
+    `,
+};

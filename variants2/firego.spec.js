@@ -1,0 +1,67 @@
+// FIREGO — 燎原碁: 隅の火点から1手ごとに火が燃え広がり、石を焼き尽くす
+const K = require('../gen_kit.js');
+module.exports = {
+    file: 'firego.html',
+    en: 'FIREGO',
+    jp: '燎原碁',
+    prefix: 'firego',
+    desc: '左上角の火点から1手ごとに火が燃え広がる。焼けた石はアゲハマに。',
+    kind: 'stone',
+    spec: [
+        ...K.rb('FIREGO', '燎原碁', 'firego'),
+        // 火は左上隅から1手ごとに斜め1マスずつ燃え広がる (x+y<=手数が燃焼域)
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            // 燎原ルール: 左上隅の火点から1手ごとに斜め1マスずつ燃え広がる。
+            //             燃焼域 (x+y<=手数) の石は焼けて相手のアゲハマになる。
+            {
+                const N = BOARD_SIZE, r = history.length;
+                for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+                    if (x + y > r) continue;
+                    const i = y * N + x;
+                    if (board[i] === 1 || board[i] === 2) {
+                        captures[board[i] === 1 ? 2 : 1]++;
+                        board[i] = 0;
+                    }
+                }
+                cleanUpPieces();
+            }
+
+            turn = opponent;`],
+        // 燃焼域の描画
+        K.CUE_GRID(`            // 燎原: 燃え広がる炎の帯
+            {
+                const r = history.length;
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (x + y > r) continue;
+                    const front = (x + y === r);
+                    ctx.fillStyle = front ? 'rgba(255,110,20,0.45)' : 'rgba(200,60,20,0.22)';
+                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize,
+                        cellSize, cellSize);
+                }
+                ctx.restore();
+            }`),
+        ...K.EVENT_CHIP_SPEC(`'燃焼域 ' + Math.min(history.length, 2 * BOARD_SIZE - 2) + ' 歩'`),
+        [K.ONE, K.RV_ALGO, K.rv([
+            '左上隅の火点から1手ごとに火が斜め1マスずつ燃え広がる (x+yが手数以下の領域)。',
+            '燃焼域の石は焼けて相手のアゲハマになる。盤が全て燃え尽きる前に決着を。',
+        ])],
+        ...K.STONE_SPEC,
+    ],
+    test: `
+        assert('起動', typeof executeMove === 'function');
+        board.fill(0);
+        executeMove({ cells: [{ x: 3, y: 3 }] }, 1); // 1手目: 燃焼域 x+y<=1
+        assert('燃焼域の外は無事', board[3 * BOARD_SIZE + 3] === 1);
+        const cells = [[8, 8], [7, 8], [8, 7], [9, 9], [10, 10]];
+        for (let k = 0; k < 5; k++) executeMove({ cells: [{ x: cells[k][0], y: cells[k][1] }] }, k % 2 + 1);
+        // 6手目: 燃焼域 x+y<=6 → (3,3)は燃える
+        assert('燃え広がった火が石を焼く', board[3 * BOARD_SIZE + 3] === 0);
+        board.fill(0);
+        const c2 = captures[2];
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1); // 火点上は即燃える
+        assert('火点に置くと即座に焼ける', board[0] === 0 && captures[2] === c2 + 1);
+    `,
+};

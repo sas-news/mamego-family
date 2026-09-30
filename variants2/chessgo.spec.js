@@ -1,0 +1,72 @@
+// CHESSGO — 騎士碁: 初手の石が王。王が取られた側の負け (王手=チェック)
+const K = require('../gen_kit.js');
+module.exports = {
+    file: 'chessgo.html',
+    en: 'CHESSGO',
+    jp: '騎士碁',
+    prefix: 'chessgo',
+    desc: '初手の石が王冠を被る王。王の連が取られたら即負けのチェック碁。',
+    kind: 'crown',
+    spec: [
+        ...K.rb('CHESSGO', '騎士碁', 'chessgo'),
+        [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
+        function endGameByScore() {`],
+        [K.ONE, K.BOARD_DECL, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
+        let kingIdx = { 1: -1, 2: -1 }; // 各プレイヤーの王の位置`],
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            // 騎士碁: 初手の石が王になる。王が取られれば即負け
+            if (kingIdx[player] < 0 && move.cells.length > 0) {
+                kingIdx[player] = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+            }
+            if (kingIdx[opponent] >= 0 && board[kingIdx[opponent]] !== opponent) {
+                winByRule(player, '王手詰み勝ち', '相手の王を捕らえました');
+                return;
+            }
+
+            turn = opponent;`],
+        // チェック表示チップ
+        ...K.EVENT_CHIP_SPEC('kingIdx[turn] >= 0 && board[kingIdx[turn]] === turn && getLiberties(board, kingIdx[turn]) === 1 ? "チェック!" : ""'),
+        // 王冠マーク
+        ...K.STONE_MARKS_SPEC(`            [1, 2].forEach(pl => {
+                const ki = kingIdx[pl];
+                if (ki < 0 || board[ki] !== pl) return;
+                const kx = ki % BOARD_SIZE, ky = Math.floor(ki / BOARD_SIZE);
+                const cx = padding + kx * cellSize, cy = padding + ky * cellSize;
+                ctx.save();
+                ctx.strokeStyle = pl === 1 ? '#f5d060' : '#b09020';
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
+                ctx.beginPath();
+                ctx.moveTo(cx - cellSize * 0.15, cy + cellSize * 0.12);
+                ctx.lineTo(cx - cellSize * 0.12, cy - cellSize * 0.1);
+                ctx.lineTo(cx - cellSize * 0.05, cy + cellSize * 0.01);
+                ctx.lineTo(cx, cy - cellSize * 0.12);
+                ctx.lineTo(cx + cellSize * 0.05, cy + cellSize * 0.01);
+                ctx.lineTo(cx + cellSize * 0.12, cy - cellSize * 0.1);
+                ctx.lineTo(cx + cellSize * 0.15, cy + cellSize * 0.12);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.restore();
+            });`),
+        [K.ONE, K.INFO_ALGO, `            騎士碁: 初手の石が王。王の連が取られたら即負け<br>
+            PC: クリックで配置<br>
+            スマホ: 1タップ目プレビュー、2タップ目確定`],
+        [K.ONE, K.RV_ALGO, K.rv([
+            '各プレイヤーの初手の石が王冠を被った王になる。',
+            '王を含む連が取られた側は即負け。王の呼吸点が1になるとチェック警告が出る。',
+            '王を守りつつ敵の王を追い詰めろ — ただし普通の地取り決着もあり得る。',
+        ])],
+        ...K.STONE_SPEC,
+    ],
+    test: `
+        board.fill(0); pieces = []; kingIdx = { 1: -1, 2: -1 };
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('初手の石が王', kingIdx[1] === 0);
+        board.fill(0); pieces = []; kingIdx = { 1: 0, 2: -1 };
+        board[0] = 1; board[1] = 2; board[BOARD_SIZE] = 2;
+        executeMove({ cells: [{ x: 5, y: 5 }] }, 2);
+        assert('王を取れば勝ち', gameOver === true);
+        assert('結果は王手詰み', !!gameResultData && gameResultData.title.includes('王'));
+    `,
+};
