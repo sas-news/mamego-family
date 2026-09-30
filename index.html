@@ -506,10 +506,11 @@
             { file: 'ziggo.html', name: 'ZIGGO', jp: '之字碁', desc: 'S字・Z字4連ピースだけを置く碁。ジグザグの連。', kind: 'stone', icon: 'ziggo' },
             { file: 'zipgo.html', name: 'ZIPGO', jp: '縞封碁', desc: '奇数手は前の手の列、偶数手は行になぞられて指される縞模様の碁。', kind: 'zip' },
             { file: 'zonego.html', name: 'ZONEGO', jp: '区域碁', desc: '盤は9区域。自分の石が相手より2個以上多い区域を「制圧」。5区域制圧で即勝ち。', kind: 'zone' },
-                                                            // ==== WAVE3 GAMES BEGIN ====
+                                                                        // ==== WAVE3 GAMES BEGIN ====
             { file: 'abyssgo.html', name: 'ABYSSGO', jp: '海底碁', desc: '深海の海嶺。熱水噴出孔の温もりの届く点 (チェビシェフ2以内) だけが呼吸点。', kind: 'stone', icon: 'abyssgo' },
             { file: 'accelgo.html', name: 'ACCELGO', jp: '加速碁', desc: '自分の番で石を置き続けると3連続ごとに+1手の連打ボーナス。パスでリセット。', kind: 'stone', icon: 'accelgo' },
             { file: 'afterimagego.html', name: 'AFTERIMAGEGO', jp: '残響碁', desc: '着手・消滅した場所に残響が残る。自分の残響の上に置くと共鳴石になり、終局時+1目。', kind: 'stone', icon: 'afterimagego' },
+            { file: 'alluvialgo.html', name: 'ALLUVIALGO', jp: '扇状碁', desc: '扇状地の盤。扇央は豊か(+1呼吸)、扇外の荒れ地は痩せる(-1呼吸)。', kind: 'stone', icon: 'alluvialgo' },
             { file: 'ambergo.html', name: 'AMBERGO', jp: '琥珀碁', desc: '取られた石は消えず琥珀に封じ込められ、その場に永久の障害物として残る。', kind: 'stone', icon: 'ambergo' },
             { file: 'antcolonygo.html', name: 'ANTCOLONYGO', jp: '蟻群碁', desc: '四隅は餌場。石で占めると+4目。石の隣にはフェロモンの道が滲む。', kind: 'stone', icon: 'antcolonygo' },
             { file: 'antiquego.html', name: 'ANTIQUEGO', jp: '骨董碁', desc: '石は骨董品。生き残った石は4手ごとに+1目。取られた石は価値0。', kind: 'stone', icon: 'antiquego' },
@@ -531,33 +532,41 @@
             { file: 'bellgo.html', name: 'BELLGO', jp: '釣鐘碁', desc: '釣鐘型の盤。石は斜面を転がり、鐘の縁か他の石に当たるまで滑る。', kind: 'stone', icon: 'bellgo' },
             { file: 'bentogo.html', name: 'BENTOGO', jp: '弁当碁', desc: '12手ごとの開け弁当判定。4仕切りすべてに石が1個以上ある側がバランス点を得る。先に3点で幕の内勝ち。', kind: 'stone', icon: 'bentogo' },
             { file: 'bidgo.html', name: 'BIDGO', jp: '入札碁', desc: '星点は入札点。占めるたびにアゲハマで代価を払い、値段は吊り上がる。', kind: 'stone', icon: 'bidgo' },
+            { file: 'biidamago.html', name: 'BIIDAMAGO', jp: 'ビー玉碁', desc: '星の点は穴。ビー玉を穴に入れると+2点、穴の中の石は呼吸+1。', kind: 'stone', icon: 'biidamago' },
             { file: 'bingolinego.html', name: 'BINGOLINEGO', jp: '釣合碁', desc: '斜め(↘/↗)に自石が5個以上連なると連なりの長さだけビンゴボーナス地。', kind: 'stone', icon: 'bingolinego' },
             { file: 'blindspotgo.html', name: 'BLINDSPOTGO', jp: '盲点碁', desc: '双方に1つずつ盲点を設定。その点の敵石は視界から消え、取りの判定にも効く。', kind: 'stone', icon: 'blindspotgo' },
             { file: 'blockcitygo.html', name: 'BLOCKCITYGO', jp: '街区碁', desc: '盤は道路で区切られた街区状。終局時、各街区で石数多数の側が街区全域を領地とする。', kind: 'stone', icon: 'blockcitygo' },
             { file: 'bloomgo.html', name: 'BLOOMGO', jp: '開花碁', desc: '12手周期の季節。春になると全ての連が「開花」して呼吸点+1。', kind: 'stone', icon: 'bloomgo' },
             { file: 'bluffgo.html', name: 'BLUFFGO', jp: '詐称碁', desc: '石を取った手番が「虚勢」(取った石が自軍から孤立)だと見抜かれて-2目。', kind: 'stone', icon: 'bluffgo' },
             { file: 'bonsaigo.html', name: 'BONSAIGO', jp: '盆栽碁', desc: '石は盆栽の枝。分岐と先端を持つ「整った樹形」の連は終局時+2目。', kind: 'stone', icon: 'bonsaigo' },
+            { file: 'bonshogo.html', name: 'BONSHOGO', jp: '鐘撞碁', desc: '天元は梵鐘。撞く(着手)と音が響き、周囲1目の石が1つ外へ押される。', kind: 'stone', icon: 'bonshogo' },
             { file: 'borego.html', name: 'BOREGO', jp: '削岩碁', desc: '盤の外周は岩盤で置けない。岩に隣接して置くと削り取られ、新しい着手点が掘れる。', kind: 'stone', icon: 'borego' },
             { file: 'borrowturngo.html', name: 'BORROWTURNGO', jp: '借用碁', desc: '「借用」で2手連続着手。ただし次の相手番は相手も2手連続になる前借り。', kind: 'stone', icon: 'borrowturngo' },
             { file: 'bouncygo.html', name: 'BOUNCYGO', jp: '弾み碁', desc: '石は弾む。置くと反発して隣の全ての石 (両色) を1マス弾き飛ばす。', kind: 'stone', icon: 'bouncygo' },
             { file: 'branchgo.html', name: 'BRANCHGO', jp: '枝分碁', desc: '石は枝。3方向以上に自分の石が伸びる分岐点を作ると終局時+1目。', kind: 'stone', icon: 'branchgo' },
             { file: 'brewgo.html', name: 'BREWGO', jp: '醸造碁', desc: '盤の醸造槽。麹の石が12手浸かると酒に変わり、終局時1個1点になる。', kind: 'stone', icon: 'brewgo' },
+            { file: 'brushgo.html', name: 'BRUSHGO', jp: '筆造碁', desc: '石は筆の穂先。縦横一直線に3つ以上揃った連は「良い筆」となり呼吸+2。', kind: 'stone', icon: 'brushgo' },
             { file: 'bulletgo.html', name: 'BULLETGO', jp: '弾丸碁', desc: '各側5手目の石は弾丸。最も近い敵石へ弾を放ち、直線上を最大3個貫通。', kind: 'stone', icon: 'bulletgo' },
             { file: 'bumpygo.html', name: 'BUMPYGO', jp: '凸凹碁', desc: '起伏のある盤。着いた石は低い方へ転がり、窪地に落ちると潰れることも。', kind: 'stone', icon: 'bumpygo' },
             { file: 'bunkergo.html', name: 'BUNKERGO', jp: '地下壕碁', desc: '中央に屋根付きの地下壕。壕内の石は取られないが、壕からも攻められない。', kind: 'stone', icon: 'bunkergo' },
             { file: 'burialgo.html', name: 'BURIALGO', jp: '墓穴碁', desc: '各側最初に石を取った場所は墓穴になり、二度と石は置けない。', kind: 'stone', icon: 'burialgo' },
+            { file: 'byoubugo.html', name: 'BYOUBUGO', jp: '屏風碁', desc: '横一線に4連以上並んだ石は「屏風」。その連は風を遮られて決して取られない。', kind: 'stone', icon: 'byoubugo' },
             { file: 'calligraphygo.html', name: 'CALLIGRAPHYGO', jp: '書道碁', desc: '石は墨の筆跡。直前の自石に隣接して打つと一筆が伸び、最長の流れが得点。', kind: 'stone', icon: 'calligraphygo' },
+            { file: 'candlego.html', name: 'CANDLEGO', jp: '蝋燭碁', desc: '石は蝋燭。灯り(隣の空点)が1つしか無い孤立の蝋燭は、12手ごとの風で燃え尽きる。', kind: 'stone', icon: 'candlego' },
             { file: 'candygo.html', name: 'CANDYGO', jp: '飴玉碁', desc: '同じ色が3個以上並ぶとポップして持ち主の得点に。連鎖ポップも起きる。', kind: 'stone', icon: 'candygo' },
+            { file: 'capego.html', name: 'CAPEGO', jp: '岬碁', desc: '盤外周は海、四方の岬だけが突出部。岬を占めると制海点+2。', kind: 'stone', icon: 'capego' },
             { file: 'capsulego.html', name: 'CAPSULEGO', jp: 'カプセル碁', desc: '敵石を取るとカプセルが弾けて自分色の中身が近くの空きマスに飛び出す。', kind: 'stone', icon: 'capsulego' },
             { file: 'carbongo.html', name: 'CARBONGO', jp: '炭素碁', desc: '盤中央の高圧区域で炭素の石はダイヤに変質。ダイヤは終局時に1個1点。', kind: 'stone', icon: 'carbongo' },
             { file: 'caromgo.html', name: 'CAROMGO', jp: '撞球碁', desc: '石はビリヤード球。衝突で敵球を転がし、ポケット (盤端) に落とす。', kind: 'stone', icon: 'caromgo' },
             { file: 'castego.html', name: 'CASTEGO', jp: '階層碁', desc: '石は階級。4手ごとの着手は上級石 — 取られると2目分。数が少ないほど価値が高い。', kind: 'stone', icon: 'castego' },
             { file: 'catalystgo.html', name: 'CATALYSTGO', jp: '触媒碁', desc: '自分の6個目ごとの石は触媒。置くと隣接する敵石を自石に変質させる。', kind: 'stone', icon: 'catalystgo' },
             { file: 'catcradlego.html', name: 'CATCRADLEGO', jp: 'あやと碁', desc: '自石2つ+敵石2つに触れる交差着手であやとり完成、+1目。', kind: 'stone', icon: 'catcradlego' },
+            { file: 'chabakogo.html', name: 'CHABAKOGO', jp: '茶箱碁', desc: '中央3x3の茶箱に道具(石)を5つ詰め込めば野点出発で即勝ち。詰めた石は+1目。', kind: 'stone', icon: 'chabakogo' },
             { file: 'chainreact.html', name: 'CHAINREACT', jp: '連鎖碁', desc: '敵石を取ると爆発: 8近傍の敵石も連鎖して取られる。連鎖は最大2波まで。', kind: 'stone', icon: 'chainreact' },
             { file: 'channelgo.html', name: 'CHANNELGO', jp: '媒介碁', desc: '石は媒介。同行・同列で視線の通った石同士は遠くても一つの連。', kind: 'stone', icon: 'channelgo' },
             { file: 'chefgo.html', name: 'CHEFGO', jp: '料理碁', desc: '取った食材は調理済みで2倍。盤上に残った生の石は1個ごとに-0.5目。', kind: 'stone', icon: 'chefgo' },
             { file: 'chickengo.html', name: 'CHICKENGO', jp: '養鶏碁', desc: '星の点は餌場。石が5手留まると隣に卵を産み、卵は6手で孵化して石になる。', kind: 'stone', icon: 'chickengo' },
+            { file: 'chisengo.html', name: 'CHISENGO', jp: '池泉碁', desc: '中央の十字形の池は打てない水場。池に面する景石ごとに+2目の庭師点。', kind: 'stone', icon: 'chisengo' },
             { file: 'ciphergo.html', name: 'CIPHERGO', jp: '暗号碁', desc: '盤面は暗号文。石を置いた場所の数字が解読されて隠し得点になる。', kind: 'stone', icon: 'ciphergo' },
             { file: 'circle2go.html', name: 'CIRCLE2GO', jp: '環状碁', desc: '自分の連で2点以上を囲む「環」を完成させると内部が得点になり、環の石は無敵になる。', kind: 'stone', icon: 'circle2go' },
             { file: 'cliffgo.html', name: 'CLIFFGO', jp: '岩壁碁', desc: '盤を横断する崖。縁の石は崖下へ落下して結合する。', kind: 'stone', icon: 'cliffgo' },
@@ -567,6 +576,7 @@
             { file: 'cobwebgo.html', name: 'COBWEBGO', jp: '蛛網碁', desc: '蜘蛛の巣状の盤。環状筋と十字の放射筋の交点だけが着手点。', kind: 'stone', icon: 'cobwebgo' },
             { file: 'collidego.html', name: 'COLLIDEGO', jp: '衝突碁', desc: '置いた石は中央へ向かう長軸方向に最大5マス滑る。敵石に衝突すると破壊してその場に止まる。', kind: 'stone', icon: 'collidego' },
             { file: 'colonygo.html', name: 'COLONYGO', jp: '植民碁', desc: '盤は3x3の区域に分割。終局時、各区域で石数が多い側が区域全域を領地として得る。', kind: 'stone', icon: 'colonygo' },
+            { file: 'compassgo.html', name: 'COMPASSGO', jp: '方位碁', desc: '盤は八方位。外周の自石は方角で得点が違う — 四正方位 (東西南北) +3・四隅方位 +1。', kind: 'stone', icon: 'compassgo' },
             { file: 'conductgo.html', name: 'CONDUCTGO', jp: '導電碁', desc: '盤の左右端は電極。両端に触れる連は短絡して呼吸点-2で弱化する。', kind: 'stone', icon: 'conductgo' },
             { file: 'corridorgo.html', name: 'CORRIDORGO', jp: '渡廊碁', desc: '東西の庭園を1列の渡り廊下が結ぶ。廊下を制する者が両岸を制す。', kind: 'stone', icon: 'corridorgo' },
             { file: 'covego.html', name: 'COVEGO', jp: '入江碁', desc: '海岸線の凹凸盤。湾内の奥まった好地は呼吸点+1の安息地。', kind: 'stone', icon: 'covego' },
@@ -578,6 +588,7 @@
             { file: 'crystalgo.html', name: 'CRYSTALGO', jp: '結晶碁', desc: '4個以上繋がった石は結晶化して不滅になるが、それ以上連にはならない。', kind: 'stone', icon: 'crystalgo' },
             { file: 'currentgo.html', name: 'CURRENTGO', jp: '海流碁', desc: '5行おきの海流が8手ごとに石を1マス流す。盤外に流されると取られる。', kind: 'stone', icon: 'currentgo' },
             { file: 'cylindergo.html', name: 'CYLINDERGO', jp: '中空碁', desc: '円筒の内側の盤。左右の端が繋がり、右端の隣は左端。', kind: 'stone', icon: 'cylindergo' },
+            { file: 'dashigo.html', name: 'DASHIGO', jp: '出汁碁', desc: '出汁区域 (琥珀の池) で終局を迎えた石は旨みが滲みて1石+1目。', kind: 'stone', icon: 'dashigo' },
             { file: 'daynightgo.html', name: 'DAYNIGHTGO', jp: '二時碁', desc: '20手ごとに昼⇄夜が巡り、盤上の全石の持ち主が反転する。布石は寝返る。', kind: 'stone', icon: 'daynightgo' },
             { file: 'debtgo.html', name: 'DEBTGO', jp: '貸付碁', desc: '「貸付」で相手色の石を置く。20手後に返済され、自石+利子1石に膨らむ。', kind: 'stone', icon: 'debtgo' },
             { file: 'deckgo.html', name: 'DECKGO', jp: '山札碁', desc: '手番ごとに山札をめくる: 複製/爆破/交換/援軍のカード効果が石に適用される。', kind: 'stone', icon: 'deckgo' },
@@ -599,11 +610,13 @@
             { file: 'dropletgo.html', name: 'DROPLETGO', jp: '雫碁', desc: '石は水滴。同色に2面までなら合体できるが、3面以上の合体は表面張力で弾けて置けない。', kind: 'stone', icon: 'dropletgo' },
             { file: 'droughtgo.html', name: 'DROUGHTGO', jp: '干ばつ碁', desc: '天元が水源。遠くの石は渇き、5手ごとに水源から遠い石が干上がる。', kind: 'weather', icon: 'droughtgo' },
             { file: 'dualphasego.html', name: 'DUALPHASEGO', jp: '二相碁', desc: '市松模様の盤。白マスの石は呼吸2倍・黒マスの石は呼吸半分で数える。', kind: 'stone', icon: 'dualphasego' },
+            { file: 'dunego.html', name: 'DUNEGO', jp: '砂丘碁', desc: '流砂の砂丘地帯。7手ごとに砂丘が東へ流れ、乗った石は砂に呑まれる。', kind: 'stone', icon: 'dunego' },
             { file: 'dungo.html', name: 'DUNGO', jp: '地下碁', desc: '4つの潜行点 (◎) に打った石は地下に潜って取られない・連にもならない。', kind: 'stone', icon: 'dungo' },
             { file: 'dustbombgo.html', name: 'DUSTBOMBGO', jp: '粉塵碁', desc: '着手の隣の空点に粉塵が堆積。粉塵3の空点は爆発し3x3の敵石を吹き飛ばす (連鎖あり・自石は無事)。', kind: 'stone', icon: 'dustbombgo' },
             { file: 'dynamitego.html', name: 'DYNAMITEGO', jp: '爆破解碁', desc: '「点火」で次の着手がダイナマイト化。着弾3x3の石を全て吹き飛ばす (各側1回)。', kind: 'stone', icon: 'dynamitego' },
             { file: 'echo2go.html', name: 'ECHOGO', jp: '残響碁', desc: '自分の直前の手の座標が残響になり、次の自分の番では着手できない。', kind: 'weather', icon: 'echo2go' },
             { file: 'eclipsego.html', name: 'ECLIPSEGO', jp: '日食碁', desc: '12手ごとの日食: 全石の色が反転しアゲハマも入れ替わる。', kind: 'weather', icon: 'eclipsego' },
+            { file: 'ehogo.html', name: 'EHOGO', jp: '恵方碁', desc: '恵方 (北→東→南→西の外2列帯) が3手ごとに回る。恵方に向かって置くと福+2点。', kind: 'stone', icon: 'ehogo' },
             { file: 'ekidengo.html', name: 'EKIDENGO', jp: '継走碁', desc: '5手ごとに「たすき石」が現れる。取ると2個分・残ると+1点の特別石。', kind: 'stone', icon: 'ekidengo' },
             { file: 'electiongo.html', name: 'ELECTIONGO', jp: '選挙碁', desc: '石は有権者。9つの選挙区で石の多い側が区を制して+4目。', kind: 'stone', icon: 'electiongo' },
             { file: 'elementgo.html', name: 'ELEMENTGO', jp: '周期碁', desc: '交点は元素記号。結合対で+2、激反応対は両者消失する。', kind: 'stone', icon: 'elementgo' },
@@ -612,10 +625,12 @@
             { file: 'encorego.html', name: 'ENCOREGO', jp: '完奏碁', desc: '盤の8個の音符点を順番に自石で埋める。先に一曲完奏した側が勝ち (各+1目)。', kind: 'stone', icon: 'encorego' },
             { file: 'erosiongo.html', name: 'EROSIONGO', jp: '浸食碁', desc: '25手ごとの増水で、川岸(上下端)の石が流れに攫われて消える。', kind: 'stone', icon: 'erosiongo' },
             { file: 'escapego2.html', name: 'ESCAPEGO2', jp: '脱走碁', desc: '自分の連で盤の上下端を縦断すれば即勝ち。繋がらなければ地取り勝負。', kind: 'stone', icon: 'escapego2' },
+            { file: 'etogo.html', name: 'ETOGO', jp: '干支碁', desc: '置いた石に干支の印が12手周期で回る。終局時、盤上の干支の種類ごと+2点。', kind: 'stone', icon: 'etogo' },
             { file: 'evacgo.html', name: 'EVACGO', jp: '避難碁', desc: '10手ごとに災害波が盤の半分を襲う。孤立した石は飲まれ、繋がった石と避難所脇の石は生き残る。', kind: 'stone', icon: 'evacgo' },
             { file: 'excavatego.html', name: 'EXCAVATEGO', jp: '発掘碁', desc: '盤下に埋まる5つの埋蔵品マス。石を置いて掘り当て、先に3つ掘れば発掘勝ち。', kind: 'stone', icon: 'excavatego' },
             { file: 'exchangego.html', name: 'EXCHANGEGO', jp: '両替碁', desc: '「両替」で自石1個を最大3個に分解。呼吸点の確保に役立つ。', kind: 'stone', icon: 'exchangego' },
             { file: 'fakego.html', name: 'FAKEGO', jp: '偽石碁', desc: '最初の石は偽物。取られると正体が暴かれ、取った側はアゲハマにならない。', kind: 'stone', icon: 'fakego' },
+            { file: 'faultgo.html', name: 'FAULTGO', jp: '断層碁', desc: '中央に断層。10手ごとの地震で右半分が1段ずれ、縁から落ちた石は呑まれる。', kind: 'stone', icon: 'faultgo' },
             { file: 'feintgo.html', name: 'FEINTGO', jp: '囮碁', desc: '各1回「おとり」で幻の囮石を置ける。4手後に跡形もなく消える。', kind: 'stone', icon: 'feintgo' },
             { file: 'fengshuigo.html', name: 'FENGSHUIGO', jp: '風水碁', desc: '気の井戸 (星の点) に立つ石は良い気に護られ、取られても盤に残る聖地となる。', kind: 'stone', icon: 'fengshuigo' },
             { file: 'fermentgo.html', name: 'FERMENTGO', jp: '発酵碁', desc: '石は菌。15手経つと熟成して終局時+1目、30手経つと腐って盤から落ちる。', kind: 'stone', icon: 'fermentgo' },
@@ -630,6 +645,7 @@
             { file: 'formationgo.html', name: 'FORMATIONGO', jp: '密集碁', desc: '自石に隣接する点にしか置けない。全軍が1つの密集隊形で戦う碁。', kind: 'stone', icon: 'formationgo' },
             { file: 'fortressgo.html', name: 'FORTRESSGO', jp: '砦碁', desc: '3つの砦。砦内の石は攻撃不能だが、終局時に持ち主の地として数える。', kind: 'stone', icon: 'fortressgo' },
             { file: 'framego.html', name: 'FRAMEGO', jp: '骨組碁', desc: '星点の石は柱、3連以上の直線は梁。建物の骨組みを作るほど得点。', kind: 'stone', icon: 'framego' },
+            { file: 'freezetaggo.html', name: 'FREEZETAGGO', jp: '氷鬼碁', desc: '2体の氷鬼が徘徊。触れた石は16手の間凍り、凍った石は連の呼吸を支える (+1)。', kind: 'stone', icon: 'freezetaggo' },
             { file: 'frostpillargo.html', name: 'FROSTPILLARGO', jp: '霜柱碁', desc: '24手ごとの早朝に霜柱が立ち、全ての石が上へ1段持ち上がる (上が空いていれば)。', kind: 'stone', icon: 'frostpillargo' },
             { file: 'fukuwaraigo.html', name: 'FUKUWARAIGO', jp: '福笑碁', desc: '盤の顔パーツ (目・鼻・口) に近い場所へ置くと得点。ピタリ賞は+2目。', kind: 'stone', icon: 'fukuwaraigo' },
             { file: 'fulcrumgo.html', name: 'FULCRUMGO', jp: '梃碁', desc: '石は梃子。置くと隣の敵石を反対側へ跳ね飛ばす (盤端では盤外へ飛んで取る)。', kind: 'stone', icon: 'fulcrumgo' },
@@ -643,6 +659,7 @@
             { file: 'glazego.html', name: 'GLAZEGO', jp: '釉薬碁', desc: '釉薬の石は生乾きのうち取られると2個分。12手ごとの窯で色が確定する。', kind: 'stone', icon: 'glazego' },
             { file: 'glowgo.html', name: 'GLOWGO', jp: '輝石碁', desc: '5個以上連なった連は輝く。輝いた連の捕獲はアゲハマ2倍。', kind: 'crown', icon: 'glowgo' },
             { file: 'goldenrepairgo.html', name: 'GOLDENREPAIRGO', jp: '金継碁', desc: '取られた連の跡を自分で打ち直すと金継ぎ修復 — 修復石は終局時+2目。', kind: 'stone', icon: 'goldenrepairgo' },
+            { file: 'gomago.html', name: 'GOMAGO', jp: '護摩碁', desc: '中央3x3は護摩壇。自分の護摩木(石)が3本たまると焚き上がって+4点。', kind: 'stone', icon: 'gomago' },
             { file: 'goshuingo.html', name: 'GOSHUINGO', jp: '集印碁', desc: '御朱印(星の点)を巡る。着手または囲みで朱印を集め、5つ集めると即勝。', kind: 'stone', icon: 'goshuingo' },
             { file: 'gradientgo.html', name: 'GRADIENTGO', jp: '勾配碁', desc: '置いた石は勾配を右下へ転がり落ち、止まった地点に定着する。', kind: 'stone', icon: 'gradientgo' },
             { file: 'graffitigo.html', name: 'GRAFFITIGO', jp: '落書碁', desc: '盤の落書き点の隣に自石を置くと落書きが消えて+1目 (各1回・両者共通)。', kind: 'stone', icon: 'graffitigo' },
@@ -654,14 +671,19 @@
             { file: 'handcuffgo.html', name: 'HANDCUFFGO', jp: '手錠碁', desc: '5個置くごとに置いた石に手錠。錠の石は12手の間取られないが、隣に自石を置くと外れる。', kind: 'stone', icon: 'handcuffgo' },
             { file: 'handovergo.html', name: 'HANDOVERGO', jp: '引継碁', desc: '10手ごとに盤面の石色が総入替。築いた陣地は相手に引き継がれる。', kind: 'stone', icon: 'handovergo' },
             { file: 'handrankgo.html', name: 'HANDRANKGO', jp: '手役碁', desc: '石の配置が役になる: 3連以上の並びと2×2ブロックで終局ボーナス。', kind: 'stone', icon: 'handrankgo' },
+            { file: 'harikyugo.html', name: 'HARIKYUGO', jp: '鍼灸碁', desc: '6つの経穴(つぼ)を含む連は気が通って取られない。経穴に鍼を刺すと気が巡る。', kind: 'stone', icon: 'harikyugo' },
             { file: 'harvestgo.html', name: 'HARVESTGO', jp: '収穫碁', desc: '12手ごとに季節が巡り、実りの象限で石が多い側が収穫点を得る。先に4点で豊作勝ち。', kind: 'stone', icon: 'harvestgo' },
             { file: 'hatchgo.html', name: 'HATCHGO', jp: '孵卵碁', desc: '石は卵。仲間の隣で14手以上温めた卵は孵り、強い石になる (+1目)。', kind: 'stone', icon: 'hatchgo' },
             { file: 'helixgo.html', name: 'HELIXGO', jp: '螺旋階碁', desc: '全交点が1本の螺旋レール。近傍は螺旋の前後だけ — 連は区間になる。', kind: 'stone', icon: 'helixgo' },
+            { file: 'henrogo.html', name: 'HENROGO', jp: '遍路碁', desc: '盤周の8札所を順に巡る遍路。8か所制覇 (満願) で即勝ち。', kind: 'stone', icon: 'henrogo' },
             { file: 'hijackgo.html', name: 'HIJACKGO', jp: '逆手碁', desc: '相手の着手点を先に指定。そこに打たれると隣接へ反撃の石を無料で置ける。', kind: 'stone', icon: 'hijackgo' },
             { file: 'hilbertgo.html', name: 'HILBERTGO', jp: '充填碁', desc: '充填曲線の巡り順の先頭3点にしか着手できない。', kind: 'stone', icon: 'hilbertgo' },
+            { file: 'himonogo.html', name: 'HIMONOGO', jp: '干物碁', desc: '干場 (上下端の列) の石は8手ごとに干されて乾物に。終局時1枚+2目。', kind: 'stone', icon: 'himonogo' },
+            { file: 'hinadango.html', name: 'HINADANGO', jp: '雛壇碁', desc: '各行が雛壇の段。1行に4石以上かつ相手より多く並べた側が段ごとに+4点。', kind: 'stone', icon: 'hinadango' },
             { file: 'hoistgo.html', name: 'HOISTGO', jp: '吊上碁', desc: '置いた石に敵石がちょうど1個隣接すると、クレーンでその石を1マス外側へ吊り上げる。', kind: 'stone', icon: 'hoistgo' },
             { file: 'homeportgo.html', name: 'HOMEPORTGO', jp: '帰港碁', desc: '自分の母港(黒は下辺・白は上辺)に石を帰すと+2アゲハマ。5回の帰港で即勝。', kind: 'stone', icon: 'homeportgo' },
             { file: 'hominggo.html', name: 'HOMINGGO', jp: '帰巣碁', desc: '巣(天元)から遠い石は弱る。遠巣の石1つにつき連は余分な呼吸点を必要とする。', kind: 'stone', icon: 'hominggo' },
+            { file: 'horagaigo.html', name: 'HORAGAIGO', jp: '法螺碁', desc: '四辺の中央点は法螺貝。吹く(置く)と山伏が集まり即座に+3目のアゲハマ。', kind: 'stone', icon: 'horagaigo' },
             { file: 'hueshiftgo.html', name: 'HUESHIFTGO', jp: '色違碁', desc: '打つたび石の色合いが微妙にずれる。淡色石は取られると取った側に+1ボーナス。', kind: 'stone', icon: 'hueshiftgo' },
             { file: 'hungergo.html', name: 'HUNGERGO', jp: '飢餓碁', desc: '盤に飢えたものがいる。6手ごとに最寄りの石を喰らい、そこへ移る。', kind: 'stone', icon: 'hungergo' },
             { file: 'hurdlego.html', name: 'HURDLEGO', jp: '跳欄碁', desc: '着手は自石の隣か、自石を1つ飛び越えた直線2マス先のみ。打てる場所がなければ自由。', kind: 'stone', icon: 'hurdlego' },
@@ -670,21 +692,40 @@
             { file: 'ikebanago.html', name: 'IKEBANAGO', jp: '生花碁', desc: '自石が縦3連(真)または斜め3連(副)を完成させると構図点。先に4点で生花勝ち。', kind: 'stone', icon: 'ikebanago' },
             { file: 'indivisiblego.html', name: 'INDIVISIBLEGO', jp: '素数碁', desc: '石数が素数の連は分割不能 — 囲まれても1石ずつしか削られない。', kind: 'stone', icon: 'indivisiblego' },
             { file: 'inkgo.html', name: 'INKGO', jp: '墨染碁', desc: '敵石2個以上に接する空点は墨の滲み。味方石と接しない限り打てない。', kind: 'stone', icon: 'inkgo' },
+            { file: 'inletgo.html', name: 'INLETGO', jp: '入江碁', desc: '各辺に海の入り江。港内の好地は安全な停泊地 (+1呼吸・入港+1点)。', kind: 'stone', icon: 'inletgo' },
             { file: 'insectgo.html', name: 'INSECTGO', jp: '昆虫碁', desc: '石は打ってから3手で蛹、6手で成虫に変態。成虫は捕獲時に一度だけ2マス先へ飛んで逃げる。', kind: 'stone', icon: 'insectgo' },
             { file: 'insurego.html', name: 'INSUREGO', jp: '保険碁', desc: '自石に保険をかけると、取られた時に保険金で近くの空点に復活する (最大2件)。', kind: 'stone', icon: 'insurego' },
             { file: 'inversiongo.html', name: 'INVERSIONGO', jp: '逆転碁', desc: '地とアゲハマの合計が少ない側が勝つ逆転ルール。取りすぎると負ける。', kind: 'stone', icon: 'inversiongo' },
+            { file: 'ishidorogo.html', name: 'ISHIDOROGO', jp: '灯籠碁', desc: '星点は庭灯籠。灯籠に火(石)を入れると夜の庭が照らされ、1基ごとに+6目。', kind: 'stone', icon: 'ishidorogo' },
             { file: 'jengago.html', name: 'JENGAGO', jp: '抜積碁', desc: '「抜く」で自石を1個回収して+1目。抜いて自軍の連が分断されると塔崩壊で負け。', kind: 'stone', icon: 'jengago' },
+            { file: 'jibikigo.html', name: 'JIBIKIGO', jp: '地引碁', desc: '1手で4個以上獲れば大漁。獲った石は終局時に2倍計上される。', kind: 'stone', icon: 'jibikigo' },
+            { file: 'jochigo.html', name: 'JOCHIGO', jp: '定置碁', desc: '定置網の区域。10手ごとの網上げで区域の石は全て獲られてしまう。', kind: 'stone', icon: 'jochigo' },
+            { file: 'joyago.html', name: 'JOYAGO', jp: '除夜碁', desc: '各側9手ごとに除夜の鐘が鳴り、孤立した敵石(煩悩)が全て祓われる。', kind: 'stone', icon: 'joyago' },
             { file: 'jumpropego.html', name: 'JUMPROPEGO', jp: '縄跳碁', desc: '石は縄跳び。敵石を跳び越えてその先の空点に着地する。', kind: 'stone', icon: 'jumpropego' },
+            { file: 'kadomatsugo.html', name: 'KADOMATSUGO', jp: '門松碁', desc: '自石の縦横3連以上は門松になり、1本+3点。竹の形を意識して打て。', kind: 'stone', icon: 'kadomatsugo' },
+            { file: 'kagurago.html', name: 'KAGURAGO', jp: '神楽碁', desc: '対角の星に神(中立)がいる。神の隣に自石を3方以上置いて招くと+4点。', kind: 'stone', icon: 'kagurago' },
+            { file: 'kaikigo.html', name: 'KAIKIGO', jp: '回忌碁', desc: '7手ごとに回忌法要。取り石(故人)1つにつき徳+1点として双方に振り込まれる。', kind: 'stone', icon: 'kaikigo' },
+            { file: 'kakinego.html', name: 'KAKINEGO', jp: '垣根碁', desc: '盤を四分割する垣根ライン(中央十字)に立てた石は、別天地を区切る垣根として+2目。', kind: 'stone', icon: 'kakinego' },
             { file: 'kanjigo.html', name: 'KANJIGO', jp: '漢字碁', desc: '石の座る交点は漢字。味方同士で熟語を隣接成立させると+2目。', kind: 'stone', icon: 'kanjigo' },
+            { file: 'karesansuigo.html', name: 'KARESANSUIGO', jp: '枯山碁', desc: '石と砂紋の山水。一色だけで囲んだ空区域は「砂紋」となり地が2倍になる。', kind: 'stone', icon: 'karesansuigo' },
             { file: 'karutago.html', name: 'KARUTAGO', jp: '歌牌碁', desc: '盤面に散らばる7枚の札マス。石で札を取り、先に4枚取った側が歌牌勝ち。', kind: 'stone', icon: 'karutago' },
             { file: 'keepsakego.html', name: 'KEEPSAKEGO', jp: '形見碁', desc: '取られた石は形見として名残を残す。形見は終局時に亡き主の1目になる。', kind: 'stone', icon: 'keepsakego' },
+            { file: 'keirakugo.html', name: 'KEIRAKUGO', jp: '経絡碁', desc: '6つ以上繋がった連は「経絡」が通る。最長の連の長さ(上限12)が終局時の得点。', kind: 'stone', icon: 'keirakugo' },
+            { file: 'keisugo.html', name: 'KEISUGO', jp: '磬子碁', desc: '自分の5手ごとに磬(けいす)が鳴る。法会の節目に功徳として+3目のアゲハマ。', kind: 'stone', icon: 'keisugo' },
+            { file: 'kemarigo.html', name: 'KEMARIGO', jp: '蹴鞠碁', desc: '盤上に鞠が1個転がる。隣に石を置けば蹴って+1目、鞠は石の向こうへ跳ねる。', kind: 'stone', icon: 'kemarigo' },
             { file: 'kendamago.html', name: 'KENDAMAGO', jp: 'けん玉碁', desc: '捕獲のたび技が進む。小皿+1→中皿+2→剣先+4のボーナス目。剣先で一段落。', kind: 'stone', icon: 'kendamago' },
             { file: 'kenzokugo.html', name: 'KENZOKUGO', jp: '眷属碁', desc: '敵陣帯に単独で打ち込んだ石は眷属(使い魔)になる。毎ターン探索+1。', kind: 'stone', icon: 'kenzokugo' },
+            { file: 'kikogo.html', name: 'KIKOGO', jp: '紀行碁', desc: '名所は5箇所。最初に石を据えた者がその地を記して+2目。', kind: 'stone', icon: 'kikogo' },
             { file: 'kingyogo.html', name: 'KINGYOGO', jp: '金魚碁', desc: '石は金魚。網の強さを超える連は獲りきれず、余った分は逃げ出す。網は5手ごとに強化。', kind: 'stone', icon: 'kingyogo' },
             { file: 'kitchengo.html', name: 'KITCHENGO', jp: '厨房碁', desc: '直列3連でオーダー完成+2、5連で大盛り+4。配置の美しさを競う。', kind: 'stone', icon: 'kitchengo' },
             { file: 'kiteflygo.html', name: 'KITEFLYGO', jp: '凧揚碁', desc: '敵陣深くに伸びる連ほど凧が高い。採点時に最大高度がボーナス。', kind: 'stone', icon: 'kiteflygo' },
             { file: 'knight2go.html', name: 'KNIGHT2GO', jp: '跳馬碁', desc: '着手は自石の桂馬跳びの位置のみ。自石がない/跳べる場所がない時はどこでも置ける。', kind: 'stone', icon: 'knight2go' },
+            { file: 'kochugo.html', name: 'KOCHUGO', jp: '講中碁', desc: '終局時、4石以上の連 (講) 1つごとに共同参拝の得点+3。', kind: 'stone', icon: 'kochugo' },
+            { file: 'kohaigo.html', name: 'KOHAIGO', jp: '光背碁', desc: '3x3全面を自石で固めると「光背」完成 — 仏が荘厳されて即勝ち。', kind: 'stone', icon: 'kohaigo' },
+            { file: 'koinoborigo.html', name: 'KOINOBORIGO', jp: '鯉幟碁', desc: '3石以上の連は鯉。着手のたび風(北→東→南→西)へ1マス泳ぐ。', kind: 'stone', icon: 'koinoborigo' },
             { file: 'komago.html', name: 'KOMAGO', jp: '独楽碁', desc: '置いた石は独楽。回転中の4手分は取られず、止まると取れる。', kind: 'stone', icon: 'komago' },
+            { file: 'kyokusuigo.html', name: 'KYOKUSUIGO', jp: '曲水碁', desc: '曲水を盃が流れる。岸の味方石に触れれば歌が成り+2目。流れ着けば沈む。', kind: 'stone', icon: 'kyokusuigo' },
+            { file: 'kyuseigo.html', name: 'KYUSEIGO', jp: '九星碁', desc: '天元の周囲8方位を吉方・凶方が毎手回る。吉方に置くと+2点、凶方に置いた石は消える。', kind: 'stone', icon: 'kyuseigo' },
             { file: 'labyrinthgo.html', name: 'LABYRINTHGO', jp: '迷路碁', desc: '蛇行迷路。幅1の関門は自分の石に隣接する側からしか通れない。', kind: 'stone', icon: 'labyrinthgo' },
             { file: 'lacquergo.html', name: 'LACQUERGO', jp: '漆器碁', desc: '漆の塗りが6手ごとに重なる。3重に塗り上がった石は堅く、二度と取られない。', kind: 'stone', icon: 'lacquergo' },
             { file: 'lampgo.html', name: 'LAMPGO', jp: '燈火碁', desc: '灯りの届く範囲だけ着手可 — 自分の石の周囲2マスと中央の常夜灯の周り。', kind: 'stone', icon: 'lampgo' },
@@ -694,6 +735,7 @@
             { file: 'levergo.html', name: 'LEVERGO', jp: '梃子碁', desc: '中央支点を挟んだ反対側の敵石が中央へ1マスずれる梃子。支点まで辿り着いた敵石は潰れて捕獲される。', kind: 'stone', icon: 'levergo' },
             { file: 'librarygo.html', name: 'LIBRARYGO', jp: '蔵書碁', desc: '盤は3x3の書棚群。棚を自分色に分類すれば蔵書得点。', kind: 'stone', icon: 'librarygo' },
             { file: 'liondancego.html', name: 'LIONDANCEGO', jp: '獅子舞碁', desc: '石は獅子頭。置くと隣の小さな敵連 (3石以下) に噛み付いて1石取る。', kind: 'stone', icon: 'liondancego' },
+            { file: 'longlinego.html', name: 'LONGLINEGO', jp: '延縄碁', desc: '5個以上の連は延縄。6手ごとに隣の敵の孤立石を釣り上げる。', kind: 'stone', icon: 'longlinego' },
             { file: 'loomgo.html', name: 'LOOMGO', jp: '織物碁', desc: '石は織糸。縦と横の両方向に自分の糸が通る織り目を作ると終局時+1目。', kind: 'stone', icon: 'loomgo' },
             { file: 'lotterygo.html', name: 'LOTTERYGO', jp: '宝籤碁', desc: '着手でくじ引き: 大当り=追加石、ハズレ=次の自分の手番スキップ、通常は何もなし。', kind: 'stone', icon: 'lotterygo' },
             { file: 'lumengo.html', name: 'LUMENGO', jp: '光彩碁', desc: '石は光源。各空点をより明るく照らす側の地になる (光量は距離二乗で減衰)。', kind: 'stone', icon: 'lumengo' },
@@ -705,24 +747,33 @@
             { file: 'marblego.html', name: 'MARBLEGO', jp: '玉石碁', desc: '着手ごとに全ての石が列の底へ転がり落ちる。浮いた石は存在しない玉石の世界。', kind: 'stone', icon: 'marblego' },
             { file: 'maskgo.html', name: 'MASKGO', jp: '覆面碁', desc: '置いてから4手の間、石に覆面がかかり誰の石か一目で分からない。', kind: 'stone', icon: 'maskgo' },
             { file: 'memorialgo.html', name: 'MEMORIALGO', jp: '供養碁', desc: '取られた石は祟りになる。敵がその地を踏むと終局時に+1目返す。', kind: 'stone', icon: 'memorialgo' },
+            { file: 'menkogo.html', name: 'MENKOGO', jp: '面子碁', desc: '石は面子。呼吸を失った敵の連は盤から除かず裏返って自分の色になる。', kind: 'stone', icon: 'menkogo' },
             { file: 'meteorshowergo.html', name: 'METEORSHOWERGO', jp: '隕群碁', desc: '10手ごとに流星群が盤面に着弾。十字に石を蒸発させる (両者共通)。', kind: 'stone', icon: 'meteorshowergo' },
             { file: 'migrationgo.html', name: 'MIGRATIONGO', jp: '渡り碁', desc: '30手ごとの季節の変わり目に、全ての石が2列分だけ南↔北へ渡る。', kind: 'stone', icon: 'migrationgo' },
             { file: 'mikoshigo.html', name: 'MIKOSHIGO', jp: '神輿碁', desc: '大連は神輿。6手ごとの揺れで各側の最大連の先端石が1つこぼれ落ちる。', kind: 'stone', icon: 'mikoshigo' },
             { file: 'mimicrygo.html', name: 'MIMICRYGO', jp: '擬態碁', desc: '5手ごとに擬態石が供給される。擬態石は一度だけ取られるのを免れ、擬態が解ける。', kind: 'stone', icon: 'mimicrygo' },
             { file: 'mindreadgo.html', name: 'MINDREADGO', jp: '読心碁', desc: '相手の次の着手点を予想して宣言。的中すれば相手の手は無効化される。', kind: 'stone', icon: 'mindreadgo' },
             { file: 'mirage2go.html', name: 'MIRAGEGO', jp: '蜃気楼碁', desc: '各石の蜃気楼が1マス右にずれて映る。見えている位置は幻 — 実座標が真実。', kind: 'mirror', icon: 'mirage2go' },
+            { file: 'mirrorcraftgo.html', name: 'MIRRORCRAFTGO', jp: '鏡磨碁', desc: '石は鏡。敵石と接した鏡は敵の色を映し、敵連に取り込まれず取られにくくなる。', kind: 'stone', icon: 'mirrorcraftgo' },
             { file: 'mirrorgo.html', name: 'MIRRORGO', jp: '鏡面碁', desc: '一手置くと左右対称の鏡像位置にも自動で石が生まれる。中央軸は映らない。', kind: 'stone', icon: 'mirrorgo' },
             { file: 'mirrorstonego.html', name: 'MIRRORSTONEGO', jp: '鏡石碁', desc: '全ての石は鏡面。取られた連は隣の敵石1個を道連れに砕く。', kind: 'mirror', icon: 'mirrorstonego' },
+            { file: 'misogo.html', name: 'MISOGO', jp: '味噌碁', desc: '味噌樽に漬かった連は発酵して固くなり、二度と取られない。', kind: 'stone', icon: 'misogo' },
             { file: 'missiongo.html', name: 'MISSIONGO', jp: '布教碁', desc: '取られる石は盤を離れず改宗して攻めた側の色に変わる。地取り布教合戦。', kind: 'stone', icon: 'missiongo' },
+            { file: 'mitatego.html', name: 'MITATEGO', jp: '見立碁', desc: '石が曲がってL字を成せば名物の見立て。終局時に角の連結1箇所+1目。', kind: 'stone', icon: 'mitatego' },
             { file: 'moatgo.html', name: 'MOATGO', jp: '内堀碁', desc: '城を取り巻く内堀。堀に置いた石は流れに乗り、水門から流れ出る。', kind: 'stone', icon: 'moatgo' },
             { file: 'mobiusgo.html', name: 'MOBIUSGO', jp: '帯環碁', desc: '左右の端が半回転して繋がるメビウス盤。端の先は反対側の端。', kind: 'stone', icon: 'mobiusgo' },
             { file: 'mochigo.html', name: 'MOCHIGO', jp: '鏡餅碁', desc: '自分の石の上に重ね置きして段を増やす (最大3段)。取られるときは1段ずつ削られる。', kind: 'stone', icon: 'mochigo' },
+            { file: 'mochitsukigo.html', name: 'MOCHITSUKIGO', jp: '餅搗碁', desc: '石は餅。自分の連に隣接して打つと、その連が空点へ1石伸びる。', kind: 'stone', icon: 'mochitsukigo' },
+            { file: 'mokugyogo.html', name: 'MOKUGYOGO', jp: '木魚碁', desc: '自分の前の石に隣接して打ち続けると木魚を叩くリズム。4拍ごとに読経が進み+2目。', kind: 'stone', icon: 'mokugyogo' },
             { file: 'moltgo.html', name: 'MOLTGO', jp: '脱皮碁', desc: '石は脱皮する生き物。取られた場所に殻が残り、終局時に1つ+1目。', kind: 'stone', icon: 'moltgo' },
+            { file: 'monogatarigo.html', name: 'MONOGATARIGO', jp: '物語碁', desc: '起・承・転・結 — 四隅を順に制すと物語が完結して+5目。', kind: 'stone', icon: 'monogatarigo' },
             { file: 'monolithgo.html', name: 'MONOLITHGO', jp: '碑石碁', desc: '中央の石碑を4方で囲んだ側に、石碑が半径2以内の敵石を消し飛ばす力を貸す。', kind: 'stone', icon: 'monolithgo' },
             { file: 'monsoongo.html', name: 'MONSOONGO', jp: '雨季碁', desc: '12手周期: 雨季は下2段が水没して着手不可、石は流出する。乾季で回復。', kind: 'weather', icon: 'monsoongo' },
             { file: 'moonphasego.html', name: 'MOONPHASEGO', jp: '月相碁', desc: '29手周期の月相で石の強さが変わる。満月は取れず、新月はアゲハマ2倍。', kind: 'stone', icon: 'moonphasego' },
             { file: 'mosaicgo.html', name: 'MOSAICGO', jp: '嵌像碁', desc: '自石でV字の鶴模様 (5個) を完成させると嵌像勝ち。', kind: 'stone', icon: 'mosaicgo' },
             { file: 'mosquitogo.html', name: 'MOSQUITOGO', jp: '吸血碁', desc: '置いた蚊(石)は隣の敵石から血(+1目)を吸う。吸われた敵石は憔悴する。', kind: 'stone', icon: 'mosquitogo' },
+            { file: 'mossgo.html', name: 'MOSSGO', jp: '苔庭碁', desc: '苔=石で庭を覆う碁。乾燥した最外周では8手ごとに苔が枯れて相手のアゲハマになる。', kind: 'stone', icon: 'mossgo' },
+            { file: 'mukaebigo.html', name: 'MUKAEBIGO', jp: '迎火碁', desc: '盤の精霊(中立)の隣に迎え火を点せ。隣接石が多い側が+4点で迎える。', kind: 'stone', icon: 'mukaebigo' },
             { file: 'mummgo.html', name: 'MUMMGO', jp: '干乾碁', desc: '呼吸0の連はミイラ化して盤に残る。敵ミイラ連をクリックで回収する。', kind: 'stone', icon: 'mummgo' },
             { file: 'murmurgo.html', name: 'MURMURGO', jp: '群鳥碁', desc: '孤立した石は鳥となり、自分の手番の終わりに最寄りの味方石へ1歩飛んで寄る。', kind: 'stone', icon: 'murmurgo' },
             { file: 'mutatego.html', name: 'MUTATEGO', jp: '変異碁', desc: '取られたセルの半分に中立の変異体が生まれる。四方を塞がれた変異体は着手側に刈り取られる。', kind: 'stone', icon: 'mutatego' },
@@ -732,12 +783,16 @@
             { file: 'oathgo.html', name: 'OATHGO', jp: '宣誓碁', desc: '中央列の刻文に自石を3箇所以上刻んだ側が誓いを守って勝利。', kind: 'stone', icon: 'oathgo' },
             { file: 'obligego.html', name: 'OBLIGEGO', jp: '返礼碁', desc: '取られた側は返礼権を得る。権利+1手で敵石1個を引き取れる。', kind: 'stone', icon: 'obligego' },
             { file: 'offergo.html', name: 'OFFERGO', jp: '捧剣碁', desc: '祭壇 (天元) を含む自連が4石以上に育てば剣を捧げて勝利。', kind: 'stone', icon: 'offergo' },
+            { file: 'ohajikigo.html', name: 'OHAJIKIGO', jp: '御碁碁', desc: '石はおはじき。打った石に接した敵石を直線に弾き、行き止まりや盤外に当たれば取れる。', kind: 'stone', icon: 'ohajikigo' },
+            { file: 'okagego.html', name: 'OKAGEGO', jp: 'お陰碁', desc: '中央5x5は神域。神域へ参拝(着手)するたび福が+2点たまる。', kind: 'stone', icon: 'okagego' },
             { file: 'omenego.html', name: 'OMENEGO', jp: '面隠碁', desc: '4手ごとの着手はお面石 — 自分の石として動くが、終局時に敵色へ化けて正体を現す。', kind: 'stone', icon: 'omenego' },
+            { file: 'onmyogo.html', name: 'ONMYOGO', jp: '陰陽碁', desc: '列は五行 (木火土金水) が巡る。置いた石は右隣の敵石を砕き、左隣に敵石があれば自石が砕かれる。', kind: 'stone', icon: 'onmyogo' },
             { file: 'opticalgo.html', name: 'OPTICALGO', jp: '錯視碁', desc: '幾何学錯視の盤。中央が拡大して見える視覚効果に惑わされる碁。', kind: 'stone', icon: 'opticalgo' },
             { file: 'oracle2go.html', name: 'ORACLE2GO', jp: '神託碁', desc: '5手周期で示される神託の点の近くに打つと+2目のご利益。', kind: 'stone', icon: 'oracle2go' },
             { file: 'orbit2go.html', name: 'ORBIT2GO', jp: '軌道碁', desc: '着手ごとに全ての石が中央を囲む軌道を時計回りに1歩周回。敵に衝突すると消滅する。', kind: 'stone', icon: 'orbit2go' },
             { file: 'ordercardgo.html', name: 'ORDERCARDGO', jp: '手順碁', desc: '順番カードが指示する区域にしか打てない。4枚を使い切ると巡って再利用。', kind: 'stone', icon: 'ordercardgo' },
             { file: 'origamigo.html', name: 'ORIGAMIGO', jp: '折形碁', desc: 'X字の折り目筋に石を置くと折点が灯る。折点を8つ灯した側が折形完成で勝ち。', kind: 'stone', icon: 'origamigo' },
+            { file: 'otedamago.html', name: 'OTEDAMAGO', jp: '手玉碁', desc: '石はお手玉。前回の着手点に接して打ち続けると投げ上げ連続回数が伸び、最高回数が得点。', kind: 'stone', icon: 'otedamago' },
             { file: 'outlastgo.html', name: 'OUTLASTGO', jp: '耐久碁', desc: 'パスは休養: パスした側の連は次の1手だけ呼吸点が+1され取られない。', kind: 'weather', icon: 'outlastgo' },
             { file: 'paintergo.html', name: 'PAINTERGO', jp: '絵画碁', desc: '前の自石と8近傍以内に筆を繋ぐと+1目。筆跡は盤上に残る。', kind: 'stone', icon: 'paintergo' },
             { file: 'parleygo.html', name: 'PARLEYGO', jp: '交渉碁', desc: '「休戦」を提案し、相手も応じればその場で境界確定。打てば破棄される。', kind: 'stone', icon: 'parleygo' },
@@ -754,6 +809,7 @@
             { file: 'pilgrimgo.html', name: 'PILGRIMGO', jp: '巡礼碁', desc: '5つの聖地のうち3ヶ所を同時に制すると奉納達成で即勝利。', kind: 'stone', icon: 'pilgrimgo' },
             { file: 'pinkygo.html', name: 'PINKYGO', jp: '指切碁', desc: '指切りを交わした点に打つと、その石が腐って相手のアゲハマになる。', kind: 'stone', icon: 'pinkygo' },
             { file: 'plantgo.html', name: 'PLANTGO', jp: '植物碁', desc: '石は植物。6手ごとに日光ゾーン (盤左側) に触れる連が1つ芽を出して成長する。', kind: 'stone', icon: 'plantgo' },
+            { file: 'plastergo.html', name: 'PLASTERGO', jp: '左官碁', desc: '石は漆喰。辺に接した自軍の連は塗り固まり、壁として呼吸を与えない。', kind: 'stone', icon: 'plastergo' },
             { file: 'platego.html', name: 'PLATEGO', jp: '皿回碁', desc: '孤立した自石は回転が落ち、4手で落ちて消える。連なれば安定。隣に置くと回し直し。', kind: 'stone', icon: 'platego' },
             { file: 'polaritygo.html', name: 'POLARITYGO', jp: '磁界碁', desc: '偶数列はN極・奇数列はS極。縦の敵石は反発で押し退き、横に2マスの敵石は吸着で引き寄せられる。', kind: 'stone', icon: 'polaritygo' },
             { file: 'pollengo.html', name: 'POLLENGO', jp: '花粉碁', desc: '風は一定方向に吹き、打った石から花粉が2マス飛ぶ。空きマスならそこに自分の石が芽吹く。', kind: 'stone', icon: 'pollengo' },
@@ -772,6 +828,7 @@
             { file: 'puppetgo.html', name: 'PUPPETGO', jp: '傀儡碁', desc: '自分の手番で相手色の石を置く傀儡操作。置いた石が自分色の連を刈り取る。', kind: 'mirror', icon: 'puppetgo' },
             { file: 'pushrowgo.html', name: 'PUSHROWGO', jp: '列推碁', desc: '着手した筋の敵石を遠ざかる向きに1マス押し出す。押し先が塞がっていれば潰れて取り。', kind: 'stone', icon: 'pushrowgo' },
             { file: 'pyramid2go.html', name: 'PYRAMID2GO', jp: '三角碁', desc: '直角二等辺三角形の3頂点に石を置くと、その内部の敵石を全て取る。', kind: 'stone', icon: 'pyramid2go' },
+            { file: 'pyroclasticgo.html', name: 'PYROCLASTICGO', jp: '火砕碁', desc: '山頂から火砕流が斜面を駆け下りる。20手ごとの噴火で通路上の石は全て焼かれる。', kind: 'stone', icon: 'pyroclasticgo' },
             { file: 'quarrygo.html', name: 'QUARRYGO', jp: '採石碁', desc: '4箇所の採石場は各3回まで石を掘り出せる。尽きると障害物に枯れる。', kind: 'stone', icon: 'quarrygo' },
             { file: 'raftgo.html', name: 'RAFTGO', jp: '筏碁', desc: '4つの筏がロープ橋で繋がる。5手ごとの潮汐で橋が架かったり沈んだりする。', kind: 'stone', icon: 'raftgo' },
             { file: 'rainbowgo.html', name: 'RAINBOWGO', jp: '虹霓碁', desc: '24手周期で雨上がり (8手間) に虹が架かり、斜め隣接も連結になる。', kind: 'stone', icon: 'rainbowgo' },
@@ -790,11 +847,13 @@
             { file: 'ringtossgo.html', name: 'RINGTOSSGO', jp: '輪投碁', desc: '石は輪。着手が敵の連に触れると輪が掛かって得点 (同じ的は1回だけ)。', kind: 'stone', icon: 'ringtossgo' },
             { file: 'ripplego.html', name: 'RIPPLEGO', jp: '同心碁', desc: '波紋は中心対称に干渉する — 対蹠点が5つ目の近傍。呼吸の場所が全部変わる。', kind: 'stone', icon: 'ripplego' },
             { file: 'riverbridgego.html', name: 'RIVERBRIDGEGO', jp: '橋渡碁', desc: '盤を3行の川が分断。3本の橋だけが両岸を結ぶ。', kind: 'stone', icon: 'riverbridgego' },
+            { file: 'rokkigo.html', name: 'ROKKIGO', jp: '六曜碁', desc: '六曜が6手周期で回る。大安に置いた石は吉+2点、仏滅に置いた石は凶-1点。', kind: 'stone', icon: 'rokkigo' },
             { file: 'roofgo.html', name: 'ROOFGO', jp: '屋根碁', desc: '下に広がる屋根型の盤。棟 (中央の頂線) の石は補強瓦で+2目。', kind: 'stone', icon: 'roofgo' },
             { file: 'rosarygo.html', name: 'ROSARYGO', jp: '数珠碁', desc: '同色石で囲んだ空点は「念珠の環」— 環1つにつき+4目の功徳。', kind: 'stone', icon: 'rosarygo' },
             { file: 'roulette2go.html', name: 'ROULETTE2GO', jp: '回転盤碁', desc: '盤は4象限。手番ごとにルーレットが回り、止まった象限にだけ着手できる。', kind: 'stone', icon: 'roulette2go' },
             { file: 'rubberjumpgo.html', name: 'RUBBERJUMPGO', jp: 'ゴム跳碁', desc: '新しい石が敵連の列を跳び越える形 (自-敵+-自の直線) を作ると方向ごとに+1目。', kind: 'stone', icon: 'rubberjumpgo' },
             { file: 'rustzonego.html', name: 'RUSTZONEGO', jp: '錆地帯碁', desc: '盤中央の錆地帯では石が腐食し、2回の錆周期で砕け落ちる。', kind: 'stone', icon: 'rustzonego' },
+            { file: 'salmonrungo.html', name: 'SALMONRUNGO', jp: '鮭遡碁', desc: '中央の川を石は遡る。6手ごとに上流へ進み、源流に着くと産卵+2目。', kind: 'stone', icon: 'salmonrungo' },
             { file: 'saltfieldgo.html', name: 'SALTFIELDGO', jp: '塩田碁', desc: '盤の両端に塩田。10手ごとの天日で、田の中の石が塩の結晶になって+1点。', kind: 'stone', icon: 'saltfieldgo' },
             { file: 'saltgo.html', name: 'SALTGO', jp: '塩碁', desc: '石は塩の結晶。潮溜まり (湿気区域) の石は8手ごとに溶けて消える。', kind: 'stone', icon: 'saltgo' },
             { file: 'samsarago.html', name: 'SAMSARAGO', jp: '輪廻碁', desc: '取られた石は六道を廻り、近くの空き地に同じ色で再誕する。', kind: 'stone', icon: 'samsarago' },
@@ -803,9 +862,13 @@
             { file: 'scissorgo.html', name: 'SCISSORGO', jp: '鋏碁', desc: '敵石を自石で挟むと鋏が入る。挟まれた敵石は切り落とされる。', kind: 'stone', icon: 'scissorgo' },
             { file: 'scrabblogo.html', name: 'SCRABBLOGO', jp: '文字碁', desc: '石は文字タイル。着手で横向きに3つ以上自石が連なると、連の長さ-2目のボーナス。', kind: 'stone', icon: 'scrabblogo' },
             { file: 'scrapgo.html', name: 'SCRAPGO', jp: '再資源碁', desc: '取られた石はスクラップとして自分に還る。3個で2連「再生石」を錬成できる。', kind: 'stone', icon: 'scrapgo' },
+            { file: 'scrollmountgo.html', name: 'SCROLLMOUNTGO', jp: '表具碁', desc: '中央列は床の間。3連以上の連を掛軸として掛けると長さ分の得点。', kind: 'stone', icon: 'scrollmountgo' },
             { file: 'sealgo.html', name: 'SEALGO', jp: '札符碁', desc: '2個以上の自石に接して置いた石は封印され、取られなくなる。', kind: 'stone', icon: 'sealgo' },
+            { file: 'sedimentgo.html', name: 'SEDIMENTGO', jp: '堆積碁', desc: '上下2行は川。石を取るたびに河口へ堆積し、三角州の新しい陸地が育つ。', kind: 'stone', icon: 'sedimentgo' },
             { file: 'seedgo.html', name: 'SEEDGO', jp: '種子碁', desc: '打った石は「種」。3手後に発芽し、空いた近傍へ新しい石が生える。', kind: 'stone', icon: 'seedgo' },
             { file: 'seizago.html', name: 'SEIZAGO', jp: '星座碁', desc: '石は星。4つ以上の連が一直線に並ぶと星座となり+4目。', kind: 'stone', icon: 'seizago' },
+            { file: 'senryugo.html', name: 'SENRYUGO', jp: '川柳碁', desc: '石が山なり (三連の山型) を成せばおかしみ点。終局時に1山+1目。', kind: 'stone', icon: 'senryugo' },
+            { file: 'senyakugo.html', name: 'SENYAKUGO', jp: '煎薬碁', desc: '味方の石と繋がらない単石は「生薬」。煎じるほど薬効が出て、単石ごとに+3目。', kind: 'stone', icon: 'senyakugo' },
             { file: 'sequencego.html', name: 'SEQUENCEGO', jp: '数列碁', desc: '盤上の自分の石数がフィボナッチ数 (1,2,3,5,8,13…) に達するたび+2目。', kind: 'stone', icon: 'sequencego' },
             { file: 'shadowgo.html', name: 'SHADOWGO', jp: '影碁', desc: '北西の光源に照らされ、石は南東へ影を落とす。影のマスは敵の呼吸点にならない。', kind: 'stone', icon: 'shadowgo' },
             { file: 'sheergo.html', name: 'SHEERGO', jp: '透け碁', desc: '手番でない側の石は半透明に透け、アゲハマ表示も「約」の曖昧表示。正確な形勢は読めない。', kind: 'stone', icon: 'sheergo' },
@@ -814,7 +877,11 @@
             { file: 'shikigamigo.html', name: 'SHIKIGAMIGO', jp: '式神碁', desc: '8手ごとの着手は式神。斜め4方に接する敵石を使役し、終局時に1つ+1目。', kind: 'stone', icon: 'shikigamigo' },
             { file: 'shinkirogo.html', name: 'SHINKIROGO', jp: '蜃気碁', desc: '相手の視界にだけ現れる蜃気楼の幻影。石を打つたび幻影が1つ実体化する。', kind: 'stone', icon: 'shinkirogo' },
             { file: 'shintogo.html', name: 'SHINTOGO', jp: '神道碁', desc: '自石で3x3の環 (神域の注連縄) を張ると聖域点。3ヶ所の聖域で鎮座勝ち。', kind: 'stone', icon: 'shintogo' },
+            { file: 'shiohigo.html', name: 'SHIOHIGO', jp: '潮干碁', desc: '干潮 (12手周期) の間だけ浜に置ける。満潮で浜の石は拾われ持ち主+1目。', kind: 'stone', icon: 'shiohigo' },
+            { file: 'shojigo.html', name: 'SHOJIGO', jp: '建具碁', desc: '盤上の枠に石をはめて建具を作る。枠内の石は呼吸+1、枠を全て埋めると建具完成で得点。', kind: 'stone', icon: 'shojigo' },
+            { file: 'shoyugo.html', name: 'SHOYUGO', jp: '醤油碁', desc: '醤油蔵の石は6手ごとに熟成が進む。終局時に熟成度×1目の風味。', kind: 'stone', icon: 'shoyugo' },
             { file: 'shrinkgo.html', name: 'SHRINKGO', jp: '縮小碁', desc: '10手ごとに盤の外周が崩落して縮む。縁の石は奈落に呑まれる。', kind: 'stone', icon: 'shrinkgo' },
+            { file: 'shugendo.html', name: 'SHUGENDO', jp: '修験碁', desc: '四隅の星は行場。行場で打った石は修行し、終局まで残れば+2点。', kind: 'stone', icon: 'shugendo' },
             { file: 'siegego.html', name: 'SIEGEGO', jp: '攻城碁', desc: '城壁で二分された盤。敵本丸の城点に石を入れれば即勝利。', kind: 'stone', icon: 'siegego' },
             { file: 'sigilgo.html', name: 'SIGILGO', jp: '印章碁', desc: '自分の石で3x3マスの印章を刻むと、その区域は二度と取られず+9点になる。', kind: 'stone', icon: 'sigilgo' },
             { file: 'silkwormgo.html', name: 'SILKWORMGO', jp: '養蚕碁', desc: '桑畑の蚕は10手で繭を収穫して+1点。跡地にはまた蚕を放てる。', kind: 'stone', icon: 'silkwormgo' },
@@ -827,10 +894,12 @@
             { file: 'snipego.html', name: 'SNIPEGO', jp: '狙撃碁', desc: '1手を使って狙撃点を設定。相手がその点に打つと石を撃ち落とす。', kind: 'stone', icon: 'snipego' },
             { file: 'snowgo.html', name: 'SNOWGO', jp: '雪崩碁', desc: '8手ごとに雪線が1段下りる (最大4段)。雪線より上は凍結: 着手不可・連も取れない。', kind: 'weather', icon: 'snowgo' },
             { file: 'snowpilego.html', name: 'SNOWPILEGO', jp: '積雪碁', desc: '30手ごとの大雪で全石が埋まり地形化。15手後の春に解けて復活する。', kind: 'stone', icon: 'snowpilego' },
+            { file: 'sorobango.html', name: 'SOROBANGO', jp: '算盤碁', desc: '石は算盤の珠。同じ列に自石が5つ並ぶと繰上り、その5石を払って桁点+5。', kind: 'stone', icon: 'sorobango' },
             { file: 'sparrgo.html', name: 'SPARRGO', jp: '対打碁', desc: '敵連に接する着手は対打になる。連の大きい方が勝ち、敗連は全滅。互角なら打ち込み石が弾かれる。', kind: 'stone', icon: 'sparrgo' },
             { file: 'spearheadgo.html', name: 'SPEARHEADGO', jp: '矛先碁', desc: '着手で直線に3連以上を作ると矛になる。矛の延長線上3マス以内の敵石を貫いて取る。', kind: 'stone', icon: 'spearheadgo' },
             { file: 'spellcirclego.html', name: 'SPELLCIRCLEGO', jp: '魔法陣碁', desc: '自石で2x2の魔法陣を描くと大魔法が発動。周囲の敵石を一掃する。', kind: 'stone', icon: 'spellcirclego' },
             { file: 'spirego.html', name: 'SPIREGO', jp: '塔頂碁', desc: '塔の断面の盤。上に行くほど狭くなり、頂上は1点の争奪戦。', kind: 'stone', icon: 'spirego' },
+            { file: 'spitgo.html', name: 'SPITGO', jp: '砂州碁', desc: '中央の海を分断する砂州(連結部)。唯一の通路を巡る陸繋の争い。', kind: 'stone', icon: 'spitgo' },
             { file: 'splitturngo.html', name: 'SPLITTURNGO', jp: '分掌碁', desc: '手番は2段構え: 配置フェーズと除去フェーズ (敵石1個除去) が交互。', kind: 'mirror', icon: 'splitturngo' },
             { file: 'spokego.html', name: 'SPOKEGO', jp: '車軸碁', desc: '中心から放射する8本の筋のみ着手可能。車輪の軸上での接近戦。', kind: 'stone', icon: 'spokego' },
             { file: 'spotgo.html', name: 'SPOTGO', jp: '勘所碁', desc: '星の「勘どころ」に置いた石は終局時に+2の直感ボーナスになる。', kind: 'stone', icon: 'spotgo' },
@@ -846,20 +915,28 @@
             { file: 'stonekickgo.html', name: 'STONEKICKGO', jp: '石蹴碁', desc: '置くと隣の味方石を蹴り飛ばす。盤端まで運ぶごとに+1点。', kind: 'stone', icon: 'stonekickgo' },
             { file: 'stormgo.html', name: 'STORMGO', jp: '嵐碁', desc: '15手ごとの「嵐手番」は石ではなく壁を1個置く。', kind: 'wall', icon: 'stormgo' },
             { file: 'stowagego.html', name: 'STOWAGEGO', jp: '積荷碁', desc: '自石が左右半分にほぼ均等 (差1以内・4個以上) に積まれると+2目。崩れると再挑戦。', kind: 'stone', icon: 'stowagego' },
+            { file: 'strathgo.html', name: 'STRATHGO', jp: '段丘2碁', desc: '河岸段丘の盤。上の段ほど古く硬い — 段の高さ分だけ呼吸点が増える。', kind: 'stone', icon: 'strathgo' },
             { file: 'stratigraphygo.html', name: 'STRATIGRAPHYGO', jp: '層積碁', desc: '石は地層に沈積する。28手以上生き残った石は化石となり1つ+1目。', kind: 'stone', icon: 'stratigraphygo' },
             { file: 'stripgo.html', name: 'STRIPGO', jp: '帯碁', desc: '幅5の帯盤は上下がループする無限戦線。帯を囲い込む閉塞戦。', kind: 'stone', icon: 'stripgo' },
             { file: 'subsidencego.html', name: 'SUBSIDENCEGO', jp: '沈降碁', desc: '20手ごとに盤の外周が1列ずつ海に沈む。石ごと沈み、盤は徐々に小さくなる。', kind: 'stone', icon: 'subsidencego' },
             { file: 'subzerogo.html', name: 'SUBZEROGO', jp: '氷点碁', desc: '中央4x4の氷点下区域の石は凍結し、取られることも囲みとしても動かない。', kind: 'stone', icon: 'subzerogo' },
             { file: 'suggestiongo.html', name: 'SUGGESTIONGO', jp: '暗示碁', desc: '空点に暗示をかける。相手がそこに置くと暗示が功を奏し宣言者に1アゲハマ。', kind: 'stone', icon: 'suggestiongo' },
+            { file: 'sukigo.html', name: 'SUKIGO', jp: '数奇碁', desc: '数寄屋の庭 (二隅の区域) に孤石を置けば風流点+2目。', kind: 'stone', icon: 'sukigo' },
+            { file: 'sumigo.html', name: 'SUMIGO', jp: '墨摺碁', desc: '石は墨。硯の上で打つと濃く摺れ、濃い石は取られると2点のアゲハマになる。', kind: 'stone', icon: 'sumigo' },
             { file: 'summitflaggo.html', name: 'SUMMITFLAGGO', jp: '登頂碁2', desc: '天元の山頂に旗(石)を立て、相手の1手を耐え抜けば登頂成功。中央を巡る攻防。', kind: 'stone', icon: 'summitflaggo' },
             { file: 'summongo.html', name: 'SUMMONGO', jp: '召喚碁', desc: '2石以上を一括で取られると生贄が溜まる。召喚獣を呼び出せ。', kind: 'stone', icon: 'summongo' },
             { file: 'swapstonego.html', name: 'SWAPSTONEGO', jp: '交替石碁', desc: '石は置いてから5手ごとに色が反転。味方が敵に化ける。', kind: 'stone', icon: 'swapstonego' },
             { file: 'symbiosisgo.html', name: 'SYMBIOSISGO', jp: '共生碁', desc: '自石と敵石は共生関係。取られた連に接した自石も連鎖して死ぬ。', kind: 'stone', icon: 'symbiosisgo' },
             { file: 'symmetrygo.html', name: 'SYMMETRYGO', jp: '対称碁', desc: '中央縦軸で镜像の位置に自分の石があれば、置いた瞬間+2目の対称美ボーナス。', kind: 'stone', icon: 'symmetrygo' },
             { file: 'taggo.html', name: 'TAGGO', jp: '組手碁', desc: '左の手(L)・右の手(R)のタッグ戦。Lは左半分・Rは右半分にしか打てない (中央列は共用)。', kind: 'stone', icon: 'taggo' },
+            { file: 'taketombogo.html', name: 'TAKETOMBOGO', jp: '竹蜻碁', desc: '12手ごとに置いた石が竹とんぼのように回転して2つ先の空点へ飛ぶ。', kind: 'stone', icon: 'taketombogo' },
+            { file: 'takotsubogo.html', name: 'TAKOTSUBOGO', jp: '蛸壺碁', desc: '蛸壺に入った石は9手ごとの壺上げで獲られる。壺は4箇所。', kind: 'stone', icon: 'takotsubogo' },
+            { file: 'tanabatago.html', name: 'TANABATAGO', jp: '七夕碁', desc: '星の笹に石の短冊を吊るせ。終局時に星の上の自石1つにつき+2点。', kind: 'stone', icon: 'tanabatago' },
+            { file: 'tansugo.html', name: 'TANSUGO', jp: '箪笥碁', desc: '四隅の3x3は箪笥の引出し。自分の石を4つ以上収めた引出しごとに+7目。', kind: 'stone', icon: 'tansugo' },
             { file: 'tanzakugo.html', name: 'TANZAKUGO', jp: '短冊碁', desc: '幅2の長い短冊盤。上下の端は折り返して繋がる輪環。', kind: 'stone', icon: 'tanzakugo' },
             { file: 'targetgo.html', name: 'TARGETGO', jp: '的当碁', desc: '天元は射的台。天元に置くと十字に弾が飛び、各方角最初の敵石を撃墜。', kind: 'stone', icon: 'targetgo' },
             { file: 'tarotgo.html', name: 'TAROTGO', jp: '占札碁', desc: '着手ごとにタロットを引く: 太陽/星/月/塔/運命の効果がその場で適用される。', kind: 'stone', icon: 'tarotgo' },
+            { file: 'temizugo.html', name: 'TEMIZUGO', jp: '手水碁', desc: '上下辺中央は手水舎。そこに打つとつながる自石すべてが清められ、終局に1石ごと+1点。', kind: 'stone', icon: 'temizugo' },
             { file: 'templego.html', name: 'TEMPLEGO', jp: '寺院碁', desc: '中央3x3の寺院区域に接する自分の連が4石以上になった側が即勝ち。', kind: 'stone', icon: 'templego' },
             { file: 'termitego.html', name: 'TERMITAGO', jp: '蟻塚碁', desc: 'シロアリの通路 (壁) が盤を這い回り、通路上の石は食われて消える。', kind: 'wall', icon: 'termitego' },
             { file: 'terracego.html', name: 'TERRACEGO', jp: '段丘碁', desc: '棚田状の3段盤。段差を挟む同色石は連にならない — 段差越しは重い手。', kind: 'stone', icon: 'terracego' },
@@ -871,9 +948,14 @@
             { file: 'tightropego.html', name: 'TIGHTROPEGO', jp: '綱渡碁', desc: '中央横一列は綱。綱上の石は毎手自動で対岸へ歩き、渡りきると+2目。', kind: 'stone', icon: 'tightropego' },
             { file: 'tilengo.html', name: 'TILENGO', jp: '敷詰碁', desc: '盤は7枚のタイルに分割。終局時、各タイルで石数多数の側がタイル全域を領地とする。', kind: 'stone', icon: 'tilengo' },
             { file: 'tithego.html', name: 'TITHEGO', jp: '什一碁', desc: '3石以上を取ると約1割 (最低1個) が「税」として相手のアゲハマになる。', kind: 'stone', icon: 'tithego' },
+            { file: 'tobiishigo.html', name: 'TOBIISHIGO', jp: '飛石碁', desc: '自分の石に隣接する点には打てない — 全ての石は庭に散らばる飛石。', kind: 'stone', icon: 'tobiishigo' },
+            { file: 'tofugo.html', name: 'TOFUGO', jp: '豆腐碁', desc: 'にがりの点に触れる連は凝固して豆腐に。終局時1連につき+3目。', kind: 'stone', icon: 'tofugo' },
+            { file: 'tokogo.html', name: 'TOKOGO', jp: '床飾碁', desc: '上下辺の床の間(1x3)に軸と花=石を飾る。2石以上飾った床の間ごとに+6目。', kind: 'stone', icon: 'tokogo' },
             { file: 'tollgo.html', name: 'TOLLGO', jp: '弔鐘碁', desc: '石が取られるたびに弔鐘が鳴り、全ての石が震源地から1歩ずつ外へ押される。', kind: 'stone', icon: 'tollgo' },
             { file: 'tonego.html', name: 'TONEGO', jp: '音石碁', desc: '列ごとにドレミの音が割り当てられる。和音の同色隣接は+1目、不協和は-1目。', kind: 'stone', icon: 'tonego' },
+            { file: 'tossengo.html', name: 'TOSSENGO', jp: '投扇碁', desc: '的に最も近い石の持ち主が、8手ごとの審判で+1目を得る投扇興。', kind: 'stone', icon: 'tossengo' },
             { file: 'totalitygo.html', name: 'TOTALITYGO', jp: '日食碁', desc: '9手ごとの皆既日食で全石が影になり取れない。置いた石は次の1手も影に残る。', kind: 'stone', icon: 'totalitygo' },
+            { file: 'toujigo.html', name: 'TOUJIGO', jp: '湯治碁', desc: '上段の湯治場(温泉区域)に石を浸けると傷が癒え、浸かった石は終局時に+2目。', kind: 'stone', icon: 'toujigo' },
             { file: 'tracego.html', name: 'TRACEGO', jp: '追跡碁', desc: '自陣の基点から石の連鎖を伸ばし、中央の目標物まで繋げた側が追跡成功で勝ち。', kind: 'stone', icon: 'tracego' },
             { file: 'tradego.html', name: 'TRADEGO', jp: '交易碁', desc: '4つの港に石を置くと資金+1。2金で2連「大船石」を買える。', kind: 'stone', icon: 'tradego' },
             { file: 'traitorgo.html', name: 'TRAITORGO', jp: '仮面碁', desc: '各1回、敵石1個を「隠し駒」に変えられる — 実は自石だったという裏切り。', kind: 'stone', icon: 'traitorgo' },
@@ -882,31 +964,49 @@
             { file: 'trickgo.html', name: 'TRICKGO', jp: '悪戯碁', desc: '8手ごとに着手の隣へ悪戯インク。仕掛けた相手の次の1手だけその点は打てない。', kind: 'stone', icon: 'trickgo' },
             { file: 'triggergo.html', name: 'TRIGGERGO', jp: '引金碁', desc: '盤の縁は引金。縁に置くとその列/行の石が全て連鎖爆発する。', kind: 'stone', icon: 'triggergo' },
             { file: 'trumpgo.html', name: 'TRUMPGO', jp: '切札碁2', desc: '各1回「切り札」: その着手に隣接する敵の連を呼吸に関係なく全て取れる。', kind: 'stone', icon: 'trumpgo' },
+            { file: 'tsuitatego.html', name: 'TSUITATEGO', jp: '衝立碁', desc: '「衝立」ボタンで構えると次の一手が一枚壁(視線を遮る衝立)になる。各側1回。', kind: 'stone', icon: 'tsuitatego' },
+            { file: 'tsukemonogo.html', name: 'TSUKEMONOGO', jp: '漬物碁', desc: '糠床 (中央) に漬けた石は10手の間だけ取られない。漬かれば普通の石。', kind: 'stone', icon: 'tsukemonogo' },
+            { file: 'tsukimigo.html', name: 'TSUKIMIGO', jp: '月見碁', desc: '天元は月。月を囲む8座に団子(石)を供えておくと終局時に+1ずつ。', kind: 'stone', icon: 'tsukimigo' },
+            { file: 'tsukiyamago.html', name: 'TSUKIYAMAGO', jp: '築山碁', desc: '星点は築山候補地。半数以上を占拠すれば主景完成で即勝ち。占拠ごとに+4目。', kind: 'stone', icon: 'tsukiyamago' },
+            { file: 'tsukubaigo.html', name: 'TSUKUBAIGO', jp: '蹲踞碁', desc: '四隅の蹲踞(つくばい)に置くと手が清められ、取られた自石2つ分が帳消しになる。', kind: 'stone', icon: 'tsukubaigo' },
+            { file: 'tsumikigo.html', name: 'TSUMIKIGO', jp: '積木碁', desc: '石は積み木。5-9石の連は安定して呼吸+1、10石以上の連は頭でっかちで呼吸-1。', kind: 'stone', icon: 'tsumikigo' },
             { file: 'tuggo.html', name: 'TUGGO', jp: '綱引碁', desc: '中央の綱標を引き合う。敵陣への侵入数で標が動き、端まで引けば勝利。', kind: 'stone', icon: 'tuggo' },
             { file: 'tunnelgo.html', name: 'TUNNELGO', jp: '隧道碁', desc: '4つの隧道入口 (◇) に打つと出口へ石が瞬間移動する。出口が塞がると使えない。', kind: 'stone', icon: 'tunnelgo' },
             { file: 'twinboardgo.html', name: 'TWINBOARDGO', jp: '双盤碁', desc: '表盤と裏盤の2枚の盤。「盤反転」で入れ替わり、地は両盤の合計。', kind: 'stone', icon: 'twinboardgo' },
             { file: 'twinringgo.html', name: 'TWINRINGGO', jp: '双環碁', desc: '2つの環が1点で繋がる8の字盤。接点の橋渡しが両環の命綱。', kind: 'stone', icon: 'twinringgo' },
+            { file: 'ukaigo.html', name: 'UKAIGO', jp: '鵜飼碁', desc: '獲った側の着手石は鵜になる。捕獲のたび+1 (最大5) の鮎を咥える。', kind: 'stone', icon: 'ukaigo' },
+            { file: 'umeboshigo.html', name: 'UMEBOSHIGO', jp: '梅干碁', desc: '梅の木の下の石は8手ごとに塩漬けされて梅干に。終局時1個+2目。', kind: 'stone', icon: 'umeboshigo' },
+            { file: 'unbango.html', name: 'UNBANGO', jp: '雲版碁', desc: '8手ごとに雲版が鳴って禅の刻が進む。鳴るたびに両者へ+1目の功徳。', kind: 'stone', icon: 'unbango' },
             { file: 'underminego.html', name: 'UNDERMINEGO', jp: '掘削碁', desc: '「掘削」→自石を選ぶと坑夫が消え、隣接する敵石を全て崩して獲る (各側4回)。', kind: 'stone', icon: 'underminego' },
             { file: 'unevengo.html', name: 'UNEVENGO', jp: '非対称碁', desc: '非対称ルール: 黒は毎手+1石の数で、白は1石連が不屈の強さで戦う。コミなし。', kind: 'stone', icon: 'unevengo' },
+            { file: 'upliftgo.html', name: 'UPLIFTGO', jp: '隆起碁', desc: '12手ごとに盤の一部が隆起して新しい高地になる。高地の石は呼吸+1。', kind: 'stone', icon: 'upliftgo' },
             { file: 'upsidedowngo.html', name: 'UPSIDEDOWNGO', jp: '逆さ碁', desc: '着手は盤の反対側に現れる。常に180度回転して読み直す逆さまの碁。', kind: 'stone', icon: 'upsidedowngo' },
+            { file: 'uruugo.html', name: 'URUUGO', jp: '閏年碁', desc: '4手ごとに閏が入り、打った側がそのままもう一手打てる。閏は白黒交互に巡る。', kind: 'stone', icon: 'uruugo' },
             { file: 'valleygo.html', name: 'VALLEYGO', jp: '谷間碁', desc: '両側を崖に挟まれた峡谷の盤。谷底 (中央行) の石は1つ余分に呼吸する。', kind: 'stone', icon: 'valleygo' },
             { file: 'vampirogo.html', name: 'VAMPIROGO', jp: '寄生碁', desc: '敵石に隣接して打った石は寄生する。寄生石は自分の手番の終わりに隣の敵石を1つ吸い取る。', kind: 'stone', icon: 'vampirogo' },
             { file: 'volcango2.html', name: 'VOLCANGO', jp: '噴火碁', desc: '天元の火山が20手ごとに噴火。溶岩流が一直線上の石を全て焼失する。', kind: 'weather', icon: 'volcango2' },
             { file: 'voltagego.html', name: 'VOLTAGEGO', jp: '電圧碁', desc: '置いた石と最初に接触した敵石が中和して両方消える (1手1対のみ)。', kind: 'stone', icon: 'voltagego' },
             { file: 'vortex2go.html', name: 'VORTEX2GO', jp: '旋風碁', desc: '石を置くと周囲8マスが時計回りに1マスずつ環流する。連は渦で千切れる。', kind: 'stone', icon: 'vortex2go' },
             { file: 'wafergo.html', name: 'WAFERGO', jp: '薄板碁', desc: '盤は表と裏の2面。5手ごとに裏返って別盤として進行する (裏返ると左右反転)。', kind: 'stone', icon: 'wafergo' },
+            { file: 'wakago.html', name: 'WAKAGO', jp: '和歌碁', desc: '句は石、結びは間。2点空けて同色が向かい合えば歌が結ばれ+1目。', kind: 'stone', icon: 'wakago' },
             { file: 'washigo.html', name: 'WASHIGO', jp: '和紙碁', desc: '和紙の石は水路に入ると濡れ、8手ごとの雨で破れて消える。', kind: 'stone', icon: 'washigo' },
             { file: 'watago.html', name: 'WATAGO', jp: '綿石碁', desc: '石は綿。取られた連は潰れて半分しかアゲハマにならない (切り上げ)。', kind: 'stone', icon: 'watago' },
             { file: 'waterwheelgo.html', name: 'WATERWHEELGO', jp: '水車碁', desc: '盤下を流れる水車。8手ごとに最下行の石が1マス東へ流され、端から零れると相手のアゲハマ。', kind: 'stone', icon: 'waterwheelgo' },
             { file: 'wave2go.html', name: 'WAVE2GO', jp: '波動碁', desc: '着手の衝撃が波として伝播。距離2リングにある全ての石が外側へ1マス押し出される。', kind: 'stone', icon: 'wave2go' },
             { file: 'weatheringgo.html', name: 'WEATHERINGGO', jp: '風化碁', desc: '石は30手で風化して砂になり、砂は12手で空に還る。永遠の地はない。', kind: 'stone', icon: 'weatheringgo' },
+            { file: 'whetstonego.html', name: 'WHETSTONEGO', jp: '研師碁', desc: '石は刃物。砥石に隣接して打つと研がれ、研がれた石を取られると相手に+1の切れ味点。', kind: 'stone', icon: 'whetstonego' },
             { file: 'wishgo.html', name: 'WISHGO', jp: '流星碁', desc: '願いの点に相手が打つと流星が落ちて願いが叶い、その石は宣言者のものになる。', kind: 'stone', icon: 'wishgo' },
             { file: 'workshopgo.html', name: 'WORKSHOPGO', jp: '工房碁', desc: '素材の隣に置いて回収。素材2個で道具を鍛えると、次の着手に助っ人石が自動で付く。', kind: 'stone', icon: 'workshopgo' },
             { file: 'wriggle.html', name: 'WRIGGLE', jp: '蠕動碁', desc: '「蠕動」で自石を1マス匍匐移動 (1手を消費)。移動でも通常の取りは発生する。', kind: 'stone', icon: 'wriggle' },
             { file: 'yabusamego.html', name: 'YABUSAMEGO', jp: '流鏑碁', desc: '着手した石の行と列を馬が走り、一直線上の的を射抜く。的ごとに+1目 (各1回)。', kind: 'stone', icon: 'yabusamego' },
             { file: 'yeastgo.html', name: 'YEASTGO', jp: '酵母碁', desc: '甘い糖蜜の窪みでは酵母の石が8手ごとに出芽して増殖する。', kind: 'stone', icon: 'yeastgo' },
             { file: 'yomigo.html', name: 'YOMIGO', jp: '黄泉碁', desc: '15手ごとに黄泉の国(盤の裏)から両者の石が1つずつ這い出す。', kind: 'stone', icon: 'yomigo' },
+            { file: 'yorakugo.html', name: 'YORAKUGO', jp: '瓔珞碁', desc: '中央の堂(3x3)に連を繋げると瓔珞で飾られる。堂に接する連の石ごとに+1目。', kind: 'stone', icon: 'yorakugo' },
+            { file: 'yubago.html', name: 'YUBAGO', jp: '湯葉碁', desc: '横4連以上の石は湯葉の膜。終局時に膜の枚数 (長さ-3) が得点になる。', kind: 'stone', icon: 'yubago' },
+            { file: 'zashikigo.html', name: 'ZASHIKIGO', jp: '座敷碁', desc: '上段の席ほど席次が高い座敷。上座+3目、中座+1目、下座はそのまま。', kind: 'stone', icon: 'zashikigo' },
+            { file: 'zazengo.html', name: 'ZAZENGO', jp: '座禅碁', desc: '中央5x5の座禅区域。敵に隣接されず静かに坐った石は心が安定して+3目。', kind: 'stone', icon: 'zazengo' },
             { file: 'zigguratgo.html', name: 'ZIGGURATGO', jp: '神殿碁', desc: '自分の石の上に積み上げて神殿を建てる。Lv4の頂点に到達した側が即勝ち。', kind: 'stone', icon: 'zigguratgo' },
+            { file: 'zuihitsugo.html', name: 'ZUIHITSUGO', jp: '随筆碁', desc: '徒然の文は孤石。終局時に同色と隣接しない石1つ+1目。', kind: 'stone', icon: 'zuihitsugo' },
             // ==== WAVE3 GAMES END ====
                     ];
 
@@ -2823,7 +2923,7 @@
                     dot(1.3,4.6,'#fef3c7','#b45309',cell*0.45);
                     dot(4.9,4.6,P1,P1S,cell*0.32); seg(4.4,4.6,4.75,4.6,'rgba(62,34,17,0.5)',1.4);
                     break;
-                                                                                                                                                // == WAVE3 ICONS BEGIN ==
+                                                                                                                                                                // == WAVE3 ICONS BEGIN ==
                 case 'abyssgo': {
         tri(3, 4.4, cell * 1.3, '#475569', '#1e293b', 0);
         blk(2.6, 2.2, '#57534e', '#292524');
@@ -2845,6 +2945,15 @@
         ring(3, 3, cell * 0.75, '#c084fc', 1.8);
         ring(3, 3, cell * 1.15, '#c084fc', 1.2);
         ring(3, 3, cell * 1.55, '#c084fc', 0.8);
+                    break;
+                }
+                case 'alluvialgo': {
+        // 扇状地: 頂点から扇に広がる堆積帯と扇央の石
+        tri(3, 0.9, cell * 0.4, '#a16207', '#713f12', 0);
+        seg(3, 1.2, 1.1, 4.6, '#d9b25c', 2.2);
+        seg(3, 1.2, 4.9, 4.6, '#d9b25c', 2.2);
+        seg(3, 1.2, 3.0, 4.9, '#eab308', 2.2);
+        dot(3, 2.6, P1, P1S);
                     break;
                 }
                 case 'ambergo': {
@@ -3037,6 +3146,14 @@
         dot(4.2, 4, P2, P2S);
                     break;
                 }
+                case 'biidamago': {
+        // ビー玉: 穴に落ちるガラス玉と穴
+        ring(3, 4.0, cell * 0.7, '#0f172a', 2.6);
+        dot(3, 2.6, '#a5f3fc', '#0891b2');
+        ring(3.25, 2.35, cell * 0.16, '#ffffff', 1.2);
+        seg(3, 3.0, 3, 3.6, '#67e8f9', 1.4);
+                    break;
+                }
                 case 'bingolinego': {
         // 釣合(ビンゴ): 斜めの5連ライン
         [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]].forEach(([x, y], i) => {
@@ -3096,6 +3213,17 @@
         blk(2.5, 3.7, "#92400e", "#451a03");
                     break;
                 }
+                case 'bonshogo': {
+        // 鐘撞: 梵鐘と撞木、音波
+        c.fillStyle = '#a16207'; c.strokeStyle = '#713f12'; c.lineWidth = 1.2;
+        c.beginPath(); c.arc(at(3.4,2.6).x, at(3.4,2.6).y, cell * 1.1, Math.PI, 0);
+        c.rect(at(3.4,2.6).x - cell * 1.1, at(3.4,2.6).y, cell * 2.2, cell * 1.1); c.fill(); c.stroke(); // 鐘
+        seg(0.9, 2.6, 2.1, 2.6, '#78350f', cell * 0.34); // 撞木
+        ring(3.4, 3.2, cell * 1.7, 'rgba(161,98,7,0.5)', 1.4); // 音波
+        ring(3.4, 3.2, cell * 2.2, 'rgba(161,98,7,0.3)', 1.2);
+        dot(3.4, 2.1, '#fde047', '#eab308', R * 0.3); // 撞座
+                    break;
+                }
                 case 'borego': {
         // 削岩機: 岩塊+ドリル+岩屑
         blk(4.0, 3.4, '#78716c', '#44403c');
@@ -3141,6 +3269,14 @@
         dot(4.6, 4.8, P1, P1S, R * 0.75);
                     break;
                 }
+                case 'brushgo': {
+        // 筆造: 筆の穂先と軸、書き跡の墨線
+        seg(4.6, 1.0, 3.4, 2.6, '#8a5a2b', 2.6);
+        tri(3.0, 3.2, cell * 0.55, '#1c1917', '#0c0a09', Math.PI * 1.25);
+        seg(1.4, 4.6, 4.4, 4.9, '#1c1917', 2.0);
+        seg(1.6, 4.2, 2.4, 4.35, '#1c1917', 1.4);
+                    break;
+                }
                 case 'bulletgo': {
         // 弾丸: 発射する弾 + 貫通線 + 撃たれる敵石
         dot(1.2, 4.6, P1, P1S, cell * 0.4);
@@ -3178,12 +3314,33 @@
         dot(4.1, 3.5, P2, P2S, R * 0.6);
                     break;
                 }
+                case 'byoubugo': {
+        // 屏風: 折り曲がった金屏風
+        seg(1.4, 2.2, 2.5, 1.8, '#d4af37', 2.6);   // 折線1上
+        seg(2.5, 1.8, 3.5, 2.2, '#d4af37', 2.6);   // 折線2上
+        seg(3.5, 2.2, 4.6, 1.8, '#d4af37', 2.6);   // 折線3上
+        seg(1.4, 4.8, 2.5, 4.4, '#b8960b', 2.6);   // 折線1下
+        seg(2.5, 4.4, 3.5, 4.8, '#b8960b', 2.6);   // 折線2下
+        seg(3.5, 4.8, 4.6, 4.4, '#b8960b', 2.6);   // 折線3下
+        seg(2.5, 1.8, 2.5, 4.4, '#8a6d0b', 1.2);   // 折り目1
+        seg(3.5, 2.2, 3.5, 4.8, '#8a6d0b', 1.2);   // 折り目2
+        dot(3, 3.4, '#dc2626', '#991b1b', cell * 0.3); // 松の絵付
+                    break;
+                }
                 case 'calligraphygo': {
         seg(1.4, 1.3, 2.2, 2.5, "#1c1917", 3);
         seg(2.2, 2.5, 3.0, 3.7, "#1c1917", 3);
         seg(3.0, 3.7, 3.9, 4.2, "#1c1917", 2.2);
         dot(3.9, 4.2, P1, P1S, R * 0.6);
         dot(1.4, 1.3, P2, P2S, R * 0.5);
+                    break;
+                }
+                case 'candlego': {
+        // 蝋燭: 蝋の身と燃える炎
+        blk(2.7, 2.8, '#fef3c7', '#d6c48a');
+        tri(3, 2.0, cell * 0.4, '#fb923c', '#ea580c', 0);
+        dot(3, 2.05, '#fde047', '#f59e0b', cell * 0.12);
+        seg(2.5, 4.9, 3.5, 4.9, '#a16207', 1.6);
                     break;
                 }
                 case 'candygo': {
@@ -3194,6 +3351,14 @@
         seg(4.9, 3, 5.3, 3, "#fbcfe8", 2.2);
         txt("✦", 1.4, 1.3, "#fbbf24", cell * 0.9);
         txt("✦", 4.7, 4.7, "#fbbf24", cell * 0.7);
+                    break;
+                }
+                case 'capego': {
+        // 岬: 海に突き出た岬と頂上の白旗、周りの波
+        mol([[0.8, 4.8], [3, 1.4], [5.2, 4.8]], '#4d7c0f', '#365314');
+        seg(3, 1.4, 3, 0.5, '#e2e8f0', 1.6);
+        tri(3.45, 0.75, cell * 0.35, '#f8fafc', '#94a3b8', Math.PI / 2);
+        seg(0.9, 5.3, 5.1, 5.3, '#38bdf8', 1.8);
                     break;
                 }
                 case 'capsulego': {
@@ -3259,6 +3424,16 @@
         dot(4.6, 3.1, P2, P2S, cell * 0.3);
                     break;
                 }
+                case 'chabakogo': {
+        // 茶箱: 葛籠の箱と持ち手、茶碗
+        seg(1.8, 2.6, 4.2, 2.6, '#92600e', 2);     // 箱上縁
+        seg(1.8, 4.6, 4.2, 4.6, '#92600e', 2);     // 箱下縁
+        seg(1.8, 2.6, 1.8, 4.6, '#92600e', 2);     // 左縁
+        seg(4.2, 2.6, 4.2, 4.6, '#92600e', 2);     // 右縁
+        c.beginPath(); c.arc(at(3, 2.6).x, at(3, 2.6).y - cell * 0.15, cell * 0.5, Math.PI, Math.PI * 2); c.strokeStyle = '#713f12'; c.lineWidth = 2; c.stroke(); // 持ち手
+        dot(3, 3.7, '#166534', '#14532d', cell * 0.45); // 中の茶碗
+                    break;
+                }
                 case 'chainreact': {
                     // 連鎖爆発: 繋がった石と爆発の火花
                     bond(1.2, 4.4, 2.6, 4.4, '#57534e'); bond(2.6, 4.4, 4, 4.4, '#57534e');
@@ -3295,6 +3470,15 @@
         dot(3, 2.2, P1, P1S, R * 0.75);
         dot(2.2, 4.2, '#fef3c7', '#d97706', R * 0.55);
         dot(3.8, 4.4, '#fef3c7', '#d97706', R * 0.55);
+                    break;
+                }
+                case 'chisengo': {
+        // 池泉: 青い池と景石、水辺の草
+        dot(3, 3.6, '#0ea5e9', '#0369a1', cell * 1.4, 0.85);
+        ring(3, 3.6, cell * 0.7, '#bae6fd', 1.2);
+        dot(1.6, 4.6, '#78716c', '#44403c', cell * 0.5);
+        dot(4.6, 4.4, '#57534e', '#44403c', cell * 0.4);
+        seg(4.9, 2.4, 5.1, 3.2, '#16a34a', 1.4);
                     break;
                 }
                 case 'ciphergo': {
@@ -3377,6 +3561,22 @@
                     dot(1.4, 1.4, P1, P1S, cell * 0.5); dot(0.8, 0.8, P1, P1S);
                     dot(4.4, 1.4, P2, P2S, cell * 0.5); dot(5.2, 0.8, P2, P2S);
                     dot(1.4, 4.6, P2, P2S); dot(4.4, 4.6, P1, P1S);
+                    break;
+                }
+                case 'compassgo': {
+        // 方位: 羅針盤の針とN極印
+        ring(3, 3, cell * 1.85, '#0369a1', 2); // 盤
+        ring(3, 3, cell * 1.5, 'rgba(3,105,161,0.4)', 1.2);
+        for (let k = 0; k < 8; k++) { // 方位目盛
+            const a = k * Math.PI / 4;
+            seg(3 + Math.cos(a) * 1.55, 3 + Math.sin(a) * 1.55,
+                3 + Math.cos(a) * (k % 2 === 0 ? 1.35 : 1.45),
+                3 + Math.sin(a) * (k % 2 === 0 ? 1.35 : 1.45), '#0369a1', k % 2 === 0 ? 2 : 1.2);
+        }
+        tri(3, 2.0, cell * 0.6, '#ef4444', '#991b1b'); // 北針
+        tri(3, 4.0, cell * 0.6, '#e2e8f0', '#64748b', Math.PI / 2); // 南針
+        dot(3, 3, '#f8fafc', '#0369a1', R * 0.3);
+        txt('N', 3, 0.7, '#0369a1', cell * 0.6);
                     break;
                 }
                 case 'conductgo': {
@@ -3481,6 +3681,16 @@
         dot(1, 3, P1, P1S, R * 0.8);
         dot(5, 3, P2, P2S, R * 0.8);
         dot(3, 3, P1, P1S, R * 0.8);
+                    break;
+                }
+                case 'dashigo': {
+        // 出汁: 旨味の溜まり (菱形の区域) と湯気
+        mol([[2, 1.4], [3.2, 2.6], [2, 3.8], [0.8, 2.6]], 'rgba(251,191,36,0.5)', '#d97706');
+        mol([[4.4, 2.6], [5.4, 3.6], [4.4, 4.6], [3.4, 3.6]], 'rgba(251,191,36,0.35)', '#d97706');
+        seg(2, 4.6, 2, 5.4, '#f59e0b', 1.4);
+        seg(3.2, 4.4, 3.6, 5.2, '#f59e0b', 1.2);
+        dot(2, 2.6, P1, P1S, cell * 0.28);
+        dot(4.4, 3.6, P2, P2S, cell * 0.24);
                     break;
                 }
                 case 'daynightgo': {
@@ -3705,6 +3915,15 @@
         txt("½", 4.3, 4.4, "#f59e0b", cell * 0.9);
                     break;
                 }
+                case 'dunego': {
+        // 砂丘: 三日月形の砂丘と風紋、流れる砂
+        mol([[1.1, 4.6], [3, 2.2], [4.9, 4.6]], '#d9b25c', '#a16207');
+        seg(1.4, 3.6, 4.6, 3.9, '#f5e0a0', 1.6);
+        seg(1.6, 4.2, 4.4, 4.4, '#f5e0a0', 1.4);
+        dot(4.9, 2.2, '#eab308', '#a16207', cell * 0.10, 0.9);
+        dot(5.4, 1.5, '#eab308', '#a16207', cell * 0.07, 0.7);
+                    break;
+                }
                 case 'dungo': {
         dot(3, 2, P1, P1S);
         seg(3, 2.7, 3, 3.9, "#78716c", 1.4);
@@ -3741,6 +3960,20 @@
         dot(3.3, 2.8, '#1c1917', '#0c0a09', cell * 0.72);
         dot(1.4, 4.4, P1, P1S, cell * 0.3);
         dot(4.6, 4.4, P2, P2S, cell * 0.3);
+                    break;
+                }
+                case 'ehogo': {
+        // 恵方: 恵方巻きと恵方の方角矢印
+        c.fillStyle = '#1c1917'; // 海苔巻き
+        c.save(); c.translate(at(3.4,3.6).x, at(3.4,3.6).y); c.rotate(-0.5);
+        c.beginPath(); c.ellipse(0, 0, cell * 0.6, cell * 1.5, 0, 0, Math.PI * 2); c.fill(); c.restore();
+        c.fillStyle = '#fef3c7'; // 断面
+        c.save(); c.translate(at(2.7,4.3).x, at(2.7,4.3).y); c.rotate(-0.5);
+        c.beginPath(); c.ellipse(0, 0, cell * 0.55, cell * 0.34, 0, 0, Math.PI * 2); c.fill(); c.restore();
+        dot(2.62, 4.25, '#f43f5e', '#9f1239', R * 0.22); // 具
+        dot(2.82, 4.38, '#4ade80', '#15803d', R * 0.22);
+        seg(3.6, 2.6, 4.9, 1.3, '#fb923c', cell * 0.3); // 恵方矢印
+        tri(5.05, 1.15, cell * 0.42, '#fb923c', '#c2410c', Math.PI / 4.6);
                     break;
                 }
                 case 'ekidengo': {
@@ -3807,6 +4040,18 @@
                     txt('↕', 1.4, 3, '#dc2626', cell * 1.4);
                     break;
                 }
+                case 'etogo': {
+        // 干支: 十二支の環と中心の石
+        ring(3, 3, cell * 1.9, '#b45309', 1.6); // 干支環
+        for (let k = 0; k < 12; k++) {
+            const a = k * Math.PI / 6 - Math.PI / 2;
+            dot(3 + Math.cos(a) * 1.9, 3 + Math.sin(a) * 1.9,
+                k % 3 === 0 ? '#fbbf24' : '#94a3b8', '#78350f', cell * 0.16);
+        }
+        dot(3, 3, P1, P1S, R * 0.8); // 中心の石
+        txt('子', 3, 1.35, '#78350f', cell * 0.55);
+                    break;
+                }
                 case 'evacgo': {
         tri(3, 1.6, cell * 0.7, "#22c55e", "#14532d");
         blk(2.5, 2.4, "#22c55e", "#14532d"); blk(3.5, 2.4, "#22c55e", "#14532d");
@@ -3834,6 +4079,16 @@
         dot(2.4, 3.4, P1, P1S);
         dot(3.6, 2.6, P1, P1S, R, 0.45);
         txt('?', 3.6, 2.6, '#fbbf24', cell * 0.8);
+                    break;
+                }
+                case 'faultgo': {
+        // 断層: 中央の割れ目とずれた地盤
+        seg(3, 0.8, 2.6, 1.8, '#3f2d20', 2.0);
+        seg(2.6, 1.8, 3.4, 2.8, '#3f2d20', 2.0);
+        seg(3.4, 2.8, 2.7, 3.9, '#3f2d20', 2.0);
+        seg(2.7, 3.9, 3.1, 5.0, '#3f2d20', 2.0);
+        dot(1.6, 2.4, P1, P1S);
+        dot(4.3, 3.4, P2, P2S);
                     break;
                 }
                 case 'feintgo': {
@@ -3953,6 +4208,15 @@
         tri(2.6, 1.0, cell * 0.38, "#facc15", "#b45309");
                     break;
                 }
+                case 'freezetaggo': {
+        // 氷鬼: 氷の鬼面と凍った石
+        blk(1.6, 2.2, '#7dd3fc', '#0284c7');
+        seg(2.0, 2.2, 1.8, 1.2, '#0284c7', 1.8);
+        seg(3.6, 2.2, 3.8, 1.2, '#0284c7', 1.8);
+        dot(4.3, 4.3, '#bae6fd', '#38bdf8');
+        seg(1.0, 5.2, 5.0, 5.2, '#bae6fd', 1.4);
+                    break;
+                }
                 case 'frostpillargo': {
         dot(3, 2.2, P1, P1S);
         seg(2.4, 4.4, 2.4, 3.2, '#7dd3fc', 2);
@@ -4066,6 +4330,17 @@
         ring(2.5, 2.8, cell * 0.62, "#fde68a", 1.1);
                     break;
                 }
+                case 'gomago': {
+        // 護摩: 護摩壇の炎と護摩木
+        seg(1.6, 4.6, 4.4, 4.6, '#b45309', cell * 0.55); // 壇
+        seg(2.0, 4.6, 4.0, 4.6, '#92400e', cell * 0.4);
+        seg(2.3, 4.3, 3.0, 3.5, '#78350f', cell * 0.2); // 護摩木
+        seg(3.7, 4.3, 3.0, 3.5, '#78350f', cell * 0.2);
+        tri(3.0, 2.5, cell * 1.0, '#f97316', '#c2410c'); // 炎
+        tri(3.0, 2.75, cell * 0.5, '#fde047', '#eab308');
+        ring(3, 2.5, cell * 1.55, 'rgba(249,115,22,0.45)', 1.2); // 祈りの輪
+                    break;
+                }
                 case 'goshuingo': {
         seg(2.4, 2.4, 3.6, 2.4, '#dc2626', 1.8);
         seg(3.6, 2.4, 3.6, 3.6, '#dc2626', 1.8);
@@ -4158,6 +4433,16 @@
         txt('五', 4.1, 3, '#dc2626', cell * 0.5);
                     break;
                 }
+                case 'harikyugo': {
+        // 鍼灸: ツボの点に刺さる鍼
+        ring(3, 3.4, cell * 1.1, '#dc2626', 1.6);   // 経穴の輪
+        seg(3, 3.4, 3, 1.9, '#a8a29e', 1.6);        // 鍼
+        seg(2.6, 1.9, 3.4, 1.9, '#57534e', 1.6);    // 鍼の柄頭
+        dot(1.8, 4.4, '#dc2626', '#991b1b', cell * 0.2); // ツボ1
+        dot(4.4, 4.4, '#dc2626', '#991b1b', cell * 0.2); // ツボ2
+        seg(4.6, 4.2, 4.9, 3.6, '#a8a29e', 1.4);    // もう一本の鍼
+                    break;
+                }
                 case 'harvestgo': {
         seg(2, 4.6, 2, 1.6, "#eab308", 2.5);
         seg(2, 2.6, 1.4, 2, "#eab308", 2); seg(2, 2.6, 2.6, 2, "#eab308", 2);
@@ -4180,6 +4465,16 @@
         dot(2.3, 3.6, P2, P2S, cell * 0.38);
                     break;
                 }
+                case 'henrogo': {
+        // 遍路: 菅笠・金剛杖・巡る道
+        tri(2.6, 2.0, cell * 0.9, '#d4a017', '#92600a'); // 菅笠
+        seg(2.6, 2.5, 2.6, 4.8, '#78350f', cell * 0.16); // 金剛杖
+        ring(2.6, 1.05, cell * 0.2, '#92600a', 1.4);
+        seg(0.9, 5.2, 5.1, 5.2, '#a16207', 1.4); // 道
+        [[1.2,'#f43f5e'],[2.6,'#f43f5e'],[4.0,'#f43f5e'],[5.0,'#cbd5e1']].forEach(([x,col]) =>
+            dot(x, 5.2, col, '#7f1d1d', R * 0.34)); // 札所の点
+                    break;
+                }
                 case 'hijackgo': {
         seg(1.4, 4.4, 4.4, 1.6, '#fb923c', 2);
         tri(4.5, 1.5, cell * 0.18, '#fb923c', '#fb923c', -Math.PI / 4);
@@ -4194,6 +4489,27 @@
         seg(3.4, 2.6, 4.6, 2.6, '#34d399', 1.8);
         seg(3.4, 2.6, 3.4, 4.0, '#34d399', 1.8);
         dot(1.4, 1.4, P1, P1S);
+                    break;
+                }
+                case 'himonogo': {
+        // 干場: 物干し竿に吊るした干物
+        seg(0.8, 1.6, 5.2, 1.6, '#78350f', 1.8);
+        seg(2, 1.6, 2, 2.4, '#a8a29e', 1);
+        seg(4, 1.6, 4, 2.4, '#a8a29e', 1);
+        tri(2, 3.2, cell * 0.55, '#94a3b8', '#64748b', Math.PI / 2);
+        tri(4, 3.2, cell * 0.55, '#cbd5e1', '#64748b', Math.PI / 2);
+        seg(2.9, 3.4, 3.1, 3.4, '#64748b', 1);
+        dot(1.8, 3, '#f8fafc', '#64748b', cell * 0.1);
+                    break;
+                }
+                case 'hinadango': {
+        // 雛壇: 三段の壇と上段の二雛
+        seg(0.8, 4.9, 5.2, 4.9, '#be185d', cell * 0.5); // 下段
+        seg(1.4, 3.8, 4.6, 3.8, '#db2777', cell * 0.5); // 中段
+        seg(2.0, 2.7, 4.0, 2.7, '#f472b6', cell * 0.5); // 上段
+        dot(2.5, 2.0, P1, P1S, R * 0.8); // 内裏
+        dot(3.5, 2.0, P2, P2S, R * 0.8); // 雛
+        dot(3.0, 3.4, P2, P2S, R * 0.55); // 官女
                     break;
                 }
                 case 'hoistgo': {
@@ -4219,6 +4535,15 @@
         seg(1, 1, 2.2, 2.2, '#57534e', 1.8);
         tri(2.4, 2.4, cell * 0.2, '#57534e', '#44403c', Math.PI / 4);
         dot(0.8, 0.8, P1, P1S, cell * 0.28);
+                    break;
+                }
+                case 'horagaigo': {
+        // 法螺貝: 渦巻く貝殻と吹き口
+        c.beginPath(); c.arc(at(3.1, 3.4).x, at(3.1, 3.4).y, cell * 1.05, Math.PI * 0.4, Math.PI * 1.95); c.strokeStyle = '#ea580c'; c.lineWidth = 2.4; c.stroke();
+        c.beginPath(); c.arc(at(3.1, 3.4).x, at(3.1, 3.4).y, cell * 0.6, Math.PI * 0.4, Math.PI * 1.9); c.strokeStyle = '#c2410c'; c.lineWidth = 2; c.stroke();
+        dot(3.3, 3.3, '#fdba74', '#ea580c', cell * 0.26); // 貝の芯
+        seg(1.6, 3.9, 2.4, 3.6, '#9a3412', 2.2);   // 吹き口
+        dot(1.6, 4, '#78350f', '#451a03', cell * 0.22);
                     break;
                 }
                 case 'hueshiftgo': {
@@ -4296,6 +4621,14 @@
     
                     break;
                 }
+                case 'inletgo': {
+        // 入江: 陸地の凹部に入る海と係留ブイ
+        blk(0.8, 0.8, '#4d7c0f', '#365314');
+        mol([[2.0, 0.8], [3, 2.6], [4.0, 0.8]], '#1a5d8f', '#0b3450');
+        ring(3, 3.4, cell * 0.22, '#f8fafc', 1.8);
+        dot(3, 3.4, '#ef4444', '#b91c1c', cell * 0.08);
+                    break;
+                }
                 case 'insectgo': {
         dot(1.8, 4, P2, P2S, cell * 0.3);
         ring(3, 3.2, cell * 0.42, "#e7e5e4", 2);
@@ -4317,6 +4650,18 @@
         seg(1.2, 4.6, 4.8, 4.6, '#78350f', 1.4);
                     break;
                 }
+                case 'ishidorogo': {
+        // 灯籠: 石灯籠と灯る火
+        seg(1.9, 2.2, 4.1, 2.2, '#57534e', 2);       // 笠
+        tri(3, 1.6, cell * 0.5, '#57534e', '#44403c'); // 宝形
+        seg(2.4, 2.4, 2.4, 3.6, '#78716c', 2);        // 柱左
+        seg(3.6, 2.4, 3.6, 3.6, '#78716c', 2);        // 柱右
+        seg(2.4, 3.6, 3.6, 3.6, '#57534e', 2);        // 中台
+        dot(3, 3, '#fbbf24', '#d97706', cell * 0.4);  // 火袋の灯り
+        seg(2.6, 3.8, 2.6, 4.9, '#57534e', 2.4);      // 竿
+        seg(1.9, 4.9, 3.9, 4.9, '#44403c', 2.4);      // 基壇
+                    break;
+                }
                 case 'jengago': {
         // 抜積: 積み木の塔と抜き出し中の1個
         for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
@@ -4331,6 +4676,36 @@
     
                     break;
                 }
+                case 'jibikigo': {
+        // 地引網: 引き上げた網と獲物の魚群
+        seg(0.8, 1.4, 5.2, 1.4, '#78350f', 1.8);
+        mol([[1.4, 1.8], [2.6, 3.4], [3.4, 3.4], [4.6, 1.8]], 'rgba(56,189,248,0.35)', '#0369a1');
+        tri(2.2, 3, cell * 0.4, '#38bdf8', '#0369a1', Math.PI / 2);
+        tri(3.6, 3.2, cell * 0.4, '#7dd3fc', '#0369a1', Math.PI / 2);
+        dot(2, 4.6, '#bae6fd', '#0369a1', cell * 0.16);
+                    break;
+                }
+                case 'jochigo': {
+        // 定置網: 網目とかかった魚
+        seg(1, 1, 5, 1, '#57534e', 1.4);
+        seg(1, 1, 1, 5, '#57534e', 1.4);
+        seg(1, 1, 5, 5, '#78716c', 1.2);
+        seg(5, 1, 1, 5, '#78716c', 1.2);
+        tri(3.4, 3, cell * 0.55, '#38bdf8', '#0369a1', Math.PI / 2);
+        dot(4.2, 3, '#f8fafc', '#0369a1', cell * 0.1);
+                    break;
+                }
+                case 'joyago': {
+        // 除夜: 除夜の鐘と響き
+        c.fillStyle = '#78350f';
+        c.beginPath(); c.arc(at(3,3).x, at(3,3).y - cell * 0.1, cell * 0.95, Math.PI, 0);
+        c.rect(at(3,3).x - cell * 0.95, at(3,3).y - cell * 0.1, cell * 1.9, cell * 0.9); c.fill(); // 鐘
+        c.fillStyle = '#fde047'; c.fillRect(at(3,3).x - cell * 0.12, at(3,3).y - cell * 0.7, cell * 0.24, cell * 0.4); // 撞座
+        ring(3, 3, cell * 1.5, 'rgba(180,83,9,0.7)', 1.4); // 響き
+        ring(3, 3, cell * 2.0, 'rgba(180,83,9,0.4)', 1.2);
+        txt('108', 3, 5.1, '#b45309', cell * 0.6);
+                    break;
+                }
                 case 'jumpropego': {
         // 縄跳び: 跳ぶ石 + 縄の弧
         dot(3, 1.6, P1, P1S, cell * 0.5);
@@ -4340,12 +4715,68 @@
         dot(5.1, 1.4, '#94a3b8', '#64748b', cell * 0.14);
                     break;
                 }
+                case 'kadomatsugo': {
+        // 門松: 三本の竹と松の葉
+        [[1.6,'#16a34a'],[2.4,'#15803d'],[3.2,'#16a34a']].forEach(([gx,col],k) => {
+            seg(gx, 4.4 - k * 0.2, gx, 1.4 + k * 0.5, col, cell * 0.34);
+        });
+        seg(4.4, 4.6, 4.4, 2.6, '#78350f', cell * 0.3); // 松の幹
+        [[3.9,2.4],[4.4,1.8],[4.9,2.4]].forEach(([x,y]) => dot(x, y, '#166534', '#14532d', R * 0.7));
+        dot(2.4, 4.9, P1, P1S, R * 0.5);
+                    break;
+                }
+                case 'kagurago': {
+        // 神楽: 扇を翳す巫女の舞と神の光輪
+        c.fillStyle = '#f43f5e'; c.strokeStyle = '#9f1239'; c.lineWidth = 1.2;
+        c.beginPath(); c.moveTo(at(2.4,4.2).x, at(2.4,4.2).y);
+        c.arc(at(2.4,4.2).x, at(2.4,4.2).y, cell * 1.15, -Math.PI * 0.85, -Math.PI * 0.15);
+        c.closePath(); c.fill(); c.stroke(); // 扇
+        seg(2.4, 4.2, 1.7, 3.3, '#9f1239', 1.2);
+        seg(2.4, 4.2, 2.4, 3.05, '#9f1239', 1.2);
+        seg(2.4, 4.2, 3.1, 3.3, '#9f1239', 1.2);
+        dot(2.4, 4.6, P1, P1S, R * 0.5); // 舞手の石
+        ring(4.4, 1.8, cell * 0.7, 'rgba(251,191,36,0.9)', 2); // 神の輪
+        dot(4.4, 1.8, '#fde68a', '#d97706', R * 0.5, 0.9);
+                    break;
+                }
+                case 'kaikigo': {
+        // 回忌: 位牌と線香の煙
+        blk(3, 3.4, '#164e63', '#0e7490'); // 位牌
+        seg(2.5, 4.6, 3.5, 4.6, '#164e63', cell * 0.3); // 台
+        txt('徳', 3, 3.35, '#a5f3fc', cell * 0.8);
+        c.strokeStyle = 'rgba(148,163,184,0.8)'; c.lineWidth = 1.6; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(at(1.6,5).x, at(1.6,5).y);
+        c.quadraticCurveTo(at(1.3,3.6).x, at(1.3,3.6).y, at(1.9,2.4).x, at(1.9,2.4).y); c.stroke(); // 煙
+        c.beginPath(); c.moveTo(at(4.4,5).x, at(4.4,5).y);
+        c.quadraticCurveTo(at(4.7,3.6).x, at(4.7,3.6).y, at(4.1,2.4).x, at(4.1,2.4).y); c.stroke();
+        dot(1.6, 5.1, '#f97316', '#c2410c', R * 0.3); // 線香火
+                    break;
+                }
+                case 'kakinego': {
+        // 垣根: 竹垣の縦格子と横桟
+        seg(1.8, 1.6, 1.8, 4.8, '#a16207', 1.8);
+        seg(2.6, 1.6, 2.6, 4.8, '#ca8a04', 1.8);
+        seg(3.4, 1.6, 3.4, 4.8, '#a16207', 1.8);
+        seg(4.2, 1.6, 4.2, 4.8, '#ca8a04', 1.8);
+        seg(1.4, 2.6, 4.6, 2.6, '#713f12', 1.4);
+        seg(1.4, 3.8, 4.6, 3.8, '#713f12', 1.4);
+                    break;
+                }
                 case 'kanjigo': {
         dot(2.0, 3, P1, P1S);
         dot(4.0, 3, P1, P1S);
         txt('火', 2.0, 3.05, '#fef3c7', cell * 0.6);
         txt('山', 4.0, 3.05, '#fef3c7', cell * 0.6);
         bond(2.5, 3, 3.5, 3, 1.6);
+                    break;
+                }
+                case 'karesansuigo': {
+        // 枯山水: 砂紋の同心弧と立石
+        ring(3, 3, cell * 2.2, '#a8a29e', 1.1);
+        ring(3, 3, cell * 1.6, '#a8a29e', 1.1);
+        ring(3, 3, cell * 1.0, '#a8a29e', 1.1);
+        tri(3, 3, cell * 0.55, '#57534e', '#44403c');
+        dot(4.9, 4.7, '#78716c', '#57534e', cell * 0.4);
                     break;
                 }
                 case 'karutago': {
@@ -4364,6 +4795,38 @@
         ring(3, 3.2, cell * 1.5, 'rgba(251,191,36,0.7)', 1.4);
                     break;
                 }
+                case 'keirakugo': {
+        // 経絡: 経穴を繋ぐ気の流れ線
+        seg(1.6, 4.6, 2.5, 3.4, '#16a34a', 1.8);
+        seg(2.5, 3.4, 3.4, 3.9, '#16a34a', 1.8);
+        seg(3.4, 3.9, 4.2, 2.6, '#16a34a', 1.8);
+        seg(4.2, 2.6, 4.7, 1.7, '#16a34a', 1.8);
+        dot(1.6, 4.6, '#dc2626', '#991b1b', cell * 0.24); // 経穴1
+        dot(2.5, 3.4, '#dc2626', '#991b1b', cell * 0.24); // 経穴2
+        dot(3.4, 3.9, '#dc2626', '#991b1b', cell * 0.24); // 経穴3
+        dot(4.2, 2.6, '#dc2626', '#991b1b', cell * 0.24); // 経穴4
+        dot(4.7, 1.7, '#dc2626', '#991b1b', cell * 0.24); // 経穴5
+                    break;
+                }
+                case 'keisugo': {
+        // 磬子: 吊るされた磬(曲玉形の鉦)と撞木
+        seg(2, 1.6, 4, 1.6, '#57534e', 1.6);       // 吊り紐横
+        seg(3, 1.6, 3, 2.3, '#57534e', 1.6);       // 吊り紐
+        c.beginPath(); c.arc(at(3, 3.7).x, at(3, 3.7).y, cell * 1.15, Math.PI * 1.05, Math.PI * 1.95); c.strokeStyle = '#a16207'; c.lineWidth = 2.4; c.stroke(); // 磬の湾曲
+        seg(2.1, 3.5, 3.9, 3.5, '#a16207', 2.4);   // 磬の弦
+        seg(4.5, 3.9, 5, 4.4, '#44403c', 1.8);     // 撞木
+        dot(3, 4.4, '#d4af37', '#92600e', cell * 0.28); // 撞座
+                    break;
+                }
+                case 'kemarigo': {
+        // 蹴鞠: 二色の革鞠と蹴り上げの軌道
+        dot(3, 3.6, '#d97706', '#78350f', cell * 0.8);
+        seg(3, 2.8, 3, 4.4, '#fde68a', 2);
+        seg(1.4, 1.2, 2.4, 1.8, '#a8a29e', 1.4);
+        seg(2.4, 1.8, 2.8, 2.6, '#a8a29e', 1.4);
+        tri(4.8, 1.4, cell * 0.3, P2, P2S, Math.PI / 2);
+                    break;
+                }
                 case 'kendamago': {
         // けん玉: 十字のけん+糸+玉
         seg(2.9, 1.4, 2.9, 4.2, '#b45309', 2.4);
@@ -4379,6 +4842,15 @@
         dot(3.4, 2.6, '#fbbf24', '#b45309');
         seg(1.6, 4.4, 3.0, 4.4, '#f59e0b', 1.6);
         seg(3.0, 4.4, 4.4, 4.4, '#f59e0b', 1.6);
+                    break;
+                }
+                case 'kikogo': {
+        // 紀行: 名所の鳥居と旅の石
+        seg(1.4, 1.8, 4.6, 1.8, '#dc2626', 2);
+        seg(1.8, 2.4, 4.2, 2.4, '#dc2626', 1.6);
+        seg(2.2, 1.8, 2.2, 4, '#dc2626', 1.6);
+        seg(3.8, 1.8, 3.8, 4, '#dc2626', 1.6);
+        dot(3, 5, P1, P1S, cell * 0.28);
                     break;
                 }
                 case 'kingyogo': {
@@ -4419,6 +4891,38 @@
     
                     break;
                 }
+                case 'kochugo': {
+        // 講中: 結び目のように連なる講の環
+        bond(1.6, 2.4, 4.4, 2.4, 3);
+        bond(1.6, 3.6, 4.4, 3.6, 3);
+        bond(1.6, 2.4, 1.6, 3.6, 3);
+        bond(4.4, 2.4, 4.4, 3.6, 3);
+        dot(1.6, 2.4, P1, P1S); dot(4.4, 2.4, P1, P1S);
+        dot(1.6, 3.6, P1, P1S); dot(4.4, 3.6, P1, P1S);
+        ring(3, 3, cell * 0.5, '#fbbf24', 2); // 結び印
+        dot(3, 3, '#fbbf24', '#b45309', R * 0.35);
+                    break;
+                }
+                case 'kohaigo': {
+        // 光背: 仏の石と後光の光背
+        ring(3, 3.2, cell * 1.5, '#eab308', 2);    // 頭光
+        ring(3, 3.2, cell * 1.05, '#facc15', 1.4); // 身光
+        dot(3, 3, '#57534e', '#292524', cell * 0.6); // 仏の石
+        seg(2.2, 4.6, 3.8, 4.6, '#78716c', 2);     // 台座
+        seg(3, 4.6, 3, 4.2, '#78716c', 1.6);
+                    break;
+                }
+                case 'koinoborigo': {
+        // 鯉幟: 泳ぐ鯉と吹き流し
+        seg(2.8, 3.0, 4.9, 3.0, '#0284c7', cell * 0.8); // 鯉の胴
+        tri(5.3, 3.0, cell * 0.62, '#0284c7', '#075985', 0); // 尾
+        dot(2.55, 2.85, '#f8fafc', '#075985', R * 0.42); // 目
+        dot(3.6, 3.0, '#38bdf8', '#075985', R * 0.3);
+        seg(1.8, 1.6, 1.8, 4.6, '#78350f', 1.6); // ポール
+        seg(1.8, 1.7, 3.4, 1.2, '#f43f5e', cell * 0.3); // 吹き流し
+        seg(1.8, 2.3, 3.2, 1.9, '#38bdf8', cell * 0.3);
+                    break;
+                }
                 case 'komago': {
         // 独楽: 回転する独楽本体 + 回転弧 + 軸
         dot(3, 2.6, P1, P1S, cell * 0.6);
@@ -4427,6 +4931,27 @@
         ring(3, 2.9, cell * 0.95, '#38bdf8', 1.4);
         seg(1.5, 4.3, 2.3, 4.7, '#38bdf8', 1.6);
         seg(3.7, 4.7, 4.5, 4.3, '#38bdf8', 1.6);
+                    break;
+                }
+                case 'kyokusuigo': {
+        // 曲水: 流れる盃と岸の詠み手
+        seg(0.8, 2, 2, 2.8, '#a78bfa', 1.8);
+        seg(2, 2.8, 4, 3.2, '#a78bfa', 1.8);
+        seg(4, 3.2, 5.2, 4, '#a78bfa', 1.8);
+        dot(3, 3, '#e9d5ff', '#7c3aed', cell * 0.3);
+        dot(1.4, 4.8, P1, P1S, cell * 0.28);
+        dot(4.6, 1.2, P2, P2S, cell * 0.28);
+                    break;
+                }
+                case 'kyuseigo': {
+        // 九星: 八方位に散る星と中央の一白水星
+        for (let k = 0; k < 8; k++) {
+            const a = k * Math.PI / 4;
+            dot(3 + Math.cos(a) * 1.85, 3 + Math.sin(a) * 1.85,
+                k % 2 === 0 ? '#fde047' : '#a5b4fc', '#713f12', cell * 0.3);
+        }
+        dot(3, 3, '#f8fafc', '#38bdf8', R * 0.75); // 一白水星
+        ring(3, 3, cell * 1.15, 'rgba(165,180,252,0.5)', 1.2);
                     break;
                 }
                 case 'labyrinthgo': {
@@ -4504,6 +5029,18 @@
         seg(1.7, 3.1, 3.1, 3.1, '#fef3c7', 2.2);
         dot(4.4, 4.4, P2, P2S, cell * 0.4);
         seg(3.4, 3.6, 4.0, 4.0, '#f87171', 1.8);
+                    break;
+                }
+                case 'longlinego': {
+        // 延縄: 幹縄に下がる釣針
+        seg(0.6, 2, 5.4, 2, '#0369a1', 2);
+        seg(1.6, 2, 1.6, 3.2, '#38bdf8', 1.2);
+        seg(3, 2, 3, 3.4, '#38bdf8', 1.2);
+        seg(4.4, 2, 4.4, 3, '#38bdf8', 1.2);
+        ring(1.6, 3.4, cell * 0.18, '#0c4a6e', 1.2);
+        ring(3, 3.6, cell * 0.18, '#0c4a6e', 1.2);
+        ring(4.4, 3.2, cell * 0.18, '#0c4a6e', 1.2);
+        tri(3, 4.8, cell * 0.4, '#fbbf24', '#b45309', Math.PI / 2);
                     break;
                 }
                 case 'loomgo': {
@@ -4597,6 +5134,14 @@
         dot(3.8, 1.6, P2, P2S, R * 0.5);
                     break;
                 }
+                case 'menkogo': {
+        // 面子: 裏返る2枚の面 (表と裏)
+        dot(2.2, 3.4, P2, P2S);
+        dot(3.9, 3.4, P1, P1S);
+        seg(3.05, 2.2, 3.05, 4.6, '#8a5a2b', 1.6);
+        tri(3.05, 1.8, cell * 0.3, '#f59e0b', '#b45309', 0);
+                    break;
+                }
                 case 'meteorshowergo': {
         seg(1.2, 0.9, 2.2, 2, "#fb923c", 2.4);
         seg(3.4, 0.7, 4.1, 1.5, "#fb923c", 2.4);
@@ -4650,6 +5195,14 @@
         dot(5.3, 1.8, P2, P2S, cell * 0.26, 0.3);
                     break;
                 }
+                case 'mirrorcraftgo': {
+        // 鏡磨: 銀の鏡面と磨きの輝き
+        ring(3, 3, cell * 1.5, '#cbd5e1', 3.0);
+        dot(3, 3, '#e2e8f0', '#94a3b8', cell * 0.9);
+        seg(3.8, 1.9, 4.5, 1.2, '#f8fafc', 1.6);
+        dot(4.7, 1.0, '#ffffff', '#e2e8f0', cell * 0.10);
+                    break;
+                }
                 case 'mirrorgo': {
         seg(3, 1, 3, 5, "#94a3b8", 1.4);
         dot(1.8, 3, P1, P1S);
@@ -4664,11 +5217,32 @@
         ring(4.5, 2.5, cell * 0.62, 'rgba(125,211,252,0.7)', 1.4);
                     break;
                 }
+                case 'misogo': {
+        // 味噌樽: 箍のある木樽と味噌玉
+        blk(1.6, 1.4, '#a16207', '#713f12');
+        blk(4.4, 3.6, '#a16207', '#713f12');
+        seg(1.4, 2.2, 4.6, 2.2, '#713f12', 1.6);
+        seg(1.4, 4.4, 4.6, 4.4, '#713f12', 1.6);
+        dot(3, 3, '#78350f', '#451a03', cell * 0.5);
+        dot(4.6, 1.4, P1, P1S, cell * 0.22);
+                    break;
+                }
                 case 'missiongo': {
         dot(1.8, 3, P1, P1S);
         seg(2.6, 3, 3.4, 3, "#22d3ee", 2.5);
         dot(4.2, 3, P2, P2S);
         ring(4.2, 3, cell * 0.55, "#22d3ee", 2);
+                    break;
+                }
+                case 'mitatego': {
+        // 見立て: L字の曲がり角と見る目
+        bond(2, 4.4, 2, 2.4, 3);
+        bond(2, 2.4, 4, 2.4, 3);
+        dot(2, 4.4, P1, P1S, cell * 0.3);
+        dot(2, 2.4, P1, P1S, cell * 0.3);
+        dot(4, 2.4, P1, P1S, cell * 0.3);
+        ring(4.4, 4.4, cell * 0.5, '#0ea5e9', 1.8);
+        dot(4.4, 4.4, '#0ea5e9', '#0369a1', cell * 0.2);
                     break;
                 }
                 case 'moatgo': {
@@ -4694,12 +5268,40 @@
         seg(3, 2.6, 3, 3.4, '#a16207', 1.2);
                     break;
                 }
+                case 'mochitsukigo': {
+        // 餅搗: 杵で搗かれた伸びる餅 + 杵
+        dot(2.6, 3.6, '#fef3c7', '#d6a94f', cell * 0.75);
+        dot(3.5, 3.4, '#fef3c7', '#d6a94f', cell * 0.5);
+        seg(3.9, 1.4, 3.2, 2.9, '#92400e', 2.6);
+        dot(4.0, 1.3, '#b45309', '#78350f', cell * 0.35);
+                    break;
+                }
+                case 'mokugyogo': {
+        // 木魚: 丸い木魚と撥、魚の目
+        dot(3, 3.6, '#a16207', '#713f12', cell * 1.3);
+        seg(2, 3.6, 4, 3.6, '#713f12', 1.2);       // 鱗の線1
+        seg(2.2, 4.1, 3.8, 4.1, '#713f12', 1.2);   // 鱗の線2
+        dot(3.7, 3.1, '#292524', '#000', cell * 0.16); // 目
+        seg(4.2, 1.6, 4.9, 2.6, '#57534e', 2);     // 撥の柄
+        dot(4.9, 2.7, '#dc2626', '#991b1b', cell * 0.32); // 撥の頭
+                    break;
+                }
                 case 'moltgo': {
         dot(1.9, 2.8, P1, P1S);
         ring(3.5, 2.6, cell * 0.52, "#a8a29e", 1.5);
         seg(3.1, 2.2, 3.9, 3.0, "#a8a29e", 1.2);
         seg(2.4, 2.8, 3.0, 2.7, "#a8a29e", 1.1);
         dot(4.0, 4.1, P2, P2S, R * 0.7);
+                    break;
+                }
+                case 'monogatarigo': {
+        // 物語: 巻物と起承転結の四場面
+        blk(3, 3, '#fef3c7', '#b45309');
+        seg(3.6, 1.8, 3.6, 4.2, '#b45309', 1.4);
+        dot(1.4, 1.4, '#f472b6', '#be185d', cell * 0.2);
+        dot(4.8, 1.4, '#f472b6', '#be185d', cell * 0.2);
+        dot(4.8, 4.8, '#f472b6', '#be185d', cell * 0.2);
+        dot(1.4, 4.8, '#f472b6', '#be185d', cell * 0.2);
                     break;
                 }
                 case 'monolithgo': {
@@ -4738,6 +5340,25 @@
         ring(3.6, 2.4, cell * 0.42, '#94a3b8', 1.6);
         seg(3, 3.2, 4.6, 4.4, '#44403c', 1.8);
         dot(4.9, 4.9, '#dc2626', '#991b1b', cell * 0.22);
+                    break;
+                }
+                case 'mossgo': {
+        // 苔庭: 苔むした地面と庭石、一部枯れた斑点
+        dot(2, 4.4, '#3f6212', '#1a2e05', cell * 0.85, 0.9);
+        dot(3.6, 4.6, '#4d7c0f', '#1a2e05', cell * 0.95, 0.9);
+        dot(4.6, 3.6, '#3f6212', '#1a2e05', cell * 0.7, 0.85);
+        dot(2.8, 3.2, '#78716c', '#44403c', cell * 0.5);
+        dot(4.8, 4.8, '#a8a29e', '#57534e', cell * 0.3);
+                    break;
+                }
+                case 'mukaebigo': {
+        // 迎火: 迎え火の炎と迎えられる精霊
+        tri(3.0, 2.6, cell * 1.15, '#f97316', '#c2410c'); // 炎
+        tri(3.0, 2.9, cell * 0.62, '#fde047', '#eab308');
+        seg(1.6, 4.4, 4.4, 4.4, '#78350f', cell * 0.3); // 薪
+        seg(2.0, 4.9, 4.0, 4.0, '#92400e', cell * 0.24);
+        ring(4.7, 1.4, cell * 0.4, 'rgba(165,180,252,0.9)', 1.6); // 精霊
+        dot(4.7, 1.4, '#c7d2fe', '#818cf8', R * 0.4, 0.8);
                     break;
                 }
                 case 'mummgo': {
@@ -4825,6 +5446,24 @@
         tri(3.0, 5.1, cell * 0.3, '#fbbf24', '#b45309', Math.PI / 2);
                     break;
                 }
+                case 'ohajikigo': {
+        // 御碁: 弾かれるおはじき (丸いガラス玉) と軌跡
+        dot(1.7, 4.0, '#fda4af', '#e11d48');
+        dot(4.3, 2.4, '#a5f3fc', '#0891b2');
+        seg(2.2, 3.7, 3.9, 2.6, '#94a3b8', 1.6);
+        ring(4.3, 2.4, cell * 0.32, '#f8fafc', 1.2);
+                    break;
+                }
+                case 'okagego': {
+        // お陰: 神域(鳥居)と集まる福の玉
+        seg(1.8, 1.6, 4.2, 1.6, '#dc2626', cell * 0.3); // 鳥居上
+        seg(2.0, 2.4, 4.0, 2.4, '#dc2626', cell * 0.2);
+        seg(2.15, 1.75, 2.15, 4.4, '#b91c1c', cell * 0.22); // 柱
+        seg(3.85, 1.75, 3.85, 4.4, '#b91c1c', cell * 0.22);
+        [[2.6,4.7],[3.0,4.5],[3.4,4.7]].forEach(([x,y]) =>
+            dot(x, y, '#f0abfc', '#a21caf', R * 0.4)); // 福の玉
+                    break;
+                }
                 case 'omenego': {
         // 面隠し: お面+背後の石
         dot(2.9, 3.1, P1, P1S);
@@ -4832,6 +5471,22 @@
         dot(2.6, 3.0, '#2e1065', '#2e1065', cell * 0.1);
         dot(3.2, 3.0, '#2e1065', '#2e1065', cell * 0.1);
         seg(2.6, 3.5, 3.2, 3.5, '#2e1065', 1.6);
+                    break;
+                }
+                case 'onmyogo': {
+        // 陰陽: 五行の五芒星と陰陽の石
+        {
+            const pts = [];
+            for (let k = 0; k < 5; k++) {
+                const a = k * Math.PI * 2 / 5 - Math.PI / 2;
+                pts.push([3 + Math.cos(a) * 1.9, 3 + Math.sin(a) * 1.9]);
+            }
+            [[0,2],[2,4],[4,1],[1,3],[3,0]].forEach(([a,b]) =>
+                seg(pts[a][0], pts[a][1], pts[b][0], pts[b][1], 'rgba(180,83,9,0.55)', 1.2));
+            const cols = ['#22c55e', '#ef4444', '#eab308', '#e2e8f0', '#3b82f6'];
+            pts.forEach(([x, y], k) => dot(x, y, cols[k], '#78350f', cell * 0.22));
+        }
+        dot(2.75, 3, P1, P1S, R * 0.55); dot(3.25, 3, P2, P2S, R * 0.55); // 陰陽
                     break;
                 }
                 case 'opticalgo': {
@@ -4877,6 +5532,15 @@
         tri(2.4, 2.8, cell * 0.8, "#f8fafc", "#94a3b8");
         tri(4, 3.4, cell * 0.55, "#f1f5f9", "#94a3b8");
         seg(1.4, 4.4, 4.8, 1.4, "#fbbf24", 1.5);
+                    break;
+                }
+                case 'otedamago': {
+        // 手玉: 弧を描いて投げ上げられる3つの玉
+        seg(1.6, 4.6, 3, 1.6, '#cbd5e1', 1.2);
+        seg(3, 1.6, 4.4, 4.6, '#cbd5e1', 1.2);
+        dot(1.7, 4.5, '#f472b6', '#be185d');
+        dot(3, 1.6, '#f9a8d4', '#ec4899');
+        dot(4.3, 4.5, '#fbcfe8', '#f472b6');
                     break;
                 }
                 case 'outlastgo': {
@@ -5018,6 +5682,14 @@
         tri(3.35, 3.4, cell * 0.3, "#22c55e", "#15803d", -0.4);
         tri(2.7, 3.5, cell * 0.26, "#4ade80", "#16a34a", -2.4);
         dot(4.4, 4.4, P2, P2S, R * 0.8);
+                    break;
+                }
+                case 'plastergo': {
+        // 左官: 漆喰の壁と鏝 (こて)
+        blk(0.8, 3.2, '#e7e5e4', '#a8a29e');
+        tri(4.0, 2.2, cell * 0.7, '#a8a29e', '#57534e', Math.PI / 4);
+        seg(4.3, 2.5, 5.2, 3.4, '#78350f', 1.8);
+        seg(1.4, 3.6, 3.4, 3.6, '#ffffff', 1.4);
                     break;
                 }
                 case 'platego': {
@@ -5181,6 +5853,14 @@
                     dot(3, 1.15, P1, P1S); dot(1.15, 5.05, P1, P1S); dot(4.85, 5.05, P1, P1S);
                     break;
                 }
+                case 'pyroclasticgo': {
+        // 火砕流: 噴火する山と斜面を下る炎の帯
+        tri(3, 2.2, cell * 1.1, '#57534e', '#292524', 0);
+        dot(3, 1.5, '#f97316', '#ea580c', cell * 0.16);
+        seg(3, 2.0, 2.2, 4.6, '#f97316', 2.2);
+        seg(3, 2.0, 3.8, 4.6, '#fb923c', 2.0);
+                    break;
+                }
                 case 'quarrygo': {
         dot(3.6, 3.8, '#78716c', '#44403c', cell * 0.5);
         dot(4.5, 4.4, '#57534e', '#44403c', cell * 0.3);
@@ -5330,6 +6010,18 @@
         dot(4.3, 4.6, P2, P2S, cell * 0.4);
                     break;
                 }
+                case 'rokkigo': {
+        // 六曜: 日めくり暦と大安の吉印
+        blk(3, 3, '#f8fafc', '#94a3b8'); // 暦
+        seg(2.4, 2.15, 3.6, 2.15, '#ef4444', cell * 0.22); // 暦の頭
+        txt('大安', 3, 3.35, '#b91c1c', cell * 0.62);
+        ring(4.7, 1.6, cell * 0.4, '#fbbf24', 1.8); // 吉の輪
+        dot(4.7, 1.6, '#fde047', '#d97706', R * 0.28);
+        dot(1.3, 4.6, P1, P1S, R * 0.4); // 凶石
+        seg(1.15, 4.45, 1.45, 4.75, '#64748b', 1.4); // 凶印×
+        seg(1.45, 4.45, 1.15, 4.75, '#64748b', 1.4);
+                    break;
+                }
                 case 'roofgo': {
         tri(3, 2.4, cell * 2.2, '#9a5140', '#5d2f26', 0);
         seg(3, 0.7, 3, 5.2, '#57534e', 1.8);
@@ -5381,6 +6073,16 @@
         dot(3.4, 3.3, '#7c2d12', '#7c2d12', cell * 0.13);
         dot(2.9, 3.6, '#451a03', '#451a03', cell * 0.12);
         dot(4.6, 4.6, P1, P1S, cell * 0.35);
+                    break;
+                }
+                case 'salmonrungo': {
+        // 鮭遡: 川を遡る鮭と産卵の泡
+        seg(1, 5.2, 5, 5.2, '#38bdf8', 2);
+        seg(1.4, 4.4, 4.6, 4.4, '#7dd3fc', 1.4);
+        tri(2.6, 3, cell * 0.7, '#fb7185', '#be123c', -Math.PI / 2);
+        dot(2.6, 2.2, '#f8fafc', '#be123c', cell * 0.1);
+        ring(4.2, 1.4, cell * 0.2, '#fda4af', 1.2);
+        ring(4.8, 2.2, cell * 0.14, '#fda4af', 1);
                     break;
                 }
                 case 'saltfieldgo': {
@@ -5456,11 +6158,27 @@
         blk(1.4, 4.6, '#a3a3a3', '#525252');
                     break;
                 }
+                case 'scrollmountgo': {
+        // 表具: 吊り下がる掛軸と軸先、絵の丸
+        seg(2.2, 0.9, 3.8, 0.9, '#57534e', 1.6);
+        blk(2.3, 1.1, '#fef3c7', '#8a5a2b');
+        dot(3, 2.4, '#dc2626', '#991b1b', cell * 0.2);
+        seg(2.1, 4.9, 3.9, 4.9, '#8a5a2b', 2.4);
+                    break;
+                }
                 case 'sealgo': {
         dot(2.5, 3.0, P1, P1S);
         blk(2.5, 1.9, "#fef3c7", "#b45309");
         txt("封", 2.5, 1.9, "#92400e", cell * 0.65);
         ring(2.5, 3.0, cell * 0.6, "#facc15", 1.3);
+                    break;
+                }
+                case 'sedimentgo': {
+        // 堆積: 川が海に注ぎ三角州が成長
+        blk(0.8, 0.8, '#1a5d8f', '#0b3450');
+        mol([[2.2, 4.9], [3, 2.8], [3.8, 4.9]], '#d9b25c', '#a16207');
+        seg(2.2, 1.2, 2.6, 3.0, '#38bdf8', 1.8);
+        seg(3.8, 1.2, 3.4, 3.0, '#38bdf8', 1.8);
                     break;
                 }
                 case 'seedgo': {
@@ -5476,6 +6194,28 @@
         seg(1.6, 1.6, 3.0, 2.4, '#fde047', 1.2);
         seg(3.0, 2.4, 4.4, 2.0, '#fde047', 1.2);
         seg(1.8, 4.4, 4.2, 4.4, '#64748b', 1.4);
+                    break;
+                }
+                case 'senryugo': {
+        // 川柳: 山なりの三連
+        dot(1.6, 3.6, P1, P1S, cell * 0.3);
+        dot(3, 2.4, P1, P1S, cell * 0.3);
+        dot(4.4, 3.6, P1, P1S, cell * 0.3);
+        seg(1.6, 3.6, 3, 2.4, '#4ade80', 1.6);
+        seg(3, 2.4, 4.4, 3.6, '#4ade80', 1.6);
+        dot(3, 4.8, P2, P2S, cell * 0.22);
+                    break;
+                }
+                case 'senyakugo': {
+        // 煎薬: 土瓶と生薬の葉、煎じる湯気
+        dot(3, 4.2, '#78350f', '#451a03', cell * 1.15); // 土瓶
+        seg(2, 3.9, 1.4, 3.4, '#451a03', 1.8);          // 注ぎ口
+        seg(3.6, 3.1, 3.6, 2.6, '#451a03', 1.8);        // 取っ手
+        seg(4.2, 3.1, 4.2, 2.6, '#451a03', 1.8);
+        seg(3.6, 2.6, 4.2, 2.6, '#451a03', 1.8);
+        dot(2.4, 2.6, '#16a34a', '#14532d', cell * 0.26); // 生薬の葉1
+        dot(2.9, 2.3, '#22c55e', '#15803d', cell * 0.22); // 生薬の葉2
+        seg(4.7, 1.9, 4.9, 2.7, '#a8a29e', 1.4);         // 湯気
                     break;
                 }
                 case 'sequencego': {
@@ -5536,11 +6276,48 @@
         dot(3, 3, P1, P1S, cell * 0.3);
                     break;
                 }
+                case 'shiohigo': {
+        // 潮干狩り: 干潟の貝と潮の引き線
+        seg(0.8, 1.8, 5.2, 1.8, '#7dd3fc', 1.6);
+        seg(1.2, 2.6, 4.8, 2.6, '#bae6fd', 1.2);
+        mol([[2, 3.4], [2.8, 3], [3, 3.8]], 'rgba(253,230,138,0.8)', '#d97706');
+        mol([[4, 4], [4.6, 3.6], [4.8, 4.4]], 'rgba(253,230,138,0.6)', '#d97706');
+        dot(2, 5, P2, P2S, cell * 0.22);
+                    break;
+                }
+                case 'shojigo': {
+        // 建具: 木枠の障子 (格子窓) と桟
+        blk(1.6, 1.2, '#fef3c7', '#8a5a2b');
+        seg(3, 1.3, 3, 4.7, '#8a5a2b', 1.8);
+        seg(1.7, 2.5, 4.3, 2.5, '#8a5a2b', 1.6);
+        seg(1.7, 3.6, 4.3, 3.6, '#8a5a2b', 1.6);
+        dot(4.6, 4.7, '#f59e0b', '#b45309', cell * 0.12);
+                    break;
+                }
+                case 'shoyugo': {
+        // 醤油蔵: 杉玉の木桶と熟成の垂れ
+        ring(3, 3, cell * 1.6, '#92400e', 2.4);
+        ring(3, 3, cell * 1.0, '#b45309', 1.4);
+        dot(3, 3, '#451a03', '#78350f', cell * 0.7);
+        seg(3, 4.8, 3, 5.6, '#451a03', 2);
+        dot(2.2, 1.6, P2, P2S, cell * 0.22);
+                    break;
+                }
                 case 'shrinkgo': {
         ring(3, 3, 2.6, "#78716c", 2);
         dot(3, 3, P1, P1S);
         tri(5.4, 3, cell * 0.3, "#ef4444", "#991b1b", Math.PI);
         tri(0.6, 3, cell * 0.3, "#ef4444", "#991b1b", 0);
+                    break;
+                }
+                case 'shugendo': {
+        // 修験: 険しい行場の山と行者の杖・法螺貝
+        tri(2.4, 3.4, cell * 1.5, '#475569', '#1e293b', -Math.PI / 2); // 山
+        tri(2.4, 2.2, cell * 0.45, '#f8fafc', '#cbd5e1', -Math.PI / 2); // 雪
+        tri(4.4, 4.0, cell * 0.9, '#64748b', '#334155', -Math.PI / 2); // 小さな山
+        seg(4.6, 5.0, 4.6, 2.2, '#78350f', cell * 0.14); // 錫杖
+        ring(4.6, 2.0, cell * 0.28, '#b45309', 1.4);
+        dot(1.4, 4.7, '#fbbf24', '#b45309', R * 0.5); // 法螺貝
                     break;
                 }
                 case 'siegego': {
@@ -5646,6 +6423,18 @@
         dot(3, 2.2, '#f0f9ff', '#bae6fd', R * 0.35);
                     break;
                 }
+                case 'sorobango': {
+        // 算盤: 梁と桁の珠、繰上りの列
+        seg(0.9, 3.0, 5.1, 3.0, '#78350f', cell * 0.22); // 梁
+        [[1.4],[2.6],[3.8],[5.0]].forEach(([x]) => seg(x, 1.0, x, 5.2, '#78350f', 1.4)); // 桁
+        dot(1.4, 2.2, P1, P1S, R * 0.7); // 上珠
+        [3.9, 4.5].forEach(y => dot(1.4, y, P1, P1S, R * 0.55)); // 下珠
+        [1.8, 2.4].forEach(y => dot(2.6, y, P2, P2S, R * 0.55));
+        [3.7, 4.3, 4.9].forEach(y => dot(3.8, y, P1, P1S, R * 0.55));
+        dot(5.0, 1.6, P2, P2S, R * 0.7);
+        txt('5', 5.0, 4.6, '#b45309', cell * 0.7); // 繰上り
+                    break;
+                }
                 case 'sparrgo': {
                     // ぶつかり合う二石と火花
                     dot(2.2, 3, P1, P1S); dot(3.8, 3, P2, P2S);
@@ -5686,6 +6475,14 @@
         dot(3.6, 3.4, P1, P1S, R * 0.8);
         dot(2, 4.8, P1, P1S, R * 0.8);
         dot(4, 4.8, P2, P2S, R * 0.8);
+                    break;
+                }
+                case 'spitgo': {
+        // 砂州: 上下の海を分断する砂の連結部
+        blk(0.8, 0.8, '#1a5d8f', '#0b3450');
+        blk(0.8, 4.4, '#1a5d8f', '#0b3450');
+        seg(3, 1.4, 3, 4.4, '#d9b25c', 3.2);
+        dot(3, 2.9, P1, P1S);
                     break;
                 }
                 case 'splitturngo': {
@@ -5812,6 +6609,15 @@
         seg(0.6, 4.3, 5.4, 4.3, '#0ea5e9', 2.2);
                     break;
                 }
+                case 'strathgo': {
+        // 河岸段丘: 3段の段丘面と崖線、最上段に石
+        blk(0.8, 4.4, '#a16207', '#713f12');
+        blk(0.8, 3.1, '#ca8a04', '#854d0e');
+        blk(0.8, 1.8, '#eab308', '#a16207');
+        seg(0.8, 4.35, 5.2, 4.35, '#713f12', 1.4);
+        dot(4.4, 1.7, P1, P1S);
+                    break;
+                }
                 case 'stratigraphygo': {
         seg(0.5, 1.4, 4.6, 1.4, "#a16207", 1.5);
         seg(0.5, 2.5, 4.6, 2.5, "#854d0e", 1.5);
@@ -5848,6 +6654,23 @@
         ring(3.4, 3.4, R * 1.3, 'rgba(168,85,247,0.7)', 1.2);
         dot(3, 3, P2, P2S, R * 0.5);
         dot(2, 1.6, P1, P1S, R * 0.5);
+                    break;
+                }
+                case 'sukigo': {
+        // 数寄屋: 茶室の庭と孤石・竹
+        mol([[1.4, 1.4], [4.6, 1.4], [4.6, 4.6], [1.4, 4.6]], 'rgba(167,243,208,0.2)', '#059669');
+        dot(3, 3, P2, P2S, cell * 0.4);
+        seg(4.8, 1.4, 4.8, 4.8, '#10b981', 1.8);
+        seg(4.4, 2.2, 5, 1.8, '#10b981', 1.2);
+        seg(4.4, 3.4, 5, 3, '#10b981', 1.2);
+                    break;
+                }
+                case 'sumigo': {
+        // 墨摺: 硯の水盤と摺る墨棒、滲み
+        ring(3, 3.6, cell * 1.4, '#292524', 3.0);
+        dot(3, 3.6, '#0c0a09', '#1c1917', cell * 0.7);
+        blk(3.7, 1.4, '#1c1917', '#44403c');
+        seg(4.0, 3.2, 4.3, 1.9, '#0c0a09', 2.4);
                     break;
                 }
                 case 'summitflaggo': {
@@ -5899,6 +6722,49 @@
         seg(3, 1.3, 3, 4.7, '#78350f', 1.2);
                     break;
                 }
+                case 'taketombogo': {
+        // 竹蜻: 回転する羽根と軸、飛行の弧
+        seg(3, 1.2, 3, 4.6, '#a16207', 2.0);
+        seg(1.6, 1.6, 4.4, 1.6, '#4d7c0f', 2.6);
+        seg(1.9, 1.2, 4.1, 2.0, '#65a30d', 1.8);
+        seg(4.4, 2.8, 4.9, 4.2, '#38bdf8', 1.6);
+                    break;
+                }
+                case 'takotsubogo': {
+        // 蛸壺: 素焼きの壺と覗く蛸足
+        ring(3, 3.4, cell * 1.3, '#b45309', 2.4);
+        dot(3, 3.6, '#92400e', '#78350f', cell * 0.85);
+        seg(2.4, 2.6, 2, 1.6, '#fb923c', 1.6);
+        seg(3.4, 2.6, 3.8, 1.4, '#fb923c', 1.6);
+        seg(3, 2.8, 3, 1.6, '#fdba74', 1.4);
+        dot(4.6, 4.8, P1, P1S, cell * 0.2);
+                    break;
+                }
+                case 'tanabatago': {
+        // 七夕: 笹の枝と吊るした短冊
+        seg(1.4, 5.2, 3.4, 1.2, '#15803d', cell * 0.3); // 笹の幹
+        seg(2.2, 3.4, 4.6, 2.4, '#16a34a', cell * 0.22); // 枝
+        seg(2.9, 2.2, 4.4, 1.4, '#16a34a', cell * 0.18);
+        blk(4.3, 2.0, '#f43f5e', '#9f1239'); // 短冊(赤)
+        blk(3.6, 2.9, '#38bdf8', '#075985'); // 短冊(青)
+        seg(4.3, 2.0, 4.3, 1.4, '#94a3b8', 1); // 吊り糸
+        seg(3.6, 2.9, 3.9, 2.6, '#94a3b8', 1);
+        dot(2.0, 4.4, P2, P2S, R * 0.5); // 星
+                    break;
+                }
+                case 'tansugo': {
+        // 箪笥: 引出し重ねの箪笥と取っ手
+        seg(1.6, 1.8, 4.4, 1.8, '#92400e', 2.2);   // 上枠
+        seg(1.6, 4.8, 4.4, 4.8, '#92400e', 2.2);   // 下枠
+        seg(1.6, 1.8, 1.6, 4.8, '#92400e', 2.2);   // 左枠
+        seg(4.4, 1.8, 4.4, 4.8, '#92400e', 2.2);   // 右枠
+        seg(1.6, 2.8, 4.4, 2.8, '#b45309', 1.6);   // 仕切り1
+        seg(1.6, 3.8, 4.4, 3.8, '#b45309', 1.6);   // 仕切り2
+        seg(2.7, 2.3, 3.3, 2.3, '#fde68a', 1.6);   // 取っ手上
+        seg(2.7, 3.3, 3.3, 3.3, '#fde68a', 1.6);   // 取っ手中
+        seg(2.7, 4.3, 3.3, 4.3, '#fde68a', 1.6);   // 取っ手下
+                    break;
+                }
                 case 'tanzakugo': {
         seg(2.4, 0.6, 2.4, 5.4, "#b45309", 3);
         seg(3.6, 0.6, 3.6, 5.4, "#b45309", 3);
@@ -5932,6 +6798,17 @@
         txt('★', 2.7, 3.7, '#fde68a', cell * 0.55);
         dot(5, 4.8, P1, P1S, cell * 0.28); dot(1, 1.2, P2, P2S, cell * 0.28);
     
+                    break;
+                }
+                case 'temizugo': {
+        // 手水: 水盤・柄杓・清めの滴
+        ring(3, 3.4, cell * 1.15, '#0e7490', 2.4); // 水盤の縁
+        c.fillStyle = 'rgba(125,211,252,0.55)';
+        c.beginPath(); c.arc(at(3,3.4).x, at(3,3.4).y, cell * 0.95, 0, Math.PI * 2); c.fill(); // 水
+        seg(4.6, 1.6, 3.6, 2.9, '#a16207', cell * 0.16); // 柄杓の柄
+        ring(4.75, 1.4, cell * 0.34, '#a16207', cell * 0.16); // 柄杓の枡
+        dot(2.3, 2.6, '#7dd3fc', '#0284c7', R * 0.34); // 滴
+        dot(3.4, 1.9, '#7dd3fc', '#0284c7', R * 0.28);
                     break;
                 }
                 case 'templego': {
@@ -6030,6 +6907,36 @@
         txt('1/10', 2.6, 4.3, '#78350f', cell * 0.85);
                     break;
                 }
+                case 'tobiishigo': {
+        // 飛石: 間隔を空けて並ぶ踏み石の弧
+        dot(1.3, 4.8, '#57534e', '#292524', cell * 0.65);
+        dot(2.7, 3.7, '#78716c', '#44403c', cell * 0.6);
+        dot(3.9, 4.3, '#57534e', '#292524', cell * 0.55);
+        dot(4.9, 2.9, '#78716c', '#44403c', cell * 0.5);
+        seg(1.9, 4.4, 2.3, 4.1, '#a8a29e', 1);
+        seg(3.3, 3.9, 3.6, 4, '#a8a29e', 1);
+                    break;
+                }
+                case 'tofugo': {
+        // 豆腐: 白い豆腐丁とにがりの雫
+        blk(2.4, 3, '#fafaf9', '#d6d3d1');
+        blk(3.8, 3.6, '#f5f5f4', '#d6d3d1');
+        seg(4.6, 1.2, 4.6, 2, '#a8a29e', 1.6);
+        tri(4.6, 2.6, cell * 0.32, '#e7e5e4', '#a8a29e', Math.PI);
+        dot(1.6, 1.4, P2, P2S, cell * 0.22);
+                    break;
+                }
+                case 'tokogo': {
+        // 床飾: 床の間に掛け軸と生け花
+        seg(1.4, 1.4, 4.6, 1.4, '#78350f', 2);      // 床框
+        seg(2.2, 1.8, 2.2, 4.6, '#e7e5e4', 4);     // 軸 (太い縦線)
+        seg(2.0, 4.6, 2.4, 4.6, '#57534e', 2);     // 軸の風帯
+        txt('飾', 2.2, 3, '#44403c', cell * 0.7);   // 軸の字
+        seg(3.6, 4.8, 3.6, 3.9, '#166534', 1.6);   // 花茎
+        dot(3.6, 3.7, '#dc2626', '#991b1b', cell * 0.35); // 花
+        seg(3.2, 4.8, 4, 4.8, '#57534e', 1.8);     // 花生け
+                    break;
+                }
                 case 'tollgo': {
         // 弔鐘と響き
         tri(3, 3.4, cell * 0.95, '#fbbf24', '#b45309', Math.PI);
@@ -6049,11 +6956,29 @@
         dot(4.2, 4.4, P2, P2S, cell * 0.36);
                     break;
                 }
+                case 'tossengo': {
+        // 投扇興: 的と投げた扇
+        ring(4, 2, cell * 0.7, '#dc2626', 2);
+        ring(4, 2, cell * 0.3, '#dc2626', 1.6);
+        dot(4, 2, '#f8fafc', '#dc2626', cell * 0.12);
+        mol([[1.2, 4.8], [2, 3.4], [2.6, 4.4], [3.2, 3.6]], 'rgba(251,191,36,0.7)', '#b45309');
+        dot(1.2, 4.8, '#78350f', '#451a03', cell * 0.16);
+                    break;
+                }
                 case 'totalitygo': {
         dot(3, 3, P1, P1S);
         ring(3, 3, R * 1.6, '#f97316', 2.2);
         ring(3, 3, R * 2.2, 'rgba(249,115,22,0.4)', 1);
         dot(4.6, 1.6, P2, P2S, R * 0.5);
+                    break;
+                }
+                case 'toujigo': {
+        // 湯治: 温泉の湯面と湯けむり、浸かる石
+        dot(3, 4.2, '#0ea5e9', '#0369a1', cell * 1.5, 0.8);
+        dot(3.4, 4.3, '#78716c', '#44403c', cell * 0.5); // 浸かる石
+        c.beginPath(); c.moveTo(at(2, 3.2).x, at(2, 3.2).y); c.quadraticCurveTo(at(2.2, 2.7).x, at(2.2, 2.7).y, at(2, 2.3).x, at(2, 2.3).y); c.strokeStyle = '#bae6fd'; c.lineWidth = 1.8; c.stroke(); // 湯けむり1
+        c.beginPath(); c.moveTo(at(3, 3).x, at(3, 3).y); c.quadraticCurveTo(at(3.2, 2.5).x, at(3.2, 2.5).y, at(3, 2.1).x, at(3, 2.1).y); c.strokeStyle = '#bae6fd'; c.lineWidth = 1.8; c.stroke(); // 湯けむり2
+        c.beginPath(); c.moveTo(at(4, 3.2).x, at(4, 3.2).y); c.quadraticCurveTo(at(4.2, 2.7).x, at(4.2, 2.7).y, at(4, 2.3).x, at(4, 2.3).y); c.strokeStyle = '#bae6fd'; c.lineWidth = 1.8; c.stroke(); // 湯けむり3
                     break;
                 }
                 case 'tracego': {
@@ -6132,6 +7057,64 @@
         dot(4.6, 4.4, P2, P2S, cell * 0.4);
                     break;
                 }
+                case 'tsuitatego': {
+        // 衝立: 一枚板の衝立と脚
+        seg(2, 1.7, 4, 1.7, '#8a5a24', 2.4);       // 上框
+        seg(2, 4.2, 4, 4.2, '#8a5a24', 2.4);       // 下框
+        seg(2, 1.7, 2, 4.2, '#a16207', 2.4);       // 左框
+        seg(4, 1.7, 4, 4.2, '#a16207', 2.4);       // 右框
+        seg(3, 1.7, 3, 4.2, '#d6a85c', 1.2);       // 板の目
+        seg(2.2, 4.2, 1.7, 4.9, '#57534e', 2);     // 左脚
+        seg(3.8, 4.2, 4.3, 4.9, '#57534e', 2);     // 右脚
+                    break;
+                }
+                case 'tsukemonogo': {
+        // 糠床: 漬物樽と大根 (漬けられた石)
+        blk(2, 2.4, '#d6d3d1', '#78716c');
+        blk(2.4, 1.8, '#e7e5e4', '#a8a29e');
+        seg(1.6, 2.6, 4.4, 2.6, '#a8a29e', 1.4);
+        tri(3, 1.4, cell * 0.5, '#fafaf9', '#d6d3d1', 0);
+        dot(2.2, 3.4, '#ca8a04', '#a16207', cell * 0.3);
+        dot(3.6, 3.8, P2, P2S, cell * 0.24);
+                    break;
+                }
+                case 'tsukimigo': {
+        // 月見: 満月・月見団子・すすき
+        dot(4.2, 1.6, '#fef3c7', '#f59e0b', cell * 0.9); // 満月
+        dot(2.4, 4.4, P2, P2S, R * 0.62); // 団子3
+        dot(3.1, 4.4, P2, P2S, R * 0.62);
+        dot(2.75, 3.85, P2, P2S, R * 0.62);
+        seg(1.2, 5.2, 1.6, 2.6, '#a16207', cell * 0.14); // すすき穂
+        seg(1.6, 2.6, 2.1, 2.2, '#ca8a04', cell * 0.3);
+        seg(1.6, 2.6, 1.2, 2.1, '#ca8a04', cell * 0.3);
+                    break;
+                }
+                case 'tsukiyamago': {
+        // 築山: 盛り上げた小山と麓の石・頂の松
+        tri(3, 4.2, cell * 1.6, '#65a30d', '#3f6212');
+        tri(3.6, 3.2, cell * 0.8, '#4d7c0f', '#3f6212');
+        seg(3.2, 1.9, 3.2, 2.7, '#44403c', 1.6);
+        tri(3.2, 1.9, cell * 0.5, '#166534', '#14532d');
+        dot(1.4, 4.9, '#78716c', '#57534e', cell * 0.45);
+                    break;
+                }
+                case 'tsukubaigo': {
+        // 蹲踞: 低い石の水盤と水面、しずく
+        ring(3, 3.8, cell * 1.2, '#57534e', 2.6);
+        dot(3, 3.8, '#7dd3fc', '#38bdf8', cell * 0.75, 0.9);
+        dot(4.4, 2.2, '#38bdf8', '#0284c7', cell * 0.22);
+        seg(2.2, 1.6, 2.2, 2.6, '#a8a29e', 1.6);
+        seg(2.2, 2.6, 2.8, 2.6, '#a8a29e', 1.6);
+                    break;
+                }
+                case 'tsumikigo': {
+        // 積木: 高く積まれた色積み木
+        blk(1.8, 4.2, '#ef4444', '#b91c1c');
+        blk(2.3, 2.9, '#3b82f6', '#1d4ed8');
+        blk(2.8, 1.6, '#f59e0b', '#b45309');
+        tri(4.6, 4.2, cell * 0.4, '#22c55e', '#15803d', 0);
+                    break;
+                }
                 case 'tuggo': {
         // 綱引: 中央の結び目 + 両方向の綱 + 引き矢印
         seg(0.8, 3.0, 5.2, 3.0, '#b45309', 3.2);
@@ -6167,6 +7150,37 @@
         dot(3.9, 4.4, P2, P2S, R * 0.8);
                     break;
                 }
+                case 'ukaigo': {
+        // 鵜飼: 鮎を銜えた鵜と篝火
+        dot(2.6, 2.8, '#1c1917', '#44403c', cell * 0.75);
+        tri(3.4, 1.8, cell * 0.4, '#292524', '#57534e', -Math.PI / 6);
+        seg(3.8, 2, 4.8, 2.4, '#d97706', 1.6);
+        tri(4.6, 3.4, cell * 0.4, '#38bdf8', '#0369a1', Math.PI / 3);
+        dot(1.6, 4.4, '#fbbf24', '#b45309', cell * 0.3);
+                    break;
+                }
+                case 'umeboshigo': {
+        // 梅干: 五弁の梅の花と塩の粒
+        dot(3, 1.8, '#fda4af', '#e11d48', cell * 0.42);
+        dot(4.1, 2.6, '#fda4af', '#e11d48', cell * 0.42);
+        dot(3.7, 4.1, '#fda4af', '#e11d48', cell * 0.42);
+        dot(2.3, 4.1, '#fda4af', '#e11d48', cell * 0.42);
+        dot(1.9, 2.6, '#fda4af', '#e11d48', cell * 0.42);
+        dot(3, 3, '#fbbf24', '#d97706', cell * 0.3);
+        dot(1.2, 5, '#f8fafc', '#cbd5e1', cell * 0.12);
+        dot(4.8, 5.2, '#f8fafc', '#cbd5e1', cell * 0.12);
+                    break;
+                }
+                case 'unbango': {
+        // 雲版: 雲形の版と撞座・下の垂れ
+        dot(2.4, 2.9, '#cbd5e1', '#64748b', cell * 0.7);
+        dot(3, 2.5, '#e2e8f0', '#64748b', cell * 0.85);
+        dot(3.7, 2.9, '#cbd5e1', '#64748b', cell * 0.7);
+        seg(2.1, 3.4, 3.9, 3.4, '#94a3b8', 2);     // 版の底
+        dot(3, 4.2, '#b45309', '#78350f', cell * 0.26); // 撞座
+        seg(3, 4.4, 3, 5, '#94a3b8', 1.6);         // 垂れ紐
+                    break;
+                }
                 case 'underminego': {
         // 掘削: 地表線+坑道+坑夫の石
         seg(0.6, 2.2, 5.4, 2.2, '#78716c', 2);
@@ -6184,11 +7198,31 @@
         ring(4.4, 3, cell * 0.75, '#fbbf24', 1.6);
                     break;
                 }
+                case 'upliftgo': {
+        // 隆起: せり上がる大地と上向きの矢、頂上の石
+        blk(0.8, 4.4, '#8a5a2b', '#5c3a1a');
+        blk(1.8, 3.3, '#b47a3e', '#8a5a2b');
+        tri(4.3, 2.0, cell * 0.5, '#f59e0b', '#b45309', 0);
+        dot(4.3, 3.4, P1, P1S);
+                    break;
+                }
                 case 'upsidedowngo': {
         tri(3, 1.8, R * 0.9, P1, P1S, -Math.PI / 2);
         tri(3, 4.2, R * 0.9, P2, P2S, Math.PI / 2);
         dot(2, 3, P1, P1S, R * 0.6);
         dot(4, 3, P2, P2S, R * 0.6);
+                    break;
+                }
+                case 'uruugo': {
+        // 閏年: 暦に差し込まれる閏の一日
+        blk(2.6, 3, '#f8fafc', '#94a3b8'); // 暦
+        seg(2.0, 2.15, 3.2, 2.15, '#0ea5e9', cell * 0.22); // 暦の頭
+        [[2.3,3.0],[2.9,3.0],[2.3,3.7],[2.9,3.7]].forEach(([x,y]) =>
+            dot(x, y, '#cbd5e1', '#64748b', cell * 0.14)); // 日々
+        blk(4.5, 3.1, '#a3e635', '#4d7c0f'); // 閏の日
+        txt('+1', 4.5, 3.1, '#1a2e05', cell * 0.55);
+        seg(3.4, 3.1, 4.05, 3.1, '#4d7c0f', cell * 0.14); // 差し込み矢印
+        tri(4.05, 3.1, cell * 0.2, '#4d7c0f', '#365314', 0);
                     break;
                 }
                 case 'valleygo': {
@@ -6239,6 +7273,16 @@
         dot(2.6, 3.4, P1, P1S);
                     break;
                 }
+                case 'wakago': {
+        // 和歌: 短冊と結ばれた句 (2点空けの石)
+        blk(2, 2.2, '#fdf2f8', '#be185d');
+        seg(1.8, 1.8, 2.2, 1.8, '#be185d', 1);
+        seg(1.8, 2.4, 2.2, 2.4, '#be185d', 1);
+        dot(4, 3.4, P1, P1S, cell * 0.3);
+        seg(4, 3.4, 4, 4.8, '#f472b6', 1.4);
+        dot(4, 4.8, P1, P1S, cell * 0.3);
+                    break;
+                }
                 case 'washigo': {
         // 和紙: 濡れて破れる紙の石と水滴
         blk(2.4, 2.6, '#f5f0e6', '#a8a29e');
@@ -6285,6 +7329,14 @@
         dot(2, 4.8, '#e7e5e4', '#a8a29e', cell * 0.2);
         dot(3.4, 5, '#e7e5e4', '#a8a29e', cell * 0.24);
         dot(4.6, 4.7, '#e7e5e4', '#a8a29e', cell * 0.16);
+                    break;
+                }
+                case 'whetstonego': {
+        // 研師: 砥石と研がれる刃物の切っ先
+        blk(0.9, 3.9, '#78716c', '#44403c');
+        tri(3.4, 2.3, cell * 0.6, '#cbd5e1', '#64748b', Math.PI / 4);
+        seg(3.6, 2.5, 5.0, 3.9, '#334155', 2.2);
+        seg(1.4, 4.3, 3.9, 4.3, '#a5f3fc', 1.4);
                     break;
                 }
                 case 'wishgo': {
@@ -6340,6 +7392,45 @@
         seg(3.4, 3, 3.4, 2.2, '#a78bfa', 1.8);
                     break;
                 }
+                case 'yorakugo': {
+        // 瓔珞: 首飾りの弧と連なる珠
+        c.beginPath(); c.arc(at(3, 2.4).x, at(3, 2.4).y, cell * 1.5, Math.PI * 0.15, Math.PI * 0.85); c.strokeStyle = '#d4af37'; c.lineWidth = 1.8; c.stroke();
+        dot(1.7, 3.7, '#dc2626', '#991b1b', cell * 0.28);
+        dot(2.4, 4.4, '#0ea5e9', '#0369a1', cell * 0.3);
+        dot(3, 4.7, '#d4af37', '#92600e', cell * 0.34);
+        dot(3.7, 4.4, '#0ea5e9', '#0369a1', cell * 0.3);
+        dot(4.3, 3.7, '#dc2626', '#991b1b', cell * 0.28);
+                    break;
+                }
+                case 'yubago': {
+        // 湯葉: 引き上げた薄膜と鍋の湯気
+        seg(0.8, 4.6, 5.2, 4.6, '#d6d3d1', 1.6);
+        seg(1, 3.6, 2.2, 2.2, '#fbbf24', 2);
+        seg(2.2, 2.2, 3.4, 3.4, '#fbbf24', 2);
+        seg(3.4, 3.4, 5, 2.2, '#fbbf24', 2);
+        dot(3, 5.2, '#fde68a', '#d97706', cell * 0.22);
+        dot(1.4, 1.2, P1, P1S, cell * 0.2);
+                    break;
+                }
+                case 'zashikigo': {
+        // 座敷: 畳の座席と上座の席次
+        seg(1.4, 2.6, 4.6, 2.6, '#65a30d', 1.6);   // 畳の縁上
+        seg(1.4, 4.8, 4.6, 4.8, '#65a30d', 1.6);   // 畳の縁下
+        seg(3, 2.6, 3, 4.8, '#65a30d', 1.2);       // 畳の区切り
+        dot(2.2, 3.6, P1, P1S, cell * 0.5);        // 上座の石
+        dot(3.8, 3.8, P2, P2S, cell * 0.5);        // 下座の石
+        txt('上', 2.2, 2.2, '#b45309', cell * 0.55);
+                    break;
+                }
+                case 'zazengo': {
+        // 座禅: 円相の中で坐る石
+        c.beginPath(); c.arc(at(3, 3.2).x, at(3, 3.2).y, cell * 1.6, Math.PI * 0.2, Math.PI * 1.75); c.strokeStyle = '#57534e'; c.lineWidth = 2.2; c.stroke(); // 円相
+        dot(3, 3.4, '#292524', '#000', cell * 0.7);    // 坐る石
+        dot(3, 2.3, '#44403c', '#292524', cell * 0.32); // 頭
+        seg(1.8, 4.6, 4.2, 4.6, '#78716c', 2);         // 座布団
+        seg(2.4, 4.2, 3.6, 4.2, '#a16207', 1.6);       // 結跏の線
+                    break;
+                }
                 case 'zigguratgo': {
                     // ジッグラト: 階段ピラミッドと頂点の光
                     c.fillStyle = '#d6b246'; c.strokeStyle = '#92610e'; c.lineWidth = 1.2;
@@ -6348,6 +7439,15 @@
                         c.strokeRect(at(x, y).x, at(x, y).y, w * cell, h * cell);
                     });
                     dot(3, 0.85, '#fde68a', '#d97706', cell * 0.3);
+                    break;
+                }
+                case 'zuihitsugo': {
+        // 随筆: 徒然に散った孤石と筆の一画
+        dot(1.6, 1.8, P1, P1S, cell * 0.3);
+        dot(4.4, 2.4, P1, P1S, cell * 0.3);
+        dot(2.6, 4, P1, P1S, cell * 0.3);
+        dot(4.8, 5, P1, P1S, cell * 0.3);
+        seg(1, 5.4, 5.2, 5.8, '#57534e', 1.4);
                     break;
                 }
                 // == WAVE3 ICONS END ==
