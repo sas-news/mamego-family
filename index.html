@@ -511,6 +511,18 @@
 
         const grid = document.getElementById('gameGrid');
         const tiles = [];
+        // アイコン遅延描画: 表示域 ±300px のタイルだけ描画し、画面外は解放して再表示時に再描画
+        const iconIO = new IntersectionObserver(entries => {
+            for (const en of entries) {
+                const t = en.target;
+                if (en.isIntersecting) {
+                    if (!t._iconDrawn) { drawIcon(t._iconCv.getContext('2d'), t._icon, 56); t._iconDrawn = true; }
+                } else if (t._iconDrawn) {
+                    t._iconCv.getContext('2d').clearRect(0, 0, 56, 56);
+                    t._iconDrawn = false;
+                }
+            }
+        }, { rootMargin: '300px 0px' });
         const gameCountEl = document.getElementById('gameCount');
         const noResultsEl = document.getElementById('gameNoResults');
         const searchInput = document.getElementById('gameSearch');
@@ -561,7 +573,9 @@
             arrow.textContent = '▶';
             a.appendChild(cv); a.appendChild(body); a.appendChild(arrow);
             grid.appendChild(a);
-            drawIcon(cv.getContext('2d'), v.icon || v.kind, 56);
+            a._icon = v.icon || v.kind;
+            a._iconCv = cv;
+            iconIO.observe(a);
             a._hay = normSearch(`${v.name} ${v.jp} ${v.desc}`);
             tiles.push(a);
         });
