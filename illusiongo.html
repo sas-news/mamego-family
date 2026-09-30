@@ -880,6 +880,28 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 幻影碁: 幻影帯を虹の光の筋が揺らめきながら流れる常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            const c = (BOARD_SIZE - 1) / 2;
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            for (let k = 0; k < 3; k++) {
+                const ph = (now / 2200 + k * 0.33) % 1;
+                const lx = ph * w;
+                const ly = pad + (c - 0.5 + k) * cs + Math.sin(now / 600 + k * 2.4) * cs * 0.2;
+                const g = ctx2.createLinearGradient(lx - cs * 2, ly, lx + cs * 2, ly);
+                g.addColorStop(0, 'rgba(192,132,252,0)');
+                g.addColorStop(0.5, 'rgba(192,132,252,0.28)');
+                g.addColorStop(1, 'rgba(192,132,252,0)');
+                ctx2.strokeStyle = g;
+                ctx2.lineWidth = Math.max(1.5, cs * 0.10);
+                ctx2.beginPath();
+                ctx2.moveTo(lx - cs * 2, ly);
+                ctx2.lineTo(lx + cs * 2, ly);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -950,7 +972,7 @@
         }
 
         // 盤面差分の自動演出: 取られた石・色反転・壁の出現/消滅を全バリアントで可視化
-        let fxPrevBoard = null, fxPrevMove = null;
+        let fxPrevBoard = null;
         function fxBoardDiff() {
             if (!fxPrevBoard || fxPrevBoard.length !== board.length) { fxPrevBoard = board.slice(); return; }
             let changed = 0;
@@ -1266,6 +1288,7 @@
             }
         }
 
+        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {
             if (!lastMove) { fxPrevMove = null; return; }
             if (lastMove !== fxPrevMove) { // 新しい着手 → 着地点に着地リング
@@ -1777,6 +1800,17 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+
+            // 幻影碁: 幻影帯への着手は「幻影」テキストと虹色の輪で発火
+            {
+                const ic = move.cells[0];
+                if (ic && inIllusion(ic.x, ic.y)) {
+                    const ii = ic.y * BOARD_SIZE + ic.x;
+                    fxGlow(ii, '#c084fc', 700);
+                    fxText(ii, '幻影', '#d8b4fe', 1000);
+                }
+            }
+
             turn = opponent;
             updateUI();
 

@@ -52,6 +52,28 @@ module.exports = {
             '相手の石はほぼ見えない。自分の石の2マス以内にある敵石だけが反響で姿を現す。',
             '不可視の敵石も呼吸・取り・地には普通に働く — 接触戦こそ情報戦。',
         ])],
+        // 反響定位: 自石から周期的に広がるソナー波 — 「届く範囲しか見えない」を演出
+        [K.ONE, '        let obstaclePainter = null;',
+`        let obstaclePainter = null;
+        // 反響碁: 自石からソナーの輪が周期的に広がる常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            board.forEach((v, i) => {
+                if (v !== turn) return;
+                const cx = pad + (i % BOARD_SIZE) * cs;
+                const cy = pad + Math.floor(i / BOARD_SIZE) * cs;
+                for (let k = 0; k < 2; k++) {
+                    const ph = (now / 2000 + k * 0.5) % 1;
+                    ctx2.globalAlpha = 0.22 * (1 - ph);
+                    ctx2.strokeStyle = '#2dd4bf';
+                    ctx2.lineWidth = Math.max(1, cs * 0.05);
+                    ctx2.beginPath();
+                    ctx2.arc(cx, cy, cs * (0.3 + ph * 2.2), 0, Math.PI * 2);
+                    ctx2.stroke();
+                }
+            });
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

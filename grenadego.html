@@ -950,7 +950,7 @@
         }
 
         // 盤面差分の自動演出: 取られた石・色反転・壁の出現/消滅を全バリアントで可視化
-        let fxPrevBoard = null, fxPrevMove = null;
+        let fxPrevBoard = null;
         function fxBoardDiff() {
             if (!fxPrevBoard || fxPrevBoard.length !== board.length) { fxPrevBoard = board.slice(); return; }
             let changed = 0;
@@ -1216,6 +1216,7 @@
             }
         }
 
+        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {
             if (!lastMove) { fxPrevMove = null; return; }
             if (lastMove !== fxPrevMove) { // 新しい着手 → 着地点に着地リング

@@ -881,6 +881,34 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 暗闇碁: 視界外を影の塊が静かに這い、自石の周りに灯りの輪が揺れる
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            for (let k = 0; k < 12; k++) {
+                const ph = now / 3200 + k * 1.71;
+                const x = (Math.sin(ph * 0.77 + k * 3.3) * 0.5 + 0.5) * BOARD_SIZE;
+                const y = (Math.sin(ph * 1.03 + k * 1.9) * 0.5 + 0.5) * BOARD_SIZE;
+                const xi = Math.max(0, Math.min(BOARD_SIZE - 1, x | 0));
+                const yi = Math.max(0, Math.min(BOARD_SIZE - 1, y | 0));
+                if (isFogVisible(yi * BOARD_SIZE + xi)) continue;
+                ctx2.fillStyle = 'rgba(10,12,26,0.30)';
+                ctx2.beginPath();
+                ctx2.arc(pad + x * cs, pad + y * cs, cs * (0.6 + 0.25 * Math.sin(ph * 2)), 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            // 自石の周りに薄い灯りの輪 — 「ここだけが見える」を強調
+            ctx2.strokeStyle = 'rgba(253,224,71,0.12)';
+            ctx2.lineWidth = Math.max(1, cs * 0.05);
+            board.forEach((v, i) => {
+                if (v !== fogViewer()) return;
+                const cx = pad + (i % BOARD_SIZE) * cs;
+                const cy = pad + Math.floor(i / BOARD_SIZE) * cs;
+                ctx2.beginPath();
+                ctx2.arc(cx, cy, cs * (0.55 + 0.08 * Math.sin(now / 500 + i)), 0, Math.PI * 2);
+                ctx2.stroke();
+            });
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -951,7 +979,7 @@
         }
 
         // 盤面差分の自動演出: 取られた石・色反転・壁の出現/消滅を全バリアントで可視化
-        let fxPrevBoard = null, fxPrevMove = null;
+        let fxPrevBoard = null;
         function fxBoardDiff() {
             if (!fxPrevBoard || fxPrevBoard.length !== board.length) { fxPrevBoard = board.slice(); return; }
             let changed = 0;
@@ -1246,6 +1274,7 @@
             }
         }
 
+        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {
             if (!lastMove) { fxPrevMove = null; return; }
             if (lastMove !== fxPrevMove) { // 新しい着手 → 着地点に着地リング

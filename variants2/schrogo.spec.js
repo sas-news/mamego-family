@@ -51,6 +51,16 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
 
+            // 量子碁: 量子石が置かれたら「量子」表示 (重ね合わせの発生)
+            {
+                const np = pieces[pieces.length - 1];
+                if (np && np.player === player && np.schro) {
+                    const qi = np.cells[0].y * BOARD_SIZE + np.cells[0].x;
+                    fxGlow(qi, '#f8fafc', 700);
+                    fxText(qi, '量子', '#e2e8f0', 1000);
+                }
+            }
+
             // 量子碁: 量子石の隣に敵石が置かれると観測 → 色が確定する
             {
                 pieces.forEach(pc => {
@@ -63,6 +73,10 @@ module.exports = {
                     board[i0] = newOwner;
                     pc.player = newOwner;
                     pc.schro = false;
+                    // 観測: 確定色で粒子が飛び散り「観測」と表示
+                    fxBurst(i0, newOwner === 1 ? '#334155' : '#f8fafc', 10, 1.4);
+                    fxText(i0, '観測', newOwner === 1 ? '#475569' : '#e2e8f0', 1000);
+                    fxShake(2, 160);
                 });
             }
 
@@ -105,6 +119,28 @@ module.exports = {
             '確定で敵色になれば自分の布石が相手の石に化ける。量子石同士の連鎖にも注意。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
+        // 量子石は絶えず明滅する — 「未観測の石」を脈動する光環で演出
+        [K.ONE, '        let obstaclePainter = null;',
+`        let obstaclePainter = null;
+        // 量子碁: 量子石が白黒に明滅する常時オーバーレイ (重ね合わせの揺らぎ)
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            const bl = Math.sin(now / 130) > 0 ? '#f8fafc' : '#1e293b';
+            pieces.forEach(pc => {
+                if (!pc.schro) return;
+                pc.cells.forEach(p => {
+                    if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                    const cx = pad + p.x * cs, cy = pad + p.y * cs;
+                    ctx2.globalAlpha = 0.18 + 0.14 * Math.sin(now / 300 + p.x + p.y);
+                    ctx2.strokeStyle = bl;
+                    ctx2.lineWidth = Math.max(2, cs * 0.12);
+                    ctx2.beginPath();
+                    ctx2.arc(cx, cy, cs * (0.5 + 0.06 * Math.sin(now / 240 + p.x)), 0, Math.PI * 2);
+                    ctx2.stroke();
+                });
+            });
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

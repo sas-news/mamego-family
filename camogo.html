@@ -952,7 +952,7 @@
         }
 
         // 盤面差分の自動演出: 取られた石・色反転・壁の出現/消滅を全バリアントで可視化
-        let fxPrevBoard = null, fxPrevMove = null;
+        let fxPrevBoard = null;
         function fxBoardDiff() {
             if (!fxPrevBoard || fxPrevBoard.length !== board.length) { fxPrevBoard = board.slice(); return; }
             let changed = 0;
@@ -1247,6 +1247,7 @@
             }
         }
 
+        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {
             if (!lastMove) { fxPrevMove = null; return; }
             if (lastMove !== fxPrevMove) { // 新しい着手 → 着地点に着地リング
@@ -1759,6 +1760,18 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+
+            // 迷彩碁: 迷彩が解けた石は本来の色で発光し「正体」と表示
+            pieces.forEach(pc => {
+                if (pc.at === undefined || history.length - pc.at !== 5) return;
+                pc.cells.forEach(p => {
+                    const i = p.y * BOARD_SIZE + p.x;
+                    if (board[i] !== pc.player) return;
+                    fxGlow(i, pc.player === 1 ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.95)', 800);
+                    fxText(i, '正体', '#4ade80', 1000);
+                });
+            });
+
             turn = opponent;
             updateUI();
 

@@ -54,6 +54,12 @@ module.exports = {
             // 斥候碁: 斥候石 (各側4手目) が盤を照らし、2手の間その側に敵の全呼吸数を見せる
             if (pieces.length && pieces[pieces.length - 1].scout && pieces[pieces.length - 1].player === player) {
                 st.until[player] = history.length + 2;
+                // 斥候の投入: 緑の閃光 + 「斥候」表示 + 敵石を一斉に照らす
+                const si = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                fxBurst(si, '#4ade80', 10, 1.3);
+                fxText(si, '斥候', '#86efac', 1100);
+                const foe2 = player === 1 ? 2 : 1;
+                board.forEach((v, i) => { if (v === foe2) fxGlow(i, '#22c55e', 800); });
             }
 
 

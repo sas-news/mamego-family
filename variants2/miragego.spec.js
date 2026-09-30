@@ -47,12 +47,26 @@ module.exports = {
                     if (pc.player === player || !isMirage(pc)) return;
                     if (!pc.cells.some(p => adj.has(p.y * BOARD_SIZE + p.x))) return;
                     pc.cells.forEach(p => {
-                        if (board[p.y * BOARD_SIZE + p.x] === pc.player) board[p.y * BOARD_SIZE + p.x] = 0;
+                        const pi = p.y * BOARD_SIZE + p.x;
+                        if (board[pi] === pc.player) {
+                            board[pi] = 0;
+                            fxSplash(pi, 'rgba(103,232,249,0.9)', 9);
+                            fxText(pi, '掻き消え', '#67e8f9', 1000);
+                        }
                     });
                     gone = true;
                 });
-                if (gone) cleanUpPieces();
+                if (gone) { cleanUpPieces(); fxShake(3, 200); }
             }
+
+            // 蜃気楼碁: 3手経って実体化した石は青白く発光して確定を知らせる
+            pieces.forEach(pc => {
+                if (pc.at === undefined || history.length - pc.at !== 3) return;
+                pc.cells.forEach(p => {
+                    const i = p.y * BOARD_SIZE + p.x;
+                    if (board[i] === pc.player) fxGlow(i, '#67e8f9', 600);
+                });
+            });
 
             turn = opponent;`],
         [K.ONE, '                drawPieceShape(alive, padding, cellSize, fill, stroke, isDead ? 0.35 : 1);',
@@ -89,6 +103,34 @@ module.exports = {
             '呼吸や取りは蜃気楼の間も普通に働く — 消される前に囲み切れるかが勝負。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        // 蜃気楼石から立ち上る陽炎 — 「まだ実体ではない石」を揺らぎで演出
+        [K.ONE, '        let obstaclePainter = null;',
+`        let obstaclePainter = null;
+        // 蜃気楼碁: 蜃気楼石から陽炎が揺らめき上る常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            pieces.forEach(pc => {
+                if (!isMirage(pc)) return;
+                pc.cells.forEach(p => {
+                    if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                    const cx = pad + p.x * cs, cy = pad + p.y * cs;
+                    ctx2.strokeStyle = 'rgba(103,232,249,0.35)';
+                    ctx2.lineWidth = Math.max(1, cs * 0.05);
+                    for (let k = 0; k < 2; k++) {
+                        const ph = (now / 900 + k * 0.5) % 1;
+                        ctx2.globalAlpha = 0.5 * (1 - ph);
+                        ctx2.beginPath();
+                        ctx2.moveTo(cx - cs * 0.2 + k * cs * 0.4, cy - cs * 0.3);
+                        ctx2.quadraticCurveTo(
+                            cx - cs * 0.2 + k * cs * 0.4 + Math.sin(now / 300 + k * 3) * cs * 0.15,
+                            cy - cs * (0.5 + ph * 0.4),
+                            cx - cs * 0.2 + k * cs * 0.4, cy - cs * (0.4 + ph * 0.6));
+                        ctx2.stroke();
+                    }
+                });
+            });
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

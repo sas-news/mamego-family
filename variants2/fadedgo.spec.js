@@ -51,6 +51,31 @@ module.exports = {
             '置いてから手数が経つほど石は薄く褪色する (最低でも22%の濃さは残る)。',
             '古い石ほど消えかけて見える — どの連が「置き忘れ」かが一目で分かる視覚ルール。',
         ])],
+        // 褪色: 盤に舞い落ちるセピア色の塵と年月のヴィネット
+        [K.ONE, '        let obstaclePainter = null;',
+`        let obstaclePainter = null;
+        // 褪色碁: セピアの塵が静かに降り積もる常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            for (let k = 0; k < 12; k++) {
+                const ph = (now / 3400 + k * 0.173) % 1;
+                const x = (Math.sin(k * 12.9898) * 0.5 + 0.5) * w;
+                const y = ((k * 0.618 + ph) % 1) * w;
+                ctx2.globalAlpha = 0.05 + 0.08 * Math.sin(ph * Math.PI);
+                ctx2.fillStyle = '#a16207';
+                ctx2.beginPath();
+                ctx2.arc(x, y, cs * 0.06, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            const g = ctx2.createRadialGradient(w / 2, w / 2, w * 0.3, w / 2, w / 2, w * 0.75);
+            g.addColorStop(0, 'rgba(120,84,20,0)');
+            g.addColorStop(1, 'rgba(120,84,20,0.10)');
+            ctx2.globalAlpha = 1;
+            ctx2.fillStyle = g;
+            ctx2.fillRect(0, 0, w, w);
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

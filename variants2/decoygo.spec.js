@@ -51,18 +51,32 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 囮碁: 囮石は置いてから3手後に消える
+            // 囮碁: 囮石は置いてから3手後に消える — 霧散の演出つき
             {
                 let vanished = false;
                 pieces.forEach(pc => {
                     if (!pc.decoy || history.length - (pc.at || 0) < 3) return;
                     pc.cells.forEach(p => {
-                        if (board[p.y * BOARD_SIZE + p.x] === pc.player) board[p.y * BOARD_SIZE + p.x] = 0;
+                        const pi = p.y * BOARD_SIZE + p.x;
+                        if (board[pi] === pc.player) {
+                            board[pi] = 0;
+                            fxSplash(pi, 'rgba(148,163,184,0.9)', 8);
+                            fxText(pi, '霧散', '#fb923c', 1000);
+                        }
                     });
                     pc.decoy = false;
                     vanished = true;
                 });
-                if (vanished) cleanUpPieces();
+                if (vanished) { cleanUpPieces(); fxShake(2, 180); }
+            }
+
+            // 囮碁: 囮石が置かれた瞬間に微かな橙の輪 (よく見ると分かる偽物)
+            {
+                const np = pieces[pieces.length - 1];
+                if (np && np.player === player && np.decoy) {
+                    const di = np.cells[0].y * BOARD_SIZE + np.cells[0].x;
+                    fxGlow(di, '#fb923c', 600);
+                }
             }
 
             turn = opponent;`],

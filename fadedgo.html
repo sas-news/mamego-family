@@ -880,6 +880,28 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 褪色碁: セピアの塵が静かに降り積もる常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            for (let k = 0; k < 12; k++) {
+                const ph = (now / 3400 + k * 0.173) % 1;
+                const x = (Math.sin(k * 12.9898) * 0.5 + 0.5) * w;
+                const y = ((k * 0.618 + ph) % 1) * w;
+                ctx2.globalAlpha = 0.05 + 0.08 * Math.sin(ph * Math.PI);
+                ctx2.fillStyle = '#a16207';
+                ctx2.beginPath();
+                ctx2.arc(x, y, cs * 0.06, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            const g = ctx2.createRadialGradient(w / 2, w / 2, w * 0.3, w / 2, w / 2, w * 0.75);
+            g.addColorStop(0, 'rgba(120,84,20,0)');
+            g.addColorStop(1, 'rgba(120,84,20,0.10)');
+            ctx2.globalAlpha = 1;
+            ctx2.fillStyle = g;
+            ctx2.fillRect(0, 0, w, w);
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -950,7 +972,7 @@
         }
 
         // 盤面差分の自動演出: 取られた石・色反転・壁の出現/消滅を全バリアントで可視化
-        let fxPrevBoard = null, fxPrevMove = null;
+        let fxPrevBoard = null;
         function fxBoardDiff() {
             if (!fxPrevBoard || fxPrevBoard.length !== board.length) { fxPrevBoard = board.slice(); return; }
             let changed = 0;
@@ -1245,6 +1267,7 @@
             }
         }
 
+        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {
             if (!lastMove) { fxPrevMove = null; return; }
             if (lastMove !== fxPrevMove) { // 新しい着手 → 着地点に着地リング
