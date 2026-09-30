@@ -13,7 +13,7 @@ module.exports = {
         });`, `            ORIENTATIONS[type] = list;
         });
 
-        // このバリアントの専用ピース形 (回転=Rキー・右クリック・ホイール)
+        // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
         ORIENTATIONS.STONE = [[[0,0],[1,2]],[[0,0],[2,1]],[[0,1],[2,0]],[[1,0],[0,2]]];`],
         [K.ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`, `        const PIECE_SIZE = 1;`],
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
@@ -29,7 +29,7 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手は桂馬飛びの位置にある2石ペア (向き=Rキー・右クリック・ホイール)。','2石は離れているので別々の連。桂馬の跳び先で制圧する。'])],
+        [K.ONE, K.RV_ALGO, K.rv(['着手は桂馬飛びの位置にある2石ペア (向き=⟳ボタン・Rキー・右クリック・ホイール)。','2石は離れているので別々の連。桂馬の跳び先で制圧する。'])],
         // 桂馬ペア: 生きている2石同士を淡い連携線で結ぶ
         ...K.STONE_MARKS_SPEC(`            // 桂馬ペアの連携線
             {

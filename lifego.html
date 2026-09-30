@@ -159,7 +159,7 @@
         <!-- 操作用インフォメーション -->
         <p class="text-xs opacity-60 text-center leading-relaxed">
             通常の囲碁 + ライフゲーム<br>
-            ※配置のたびに盤面が1世代進化 (誕生B3・生存S23・8近傍)
+            ※4手ごと盤面が1世代進化 (誕生B3・生存S23・8近傍)
         </p>
     </div>
 
@@ -502,8 +502,8 @@
             '双方が連続でパスすると終局。地の中の死に石を確認し、地の数 + アゲハマ数 (+白はコミ6.5目) で勝敗を決める。',
         ];
         const RULES_VARIANT = [
-            '着手ごとに盤面全体が Conway のライフゲームを1世代進む (B3/S23・斜め含む8近傍)。',
-            '石は孤独(近傍<2)でも過密(>3)でも死滅する (置いたばかりの石はその世代は死なない)。空点はちょうど3個の同色近傍で誕生。',
+            '4手ごとに盤面全体が Conway のライフゲームを1世代進む (B3/S23・斜め含む8近傍)。',
+            '石は孤独(近傍<2)でも過密(>3)でも死滅する (前回の世代以降に置いた石はその世代は死なない)。空点はちょうど3個の同色近傍で誕生。',
             'ライフ死滅はアゲハマにならない。世代交代で呼吸点を失った連は通常通り取られる。',
             '累計200手で打ち切り終局して地計算 (無限対局を防ぐ安全装置)。',
         ];
@@ -881,6 +881,8 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 静的層キャッシュ: エフェクトフレームでは全面再描画せずオフスクリーンを貼る
+        let fxStaticCv = null, fxStaticCtx = null, fxStaticW = 0;
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1124,12 +1126,35 @@
 
             // 画面揺れの transform を戻し、エフェクトを最前面に描画
             if (fxN0 < fxShakeUntil) ctx.restore();
+            // 静的層スナップショット (揺れ中は歪むので撮らない): エフェクトフレームの貼り付け元
+            if (fxN0 >= fxShakeUntil) {
+                if (!fxStaticCv) { fxStaticCv = document.createElement('canvas'); fxStaticCtx = fxStaticCv.getContext('2d'); }
+                if (fxStaticCv.width !== width) fxStaticCv.width = fxStaticCv.height = width;
+                fxStaticCtx.drawImage(canvas, 0, 0);
+                fxStaticW = width;
+            }
             fxBoardDiff(); // 差分検知で取り/反転/壁変化を自動演出
             drawFx(fxNow(), padding, cellSize);
 
             // エフェクトが生きている間は描画を続ける (常時オーバーレイ含む)
             if (fxActive() && typeof requestAnimationFrame === 'function') {
-                requestAnimationFrame(() => { try { render(); } catch (e) { fxList = []; } });
+                requestAnimationFrame(() => { try { fxFrame(); } catch (e) { fxList = []; } });
+            }
+        }
+
+        // エフェクトフレーム: 静的層はキャッシュを貼るだけ (全石・壁・格子の再描画を省く)
+        function fxFrame() {
+            const { width, padding, cellSize } = getBoardMetrics();
+            const now = fxNow();
+            // 揺れ中・キャッシュ未作成・リサイズ直後は全面描画にフォールバック
+            if (now < fxShakeUntil || !fxStaticCv || fxStaticW !== width) {
+                render();
+                return;
+            }
+            ctx.drawImage(fxStaticCv, 0, 0);
+            drawFx(now, padding, cellSize);
+            if (fxActive() && typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(() => { try { fxFrame(); } catch (e) { fxList = []; } });
             }
         }
 
@@ -1379,6 +1404,7 @@
         // ホールド: 現在ピースを自分のホールド枠に保存して次を供給 (初回)
         // か保持ピースと交換 (2回目以降)。1手につき1回まで (着手するまで再ホールド不可)。
         function holdPiece() {
+            if (btnHold.disabled) return; // ホールド無効時はキーでも無効
             if (pieceMode !== 'next' || holdUsed || gameOver
                 || gamePhase !== 'playing' || !isMyTurn()) return;
             soundManager.playClick();
@@ -1402,6 +1428,7 @@
         }
 
         function rotatePiece() {
+            if (btnRotate.disabled) return; // 回転不可バリアントはキー/ホイールも無効
             const list = ORIENTATIONS[currentPieceType];
             if (!list) return;
             currentRot = (currentRot + 1) % list.length;
@@ -1722,8 +1749,15 @@
                 soundManager.playPlace();
             }
 
-            // ライフゲーム世代交代: 着手ごとに盤面全体を1世代進める (置いた石はこの世代は死なない)
-            applyLifeStep(new Set(move.cells.map(p => p.y * BOARD_SIZE + p.x)));
+            // ライフゲーム世代交代: LIFE_EVERY 手ごとに盤面全体を1世代進める。
+            // 前回世代以降に置かれた石はその世代だけ死滅を免除 (孤立しても次の世代までは残る)。
+            move.cells.forEach(p => lifeNewborns.add(p.y * BOARD_SIZE + p.x));
+            if (history.length % LIFE_EVERY === 0) {
+                applyLifeStep(lifeNewborns);
+                lifeNewborns.clear();
+                // 世代交代の合図: 盤中央に世代マーカーを表示
+                fxText(Math.floor(BOARD_SIZE / 2) * (BOARD_SIZE + 1), '世代+1', '#4ade80', 900);
+            }
 
             // ネクストモードでは次のピースを供給
             if (pieceMode === 'next') {
@@ -1756,12 +1790,15 @@
             );
         }
 
-        // 着手ごとに盤面全体を Conway のライフゲーム1世代進める (B3/S23・斜め含む8近傍)。
+        // LIFE_EVERY 手ごとに盤面全体を Conway のライフゲーム1世代進める (B3/S23・斜め含む8近傍)。
         // 誕生色は3近傍の単色のみ (混色なら誕生しない)。死滅は自然消滅 (アゲハマにならない)。
+        // 前回の世代以降に置かれた石はその世代だけ死滅を免除される (新生児保護)。
         // 世代交代の結果、呼吸点を失った連は両色とも取り除く。
+        const LIFE_EVERY = 4;          // 世代交代の間隔 (手数)
+        const lifeNewborns = new Set(); // 前回世代以降に置かれた石 (その世代は死滅しない)
         function applyLifeStep(immune) {
             const n = BOARD_SIZE;
-            immune = immune || new Set(); // 置いたばかりの石はこの世代は死なない (新生児保護)
+            immune = immune || new Set(); // 前回世代以降の新生児はこの世代は死なない
             const counts = new Array(board.length).fill(0);
             const tint = new Array(board.length).fill(0); // 0:未接触 / 1,2:単色 / -1:混色
             for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
@@ -2658,6 +2695,7 @@
         function resetGame() {
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
+            lifeNewborns.clear();
             pieces = [];
             turn = 1;
             captures = { 1: 0, 2: 0 };

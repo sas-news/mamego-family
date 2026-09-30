@@ -272,6 +272,7 @@ const TRAY_UI_ALGO = `        function updatePieceTrayUI() {
 const HOLD_ROTATE_FNS = `        // ホールド: 現在ピースを自分のホールド枠に保存して次を供給 (初回)
         // か保持ピースと交換 (2回目以降)。1手につき1回まで (着手するまで再ホールド不可)。
         function holdPiece() {
+            if (btnHold.disabled) return; // ホールド無効時はキーでも無効
             if (pieceMode !== 'next' || holdUsed || gameOver
                 || gamePhase !== 'playing' || !isMyTurn()) return;
             soundManager.playClick();
@@ -295,6 +296,7 @@ const HOLD_ROTATE_FNS = `        // ホールド: 現在ピースを自分のホ
         }
 
         function rotatePiece() {
+            if (btnRotate.disabled) return; // 回転不可バリアントはキー/ホイールも無効
             const list = ORIENTATIONS[currentPieceType];
             if (!list) return;
             currentRot = (currentRot + 1) % list.length;

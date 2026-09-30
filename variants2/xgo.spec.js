@@ -13,7 +13,7 @@ module.exports = {
         });`, `            ORIENTATIONS[type] = list;
         });
 
-        // このバリアントの専用ピース形 (回転=Rキー・右クリック・ホイール)
+        // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
         ORIENTATIONS.STONE = [[[1,0],[0,1],[1,1],[2,1],[1,2]]];`],
         [K.ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`, `        const PIECE_SIZE = 5;`],
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `

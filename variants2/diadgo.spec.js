@@ -13,7 +13,7 @@ module.exports = {
         });`, `            ORIENTATIONS[type] = list;
         });
 
-        // このバリアントの専用ピース形 (回転=Rキー・右クリック・ホイール)
+        // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
         ORIENTATIONS.STONE = [[[0,0],[1,1]],[[0,1],[1,0]]];`],
         [K.ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`, `        const PIECE_SIZE = 1;`],
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
@@ -29,7 +29,7 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手は斜めに接する2石のドミノ (回転=Rキー・右クリック・ホイール)。','斜め接触は連にならない: 2石は別々の連として呼吸する。'])],
+        [K.ONE, K.RV_ALGO, K.rv(['着手は斜めに接する2石のドミノ (回転=⟳ボタン・Rキー・右クリック・ホイール)。','斜め接触は連にならない: 2石は別々の連として呼吸する。'])],
         // === FX: ドミノ駒 ===
         [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
 
