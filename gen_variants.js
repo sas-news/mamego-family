@@ -209,6 +209,15 @@ out('gravgo.html', apply(ALGO, [
 
             // 重力ルール: 最下段か、真下の交点が既に占有されている場所のみ置ける
             if (!cells.every(p => p.y === BOARD_SIZE - 1 || board[(p.y + 1) * BOARD_SIZE + p.x] !== 0)) return false;`],
+    // 着地の重み: 支えとなる真下の石 (または地面) を瞬間的に光らせる
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            // 重力の見える化: 着手を支える直下の石/地面を光らせる
+            move.cells.forEach(p => {
+                if (p.y < BOARD_SIZE - 1) fxGlow((p.y + 1) * BOARD_SIZE + p.x, 'rgba(200,170,90,0.8)', 550);
+                else fxGlow(p.y * BOARD_SIZE + p.x, 'rgba(200,170,90,0.55)', 450);
+            });`],
     // 重力方向の印: 下端余白の小さな三角
     CUE_STARS(`            // 重力方向の印: 下端中央の下向き三角
             {
@@ -222,6 +231,22 @@ out('gravgo.html', apply(ALGO, [
                 ctx.lineTo(gx, gy + gs * 0.8);
                 ctx.closePath();
                 ctx.fill();
+                ctx.restore();
+            }`),
+    // 地面: 最下段の下に地盤の帯
+    CUE_GRID(`            // 地面: 最下段の下に地盤の帯
+            {
+                ctx.save();
+                const gy = padding + (BOARD_SIZE - 0.5) * cellSize;
+                const w = padding * 2 + (BOARD_SIZE - 1) * cellSize;
+                ctx.fillStyle = 'rgba(120,95,60,0.30)';
+                ctx.fillRect(0, gy, w, cellSize * 0.5);
+                ctx.strokeStyle = 'rgba(120,95,60,0.5)';
+                ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                ctx.beginPath();
+                ctx.moveTo(0, gy);
+                ctx.lineTo(w, gy);
+                ctx.stroke();
                 ctx.restore();
             }`),
     ...LEGAL_DOTS_SPEC,
@@ -2237,6 +2262,7 @@ out('pushgo.html', apply(ALGO, [
                         const ti = ty * BOARD_SIZE + tx;
                         if (board[ti] !== 0) return;
                         board[ti] = opp2; board[ni] = 0;
+                        fxSlide(ni, ti, 340); // 押し出される軌跡
                     });
                 });
                 cleanUpPieces();
@@ -2269,6 +2295,7 @@ out('attractgo.html', apply(ALGO, [
                         const ai = ay * BOARD_SIZE + ax, bi = by * BOARD_SIZE + bx;
                         if (board[bi] === opp2 && board[ai] === 0) {
                             board[ai] = opp2; board[bi] = 0;
+                            fxSlide(bi, ai, 360); // 引き寄せられる軌跡
                         }
                     });
                 });
@@ -2517,6 +2544,7 @@ out('growgo.html', apply(ALGO, [
                 if (chokes) return;
                 const s = adj[(Math.random() * adj.length) | 0];
                 board[i] = board[s]; used.add(i);
+                fxGlow(i, 'rgba(90,220,120,0.85)', 650); // 増殖した点が芽吹く
             });
             cleanUpPieces();
         }`],
@@ -2555,6 +2583,8 @@ out('molego.html', apply(ALGO, [
                 if (!empty.length) return;
                 const dst = empty[(Math.random() * empty.length) | 0];
                 board[dst] = board[i]; board[i] = 0;
+                fxSlide(i, dst, 380); // もぐらが潜る軌跡
+                fxSplash(dst, 'rgba(150,115,75,0.8)', 6); // 顔を出す土
             });
             cleanUpPieces();
         }`],
@@ -4580,6 +4610,15 @@ out('antigravgo.html', apply(ALGO, [
 
             // 反重力: 最上段か、直上に石がある点のみ
             if (cells.some(p => p.y !== 0 && board[(p.y - 1) * BOARD_SIZE + p.x] === 0)) return false;`],
+    // 反重力の見える化: 支えとなる直上の石/天井を光らせる
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            // 反重力: 着手を吊るす直上の石/天井を光らせる
+            move.cells.forEach(p => {
+                if (p.y > 0) fxGlow((p.y - 1) * BOARD_SIZE + p.x, 'rgba(160,140,230,0.8)', 550);
+                else fxGlow(p.y * BOARD_SIZE + p.x, 'rgba(160,140,230,0.55)', 450);
+            });`],
     // 反重力方向の印: 上端余白の小さな三角
     CUE_STARS(`            // 反重力の印: 上端中央の上向き三角
             {
@@ -4593,6 +4632,22 @@ out('antigravgo.html', apply(ALGO, [
                 ctx.lineTo(gx, gy - gs * 0.8);
                 ctx.closePath();
                 ctx.fill();
+                ctx.restore();
+            }`),
+    // 天井: 最上段の上に逆さの地盤
+    CUE_GRID(`            // 天井: 最上段の上に逆さ地盤の帯
+            {
+                ctx.save();
+                const gy = padding - cellSize * 0.5;
+                const w = padding * 2 + (BOARD_SIZE - 1) * cellSize;
+                ctx.fillStyle = 'rgba(110,95,160,0.28)';
+                ctx.fillRect(0, gy - cellSize * 0.5, w, cellSize * 0.5);
+                ctx.strokeStyle = 'rgba(110,95,160,0.5)';
+                ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                ctx.beginPath();
+                ctx.moveTo(0, gy);
+                ctx.lineTo(w, gy);
+                ctx.stroke();
                 ctx.restore();
             }`),
     ...LEGAL_DOTS_SPEC,
@@ -4631,6 +4686,20 @@ out('fourgo.html', apply(ALGO, [
             }`],
     [ONE, TURN_LINE,
 `            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + ' ' + ['↓','←','↑','→'][history.length % 4];`],
+    // 重力の見える化: 着手を支える石/縁を光らせる
+    [ONE, PIECES_PUSH,
+`${PIECES_PUSH}
+
+            // 四方重力: 重力方向の支えセルを光らせる
+            {
+                const gd2 = gravityDir();
+                move.cells.forEach(p => {
+                    const sx2 = p.x + gd2[0], sy2 = p.y + gd2[1];
+                    if (sx2 >= 0 && sx2 < BOARD_SIZE && sy2 >= 0 && sy2 < BOARD_SIZE) {
+                        fxGlow(sy2 * BOARD_SIZE + sx2, 'rgba(200,170,90,0.75)', 550);
+                    }
+                });
+            }`],
     // 現在の重力方向をその辺の余白に三角で示す
     CUE_STARS(`            // 重力方向の印: 現在方向の辺の余白に三角
             {
@@ -4649,6 +4718,29 @@ out('fourgo.html', apply(ALGO, [
                 ctx.fill();
                 ctx.restore();
             }`),
+    // 重力方向へ塵が漂う筋 (常時)
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const gd = gravityDir();
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(190,170,110,0.28)';
+            ctx2.lineWidth = Math.max(1, cs * 0.04);
+            ctx2.lineCap = 'round';
+            for (let k = 0; k < 12; k++) {
+                const sx2 = ((k * 37.7) % 1) * w, sy2 = ((k * 61.3) % 1) * w;
+                const t = ((now / 1400) + k * 0.29) % 1;
+                let px = sx2 + gd[0] * t * w, py = sy2 + gd[1] * t * w;
+                px = ((px % w) + w) % w; py = ((py % w) + w) % w;
+                const len = cs * (0.3 + (k % 3) * 0.12);
+                ctx2.beginPath();
+                ctx2.moveTo(px - gd[0] * len, py - gd[1] * len);
+                ctx2.lineTo(px, py);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
     ...LEGAL_DOTS_SPEC,
     ...STONE_SPEC,
 ], 'fourgo'));
@@ -4686,6 +4778,7 @@ out('pushchaingo.html', apply(ALGO, [
                         for (let k = chain.length - 1; k >= 0; k--) {
                             board[chain[k] + dx + dy * BOARD_SIZE] = board[chain[k]];
                             board[chain[k]] = 0;
+                            fxSlide(chain[k], chain[k] + dx + dy * BOARD_SIZE, 360); // 押される軌跡
                         }
                     });
                 });
@@ -6544,6 +6637,14 @@ out('frontgo.html', apply(ALGO, [
             }`],
     [ONE, TURN_FLIP,
 `${TURN_FLIP}
+            // 前線の前進 (4手ごと): 確定した行を光らせ前線降下を告げる
+            if (history.length % 4 === 0 && frontRow() > 0) {
+                const sr = frontRow() - 1;
+                for (let x = 0; x < BOARD_SIZE; x++) {
+                    fxGlow(sr * BOARD_SIZE + x, 'rgba(230,180,80,0.75)', 750);
+                }
+                fxText(sr * BOARD_SIZE + Math.floor(BOARD_SIZE / 2), '前線↓', 'rgba(230,190,90,0.95)', 1000);
+            }
             // 手数上限: 200手で自動終局 (最下行での追跡膠着を防ぐ)
             if (history.length >= 200) { endGameByScore(); return; }`],
     [ONE, TURN_LINE,
@@ -7027,6 +7128,21 @@ out('jumpgo.html', apply(ALGO, [
             }`],
     [ONE, TURN_FLIP,
 `${TURN_FLIP}
+            // 跳躍の軌跡: 距離2の自石から今の着地点へ石が跳ぶ
+            if (lastMove && lastMove.cells.length > 0) {
+                const JOFF2 = [[2,0],[-2,0],[0,2],[0,-2],[1,1],[1,-1],[-1,1],[-1,-1]];
+                for (const p of lastMove.cells) {
+                    for (const [dx, dy] of JOFF2) {
+                        const sx2 = p.x - dx, sy2 = p.y - dy;
+                        if (sx2 < 0 || sx2 >= BOARD_SIZE || sy2 < 0 || sy2 >= BOARD_SIZE) continue;
+                        const si = sy2 * BOARD_SIZE + sx2;
+                        if (board[si] === player) {
+                            fxSlide(si, p.y * BOARD_SIZE + p.x, 400); // 跳躍の軌跡
+                            break;
+                        }
+                    }
+                }
+            }
             // 手数上限: 200手で自動終局
             if (history.length >= 200) { endGameByScore(); return; }`],
     ...LEGAL_DOTS_SPEC,

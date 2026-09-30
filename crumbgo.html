@@ -1778,9 +1778,15 @@
                         const fn = getNeighbors(g).filter(n => snapB[n] === v).length;
                         if (fn < tipN) { tipN = fn; tip = g; }
                     });
-                    if (board[tip] === v) { board[tip] = 0; fell++; }
+                    if (board[tip] === v) {
+                        board[tip] = 0; fell++;
+                        fxBurst(tip, 'rgba(140,110,80,0.85)', 9, 1.1); // 崩れ落ちる欠片
+                    }
                 });
-                if (fell > 0) cleanUpPieces();
+                if (fell > 0) {
+                    cleanUpPieces();
+                    if (fell >= 3) fxShake(3.5, 240); // 多数が崩れると盤が揺れる
+                }
             }
 
             // 崩落が盤を決して満たさないため、240手で自動的に点数計算して終局 (無期限の延命を防ぐ)

@@ -1075,15 +1075,18 @@
             {
                 const c = Math.floor(BOARD_SIZE / 2);
                 ctx.save();
-                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.5);
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.55);
                 ctx.lineWidth = Math.max(1.5, cellSize * 0.07);
                 const fx = padding + (c - 0.5) * cellSize;
-                ctx.setLineDash([cellSize * 0.25, cellSize * 0.18]);
+                // ギザギザの断層線 (地割れの質感)
                 ctx.beginPath();
                 ctx.moveTo(fx, padding - cellSize * 0.5);
+                for (let y = 0; y < BOARD_SIZE; y++) {
+                    const jag = (y % 2 === 0 ? -1 : 1) * cellSize * 0.13;
+                    ctx.lineTo(fx + jag, padding + (y - 0.5) * cellSize);
+                }
                 ctx.lineTo(fx, padding + (BOARD_SIZE - 0.5) * cellSize);
                 ctx.stroke();
-                ctx.setLineDash([]);
                 ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.55);
                 ctx.font = 'bold ' + Math.round(cellSize * 0.5) + 'px sans-serif';
                 ctx.textAlign = 'center';
@@ -1764,15 +1767,31 @@
                 for (let y = N - 1; y >= 0; y--) for (let x = 0; x < c; x++) {
                     const i = y * N + x;
                     if (board[i] !== 1 && board[i] !== 2) continue;
-                    if (y === N - 1) { lost[board[i]]++; board[i] = 0; continue; }
-                    if (board[i + N] === 0) { board[i + N] = board[i]; board[i] = 0; }
+                    if (y === N - 1) {
+                        lost[board[i]]++; board[i] = 0;
+                        fxSplash(i, 'rgba(140,110,80,0.9)', 9); // 沈み込む土煙
+                        fxText(i, '沈没', 'rgba(170,140,100,0.95)', 900);
+                        continue;
+                    }
+                    if (board[i + N] === 0) {
+                        board[i + N] = board[i]; board[i] = 0;
+                        fxSlide(i, i + N, 420); // プレートがずれる軌跡
+                    }
                 }
                 // 右プレート: 上へ (上から処理)
                 for (let y = 0; y < N; y++) for (let x = c; x < N; x++) {
                     const i = y * N + x;
                     if (board[i] !== 1 && board[i] !== 2) continue;
-                    if (y === 0) { lost[board[i]]++; board[i] = 0; continue; }
-                    if (board[i - N] === 0) { board[i - N] = board[i]; board[i] = 0; }
+                    if (y === 0) {
+                        lost[board[i]]++; board[i] = 0;
+                        fxSplash(i, 'rgba(140,110,80,0.9)', 9); // 沈み込む土煙
+                        fxText(i, '沈没', 'rgba(170,140,100,0.95)', 900);
+                        continue;
+                    }
+                    if (board[i - N] === 0) {
+                        board[i - N] = board[i]; board[i] = 0;
+                        fxSlide(i, i - N, 420); // プレートがずれる軌跡
+                    }
                 }
                 captures[1] += lost[2];
                 captures[2] += lost[1];

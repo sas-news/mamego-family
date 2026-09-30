@@ -1721,6 +1721,7 @@
                         const ti = ty * BOARD_SIZE + tx;
                         if (board[ti] !== 0) return;
                         board[ti] = opp2; board[ni] = 0;
+                        fxSlide(ni, ti, 340); // 押し出される軌跡
                     });
                 });
                 cleanUpPieces();

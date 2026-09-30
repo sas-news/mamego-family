@@ -30,6 +30,7 @@ module.exports = {
                         if (board[i] === 1 || board[i] === 2) {
                             captures[board[i] === 1 ? 2 : 1]++;
                             board[i] = 0;
+                            fxSplash(i, 'rgba(110,180,250,0.9)', 9); // 沈む水しぶき
                         }
                     }
                     cleanUpPieces();
@@ -63,6 +64,37 @@ module.exports = {
             '盤の下から2手ごとに水位が1段上がる。水没域には打てず、そこの石は沈んでアゲハマに。',
             '高みを目指して打ち進め。全部が沈む前に決着を。',
         ])],
+        // 水没域の揺れる水面と立ち上る泡 (常時)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const wl = Math.floor(history.length / 2);
+            if (wl <= 0) return;
+            const y0 = pad + (BOARD_SIZE - wl - 0.5) * cs;
+            ctx2.save();
+            // 揺れる水面線
+            ctx2.strokeStyle = 'rgba(160,215,255,0.55)';
+            ctx2.lineWidth = Math.max(1.2, cs * 0.06);
+            ctx2.beginPath();
+            for (let x = 0; x <= BOARD_SIZE; x++) {
+                const px = pad + (x - 0.5) * cs;
+                const py = y0 + Math.sin(x * 1.5 + now / 380) * cs * 0.10;
+                if (x === 0) ctx2.moveTo(px, py); else ctx2.lineTo(px, py);
+            }
+            ctx2.stroke();
+            // 水中の泡
+            ctx2.fillStyle = 'rgba(200,235,255,0.4)';
+            const w = cs * BOARD_SIZE;
+            for (let k = 0; k < 12; k++) {
+                const t = ((now / 2400) + k * 0.19) % 1;
+                const px = pad - cs * 0.5 + ((k * 61.7) % 1) * w;
+                const py = y0 + cs * 0.3 + (1 - t) * cs * (wl - 0.3);
+                ctx2.beginPath();
+                ctx2.arc(px, py, cs * (0.03 + (k % 3) * 0.02), 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

@@ -612,6 +612,7 @@
                 if (chokes) return;
                 const s = adj[(Math.random() * adj.length) | 0];
                 board[i] = board[s]; used.add(i);
+                fxGlow(i, 'rgba(90,220,120,0.85)', 650); // 増殖した点が芽吹く
             });
             cleanUpPieces();
         }

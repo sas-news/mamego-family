@@ -1750,7 +1750,11 @@
                     for (let y = N - 1; y >= 0; y--) {
                         const i = y * N + x;
                         if (board[i] === 1 || board[i] === 2) {
-                            if (w !== y) { board[w * N + x] = board[i]; board[i] = 0; }
+                            if (w !== y) {
+                                board[w * N + x] = board[i]; board[i] = 0;
+                                fxSlide(i, w * N + x, 420); // 落下経路を可視化
+                                if (w - y >= 2) fxSplash(w * N + x, 'rgba(190,170,140,0.8)', 5); // 着地の土煙
+                            }
                             w--;
                         }
                     }

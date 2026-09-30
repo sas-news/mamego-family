@@ -1728,6 +1728,7 @@
                         for (let k = chain.length - 1; k >= 0; k--) {
                             board[chain[k] + dx + dy * BOARD_SIZE] = board[chain[k]];
                             board[chain[k]] = 0;
+                            fxSlide(chain[k], chain[k] + dx + dy * BOARD_SIZE, 360); // 押される軌跡
                         }
                     });
                 });

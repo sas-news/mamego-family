@@ -1756,7 +1756,10 @@
                     if (board[i] !== 1 && board[i] !== 2) continue;
                     const nx = x + 1, ny = y + 1;
                     if (nx >= N || ny >= N) continue;
-                    if (board[ny * N + nx] === 0) { board[ny * N + nx] = board[i]; board[i] = 0; }
+                    if (board[ny * N + nx] === 0) {
+                        board[ny * N + nx] = board[i]; board[i] = 0;
+                        fxSlide(i, ny * N + nx, 380); // 滑走経路を可視化
+                    }
                 }
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {

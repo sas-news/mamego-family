@@ -32,6 +32,7 @@ module.exports = {
                     if (board[ny * N + nx] !== 0) continue;
                     board[ny * N + nx] = board[i];
                     board[i] = 0;
+                    fxSlide(i, ny * N + nx, 360); // 風で流れる軌跡
                 }
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
@@ -69,6 +70,30 @@ module.exports = {
             '盤端や他の石に詰まった石は流されない。風読みが勝負を分ける。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
+        // 風の筋: 現在の風向きへ薄い筋が流れ続ける
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+            const d = dirs[history.length % 4];
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(150,190,235,0.30)';
+            ctx2.lineWidth = Math.max(1, cs * 0.04);
+            ctx2.lineCap = 'round';
+            for (let k = 0; k < 16; k++) {
+                const sx = ((k * 37.7) % 1) * w, sy = ((k * 61.3) % 1) * w;
+                const t = ((now / 1100) + k * 0.37) % 1;
+                let px = sx + d[0] * t * w, py = sy + d[1] * t * w;
+                px = ((px % w) + w) % w; py = ((py % w) + w) % w;
+                const len = cs * (0.4 + (k % 3) * 0.15);
+                ctx2.beginPath();
+                ctx2.moveTo(px - d[0] * len, py - d[1] * len);
+                ctx2.lineTo(px, py);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `
