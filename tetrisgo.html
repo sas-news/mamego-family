@@ -1751,11 +1751,18 @@
                         if (board[y * BOARD_SIZE + x] === 0) { full = false; break; }
                     }
                     if (full) {
-                        for (let x = 0; x < BOARD_SIZE; x++) board[y * BOARD_SIZE + x] = 0;
+                        // 列消滅: 各マスが弾けて消える
+                        for (let x = 0; x < BOARD_SIZE; x++) {
+                            const i = y * BOARD_SIZE + x;
+                            fxBurst(i, '#a78bfa', 7, 1.4);
+                            fxGlow(i, '#c4b5fd', 650);
+                            board[i] = 0;
+                        }
                         cleared += BOARD_SIZE;
+                        fxText(y * BOARD_SIZE + Math.floor(BOARD_SIZE / 2), '+' + BOARD_SIZE + ' 列消滅!', '#a78bfa', 1300);
                     }
                 }
-                if (cleared > 0) { captures[player] += cleared; cleanUpPieces(); }
+                if (cleared > 0) { captures[player] += cleared; fxShake(5, 320); cleanUpPieces(); }
             }
 
 

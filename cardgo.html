@@ -1731,12 +1731,23 @@
             const opponent = player === 1 ? 2 : 1;
             const captured = getCapturedStones(board, opponent);
             const card = currentCard();
+            const cardIdx = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             if (captured.length > 0 && card !== 2) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length * (card === 1 ? 2 : 1);
+                // 恵みの札: 取りた石が金色に滲み、×2の宣言が舞う
+                if (card === 1) {
+                    captured.forEach(idx => fxGlow(idx, '#facc15', 800));
+                    fxText(cardIdx, '恵み×2!', '#facc15', 1200);
+                }
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {
+                // 呪いの札: 取り損ねた手は紫の渦で呪いを示す
+                if (card === 2 && captured.length > 0) {
+                    fxGlow(cardIdx, '#a855f7', 900);
+                    fxText(cardIdx, '呪いの札!', '#c084fc', 1200);
+                }
                 soundManager.playPlace();
             }
 

@@ -1728,6 +1728,9 @@
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
+                const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                fxGlow(ci, '#ef4444', 900);
+                fxText(ci, '条約違反!', '#ef4444', 1200);
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {

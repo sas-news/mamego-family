@@ -20,7 +20,13 @@ module.exports = {
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
 `            move.cells.forEach(p => {
                 const bi = p.y * BOARD_SIZE + p.x;
-                if (board[bi] !== 0) captures[player]--; // 打ち込みは持ち駒を消費
+                if (board[bi] !== 0) {
+                    captures[player]--; // 打ち込みは持ち駒を消費
+                    // 打ち込み: 駒台から駒が叩き込まれる閃き
+                    fxGlow(bi, '#fbbf24', 900);
+                    fxBurst(bi, '#fbbf24', 8, 1.3);
+                    fxText(bi, '打込!', '#fbbf24', 1100);
+                }
                 board[bi] = player;
             });`],
         [K.ONE, K.INFO_ALGO, `            将棋碁: アゲハマは持ち駒。敵石の上に打ち込んで自分の石に変える<br>
@@ -41,6 +47,8 @@ module.exports = {
             }
 
             turn = opponent;`],
+        // 駒台: 残り持ち駒数を常時チップで示す
+        ...K.EVENT_CHIP_SPEC('captures[turn] > 0 ? "持ち駒 " + captures[turn] : ""'),
         ...K.STONE_SPEC,
     ],
     test: `

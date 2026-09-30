@@ -1721,6 +1721,13 @@
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length * mult[player]; // 倍率適用
+                // 連続キャプチャの大当たり: 適用した倍率をジャックポット表示
+                if (mult[player] > 1) {
+                    const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                    captured.forEach(idx => fxGlow(idx, '#facc15', 800));
+                    fxShake(4, 280);
+                    fxText(ci, 'JACKPOT ×' + mult[player] + '!', '#facc15', 1300);
+                }
                 mult[player] = Math.min(mult[player] + 1, 9);        // 連続キャプチャで倍率上昇
                 soundManager.playCapture();
                 cleanUpPieces();

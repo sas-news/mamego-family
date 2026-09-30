@@ -58,13 +58,23 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 旗碁ルール: 初手の石が旗になる
-            if (flagIdx[player] < 0) flagIdx[player] = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+            if (flagIdx[player] < 0) {
+                flagIdx[player] = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                // 旗立て: 自軍の旗が立つ瞬間を告げる
+                fxGlow(flagIdx[player], '#f8fafc', 900);
+                fxText(flagIdx[player], '旗!', '#facc15', 1200);
+            }
             // 敵旗が消えた → 奪取勝ち
             if (flagIdx[opponent] >= 0 && board[flagIdx[opponent]] !== opponent) {
+                fxBurst(flagIdx[opponent], '#ef4444', 16, 1.9);
+                fxShake(7, 400);
+                fxText(flagIdx[opponent], '旗奪取!', '#ef4444', 1400);
                 winByRule(player, '旗奪取勝ち', '敵の旗石を取りました'); return;
             }
             // 自旗の連が敵陣端に到達 → 旗到達勝ち
             if (flagReached(player)) {
+                fxShake(6, 380);
+                fxText(flagIdx[player], 'GOAL!', '#facc15', 1500);
                 winByRule(player, '旗到達勝ち', '旗を敵陣の端まで運びました'); return;
             }
 

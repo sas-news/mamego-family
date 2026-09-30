@@ -1757,9 +1757,16 @@
                 if (hotIdx >= 0) {
                     const hx = hotIdx % BOARD_SIZE, hy = Math.floor(hotIdx / BOARD_SIZE);
                     const inZone = move.cells.some(p => Math.abs(p.x - hx) <= 1 && Math.abs(p.y - hy) <= 1);
-                    if (inZone) captures[player] += 2;
+                    if (inZone) {
+                        captures[player] += 2;
+                        const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                        fxGlow(ci, '#facc15', 900);
+                        fxBurst(ci, '#fde68a', 10, 1.4);
+                        fxText(ci, '+2目!', '#facc15', 1200);
+                    }
                 }
                 hotIdx = Math.floor(Math.random() * board.length);
+                fxGlow(hotIdx, '#fde68a', 700); // 玉が新しい区画に落ちる閃き
             }
 
 

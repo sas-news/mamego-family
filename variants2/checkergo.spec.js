@@ -26,6 +26,24 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
+        // チェッカー駒: 全石の面に同心リングを刻む
+        ...K.STONE_MARKS_SPEC(`            {
+                ctx.save();
+                for (let i = 0; i < board.length; i++) {
+                    const v = board[i];
+                    if (v !== 1 && v !== 2) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
+                    ctx.strokeStyle = v === 1 ? 'rgba(255,255,255,0.38)' : 'rgba(30,30,30,0.38)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.27, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.14, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }`),
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '着手できるのは市松模様の黒マスだけ。',

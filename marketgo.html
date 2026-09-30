@@ -1221,6 +1221,28 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            {
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold ' + Math.round(cellSize * 0.30) + 'px sans-serif';
+                pieces.forEach(pc => {
+                    const mv = pc.mv || 1;
+                    pc.cells.forEach(p => {
+                        if (board[p.y * BOARD_SIZE + p.x] !== pc.player) return;
+                        const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                        ctx.fillStyle = pc.player === 1 ? 'rgba(255,255,255,0.85)' : 'rgba(15,15,15,0.72)';
+                        ctx.fillText('¥' + mv, cx, cy + cellSize * 0.02);
+                    });
+                });
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;
@@ -1751,6 +1773,13 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 相場ルール: 着手のたび石価が1〜5の間で変動する
+            {
+                const last = pieces[pieces.length - 1];
+                if (last && last.mv) {
+                    const p = move.cells[0];
+                    fxText(p.y * BOARD_SIZE + p.x, '¥' + last.mv, last.mv >= 4 ? '#facc15' : '#cbd5e1', 1000);
+                }
+            }
             market = 1 + ((history.length * 7 + 3) % 5);
 
             turn = opponent;

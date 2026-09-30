@@ -18,25 +18,59 @@ module.exports = {
             // 五目碁: 縦・横・斜めに5連以上の自分色があれば即勝ち
             {
                 const gdirs = [[1, 0], [0, 1], [1, 1], [1, -1]];
-                let five = false;
+                let fiveCells = null;
                 gcheck: for (let i = 0; i < board.length; i++) {
                     if (board[i] !== player) continue;
                     const bx = i % BOARD_SIZE, by = Math.floor(i / BOARD_SIZE);
                     for (const [dx, dy] of gdirs) {
-                        let n = 0;
+                        let n = 0; const cells = [];
                         for (let k = 0; k < 5; k++) {
                             const nx = bx + dx * k, ny = by + dy * k;
                             if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE) break;
                             if (board[ny * BOARD_SIZE + nx] !== player) break;
-                            n++;
+                            cells.push(ny * BOARD_SIZE + nx); n++;
                         }
-                        if (n >= 5) { five = true; break gcheck; }
+                        if (n >= 5) { fiveCells = cells; break gcheck; }
                     }
                 }
-                if (five) { winByRule(player, '五目勝ち', '自分の石を5つ以上連続で並べました'); return; }
+                if (fiveCells) {
+                    fiveCells.forEach(i => fxGlow(i, '#facc15', 1000));
+                    fxText(fiveCells[Math.floor(fiveCells.length / 2)], '五目!', '#facc15', 1500);
+                    fxShake(6, 380);
+                    winByRule(player, '五目勝ち', '自分の石を5つ以上連続で並べました'); return;
+                }
             }
 
             turn = opponent;`],
+        // 四の警告: あと1手で五連になる連の伸び端に警戒点を打つ
+        ...K.STONE_MARKS_SPEC(`            {
+                const dirs = [[1, 0], [0, 1], [1, 1], [1, -1]];
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const v = board[y * BOARD_SIZE + x];
+                    if (v !== 1 && v !== 2) continue;
+                    for (const [dx, dy] of dirs) {
+                        const bx = x - dx, by = y - dy;
+                        if (bx >= 0 && by >= 0 && bx < BOARD_SIZE && by < BOARD_SIZE && board[by * BOARD_SIZE + bx] === v) continue;
+                        let run = 1;
+                        while (true) {
+                            const nx = x + dx * run, ny = y + dy * run;
+                            if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE || board[ny * BOARD_SIZE + nx] !== v) break;
+                            run++;
+                        }
+                        if (run !== 4) continue;
+                        [[x - dx, y - dy], [x + dx * 4, y + dy * 4]].forEach(([ex, ey]) => {
+                            if (ex < 0 || ey < 0 || ex >= BOARD_SIZE || ey >= BOARD_SIZE) return;
+                            if (board[ey * BOARD_SIZE + ex] !== 0) return;
+                            ctx.fillStyle = 'rgba(239,68,68,0.85)';
+                            ctx.beginPath();
+                            ctx.arc(padding + ex * cellSize, padding + ey * cellSize, cellSize * 0.13, 0, Math.PI * 2);
+                            ctx.fill();
+                        });
+                    }
+                }
+                ctx.restore();
+            }`),
         [K.ONE, K.INFO_ALGO, `            五目碁: 縦横斜めに5連を作れば即勝ち。地取り勝負にもなる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

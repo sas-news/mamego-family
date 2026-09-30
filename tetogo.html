@@ -579,6 +579,7 @@
         let currentTheme = THEMES.default;
         let previewPos = null; // { u, v, cells, valid, type, rot }
         let lastMove = null; // 直前に配置したピース { player, cells }
+        let tetDrops = []; // ハードドロップ演出: 最近置かれたピースの落下ゴースト
         let prevBoard = null; // コウ判定用: 直前の着手が行われる前の盤面
         let lastPointerType = 'mouse'; // 'mouse' | 'touch' | 'pen' (スマホ判定用)
         let history = []; // 1手戻る用: 各着手前のスナップショットのスタック
@@ -878,6 +879,24 @@
             // プレビュー描画
             if (!gameOver && previewPos && isMyTurn()) {
                 drawPreview(padding, cellSize);
+            }
+
+            // ハードドロップ演出: ピースの影が盤上から落下して定着する
+            {
+                const now = performance.now();
+                tetDrops = tetDrops.filter(d => now - d.t0 < d.dur);
+                if (tetDrops.length > 0) {
+                    tetDrops.forEach(d => {
+                        const t = Math.min(1, (now - d.t0) / d.dur);
+                        const e = 1 - Math.pow(1 - t, 3); // easeOutCubic: 高速落下→着地
+                        const minY = Math.min(...d.cells.map(c => c.y));
+                        const off = (1 - e) * (minY + 0.8) * cellSize;
+                        const fill = d.player === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                        const stroke = d.player === 1 ? currentTheme.p1Stroke : currentTheme.p2Stroke;
+                        drawPieceShape(d.cells.map(c => ({ x: c.x, y: c.y - off / cellSize })), padding, cellSize, fill, stroke, 0.15 + 0.8 * e);
+                    });
+                    requestAnimationFrame(render);
+                }
             }
         }
 
@@ -1422,6 +1441,10 @@
                 rot: move.rot,
                 cells: move.cells
             });
+
+            // テトロミノのハードドロップ: 置かれたピースが盤上から落ちて定着する見た目
+            tetDrops.push({ cells: move.cells.map(p => ({ x: p.x, y: p.y })), player, t0: performance.now(), dur: 380 });
+            if (tetDrops.length > 6) tetDrops.shift();
 
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;

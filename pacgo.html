@@ -1217,6 +1217,27 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            {
+                const px = pacPos % BOARD_SIZE, py = Math.floor(pacPos / BOARD_SIZE);
+                const cx = padding + px * cellSize, cy = padding + py * cellSize;
+                ctx.save();
+                ctx.fillStyle = '#ffd23f';
+                ctx.beginPath();
+                ctx.arc(cx, cy, cellSize * 0.32, 0.45, Math.PI * 2 - 0.45);
+                ctx.lineTo(cx, cy);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#9a7600';
+                ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                ctx.stroke();
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;
@@ -1746,8 +1767,12 @@
 
             // 喰碁: パックマンが斜めに巡回し、止まった点の石を色問わず食べる
             {
+                const prev = pacPos;
                 pacPos = (pacPos + BOARD_SIZE + 2) % board.length;
+                fxSlide(prev, pacPos, 360); // ワカワカ進む経路
                 if (board[pacPos] === 1 || board[pacPos] === 2) {
+                    fxBurst(pacPos, '#ffd23f', 10, 1.5);
+                    fxText(pacPos, 'パクッ!', '#ffd23f', 1000);
                     board[pacPos] = 0;
                     cleanUpPieces();
                 }

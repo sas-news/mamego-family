@@ -1748,6 +1748,23 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+
+            {
+                const cc = Math.floor(BOARD_SIZE / 2);
+                move.cells.forEach(p => {
+                    const d = Math.abs(p.x - cc) + Math.abs(p.y - cc);
+                    if (d > 2) return;
+                    const i = p.y * BOARD_SIZE + p.x;
+                    if (d === 0) {
+                        fxGlow(i, '#facc15', 1000);
+                        fxBurst(i, '#fca5a5', 10, 1.4);
+                        fxText(i, 'BULL!', '#facc15', 1300);
+                    } else {
+                        fxText(i, '+' + (3 - d), '#fca5a5', 1000);
+                    }
+                });
+            }
+
             turn = opponent;
             updateUI();
 
