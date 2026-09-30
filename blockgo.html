@@ -1376,7 +1376,7 @@
             const rect = canvas.getBoundingClientRect();
             const u = (e.clientX - rect.left - padding) / cellSize;
             const v = (e.clientY - rect.top - padding) / cellSize;
-            return pv.cells.some(p => Math.hypot(u - p.x, v - p.y) <= 0.55);
+            return pv.cells.some(p => Math.hypot(u - p.x, v - p.y) <= 0.4);
         }
 
         function toggleDeadGroup(startIdx) {

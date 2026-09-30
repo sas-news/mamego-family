@@ -85,11 +85,19 @@
             </span>
         </button>
 
+        <!-- 囲碁検索 -->
+        <div class="w-full relative">
+            <input id="gameSearch" type="search" placeholder="囲碁を検索… (例: 引力, GO, 壁)" autocomplete="off"
+                class="w-full rounded-xl border border-[#cbb07a] bg-white/80 px-4 py-2.5 text-sm font-bold placeholder:font-normal placeholder:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#a8842f]/60" />
+            <button id="gameSearchClear" type="button" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-lg opacity-40 hover:opacity-80">✕</button>
+        </div>
+
         <!-- 全ゲーム一覧 -->
         <div id="gameGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+        <p id="gameNoResults" class="hidden w-full text-center text-sm opacity-60 py-6">該当する囲碁がありません</p>
 
         <!-- MAMEGO (原作) -->
-        <a href="https://github.com/cerevisiae-fii/mamego" class="group w-full bg-white/60 hover:bg-white/90 rounded-2xl border border-dashed border-[#cbb07a] transition-all p-4 flex items-center gap-4">
+        <a href="https://cerevisiae-fii.github.io/mamego/" class="group w-full bg-white/60 hover:bg-white/90 rounded-2xl border border-dashed border-[#cbb07a] transition-all p-4 flex items-center gap-4">
             <canvas id="iconMamego" width="96" height="96" class="shrink-0 rounded-xl bg-[#e8c88b] w-14 h-14"></canvas>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2">
@@ -99,7 +107,7 @@
                 </div>
                 <p class="text-xs sm:text-sm opacity-75 mt-1 leading-relaxed">
                     1×2 の「碁豆」を配置するオリジナル (このシリーズの元ネタ)。<br>
-                    GitHub リポジトリへ移動します。
+                    原作プレイページへ移動します。
                 </p>
             </div>
             <span class="text-2xl opacity-30 group-hover:opacity-70 group-hover:translate-x-1 transition-all">↗</span>
@@ -502,7 +510,36 @@
 
         const grid = document.getElementById('gameGrid');
         const tiles = [];
-        document.getElementById('gameCount').textContent = `全${GAMES.length}種`;
+        const gameCountEl = document.getElementById('gameCount');
+        const noResultsEl = document.getElementById('gameNoResults');
+        const searchInput = document.getElementById('gameSearch');
+        const searchClear = document.getElementById('gameSearchClear');
+        gameCountEl.textContent = `全${GAMES.length}種`;
+        // 曖昧検索: NFKC正規化(全角→半角・大小統一) + カタカナ→ひらがな + 空白区切り複数語AND + 各語は部分一致 or 部分列(文字飛ばし順序一致)でヒット
+        function normSearch(s) {
+            return (s || '').normalize('NFKC').toLowerCase()
+                .replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+        }
+        function subseqHit(term, text) {
+            let i = 0;
+            for (const ch of text) { if (ch === term[i]) { i++; if (i >= term.length) return true; } }
+            return false;
+        }
+        function applyGameFilter(q) {
+            const terms = normSearch(q).split(/\s+/).filter(Boolean);
+            let shown = 0;
+            tiles.forEach(t => {
+                const hit = !terms.length || terms.every(term => t._hay.includes(term) || subseqHit(term, t._hay));
+                t.style.display = hit ? '' : 'none';
+                if (hit) shown++;
+            });
+            const hasQuery = terms.length > 0;
+            noResultsEl.classList.toggle('hidden', shown > 0);
+            searchClear.classList.toggle('hidden', !hasQuery);
+            gameCountEl.textContent = hasQuery ? `${shown}件 / 全${GAMES.length}種` : `全${GAMES.length}種`;
+        }
+        searchInput.addEventListener('input', e => applyGameFilter(e.target.value));
+        searchClear.addEventListener('click', () => { searchInput.value = ''; applyGameFilter(''); searchInput.focus(); });
         GAMES.forEach(v => {
             const a = document.createElement('a');
             a.href = v.file;
@@ -524,6 +561,7 @@
             a.appendChild(cv); a.appendChild(body); a.appendChild(arrow);
             grid.appendChild(a);
             drawIcon(cv.getContext('2d'), v.kind, 56);
+            a._hay = normSearch(`${v.name} ${v.jp} ${v.desc}`);
             tiles.push(a);
         });
 
