@@ -50,6 +50,44 @@ module.exports = {
             '天元は王座 (金色の王冠マーク)。終局時に天元の石を持つ側が+3点のボーナス。',
             '通常の地取り勝負に王座争奪戦が載る。取っても取り返される激戦区。',
         ])],
+        // 王座: 天元の脈動リング + 占める石に王冠
+        ...K.STONE_MARKS_SPEC(`            {
+                const c = Math.floor(BOARD_SIZE / 2);
+                const ci = c * BOARD_SIZE + c;
+                if (board[ci] === 1 || board[ci] === 2) {
+                    const cx = padding + c * cellSize, cy = padding + c * cellSize;
+                    ctx.save();
+                    ctx.fillStyle = '#f5c518';
+                    ctx.strokeStyle = '#8a6a00';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    const w = cellSize * 0.26, h = cellSize * 0.2;
+                    ctx.beginPath();
+                    ctx.moveTo(cx - w, cy - h * 0.2);
+                    ctx.lineTo(cx - w, cy - h);
+                    ctx.lineTo(cx - w * 0.4, cy - h * 0.4);
+                    ctx.lineTo(cx, cy - h * 1.15);
+                    ctx.lineTo(cx + w * 0.4, cy - h * 0.4);
+                    ctx.lineTo(cx + w, cy - h);
+                    ctx.lineTo(cx + w, cy - h * 0.2);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }`),
+        [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const c = Math.floor(BOARD_SIZE / 2);
+            const cx = pad + c * cs, cy = pad + c * cs;
+            const ph = (Math.sin(now / 650) + 1) / 2;
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(255,215,110,' + (0.20 + ph * 0.30).toFixed(3) + ')';
+            ctx2.lineWidth = Math.max(1.2, cs * 0.05);
+            ctx2.beginPath();
+            ctx2.arc(cx, cy, cs * (0.5 + ph * 0.12), 0, Math.PI * 2);
+            ctx2.stroke();
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

@@ -1748,7 +1748,16 @@
                 const lostNow = captures[opponent]; // 相手のアゲハマ = 自分の被取石数
                 if (lostNow === lastLost[player]) {
                     streak[player]++;
-                    if (streak[player] >= 5) { dynasty[player] += 5; streak[player] = 0; }
+                    if (streak[player] >= 5) {
+                        dynasty[player] += 5;
+                        streak[player] = 0;
+                        if (lastMove && lastMove.cells[0]) {
+                            const di = lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x;
+                            fxText(di, '王朝+5!', '#facc15', 1500);
+                            fxGlow(di, '#facc15', 950);
+                            fxShake(5, 340);
+                        }
+                    }
                 } else {
                     streak[player] = 0;
                     lastLost[player] = lostNow;

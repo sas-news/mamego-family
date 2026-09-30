@@ -31,13 +31,25 @@ module.exports = {
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の標高:</span> <strong>\${peakScore(2)}</strong></div>`],
         // 標高グラデーション (上ほど明るく雪がかかる演出)
-        K.CUE_GRID(`            // 標高帯: 上に行くほど白っぽく (雪山演出)
+        K.CUE_GRID(`            // 標高帯 + 等高線 + 右端の標高数値
             {
                 for (let y = 0; y < BOARD_SIZE; y++) {
                     const a = 0.18 * (1 - y / (BOARD_SIZE - 1));
-                    if (a <= 0.01) continue;
-                    ctx.fillStyle = 'rgba(255,255,255,' + a.toFixed(3) + ')';
-                    ctx.fillRect(padding, padding + y * cellSize - cellSize / 2, width - padding * 2, cellSize);
+                    if (a > 0.01) {
+                        ctx.fillStyle = 'rgba(255,255,255,' + a.toFixed(3) + ')';
+                        ctx.fillRect(padding, padding + y * cellSize - cellSize / 2, width - padding * 2, cellSize);
+                    }
+                    ctx.strokeStyle = 'rgba(120,150,190,0.30)';
+                    ctx.lineWidth = Math.max(0.8, cellSize * 0.025);
+                    ctx.beginPath();
+                    ctx.moveTo(padding - cellSize * 0.5, padding + y * cellSize - cellSize / 2);
+                    ctx.lineTo(width - padding + cellSize * 0.5, padding + y * cellSize - cellSize / 2);
+                    ctx.stroke();
+                    ctx.fillStyle = 'rgba(80,110,150,0.85)';
+                    ctx.font = (cellSize * 0.26).toFixed(1) + 'px sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(String(BOARD_SIZE - 1 - y), width - padding + cellSize * 0.4, padding + y * cellSize);
                 }
             }`),
         [K.ONE, K.RV_ALGO, K.rv([
@@ -45,6 +57,23 @@ module.exports = {
             '終局時、各自の石に標高 (上端が最高点) の合計が得点になる。高峰を目指せ。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        // 降雪: 上層ほど強い粉雪
+        [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            for (let k = 0; k < 26; k++) {
+                const t = ((now / 4200) + k * 0.618) % 1;
+                const sx = ((k * 97.3) % w) + Math.sin(now / 1500 + k) * cs * 0.3;
+                const sy = pad + t * (BOARD_SIZE - 1) * cs;
+                const depth = 1 - (sy - pad) / ((BOARD_SIZE - 1) * cs);
+                ctx2.fillStyle = 'rgba(255,255,255,' + (0.12 + depth * 0.5).toFixed(3) + ')';
+                ctx2.beginPath();
+                ctx2.arc(sx, sy, cs * (0.03 + depth * 0.05), 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`],
         ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],

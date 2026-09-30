@@ -32,6 +32,11 @@ module.exports = {
 
             // 区域ルール: 5区域以上を制圧したら即勝ち
             if (controlledZones(player) >= 5) {
+                if (lastMove && lastMove.cells[0]) {
+                    fxGlow(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, '#facc15', 800);
+                    fxText(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, '制圧!', '#facc15', 1200);
+                }
+                fxShake(4, 300);
                 winByRule(player, '区域制圧勝ち', '9区域のうち5区域以上を制圧しました'); return;
             }
 
@@ -48,6 +53,42 @@ module.exports = {
                     ctx.beginPath(); ctx.moveTo(padding, p2); ctx.lineTo(width - padding, p2); ctx.stroke();
                 }
                 ctx.restore();
+            }`),
+        // 区域制圧: 制圧区域をプレイヤー色で染め、小旗を立てる
+        K.CUE_GRID(`            {
+                const zw = Math.ceil(BOARD_SIZE / 3), zh = Math.ceil(BOARD_SIZE / 3);
+                const own = Array(9).fill(0), opp = Array(9).fill(0);
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const v = board[y * BOARD_SIZE + x];
+                    const z = Math.min(2, Math.floor(y / zh)) * 3 + Math.min(2, Math.floor(x / zw));
+                    if (v === 1) own[z]++;
+                    else if (v === 2) opp[z]++;
+                }
+                for (let z = 0; z < 9; z++) {
+                    const zx = z % 3, zy = Math.floor(z / 3);
+                    const x0 = padding + zx * zw * cellSize - cellSize * 0.5;
+                    const y0 = padding + zy * zh * cellSize - cellSize * 0.5;
+                    const w2 = Math.min(zw * cellSize, width - padding * 2 + cellSize - zx * zw * cellSize);
+                    const h2 = Math.min(zh * cellSize, width - padding * 2 + cellSize - zy * zh * cellSize);
+                    if (own[z] >= opp[z] + 2) {
+                        ctx.fillStyle = 'rgba(30,30,30,0.16)';
+                    } else if (opp[z] >= own[z] + 2) {
+                        ctx.fillStyle = 'rgba(255,255,255,0.28)';
+                    } else {
+                        continue;
+                    }
+                    ctx.fillRect(x0, y0, w2, h2);
+                    const dark = own[z] >= opp[z] + 2;
+                    ctx.fillStyle = dark ? 'rgba(15,15,15,0.55)' : 'rgba(255,255,255,0.7)';
+                    const fx2 = x0 + w2 * 0.15, fy2 = y0 + h2 * 0.14;
+                    ctx.fillRect(fx2 - cellSize * 0.015, fy2, cellSize * 0.03, cellSize * 0.32);
+                    ctx.beginPath();
+                    ctx.moveTo(fx2, fy2);
+                    ctx.lineTo(fx2 + cellSize * 0.26, fy2 + cellSize * 0.08);
+                    ctx.lineTo(fx2, fy2 + cellSize * 0.17);
+                    ctx.closePath();
+                    ctx.fill();
+                }
             }`),
         ...K.EVENT_CHIP_SPEC(`'制圧 黒:' + controlledZones(1) + ' 白:' + controlledZones(2)`),
         [K.ONE, K.RV_ALGO, K.rv([

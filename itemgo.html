@@ -1220,6 +1220,33 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // アイテム: 金色の★を点滅表示
+            if (st.item >= 0) {
+                const ix = st.item % BOARD_SIZE, iy = Math.floor(st.item / BOARD_SIZE);
+                const cx = padding + ix * cellSize, cy = padding + iy * cellSize;
+                ctx.save();
+                ctx.fillStyle = '#facc15';
+                ctx.strokeStyle = '#a16207';
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.04);
+                const R = cellSize * 0.34, r2 = cellSize * 0.15;
+                ctx.beginPath();
+                for (let k = 0; k < 10; k++) {
+                    const rr = k % 2 === 0 ? R : r2;
+                    const a = -Math.PI / 2 + k * Math.PI / 5;
+                    const px = cx + rr * Math.cos(a), py = cy + rr * Math.sin(a);
+                    if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;

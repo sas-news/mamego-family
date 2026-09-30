@@ -45,6 +45,36 @@ module.exports = {
                 ctx.fill();
                 ctx.restore();
             }`),
+        // 時計盤: 外周の12目盛りと現在区域を指す赤い針
+        K.CUE_STARS(`            {
+                const c = (BOARD_SIZE - 1) / 2;
+                const cx = padding + c * cellSize, cy = padding + c * cellSize;
+                const rr = (c + 0.40) * cellSize;
+                ctx.save();
+                for (let k = 0; k < 12; k++) {
+                    const a = k * Math.PI / 6 - Math.PI / 2;
+                    const cur = k === history.length % 12;
+                    ctx.strokeStyle = cur ? '#dc2626' : alphaColor(currentTheme.lineColor, 0.6);
+                    ctx.lineWidth = cur ? Math.max(2.2, cellSize * 0.075) : Math.max(1.2, cellSize * 0.04);
+                    ctx.beginPath();
+                    ctx.moveTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+                    ctx.lineTo(cx + Math.cos(a) * (rr + cellSize * 0.18), cy + Math.sin(a) * (rr + cellSize * 0.18));
+                    ctx.stroke();
+                }
+                const ha = (history.length % 12) * Math.PI / 6 - Math.PI / 2;
+                ctx.strokeStyle = '#dc2626';
+                ctx.lineWidth = Math.max(2, cellSize * 0.06);
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(ha) * rr * 0.9, cy + Math.sin(ha) * rr * 0.9);
+                ctx.stroke();
+                ctx.fillStyle = '#dc2626';
+                ctx.beginPath();
+                ctx.arc(cx, cy, cellSize * 0.09, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }`),
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '盤面は天元を軸に12の時刻区域。着手は現在の時刻区域内のみ (天元は常に可)。',

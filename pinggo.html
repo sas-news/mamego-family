@@ -1217,6 +1217,26 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            {
+                const bx = ballPos % BOARD_SIZE, by = Math.floor(ballPos / BOARD_SIZE);
+                const cx = padding + bx * cellSize, cy = padding + by * cellSize;
+                ctx.save();
+                ctx.fillStyle = '#e04030';
+                ctx.beginPath();
+                ctx.arc(cx, cy, cellSize * 0.22, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.beginPath();
+                ctx.arc(cx - cellSize * 0.07, cy - cellSize * 0.08, cellSize * 0.07, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;

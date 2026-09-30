@@ -30,6 +30,41 @@ module.exports = {
                 if (!_allow.includes(_cur)) return false;
             }`],
         [K.ONE, K.RV_ALGO, K.rv(['着手はL字 (拐) の3連ピースのみ (回転=Rキー・右クリック・ホイール)。','ピースが入らない3マス未満の連結空領域は窒息領域。'])],
+        // === FX: 積み木タイル駒 ===
+        [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
+
+        // ピースを丸石ではなく角丸タイルの連結ブロックとして描く (形が一目で分かる)
+        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
+            if (!cellsAbs || cellsAbs.length === 0) return;
+            const R = cellSize * 0.5, rr = cellSize * 0.15;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = shiftColor(fill, -0.12);
+            cellsAbs.forEach(p => {
+                ctx.fillRect(padding + p.x * cellSize - R, padding + p.y * cellSize - R, R * 2, R * 2);
+            });
+            cellsAbs.forEach(p => {
+                const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                const g = ctx.createLinearGradient(cx, cy - R, cx, cy + R);
+                g.addColorStop(0, shiftColor(fill, 0.42));
+                g.addColorStop(0.55, fill);
+                g.addColorStop(1, shiftColor(fill, -0.3));
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.roundRect(cx - R, cy - R, R * 2, R * 2, rr);
+                ctx.fill();
+                if (stroke) {
+                    ctx.strokeStyle = stroke;
+                    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                    ctx.stroke();
+                }
+                ctx.fillStyle = 'rgba(255,255,255,0.30)';
+                ctx.beginPath();
+                ctx.roundRect(cx - R + cellSize * 0.08, cy - R + cellSize * 0.07, R * 2 - cellSize * 0.16, cellSize * 0.1, cellSize * 0.05);
+                ctx.fill();
+            });
+            ctx.restore();
+        }`],
         ...K.STONE_SPEC,
     ],
     test: `

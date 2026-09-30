@@ -1240,6 +1240,26 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== 3) continue;
+                const px = i % BOARD_SIZE, py = Math.floor(i / BOARD_SIZE);
+                const cx = padding + px * cellSize, cy = padding + py * cellSize;
+                ctx.save();
+                ctx.fillStyle = '#f2f0e4';
+                ctx.beginPath();
+                ctx.arc(cx, cy - cellSize * 0.13, cellSize * 0.15, 0, Math.PI * 2);
+                ctx.arc(cx, cy + cellSize * 0.13, cellSize * 0.21, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#c03a3a';
+                ctx.fillRect(cx - cellSize * 0.11, cy - cellSize * 0.09, cellSize * 0.22, cellSize * 0.07);
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;

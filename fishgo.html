@@ -1722,9 +1722,14 @@
                         const bi = board[ny * BOARD_SIZE + nx];
                         if (bi === 0) continue;         // 空点は飛び越す
                         if (bi === opponent && d >= 2) { // 間合いがあれば釣れる
-                            board[ny * BOARD_SIZE + nx] = 0;
+                            const fi = ny * BOARD_SIZE + nx;
+                            const ti = p.y * BOARD_SIZE + p.x;
+                            board[fi] = 0;
                             captures[player]++;
                             cleanUpPieces();
+                            fxSlide(fi, ti, 340);
+                            fxSplash(fi, '#38bdf8', 10);
+                            fxText(ti, '釣!', '#38bdf8', 950);
                         }
                         return; // 最初の石で針は止まる
                     }

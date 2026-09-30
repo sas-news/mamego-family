@@ -1224,6 +1224,57 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 斥候石の双眼マーク + 視界中は敵石に呼吸数と照準環
+            {
+                ctx.save();
+                pieces.forEach(pc => {
+                    if (!pc.scout) return;
+                    pc.cells.forEach(p => {
+                        if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                        const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                        ctx.strokeStyle = 'rgba(34, 197, 94, 0.85)';
+                        ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
+                        ctx.beginPath();
+                        ctx.moveTo(cx - cellSize * 0.18, cy - cellSize * 0.18);
+                        ctx.lineTo(cx + cellSize * 0.18, cy + cellSize * 0.18);
+                        ctx.moveTo(cx + cellSize * 0.18, cy - cellSize * 0.18);
+                        ctx.lineTo(cx - cellSize * 0.18, cy + cellSize * 0.18);
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
+            }
+            {
+                const viewers = [1, 2].filter(pl => isScoutView(pl));
+                if (viewers.length) {
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.font = 'bold ' + Math.max(9, cellSize * 0.38) + 'px sans-serif';
+                    viewers.forEach(pl => {
+                        const foe = pl === 1 ? 2 : 1;
+                        board.forEach((v, i) => {
+                            if (v !== foe) return;
+                            const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                            const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                            ctx.strokeStyle = 'rgba(34, 197, 94, 0.7)';
+                            ctx.lineWidth = Math.max(1.2, cellSize * 0.04);
+                            ctx.beginPath();
+                            ctx.arc(cx, cy, cellSize * 0.42, 0, Math.PI * 2);
+                            ctx.stroke();
+                            ctx.fillStyle = '#16a34a';
+                            ctx.fillText(String(getLiberties(board, i)), cx, cy);
+                        });
+                    });
+                    ctx.restore();
+                }
+            }
         }
 
         let fxPrevMove = null;

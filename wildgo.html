@@ -1745,6 +1745,11 @@
             }
 
             if (moveCount % 5 !== 0) turn = opponent;
+            else if (lastMove && lastMove.cells[0]) {
+                const wi = lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x;
+                fxText(wi, 'WILD!', '#f472b6', 1200);
+                fxGlow(wi, '#f472b6', 750);
+            }
             updateUI();
 
             // オンライン同期

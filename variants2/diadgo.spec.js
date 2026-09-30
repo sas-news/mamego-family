@@ -30,6 +30,52 @@ module.exports = {
                 if (!_allow.includes(_cur)) return false;
             }`],
         [K.ONE, K.RV_ALGO, K.rv(['着手は斜めに接する2石のドミノ (回転=Rキー・右クリック・ホイール)。','斜め接触は連にならない: 2石は別々の連として呼吸する。'])],
+        // === FX: ドミノ駒 ===
+        [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
+
+        // 2セルを斜めに結ぶドミノ牌として描く
+        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
+            if (!cellsAbs || cellsAbs.length === 0) return;
+            const R = cellSize * 0.5, rr = cellSize * 0.14;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            if (cellsAbs.length === 2) {
+                const ax = padding + cellsAbs[0].x * cellSize, ay = padding + cellsAbs[0].y * cellSize;
+                const bx = padding + cellsAbs[1].x * cellSize, by = padding + cellsAbs[1].y * cellSize;
+                ctx.strokeStyle = shiftColor(fill, -0.28);
+                ctx.lineWidth = cellSize * 0.24;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(ax, ay);
+                ctx.lineTo(bx, by);
+                ctx.stroke();
+            }
+            cellsAbs.forEach((p, i) => {
+                const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                const g = ctx.createLinearGradient(cx, cy - R, cx, cy + R);
+                g.addColorStop(0, shiftColor(fill, 0.45));
+                g.addColorStop(0.55, fill);
+                g.addColorStop(1, shiftColor(fill, -0.32));
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.roundRect(cx - R, cy - R, R * 2, R * 2, rr);
+                ctx.fill();
+                if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = Math.max(1, cellSize * 0.05); ctx.stroke(); }
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                ctx.lineWidth = Math.max(1, cellSize * 0.035);
+                ctx.beginPath();
+                ctx.moveTo(cx - R * 0.55, cy);
+                ctx.lineTo(cx + R * 0.55, cy);
+                ctx.stroke();
+                ctx.fillStyle = shiftColor(fill, 0.6);
+                [[-0.26, -0.26], [0.26, -0.26], [-0.26, 0.26], [0.26, 0.26]].slice(0, i === 0 ? 1 : 4).forEach(q => {
+                    ctx.beginPath();
+                    ctx.arc(cx + q[0] * cellSize, cy + q[1] * cellSize, cellSize * 0.055, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            });
+            ctx.restore();
+        }`],
         ...K.STONE_SPEC,
     ],
     test: `

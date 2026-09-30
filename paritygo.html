@@ -1073,6 +1073,19 @@
             ctx.fillRect(0, 0, width, width);
             ctx.restore();
 
+            {
+                const evenMove = (history.length + 1) % 2 === 0;
+                ctx.save();
+                ctx.fillStyle = 'rgba(90,190,110,0.13)';
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (((x + y) % 2 === 0) !== evenMove) continue;
+                    ctx.beginPath();
+                    ctx.arc(padding + x * cellSize, padding + y * cellSize, cellSize * 0.34, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
             // 格子線
             ctx.strokeStyle = currentTheme.lineColor;
             ctx.lineWidth = Math.max(1, cellSize * 0.028);

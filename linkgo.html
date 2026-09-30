@@ -1745,6 +1745,27 @@
 
             // 架橋ルール: 着手した側が自分の両辺を結べば即勝ち
             if (linkedEdges(player)) {
+                // 架橋した連を全体発光させる
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== player) continue;
+                    const seen = new Set([i]); const q = [i];
+                    let lo = BOARD_SIZE, hi = -1;
+                    while (q.length) {
+                        const cur = q.pop();
+                        const pos = player === 1 ? Math.floor(cur / BOARD_SIZE) : cur % BOARD_SIZE;
+                        if (pos < lo) lo = pos;
+                        if (pos > hi) hi = pos;
+                        getNeighbors(cur).forEach(n => { if (board[n] === player && !seen.has(n)) { seen.add(n); q.push(n); } });
+                    }
+                    if (lo === 0 && hi === BOARD_SIZE - 1) {
+                        seen.forEach(idx => fxGlow(idx, '#facc15', 950));
+                        break;
+                    }
+                }
+                fxShake(5, 360);
+                if (lastMove && lastMove.cells[0]) {
+                    fxText(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, '架橋!', '#facc15', 1400);
+                }
                 winByRule(player, '架橋勝ち', '自分の担当する両辺を連結しました'); return;
             }
 

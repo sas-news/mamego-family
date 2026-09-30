@@ -881,6 +881,18 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            if (!pendingDot) return;
+            const ph = (Math.sin(now / 350) + 1) / 2;
+            const px = pad + pendingDot.x * cs, py = pad + pendingDot.y * cs;
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(255,210,60,' + (0.45 + ph * 0.5).toFixed(3) + ')';
+            ctx2.lineWidth = Math.max(1.4, cs * 0.06);
+            ctx2.beginPath();
+            ctx2.arc(px, py, cs * (0.3 + ph * 0.12), 0, Math.PI * 2);
+            ctx2.stroke();
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1214,6 +1226,23 @@
                     drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
+            }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 仮置きの1点目を金色の点で表示
+            if (pendingDot) {
+                const px = padding + pendingDot.x * cellSize;
+                const py = padding + pendingDot.y * cellSize;
+                ctx.save();
+                ctx.fillStyle = 'rgba(230,180,0,0.95)';
+                ctx.beginPath();
+                ctx.arc(px, py, Math.max(3, cellSize * 0.2), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
             }
         }
 
@@ -1559,6 +1588,7 @@
             const cells = [{ x: pendingDot.x, y: pendingDot.y }, { x: cell.x, y: cell.y }];
             if (isValidPlacement(cells, turn)) {
                 executeMove({ cells, type: currentPieceType, rot: 0 }, turn);
+                fxGlow(cells[1].y * BOARD_SIZE + cells[1].x, '#facc15', 650);
             }
             pendingDot = null;
             previewPos = null;

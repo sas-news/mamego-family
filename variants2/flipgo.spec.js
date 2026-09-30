@@ -23,7 +23,12 @@ module.exports = {
                         flips.push(i);
                     }
                 }
-                flips.forEach(i => { board[i] = player; });
+                flips.forEach(i => { board[i] = player; fxGlow(i, '#a5f3fc', 550); });
+                if (flips.length > 0 && move.cells[0]) {
+                    const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                    fxText(mi, '挟撃×' + flips.length, '#38bdf8', 1050);
+                    if (flips.length >= 3) fxShake(4, 260);
+                }
             }
 
             const captured = getCapturedStones(board, opponent);

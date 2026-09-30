@@ -60,6 +60,10 @@ module.exports = {
                     board[prey] = 0;
                     captures[pc.player]++;
                     sprung = true;
+                    fxSlide(prey, i0, 300);
+                    fxBurst(i0, '#facc15', 14, 1.8);
+                    fxGlow(i0, '#ef4444', 700);
+                    fxText(i0, '罠!', '#facc15', 950);
                 });
                 if (sprung) cleanUpPieces();
             }
