@@ -904,15 +904,6 @@
                 ctx.stroke();
             }
 
-            // 外枠強調 (二重線で碁盤らしく)
-            ctx.strokeStyle = currentTheme.lineColor;
-            ctx.lineWidth = Math.max(1.6, cellSize * 0.055);
-            ctx.strokeRect(padding, padding, width - padding * 2, width - padding * 2);
-            ctx.lineWidth = 1;
-            ctx.globalAlpha = 0.35;
-            ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
-            ctx.globalAlpha = 1;
-
             // 星 (天元・星の点)
             const starPoints = getStarPoints(BOARD_SIZE);
             ctx.fillStyle = currentTheme.starColor;
@@ -984,19 +975,30 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁マスの描画 (中立ブロック)
-            for (let wy = 0; wy < BOARD_SIZE; wy++) {
-                for (let wx = 0; wx < BOARD_SIZE; wx++) {
-                    if (board[wy * BOARD_SIZE + wx] !== 3) continue;
-                    const bx = padding + wx * cellSize;
-                    const by = padding + wy * cellSize;
-                    const bs = cellSize * 0.52;
-                    ctx.fillStyle = 'rgba(60, 42, 25, 0.85)';
-                    ctx.fillRect(bx - bs / 2, by - bs / 2, bs, bs);
-                    ctx.strokeStyle = 'rgba(30, 20, 10, 0.9)';
-                    ctx.lineWidth = 1.5;
-                    ctx.strokeRect(bx - bs / 2, by - bs / 2, bs, bs);
-                }
+            // 円形盤: 円の外側を暗い面で覆い (格子線・枠の残骸ごと消す)、滑らかな円縁を引く
+            {
+                const cr = (BOARD_SIZE - 1) / 2;
+                const bcx = padding + cr * cellSize, bcy = padding + cr * cellSize;
+                const rr = (cr + 0.55) * cellSize;
+                const w = padding * 2 + (BOARD_SIZE - 1) * cellSize;
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(-cellSize, -cellSize, w + cellSize * 2, w + cellSize * 2);
+                ctx.arc(bcx, bcy, rr, 0, Math.PI * 2, true);
+                ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.48);
+                ctx.fill();
+                // 円縁 (外枠と同じ二重線の質感)
+                ctx.beginPath();
+                ctx.arc(bcx, bcy, rr, 0, Math.PI * 2);
+                ctx.strokeStyle = currentTheme.lineColor;
+                ctx.lineWidth = Math.max(1.6, cellSize * 0.055);
+                ctx.stroke();
+                ctx.lineWidth = 1;
+                ctx.globalAlpha = 0.35;
+                ctx.beginPath();
+                ctx.arc(bcx, bcy, rr - 3, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
             }
 
             // ピースごとに融合描画 (盤上に残っているセルのみ)

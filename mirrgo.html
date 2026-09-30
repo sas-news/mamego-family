@@ -914,6 +914,20 @@
             ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
             ctx.globalAlpha = 1;
 
+            // 対称軸: 縦中央線に薄い破線
+            {
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.45);
+                ctx.lineWidth = Math.max(1, cellSize * 0.03);
+                ctx.setLineDash([cellSize * 0.14, cellSize * 0.10]);
+                const mx = padding + (BOARD_SIZE - 1) / 2 * cellSize;
+                ctx.beginPath();
+                ctx.moveTo(mx, padding);
+                ctx.lineTo(mx, width - padding);
+                ctx.stroke();
+                ctx.restore();
+            }
+
             // 星 (天元・星の点)
             const starPoints = getStarPoints(BOARD_SIZE);
             ctx.fillStyle = currentTheme.starColor;

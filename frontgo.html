@@ -913,6 +913,28 @@
             ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
             ctx.globalAlpha = 1;
 
+            // 前線の表示: 確定済み領域の薄いヴェール + 前線の破線
+            {
+                const fr = frontRow();
+                const x0 = padding - cellSize * 0.5, x1 = padding + (BOARD_SIZE - 0.5) * cellSize;
+                if (fr > 0) {
+                    ctx.save();
+                    ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.07);
+                    ctx.fillRect(x0, padding - cellSize * 0.5, x1 - x0, fr * cellSize);
+                    ctx.restore();
+                }
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.5);
+                ctx.setLineDash([cellSize * 0.15, cellSize * 0.11]);
+                ctx.lineWidth = Math.max(1, cellSize * 0.03);
+                const fy = padding + (fr - 0.5) * cellSize;
+                ctx.beginPath();
+                ctx.moveTo(x0, fy);
+                ctx.lineTo(x1, fy);
+                ctx.stroke();
+                ctx.restore();
+            }
+
             // 星 (天元・星の点)
             const starPoints = getStarPoints(BOARD_SIZE);
             ctx.fillStyle = currentTheme.starColor;

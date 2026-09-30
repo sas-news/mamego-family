@@ -913,6 +913,28 @@
             ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
             ctx.globalAlpha = 1;
 
+            // 端が対側に繋がる印: 枠外へ向く二重シェブロン
+            {
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.6);
+                ctx.lineWidth = Math.max(1.3, cellSize * 0.05);
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                const chev = (cx, cy, dx, dy) => {
+                    for (let k = 0; k < 2; k++) {
+                        const T = cellSize * (0.30 - 0.10 * k), B = cellSize * 0.11, W = cellSize * 0.10;
+                        ctx.beginPath();
+                        ctx.moveTo(cx + dx * (T - B) - dy * W, cy + dy * (T - B) + dx * W);
+                        ctx.lineTo(cx + dx * T, cy + dy * T);
+                        ctx.lineTo(cx + dx * (T - B) + dy * W, cy + dy * (T - B) - dx * W);
+                        ctx.stroke();
+                    }
+                };
+                const midC = padding + (BOARD_SIZE - 1) / 2 * cellSize;
+                chev(padding * 0.55, padding + (BOARD_SIZE - 1) * cellSize * 0.3, -1, 0); chev(width - padding * 0.55, padding + (BOARD_SIZE - 1) * cellSize * 0.7, 1, 0);
+                ctx.restore();
+            }
+
             // 星 (天元・星の点)
             const starPoints = getStarPoints(BOARD_SIZE);
             ctx.fillStyle = currentTheme.starColor;
