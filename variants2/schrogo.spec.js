@@ -50,11 +50,6 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
-                endGameByScore();
-                return;
-            }
 
             // 量子碁: 量子石の隣に敵石が置かれると観測 → 色が確定する
             {
@@ -69,6 +64,13 @@ module.exports = {
                     pc.player = newOwner;
                     pc.schro = false;
                 });
+            }
+
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
             }
 
             turn = opponent;`],

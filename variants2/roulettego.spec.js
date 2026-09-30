@@ -14,11 +14,6 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
-                endGameByScore();
-                return;
-            }
 
             // 輪盤: 出目区域 (3x3) 内に打てば+2目ボーナス。その後出目を振り直す
             {
@@ -28,6 +23,13 @@ module.exports = {
                     if (inZone) captures[player] += 2;
                 }
                 hotIdx = Math.floor(Math.random() * board.length);
+            }
+
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
             }
 
             turn = opponent;`],

@@ -1574,11 +1574,6 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
-                endGameByScore();
-                return;
-            }
 
             // 罠碁: 未発動の罠の隣に敵石があると起動し、隣の敵石1個を道連れにする
             {
@@ -1596,6 +1591,13 @@
                     sprung = true;
                 });
                 if (sprung) cleanUpPieces();
+            }
+
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
             }
 
             turn = opponent;

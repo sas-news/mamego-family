@@ -12,11 +12,6 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
-                endGameByScore();
-                return;
-            }
 
             // 錆碁: 相手の連 (2石以上) が最も露出した端から1石ずつ錆びる
             {
@@ -44,6 +39,13 @@ module.exports = {
                     if (board[tip] === opponent) { board[tip] = 0; rusted++; }
                 });
                 if (rusted > 0) { captures[player] += rusted; cleanUpPieces(); }
+            }
+
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
             }
 
             turn = opponent;`],

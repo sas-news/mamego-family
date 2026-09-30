@@ -619,6 +619,7 @@
                     deadStones: [...deadStones],
                     prevBoard,
                     lastMove,
+                    hydraUsed: [...hydraUsed],
                     history,
                     pieceMode,
                     currentPieceType,
@@ -658,6 +659,7 @@
             deadStones = new Set(s.deadStones || []);
             prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
             lastMove = s.lastMove || null;
+            hydraUsed = new Set(s.hydraUsed || []);
             history = Array.isArray(s.history) ? s.history : [];
             pieceMode = ['free', 'next'].includes(s.pieceMode) ? s.pieceMode : 'next';
             currentPieceType = PIECE_TYPES.includes(s.currentPieceType) ? s.currentPieceType : 'STONE';
@@ -1495,6 +1497,7 @@
                 consecutivePasses,
                 prevBoard,
                 lastMove,
+                hydraUsed: [...hydraUsed],
                 currentPieceType,
                 pieceQueue: [...pieceQueue],
                 heldPieces: { ...heldPieces },
@@ -1775,6 +1778,7 @@
             consecutivePasses = snap.consecutivePasses;
             prevBoard = snap.prevBoard;
             lastMove = snap.lastMove;
+            hydraUsed = new Set(snap.hydraUsed || []);
             if (snap.currentPieceType) currentPieceType = snap.currentPieceType;
             if (snap.pieceQueue) pieceQueue = snap.pieceQueue;
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
@@ -2154,6 +2158,7 @@
             gamePhase = data.gamePhase || 'playing';
             prevBoard = data.prevBoard || null;
             lastMove = data.lastMove || null;
+            if (Array.isArray(data.hydraUsed)) hydraUsed = new Set(data.hydraUsed);
             if (data.pieceMode) pieceMode = data.pieceMode;
             if (data.currentPieceType) currentPieceType = data.currentPieceType;
             if (data.pieceQueue) pieceQueue = data.pieceQueue;
@@ -2192,6 +2197,7 @@
                 gamePhase,
                 prevBoard,
                 lastMove,
+                hydraUsed: [...hydraUsed],
                 pieceMode,
                 currentPieceType,
                 pieceQueue,

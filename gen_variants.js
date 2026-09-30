@@ -1746,8 +1746,9 @@ let draft = apply(ALGO, [
     [ONE, `            if (gameOver || gamePhase !== 'playing' || draftState || !isMyTurn()) return;
 
             prevBoard = null; // パスでコウ制限は解除`,
-`            if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
+`            if (gameOver || gamePhase !== 'playing') return;
             // ドラフト中のパス: 自分のピック順なら代わりにランダム自動ピック
+            // (ドラフト中は turn が黒のままなので isMyTurn ではなく draftState.turn で判定する)
             if (draftState) {
                 const myPick = gameMode === 'online'
                     ? draftState.turn === myOnlineRole
@@ -1755,6 +1756,7 @@ let draft = apply(ALGO, [
                 if (myPick) aiDraftPick();
                 return;
             }
+            if (!isMyTurn()) return;
 
             prevBoard = null; // パスでコウ制限は解除`],
     [ONE, `            if (!isMyTurn()) return;
@@ -3786,6 +3788,40 @@ out('hydrago.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限: 200手で自動終局
             if (history.length >= 200) { endGameByScore(); return; }`],
+    [ONE, `                prevBoard,
+                lastMove,
+                currentPieceType,`,
+`                prevBoard,
+                lastMove,
+                hydraUsed: [...hydraUsed],
+                currentPieceType,`],
+    [ONE, `            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;`,
+`            prevBoard = snap.prevBoard;
+            lastMove = snap.lastMove;
+            hydraUsed = new Set(snap.hydraUsed || []);`],
+    [ONE, `                    prevBoard,
+                    lastMove,
+                    history`,
+`                    prevBoard,
+                    lastMove,
+                    hydraUsed: [...hydraUsed],
+                    history`],
+    [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;`,
+`            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
+            lastMove = s.lastMove || null;
+            hydraUsed = new Set(s.hydraUsed || []);`],
+    [ONE, `                prevBoard,
+                lastMove,
+                pieceMode,`,
+`                prevBoard,
+                lastMove,
+                hydraUsed: [...hydraUsed],
+                pieceMode,`],
+    [ONE, `            lastMove = data.lastMove || null;`,
+`            lastMove = data.lastMove || null;
+            if (Array.isArray(data.hydraUsed)) hydraUsed = new Set(data.hydraUsed);`],
     ...STONE_SPEC,
 ], 'hydrago'));
 
@@ -4720,34 +4756,40 @@ out('recyclego.html', apply(ALGO, [
 `                prevBoard,
                 lastMove,
                 returnQueue: returnQueue.map(q => ({ ...q })),
+                revivedUsed: [...revivedUsed],
                 currentPieceType,`],
     [ONE, `            prevBoard = snap.prevBoard;
             lastMove = snap.lastMove;`,
 `            prevBoard = snap.prevBoard;
             lastMove = snap.lastMove;
-            returnQueue = snap.returnQueue ? snap.returnQueue.map(q => ({ ...q })) : returnQueue;`],
+            returnQueue = snap.returnQueue ? snap.returnQueue.map(q => ({ ...q })) : returnQueue;
+            revivedUsed = new Set(snap.revivedUsed || []);`],
     [ONE, `                    prevBoard,
                     lastMove,
                     history`,
 `                    prevBoard,
                     lastMove,
                     returnQueue: returnQueue.map(q => ({ ...q })),
+                    revivedUsed: [...revivedUsed],
                     history`],
     [ONE, `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
             lastMove = s.lastMove || null;`,
 `            prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
             lastMove = s.lastMove || null;
-            returnQueue = Array.isArray(s.returnQueue) ? s.returnQueue.map(q => ({ ...q })) : [];`],
+            returnQueue = Array.isArray(s.returnQueue) ? s.returnQueue.map(q => ({ ...q })) : [];
+            revivedUsed = new Set(s.revivedUsed || []);`],
     [ONE, `                prevBoard,
                 lastMove,
                 pieceMode,`,
 `                prevBoard,
                 lastMove,
                 returnQueue: returnQueue.map(q => ({ ...q })),
+                revivedUsed: [...revivedUsed],
                 pieceMode,`],
     [ONE, `            lastMove = data.lastMove || null;`,
 `            lastMove = data.lastMove || null;
-            if (Array.isArray(data.returnQueue)) returnQueue = data.returnQueue.map(q => ({ ...q }));`],
+            if (Array.isArray(data.returnQueue)) returnQueue = data.returnQueue.map(q => ({ ...q }));
+            if (Array.isArray(data.revivedUsed)) revivedUsed = new Set(data.revivedUsed);`],
     ...EVENT_CHIP_SPEC(`(returnQueue.length ? '復活' + (Math.min(...returnQueue.map(q => q.due)) - history.length) + '手' : '')`),
     ...STONE_SPEC,
 ], 'recyclego'));

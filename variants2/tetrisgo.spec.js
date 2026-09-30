@@ -12,11 +12,6 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
-                endGameByScore();
-                return;
-            }
 
             // 消滅列: 空点0の行が消え、消えたマス数だけ着手者の得点になる
             {
@@ -32,6 +27,13 @@ module.exports = {
                     }
                 }
                 if (cleared > 0) { captures[player] += cleared; cleanUpPieces(); }
+            }
+
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
             }
 
             turn = opponent;`],

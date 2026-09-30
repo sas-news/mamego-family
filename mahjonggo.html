@@ -1486,9 +1486,14 @@
             return true;
         }
 
+        let moveCapFired = false;
         function executeMove(move, player) {
+            // 新規対局 (履歴空) で打ち切りを再武装
+            if (moveCapFired && history.length === 0) moveCapFired = false;
             // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+            // (1局につき1回のみ発火。死に石選択を取り消して続行する場合は再発火しない)
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+                moveCapFired = true;
                 startDeadStoneSelectionPhase();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();

@@ -622,6 +622,7 @@
                     prevBoard,
                     lastMove,
                     returnQueue: returnQueue.map(q => ({ ...q })),
+                    revivedUsed: [...revivedUsed],
                     history,
                     pieceMode,
                     currentPieceType,
@@ -662,6 +663,7 @@
             prevBoard = Array.isArray(s.prevBoard) ? s.prevBoard : null;
             lastMove = s.lastMove || null;
             returnQueue = Array.isArray(s.returnQueue) ? s.returnQueue.map(q => ({ ...q })) : [];
+            revivedUsed = new Set(s.revivedUsed || []);
             history = Array.isArray(s.history) ? s.history : [];
             pieceMode = ['free', 'next'].includes(s.pieceMode) ? s.pieceMode : 'next';
             currentPieceType = PIECE_TYPES.includes(s.currentPieceType) ? s.currentPieceType : 'STONE';
@@ -1501,6 +1503,7 @@
                 prevBoard,
                 lastMove,
                 returnQueue: returnQueue.map(q => ({ ...q })),
+                revivedUsed: [...revivedUsed],
                 currentPieceType,
                 pieceQueue: [...pieceQueue],
                 heldPieces: { ...heldPieces },
@@ -1792,6 +1795,7 @@
             prevBoard = snap.prevBoard;
             lastMove = snap.lastMove;
             returnQueue = snap.returnQueue ? snap.returnQueue.map(q => ({ ...q })) : returnQueue;
+            revivedUsed = new Set(snap.revivedUsed || []);
             if (snap.currentPieceType) currentPieceType = snap.currentPieceType;
             if (snap.pieceQueue) pieceQueue = snap.pieceQueue;
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
@@ -2172,6 +2176,7 @@
             prevBoard = data.prevBoard || null;
             lastMove = data.lastMove || null;
             if (Array.isArray(data.returnQueue)) returnQueue = data.returnQueue.map(q => ({ ...q }));
+            if (Array.isArray(data.revivedUsed)) revivedUsed = new Set(data.revivedUsed);
             if (data.pieceMode) pieceMode = data.pieceMode;
             if (data.currentPieceType) currentPieceType = data.currentPieceType;
             if (data.pieceQueue) pieceQueue = data.pieceQueue;
@@ -2211,6 +2216,7 @@
                 prevBoard,
                 lastMove,
                 returnQueue: returnQueue.map(q => ({ ...q })),
+                revivedUsed: [...revivedUsed],
                 pieceMode,
                 currentPieceType,
                 pieceQueue,

@@ -1930,8 +1930,9 @@
 
         function handlePass() {
             soundManager.playClick();
-            if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
+            if (gameOver || gamePhase !== 'playing') return;
             // ドラフト中のパス: 自分のピック順なら代わりにランダム自動ピック
+            // (ドラフト中は turn が黒のままなので isMyTurn ではなく draftState.turn で判定する)
             if (draftState) {
                 const myPick = gameMode === 'online'
                     ? draftState.turn === myOnlineRole
@@ -1939,6 +1940,7 @@
                 if (myPick) aiDraftPick();
                 return;
             }
+            if (!isMyTurn()) return;
 
             prevBoard = null; // パスでコウ制限は解除
             consecutivePasses++;
