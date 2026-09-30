@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>変則碁シリーズ - ゲーム一覧</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -596,6 +597,32 @@
             const mol = (atoms, fill, stroke) => {
                 const pts = atoms.map(([x, y]) => ({ gx: x, gy: y, cell, x: cell + x * cell, y: cell + y * cell }));
                 drawMolecule(c, pts, fill, stroke, cell * 0.42);
+            };
+            const ring = (gx, gy, r, stroke, w = 1.6) => {
+                const p = at(gx, gy);
+                c.strokeStyle = stroke; c.lineWidth = w;
+                c.beginPath(); c.arc(p.x, p.y, r, 0, Math.PI * 2); c.stroke();
+            };
+            const seg = (x1, y1, x2, y2, stroke, w = 1.6) => {
+                const a = at(x1, y1), b = at(x2, y2);
+                c.strokeStyle = stroke; c.lineWidth = w; c.lineCap = 'round';
+                c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke();
+            };
+            const txt = (s, gx, gy, fill, h = cell * 1.1) => {
+                const p = at(gx, gy);
+                c.fillStyle = fill; c.font = `bold ${h}px sans-serif`;
+                c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(s, p.x, p.y);
+            };
+            const tri = (gx, gy, r, fill, stroke, rot = -Math.PI / 2) => {
+                const p = at(gx, gy);
+                c.fillStyle = fill; c.strokeStyle = stroke; c.lineWidth = 1.2;
+                c.beginPath();
+                for (let i = 0; i < 3; i++) {
+                    const a = rot + i * 2 * Math.PI / 3;
+                    const x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r;
+                    i ? c.lineTo(x, y) : c.moveTo(x, y);
+                }
+                c.closePath(); c.fill(); c.stroke();
             };
 
             switch (kind) {
@@ -1246,6 +1273,423 @@
                         const t = at(3 + (3-x)*0.25, 3 + (3-y)*0.25);
                         c.lineTo(t.x, t.y); c.stroke();
                     });
+                    break;
+                case 'sentry': // 番兵: 交互行で睨み合う二軍
+                    [[1.6,2.2],[3,2.2],[4.4,2.2]].forEach(([x,y]) => dot(x, y, P1, P1S));
+                    [[1.6,4.4],[3,4.4],[4.4,4.4]].forEach(([x,y]) => dot(x, y, P2, P2S));
+                    seg(1.2,3.3,4.8,3.3,'rgba(217,119,6,0.7)',1.5);
+                    break;
+                case 'bank': // 銀行: 円コインと積立バー
+                    ring(3,2.6,cell*1.05,'#b45309',cell*0.9);
+                    c.fillStyle = '#fef3c7'; c.beginPath(); c.arc(at(3,2.6).x, at(3,2.6).y, cell*0.9, 0, Math.PI*2); c.fill();
+                    txt('¥', 3, 2.62, '#b45309');
+                    c.fillStyle = '#b45309'; c.fillRect(at(1.9,4.3).x, at(1.9,4.3).y, cell*0.5, cell*0.45);
+                    c.fillRect(at(2.8,4.0).x, at(2.8,4.0).y, cell*0.5, cell*0.75);
+                    c.fillRect(at(3.7,3.7).x, at(3.7,3.7).y, cell*0.5, cell*1.05);
+                    break;
+                case 'bet': // 賭: カジノチップ
+                    ring(3,3.3,cell*1.25,'#d97706',cell*0.55);
+                    ring(3,3.3,cell*0.72,'#d97706',1.5);
+                    [0,1,2,3].forEach(i => {
+                        const a = i * Math.PI/2;
+                        const p1 = at(3 + Math.cos(a)*1.15, 3.3 + Math.sin(a)*1.15);
+                        const p2 = at(3 + Math.cos(a)*1.5, 3.3 + Math.sin(a)*1.5);
+                        c.strokeStyle = '#d97706'; c.lineWidth = 2.5;
+                        c.beginPath(); c.moveTo(p1.x,p1.y); c.lineTo(p2.x,p2.y); c.stroke();
+                    });
+                    break;
+                case 'bingo': // ビンゴ: 5x5カードの斜めライン
+                    for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++)
+                        dot(1.4 + i*0.85, 1.4 + j*0.85, (i===j) ? '#d97706' : '#a8926a', (i===j) ? '#92400e' : '#8a7455', cell*0.24);
+                    seg(1.4,1.4,4.8,4.8,'#92400e',2);
+                    break;
+                case 'bishop': // 角行: 斜線の射程
+                    seg(1.2,5.4,5.4,1.2,'rgba(217,119,6,0.8)',2);
+                    dot(1.7,4.9,P1,P1S); dot(4.9,1.7,P2,P2S);
+                    break;
+                case 'blind': // 盲点: 見える石と見えない石
+                    dot(2.4,3.3,P1,P1S);
+                    c.setLineDash([4,3]); ring(4.7,3.3,R,'rgba(62,34,17,0.55)'); c.setLineDash([]);
+                    break;
+                case 'bomb': // 爆弾: 導火線付きの爆弾石
+                    dot(2.9,3.9,P1,P1S,cell*0.95);
+                    seg(3.5,3.0,4.1,2.1,P1S,2);
+                    c.strokeStyle = '#f59e0b'; c.lineWidth = 2;
+                    [[0,-0.5],[0.45,-0.15],[0.28,0.45],[-0.28,0.45],[-0.45,-0.15]].forEach(([dx,dy]) =>
+                        seg(4.1+dx*0.5, 2.1+dy*0.5, 4.1+dx, 2.1+dy, '#f59e0b', 1.6));
+                    break;
+                case 'border': // 国境: 点線を挟んで接する両軍
+                    c.setLineDash([3,3]); seg(3.3,0.8,3.3,5.8,'rgba(62,34,17,0.6)',1.5); c.setLineDash([]);
+                    dot(2.6,2.6,P1,P1S); dot(2.6,4.0,P1,P1S);
+                    dot(4.0,2.6,P2,P2S); dot(4.0,4.0,P2,P2S);
+                    break;
+                case 'bury': // 埋蔵: 半分埋まった石と「?」
+                    dot(2.8,4.0,P1,P1S,cell*0.9);
+                    seg(1.2,4.7,5.4,4.7,'rgba(62,34,17,0.8)',2.5);
+                    txt('?', 4.4, 2.1, '#92400e', cell*1.5);
+                    break;
+                case 'camo': // 迷彩: 敵色に化ける石
+                    dot(3.3,3.3,P2,P2S,cell*1.0);
+                    c.save(); const cp = at(3.3,3.3);
+                    c.beginPath(); c.arc(cp.x, cp.y, cell*1.0, Math.PI*0.5, Math.PI*1.5); c.closePath();
+                    c.fillStyle = P1; c.fill(); c.restore();
+                    break;
+                case 'card': // 札: 一枚のカード
+                    c.save(); c.translate(at(3.2,3.4).x, at(3.2,3.4).y); c.rotate(-0.25);
+                    c.fillStyle = '#fef3c7'; c.strokeStyle = '#78350f'; c.lineWidth = 1.5;
+                    if (c.roundRect) { c.beginPath(); c.roundRect(-cell*0.95, -cell*1.35, cell*1.9, cell*2.7, cell*0.2); c.fill(); c.stroke(); }
+                    c.fillStyle = '#1c1917'; c.beginPath(); c.arc(0, 0, cell*0.4, 0, Math.PI*2); c.fill();
+                    c.restore();
+                    break;
+                case 'crown': // 王冠: 王冠を被る石
+                    dot(3.3,4.2,P1,P1S,cell*0.95);
+                    c.fillStyle = '#fbbf24'; c.strokeStyle = '#b45309'; c.lineWidth = 1.3;
+                    c.beginPath();
+                    const cw = at(3.3,3.15);
+                    c.moveTo(cw.x - cell*1.0, cw.y + cell*0.35);
+                    c.lineTo(cw.x - cell*0.85, cw.y - cell*0.5);
+                    c.lineTo(cw.x - cell*0.45, cw.y + cell*0.02);
+                    c.lineTo(cw.x, cw.y - cell*0.75);
+                    c.lineTo(cw.x + cell*0.45, cw.y + cell*0.02);
+                    c.lineTo(cw.x + cell*0.85, cw.y - cell*0.5);
+                    c.lineTo(cw.x + cell*1.0, cw.y + cell*0.35);
+                    c.closePath(); c.fill(); c.stroke();
+                    break;
+                case 'cloak': // 隠密: 不可視の影
+                    c.setLineDash([4,3]);
+                    ring(2.6,3.1,R,'rgba(62,34,17,0.5)');
+                    ring(4.2,4.1,R,'rgba(120,53,15,0.5)');
+                    c.setLineDash([]);
+                    dot(3.3,5.2,P1,P1S,R,0.35);
+                    break;
+                case 'clock': // 時計: 回る針と目盛
+                    ring(3.3,3.3,cell*1.35,P1,2);
+                    [0,Math.PI/2,Math.PI,Math.PI*1.5].forEach(a => {
+                        const p1 = at(3.3+Math.cos(a)*1.18, 3.3+Math.sin(a)*1.18);
+                        const p2 = at(3.3+Math.cos(a)*1.42, 3.3+Math.sin(a)*1.42);
+                        c.strokeStyle=P1; c.lineWidth=2; c.beginPath(); c.moveTo(p1.x,p1.y); c.lineTo(p2.x,p2.y); c.stroke();
+                    });
+                    seg(3.3,3.3,3.3,2.15,P1,2.2); seg(3.3,3.3,4.15,3.75,P1,2.2);
+                    break;
+                case 'contract': // 請負: 契約書と印鑑
+                    blk(2.9,3.1,'#fef3c7','#78350f');
+                    seg(2.5,2.7,3.3,2.7,'#a8926a',1.4); seg(2.5,3.1,3.3,3.1,'#a8926a',1.4);
+                    dot(4.4,4.4,'#dc2626','#7f1d1d',cell*0.55);
+                    break;
+                case 'core': // 内核: 中央の正方形核
+                    c.fillStyle = 'rgba(217,119,6,0.25)';
+                    c.fillRect(at(2.1,2.1).x, at(2.1,2.1).y, cell*2.4, cell*2.4);
+                    c.strokeStyle = '#b45309'; c.lineWidth = 1.6;
+                    c.strokeRect(at(2.1,2.1).x, at(2.1,2.1).y, cell*2.4, cell*2.4);
+                    dot(3.3,3.3,P1,P1S);
+                    [[1.1,1.1],[5.5,1.1],[1.1,5.5],[5.5,5.5]].forEach(([x,y]) => dot(x,y,'#a8926a','#8a7455',cell*0.22));
+                    break;
+                case 'corner': // 隅田川: 四隅から広がる
+                    [[1.4,1.4],[5.2,1.4],[1.4,5.2],[5.2,5.2]].forEach(([x,y]) => dot(x,y,P1,P1S));
+                    bond(1.4,1.4,2.6,2.6,3); bond(5.2,5.2,4.0,4.0,3);
+                    dot(2.6,2.6,P2,P2S); dot(4.0,4.0,P2,P2S);
+                    break;
+                case 'dart': // 的: 同心円ターゲット
+                    ring(3.3,3.3,cell*1.5,'#b45309',1.5);
+                    ring(3.3,3.3,cell*0.95,'#b45309',1.5);
+                    ring(3.3,3.3,cell*0.45,'#b45309',1.5);
+                    dot(3.3,3.3,'#dc2626','#7f1d1d',cell*0.25);
+                    break;
+                case 'decoy': // 囮: 本物と消えゆく偽物
+                    dot(2.5,3.2,P1,P1S);
+                    dot(4.5,3.2,P1,P1S,R,0.3);
+                    seg(4.2,2.9,4.8,3.5,'#dc2626',2); seg(4.8,2.9,4.2,3.5,'#dc2626',2);
+                    break;
+                case 'dice': // 賽: 五目の骰子
+                    blk(3.2,3.3,'#fef3c7','#78350f');
+                    [[-0.28,-0.28],[0.28,-0.28],[0,0],[-0.28,0.28],[0.28,0.28]].forEach(([dx,dy]) => {
+                        const p = at(3.2+dx, 3.3+dy);
+                        c.fillStyle = '#1c1917'; c.beginPath(); c.arc(p.x, p.y, cell*0.09, 0, Math.PI*2); c.fill();
+                    });
+                    break;
+                case 'dusk': // 薄暮: 中央だけ明るい
+                    dot(3.3,3.3,P1,P1S);
+                    [[1.6,1.6],[5,1.6],[1.6,5],[5,5]].forEach(([x,y]) => dot(x,y,P1,P1S,R,0.28));
+                    break;
+                case 'dist': // 距離: 前進する石と矢印
+                    [[2.2,4.8],[2.2,3.8],[2.2,2.8]].forEach(([x,y]) => dot(x,y,P1,P1S));
+                    tri(4.6,1.6,cell*0.5,'#d97706','#92400e');
+                    seg(4.6,5.2,4.6,2.2,'rgba(217,119,6,0.8)',2);
+                    break;
+                case 'dual': // 双王: 二つの王冠石
+                    dot(2.5,3.8,P1,P1S,cell*0.8); dot(4.3,3.8,P2,P2S,cell*0.8);
+                    tri(2.5,2.7,cell*0.45,'#fbbf24','#b45309');
+                    tri(4.3,2.7,cell*0.45,'#fbbf24','#b45309');
+                    break;
+                case 'dynasty': // 王朝: 連続不敗の勢い
+                    [[1.9,4.3],[3.3,4.3],[4.7,4.3]].forEach(([x,y]) => dot(x,y,P1,P1S));
+                    c.strokeStyle='#fbbf24'; c.lineWidth=2.5; c.lineCap='round';
+                    c.beginPath(); c.arc(at(3.3,3.0).x, at(3.3,3.0).y, cell*1.35, Math.PI*1.15, Math.PI*1.85); c.stroke();
+                    txt('×5', 4.6, 1.6, '#b45309', cell*0.8);
+                    break;
+                case 'echo': // 残響: 石から広がる波紋
+                    dot(3.3,3.3,P1,P1S);
+                    ring(3.3,3.3,cell*0.75,'rgba(217,119,6,0.75)',1.5);
+                    ring(3.3,3.3,cell*1.2,'rgba(217,119,6,0.4)',1.3);
+                    break;
+                case 'edge': // 辺縁: 周縁帯だけの陣地
+                    [[1.4,1.4],[3.3,1.4],[5.2,1.4],[1.4,3.3],[5.2,3.3],[1.4,5.2],[3.3,5.2],[5.2,5.2]].forEach(([x,y]) =>
+                        dot(x,y,P1,P1S,cell*0.32));
+                    c.strokeStyle='rgba(217,119,6,0.7)'; c.lineWidth=1.6; c.setLineDash([4,3]);
+                    c.strokeRect(at(2.2,2.2).x, at(2.2,2.2).y, cell*2.2, cell*2.2); c.setLineDash([]);
+                    break;
+                case 'fade': // 褪色: 古いほど褪せる
+                    dot(1.9,3.3,P1,P1S); dot(3.3,3.3,P1,P1S,R,0.55); dot(4.7,3.3,P1,P1S,R,0.2);
+                    break;
+                case 'fate': // 運命: 予告された運命の手
+                    dot(3.0,3.8,P1,P1S);
+                    txt('★', 4.3, 2.2, '#d97706', cell*1.1);
+                    break;
+                case 'flag': // 旗: 旗竿と旗石
+                    seg(2.6,5.4,2.6,1.4,P1S,2.5);
+                    c.fillStyle='#dc2626'; c.strokeStyle='#7f1d1d'; c.lineWidth=1.2;
+                    c.beginPath(); const fp = at(2.6,1.7);
+                    c.moveTo(fp.x,fp.y); c.lineTo(fp.x+cell*1.7,fp.y+cell*0.55); c.lineTo(fp.x,fp.y+cell*1.1);
+                    c.closePath(); c.fill(); c.stroke();
+                    dot(2.6,5.5,P1,P1S,cell*0.55);
+                    break;
+                case 'flank': // 側面: 十字の挟撃
+                    dot(3.3,3.3,P2,P2S);
+                    [[3.3,2.3],[3.3,4.3],[2.3,3.3],[4.3,3.3]].forEach(([x,y]) => dot(x,y,P1,P1S));
+                    break;
+                case 'gacha': // 抽選: ガチャカプセル
+                    c.save();
+                    const gp = at(3.3,3.3);
+                    c.beginPath(); c.arc(gp.x, gp.y, cell*1.15, Math.PI, 0); c.fillStyle='#dc2626'; c.fill();
+                    c.beginPath(); c.arc(gp.x, gp.y, cell*1.15, 0, Math.PI); c.fillStyle='#fef3c7'; c.fill();
+                    c.strokeStyle='#78350f'; c.lineWidth=1.5; c.beginPath(); c.arc(gp.x, gp.y, cell*1.15, 0, Math.PI*2); c.stroke();
+                    c.restore();
+                    txt('SSR', 3.3, 3.35, '#78350f', cell*0.62);
+                    break;
+                case 'goal': // 得点: 中央ゴールと入った石
+                    c.strokeStyle='#b45309'; c.lineWidth=1.8;
+                    c.strokeRect(at(2.3,2.3).x, at(2.3,2.3).y, cell*2.0, cell*2.0);
+                    dot(3.3,3.3,P1,P1S); txt('+1', 4.9, 1.7, '#d97706', cell*0.75);
+                    break;
+                case 'illusion': // 幻影: 敵色に見える石
+                    dot(3.3,3.3,P1,P1S,cell*0.95,0.45);
+                    dot(3.3,3.3,P2,P2S,cell*0.55);
+                    break;
+                case 'item': // 道具: 盤上の宝箱アイテム
+                    blk(2.4,4.0,'#d97706','#92400e');
+                    seg(2.4,3.6,2.4,4.4,'#92400e',1.4);
+                    txt('★', 4.4, 2.3, '#d97706', cell*1.0);
+                    dot(4.4,4.4,P1,P1S,R,0.9);
+                    break;
+                case 'jackpot': // 百倍: 倍率アップの7
+                    txt('7', 2.2, 2.4, '#d97706', cell*1.5);
+                    txt('7', 3.5, 3.4, '#b45309', cell*1.5);
+                    txt('7', 4.8, 4.4, '#dc2626', cell*1.5);
+                    break;
+                case 'knight': // 桂馬: L字ジャンプ
+                    dot(2.5,4.6,P1,P1S);
+                    c.setLineDash([4,3]); seg(2.5,4.6,2.5,2.6,'rgba(217,119,6,0.9)',2); seg(2.5,2.6,4.5,2.6,'rgba(217,119,6,0.9)',2); c.setLineDash([]);
+                    dot(4.5,2.6,P2,P2S);
+                    break;
+                case 'leash': // 繋留: 最古の石に繋がれた鎖
+                    dot(1.8,4.6,P1,P1S);
+                    c.setLineDash([3,3]); seg(1.8,4.6,4.4,2.6,'#b45309',2); c.setLineDash([]);
+                    dot(4.4,2.6,P2,P2S); ring(4.4,2.6,cell*0.75,'rgba(62,34,17,0.5)',1.3);
+                    break;
+                case 'link': // 架橋: 辺を結ぶ石の橋
+                    bond(2.0,1.2,3.2,2.6,3); bond(3.2,2.6,2.4,4.0,3); bond(2.4,4.0,4.4,5.4,3);
+                    [[2.0,1.2],[3.2,2.6],[2.4,4.0],[4.4,5.4]].forEach(([x,y]) => dot(x,y,P1,P1S,cell*0.38));
+                    break;
+                case 'loop': // 周回: 外周を回る環
+                    c.strokeStyle='#b45309'; c.lineWidth=2; c.lineCap='round';
+                    c.beginPath(); c.arc(at(3.3,3.3).x, at(3.3,3.3).y, cell*1.6, Math.PI*0.2, Math.PI*1.6); c.stroke();
+                    tri(4.9,4.6,cell*0.4,'#b45309','#92400e',Math.PI*0.7);
+                    dot(3.3,3.3,P1,P1S);
+                    break;
+                case 'market': // 相場: 乱高下のチャート
+                    seg(1.4,4.6,2.4,2.8,'#dc2626',2); seg(2.4,2.8,3.2,3.8,'#dc2626',2);
+                    seg(3.2,3.8,4.2,2.0,'#dc2626',2); seg(4.2,2.0,5.2,3.0,'#dc2626',2);
+                    [[2.4,2.8],[3.2,3.8],[4.2,2.0],[5.2,3.0]].forEach(([x,y]) => dot(x,y,P1,P1S,cell*0.28));
+                    seg(1.2,5.2,5.4,5.2,'rgba(62,34,17,0.6)',1.5);
+                    break;
+                case 'mirage': // 蜃気楼: 揺らぐ幻影石
+                    dot(3.3,3.3,P1,P1S,R,0.45);
+                    c.strokeStyle='rgba(217,119,6,0.8)'; c.lineWidth=1.5; c.lineCap='round';
+                    [[1.3],[3.3],[5.3]].forEach(([y]) => {
+                        c.beginPath(); c.moveTo(at(1.3,y).x, at(1.3,y).y);
+                        for (let x = 1.3; x <= 5.3; x += 0.5)
+                            c.lineTo(at(x, y + Math.sin(x*2)*0.14).x, at(x, y + Math.sin(x*2)*0.14).y);
+                        c.stroke();
+                    });
+                    break;
+                case 'modulo': // 剰余: 周期で回る帯
+                    [0,1,2].forEach(i => {
+                        c.fillStyle = ['rgba(28,25,23,0.5)','rgba(217,119,6,0.45)','rgba(168,146,106,0.5)'][i];
+                        c.fillRect(at(1.1,1.3+i*1.4).x, at(1.1,1.3+i*1.4).y, cell*4.4, cell*0.85);
+                    });
+                    dot(3.3,3.6,P2,P2S);
+                    break;
+                case 'number': // 数読: 呼吸点数が見える
+                    dot(2.7,3.3,P1,P1S); txt('4', 1.7, 2.4, '#b45309', cell*0.8);
+                    dot(4.5,4.1,P2,P2S); txt('1', 5.4, 3.3, '#dc2626', cell*0.8);
+                    break;
+                case 'over': // 大差: 圧倒的な勢力差
+                    [[1.9,2.6],[2.9,2.6],[3.9,2.6],[1.9,3.6],[2.9,3.6],[3.9,3.6]].forEach(([x,y]) =>
+                        dot(x,y,P1,P1S,cell*0.3));
+                    dot(5.3,4.6,P2,P2S,cell*0.32);
+                    break;
+                case 'peace': // 平和: 手を取り合う陣地
+                    dot(2.6,3.3,P1,P1S); dot(4.0,3.3,P2,P2S);
+                    c.strokeStyle='#15803d'; c.lineWidth=2; c.lineCap='round';
+                    c.beginPath(); c.moveTo(at(2.6,2.2).x, at(2.6,2.2).y);
+                    c.quadraticCurveTo(at(3.3,1.4).x, at(3.3,1.4).y, at(4.0,2.2).x, at(4.0,2.2).y); c.stroke();
+                    break;
+                case 'parity': // 偶奇: 市松の染分け
+                    blk(2.3,2.3,P1,P1S); blk(3.9,2.3,P2,P2S);
+                    blk(2.3,3.9,P2,P2S); blk(3.9,3.9,P1,P1S);
+                    break;
+                case 'peak': // 高峰: 標高の山
+                    c.fillStyle='rgba(168,146,106,0.7)'; c.strokeStyle='#8a7455'; c.lineWidth=1.4;
+                    c.beginPath();
+                    c.moveTo(at(1.0,5.4).x, at(1.0,5.4).y); c.lineTo(at(3.3,1.3).x, at(3.3,1.3).y);
+                    c.lineTo(at(5.6,5.4).x, at(5.6,5.4).y); c.closePath(); c.fill(); c.stroke();
+                    dot(3.3,2.6,P1,P1S,cell*0.3); dot(2.6,4.1,P2,P2S,cell*0.3); dot(4.0,4.1,P1,P1S,cell*0.3);
+                    break;
+                case 'penta': // 五連: 五つ並んだ石
+                    [0,1,2,3,4].forEach(i => dot(1.3+i*1.0, 3.3, i===4?P2:P1, i===4?P2S:P1S, cell*0.4));
+                    break;
+                case 'pole': // 極軸: 中央十字軸
+                    seg(3.3,0.9,3.3,5.7,'rgba(62,34,17,0.5)',1.8); seg(0.9,3.3,5.7,3.3,'rgba(62,34,17,0.5)',1.8);
+                    dot(3.3,3.3,P1,P1S); dot(3.3,2.3,P2,P2S); dot(2.3,3.3,P2,P2S);
+                    break;
+                case 'pot': // 壺: アゲハマを蓄える壺
+                    c.fillStyle='#a8926a'; c.strokeStyle='#6b5738'; c.lineWidth=1.5;
+                    c.beginPath(); c.ellipse(at(3.3,4.0).x, at(3.3,4.0).y, cell*1.35, cell*1.15, 0, 0, Math.PI*2); c.fill(); c.stroke();
+                    c.fillStyle='#6b5738'; c.fillRect(at(2.7,2.6).x, at(2.7,2.6).y, cell*1.2, cell*0.35);
+                    [[2.9,3.8],[3.5,3.8],[3.2,4.3]].forEach(([x,y]) => dot(x,y,P2,P2S,cell*0.22));
+                    break;
+                case 'prime': // 素数: 疎らな星座
+                    [[1.6,1.6],[3.3,2.4],[5.0,1.9],[2.2,4.6],[4.6,5.0]].forEach(([x,y]) => dot(x,y,P1,P1S,cell*0.32));
+                    bond(1.6,1.6,3.3,2.4,2); bond(3.3,2.4,5.0,1.9,2); bond(3.3,2.4,2.2,4.6,2); bond(2.2,4.6,4.6,5.0,2);
+                    break;
+                case 'meteor': // 預言: 落下する隕石
+                    seg(5.3,1.1,3.6,2.8,'#dc2626',3); seg(5.0,1.5,4.5,2.0,'#f59e0b',4);
+                    dot(3.3,3.1,P1,P1S,cell*0.6);
+                    ring(3.3,4.6,cell*0.9,'rgba(62,34,17,0.6)',1.5);
+                    ring(3.3,4.6,cell*1.35,'rgba(62,34,17,0.3)',1.2);
+                    break;
+                case 'radar': // 探知: レーダー掃引
+                    ring(3.3,3.3,cell*1.55,'#15803d',1.6);
+                    ring(3.3,3.3,cell*0.8,'#15803d',1.2);
+                    c.fillStyle='rgba(21,128,61,0.25)';
+                    c.beginPath(); c.moveTo(at(3.3,3.3).x, at(3.3,3.3).y);
+                    c.arc(at(3.3,3.3).x, at(3.3,3.3).y, cell*1.55, -Math.PI/2, -Math.PI/6); c.closePath(); c.fill();
+                    seg(3.3,3.3,4.6,2.1,'#15803d',2);
+                    dot(2.3,4.2,'#dc2626','#7f1d1d',cell*0.22);
+                    break;
+                case 'rook': // 飛車: 縦横の射程
+                    seg(3.3,0.9,3.3,5.7,'rgba(217,119,6,0.75)',2); seg(0.9,3.3,5.7,3.3,'rgba(217,119,6,0.75)',2);
+                    dot(3.3,3.3,P1,P1S,cell*0.75);
+                    break;
+                case 'row': // 行進: 上から下へ回る対象行
+                    c.fillStyle='rgba(217,119,6,0.3)'; c.fillRect(at(0.9,2.9).x, at(0.9,2.9).y, cell*4.8, cell*0.9);
+                    [[1.5,3.3],[3.3,3.3],[5.1,3.3]].forEach(([x,y]) => dot(x,y,P1,P1S,cell*0.36));
+                    tri(5.6,4.9,cell*0.4,'#b45309','#92400e',Math.PI/2);
+                    seg(1.5,4.9,5.0,4.9,'rgba(62,34,17,0.5)',1.4);
+                    break;
+                case 'scarce': // 寡占: 4個で閉鎖される行
+                    [0,1,2,3].forEach(i => dot(1.5+i*0.95, 2.6, P1, P1S, cell*0.34));
+                    seg(5.2,2.0,5.9,3.3,'#dc2626',2.2); seg(5.9,2.0,5.2,3.3,'#dc2626',2.2);
+                    seg(1.2,4.4,5.4,4.4,'rgba(62,34,17,0.55)',1.6);
+                    break;
+                case 'scatter': // 散布: 中心から3マス環に撒く
+                    dot(3.3,3.3,P1,P1S);
+                    for (let i = 0; i < 6; i++) {
+                        const a = i * Math.PI/3 + 0.3;
+                        dot(3.3+Math.cos(a)*1.9, 3.3+Math.sin(a)*1.9, P2, P2S, cell*0.3);
+                    }
+                    c.setLineDash([3,3]); ring(3.3,3.3,cell*1.9,'rgba(62,34,17,0.35)',1.2); c.setLineDash([]);
+                    break;
+                case 'quantum': // 量子: 重ね合わせの二色石
+                    dot(3.0,3.3,P1,P1S,cell*0.85,0.75);
+                    dot(3.7,3.3,P2,P2S,cell*0.85,0.75);
+                    txt('?', 3.35, 1.5, '#b45309', cell*0.9);
+                    break;
+                case 'scout': // 斥候: 双眼のレンズ
+                    ring(2.7,3.1,cell*0.62,P1,2); ring(4.0,3.1,cell*0.62,P1,2);
+                    seg(3.35,3.1,3.35,3.1,P1,2.5);
+                    seg(2.7,3.7,2.7,4.5,P1,2); seg(4.0,3.7,4.0,4.5,P1,2);
+                    dot(5.1,4.9,P1,P1S,cell*0.3);
+                    break;
+                case 'fan': // 回転扇: 回る扇区
+                    [[-0.9,-0.5],[0.15,-1.05],[1.0,-0.35]].forEach(([rx,ry],i) => {
+                        const a0 = Math.atan2(ry,rx), a1 = Math.atan2(ry*0.8+0.35, rx+0.1);
+                        c.fillStyle=['rgba(217,119,6,0.55)','rgba(168,146,106,0.55)','rgba(28,25,23,0.45)'][i];
+                        c.strokeStyle='#78350f'; c.lineWidth=1.2;
+                        c.beginPath(); c.moveTo(at(3.3,3.6).x, at(3.3,3.6).y);
+                        c.arc(at(3.3,3.6).x, at(3.3,3.6).y, cell*1.7, a0, a0+0.75); c.closePath(); c.fill(); c.stroke();
+                    });
+                    dot(3.3,3.6,P1,P1S,cell*0.35);
+                    break;
+                case 'slot': // 遊技: 3リールのスロット
+                    [0,1,2].forEach(i => blk(2.0+i*1.3, 3.3, '#fef3c7', '#78350f'));
+                    txt('7', 2.0, 3.3, '#dc2626', cell*0.7); txt('7', 3.3, 3.3, '#dc2626', cell*0.7); txt('7', 4.6, 3.3, '#dc2626', cell*0.7);
+                    break;
+                case 'sloth': // 遅滞: 封鎖された筋
+                    dot(2.6,3.0,P1,P1S); dot(4.2,4.0,P2,P2S);
+                    ring(2.6,3.0,cell*0.7,'#dc2626',2); seg(2.1,2.5,3.1,3.5,'#dc2626',2.2);
+                    ring(4.2,4.0,cell*0.7,'#dc2626',2); seg(3.7,3.5,4.7,4.5,'#dc2626',2.2);
+                    break;
+                case 'smoke': // 煙幕: 上がる煙
+                    [[2.5,4.3],[3.4,3.8],[4.3,4.4],[3.0,3.0]].forEach(([x,y],i) => {
+                        c.fillStyle=`rgba(120,113,108,${0.55-i*0.1})`;
+                        c.beginPath(); c.arc(at(x,y).x, at(x,y).y, cell*(0.75-i*0.08), 0, Math.PI*2); c.fill();
+                    });
+                    dot(2.4,5.2,P1,P1S,cell*0.3); dot(4.4,5.3,P2,P2S,cell*0.3);
+                    break;
+                case 'survey': // 測量: 囲んだ矩形のボーナス
+                    c.setLineDash([4,3]); c.strokeStyle='#b45309'; c.lineWidth=1.8;
+                    c.strokeRect(at(1.9,2.2).x, at(1.9,2.2).y, cell*2.8, cell*2.2); c.setLineDash([]);
+                    [[1.9,2.2],[4.7,2.2],[1.9,4.4],[4.7,4.4]].forEach(([x,y]) => dot(x,y,P1,P1S,cell*0.32));
+                    txt('面積', 3.3, 3.3, '#92400e', cell*0.55);
+                    break;
+                case 'trap': // 罠: 空点に見える罠石
+                    c.setLineDash([3,3]); ring(3.3,3.3,R,'rgba(62,34,17,0.5)'); c.setLineDash([]);
+                    c.fillStyle='#dc2626'; c.strokeStyle='#7f1d1d'; c.lineWidth=1.2;
+                    [[2.2,3.3,0],[4.4,3.3,Math.PI],[3.3,2.2,-Math.PI/2],[3.3,4.4,Math.PI/2]].forEach(([x,y,r]) =>
+                        tri(x,y,cell*0.3,'#dc2626','#7f1d1d',r));
+                    break;
+                case 'triple': // 三手: 3石まとめて置く
+                    [[2.6,3.6],[3.6,3.6],[3.1,2.7]].forEach(([x,y]) => dot(x,y,P1,P1S));
+                    ring(3.1,3.35,cell*1.3,'rgba(217,119,6,0.6)',1.5);
+                    txt('×3', 4.9, 1.9, '#b45309', cell*0.8);
+                    break;
+                case 'vote': // 選挙: 9区画の多数決
+                    [[0,0,P1],[1,0,P2],[2,0,P1],[0,1,P1],[1,1,P2],[2,1,P1],[0,2,P2],[1,2,P1],[2,2,P2]].forEach(([i,j,f]) => {
+                        c.fillStyle = f===P1?'rgba(28,25,23,0.7)':'rgba(254,243,199,0.9)';
+                        c.strokeStyle='#78350f'; c.lineWidth=1;
+                        c.fillRect(at(1.7+i*1.1,1.7+j*1.1).x, at(1.7+i*1.1,1.7+j*1.1).y, cell*0.95, cell*0.95);
+                        c.strokeRect(at(1.7+i*1.1,1.7+j*1.1).x, at(1.7+i*1.1,1.7+j*1.1).y, cell*0.95, cell*0.95);
+                    });
+                    break;
+                case 'xray': // 透視: X線の閃光
+                    ring(3.3,3.3,cell*0.7,'#0e7490',1.8);
+                    dot(3.3,3.3,'#0e7490','#155e75',cell*0.3);
+                    [0,Math.PI/3,Math.PI*2/3,Math.PI,Math.PI*4/3,Math.PI*5/3].forEach(a =>
+                        seg(3.3+Math.cos(a)*1.0, 3.3+Math.sin(a)*1.0, 3.3+Math.cos(a)*1.6, 3.3+Math.sin(a)*1.6, 'rgba(14,116,144,0.8)', 1.6));
+                    break;
+                case 'zip': // 縞封: 交互に食い違うジッパー
+                    [0,1,2,3,4].forEach(i => dot(i%2?2.6:3.9, 1.4+i*0.95, i%2?P2:P1, i%2?P2S:P1S, cell*0.34));
+                    seg(3.25,1.0,3.25,5.7,'rgba(62,34,17,0.4)',1.4);
+                    break;
+                case 'zone': // 区域: 9区画の制圧
+                    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) {
+                        const f = (i+j)%2 ? 'rgba(254,243,199,0.85)' : 'rgba(28,25,23,0.6)';
+                        c.fillStyle=f; c.strokeStyle='#78350f'; c.lineWidth=1.2;
+                        c.fillRect(at(1.55+i*1.2,1.55+j*1.2).x, at(1.55+i*1.2,1.55+j*1.2).y, cell*1.05, cell*1.05);
+                        c.strokeRect(at(1.55+i*1.2,1.55+j*1.2).x, at(1.55+i*1.2,1.55+j*1.2).y, cell*1.05, cell*1.05);
+                    }
+                    dot(3.3,3.3,P2,P2S,cell*0.3);
                     break;
                 default: // 未定義kind: 石+スパークル (wave2汎用)
                     dot(3, 3, P1, P1S);
