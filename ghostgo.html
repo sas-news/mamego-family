@@ -882,6 +882,23 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 漂う靄: 大きな半透明の帯がゆっくり盤面を横切る
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            for (let k = 0; k < 3; k++) {
+                const t = (now / 11000 + k / 3) % 1;
+                const mx = pad + (t * (BOARD_SIZE + 5) - 2.5) * cs;
+                const my = pad + (BOARD_SIZE - 1) * cs * (0.2 + 0.3 * k) + Math.sin(now / 2600 + k * 2) * cs * 0.5;
+                const g = ctx2.createRadialGradient(mx, my, 0, mx, my, cs * 2.8);
+                g.addColorStop(0, 'rgba(170,190,220,0.10)');
+                g.addColorStop(1, 'rgba(170,190,220,0)');
+                ctx2.fillStyle = g;
+                ctx2.beginPath();
+                ctx2.arc(mx, my, cs * 2.8, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1178,19 +1195,49 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 幽霊マスの描画 (薄い輪郭)
-            for (let gy = 0; gy < BOARD_SIZE; gy++) {
-                for (let gx = 0; gx < BOARD_SIZE; gx++) {
-                    if (board[gy * BOARD_SIZE + gx] !== 4) continue;
-                    const bx = padding + gx * cellSize;
-                    const by = padding + gy * cellSize;
-                    ctx.strokeStyle = 'rgba(150, 160, 190, 0.8)';
-                    ctx.lineWidth = 2;
-                    ctx.setLineDash([3, 3]);
-                    ctx.beginPath();
-                    ctx.arc(bx, by, cellSize * 0.36, 0, Math.PI * 2);
-                    ctx.stroke();
-                    ctx.setLineDash([]);
+            // 幽霊マスの描画 (漂う半透明の亡霊 + 残り手数)
+            {
+                const now = fxNow();
+                for (let gy = 0; gy < BOARD_SIZE; gy++) {
+                    for (let gx = 0; gx < BOARD_SIZE; gx++) {
+                        const gi = gy * BOARD_SIZE + gx;
+                        if (board[gi] !== 4) continue;
+                        const bx = padding + gx * cellSize;
+                        const by = padding + gy * cellSize;
+                        const remain = ghostTimer[gi] || 0;
+                        const bob = Math.sin(now / 420 + gi * 1.9) * cellSize * 0.04;
+                        const gw = cellSize * 0.30;
+                        ctx.save();
+                        ctx.globalAlpha = 0.22 + 0.55 * (remain / 6);
+                        // 丸い頭と波打つ裾のシルエット
+                        const g2 = ctx.createLinearGradient(bx, by - gw, bx, by + gw * 1.4);
+                        g2.addColorStop(0, 'rgba(196,210,240,0.95)');
+                        g2.addColorStop(1, 'rgba(150,170,210,0.30)');
+                        ctx.fillStyle = g2;
+                        ctx.beginPath();
+                        ctx.arc(bx, by + bob - cellSize * 0.05, gw, Math.PI, 0);
+                        ctx.lineTo(bx + gw, by + bob + gw * 0.5);
+                        for (let k = 0; k < 3; k++) {
+                            const wx = bx + gw - (k + 0.5) * (gw * 2 / 3);
+                            ctx.quadraticCurveTo(wx + gw / 6, by + bob + gw * 1.0 + Math.sin(now / 300 + k + gi) * cellSize * 0.03,
+                                wx - gw / 6, by + bob + gw * 0.55);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                        // 目と口
+                        ctx.fillStyle = 'rgba(30,35,60,0.8)';
+                        ctx.beginPath();
+                        ctx.arc(bx - gw * 0.35, by + bob - gw * 0.2, cellSize * 0.045, 0, Math.PI * 2);
+                        ctx.arc(bx + gw * 0.35, by + bob - gw * 0.2, cellSize * 0.045, 0, Math.PI * 2);
+                        ctx.arc(bx, by + bob + gw * 0.15, cellSize * 0.05, 0, Math.PI * 2);
+                        ctx.fill();
+                        // 残り手数
+                        ctx.fillStyle = 'rgba(225,235,255,0.95)';
+                        ctx.font = 'bold ' + Math.round(cellSize * 0.30) + 'px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(String(remain), bx, by + cellSize * 0.42);
+                        ctx.restore();
+                    }
                 }
             }
 
@@ -1733,7 +1780,7 @@
             const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 // 幽霊: 取られたマスは幽霊(4)として6手間残る
-                captured.forEach(idx => { board[idx] = 4; ghostTimer[idx] = 6; });
+                captured.forEach(idx => { board[idx] = 4; ghostTimer[idx] = 6; fxGlow(idx, 'rgba(165,190,235,0.9)', 650); });
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -1751,7 +1798,10 @@
             turn = opponent;
             // 幽霊の消滅カウントダウン
             for (let gi = 0; gi < ghostTimer.length; gi++) {
-                if (ghostTimer[gi] > 0 && --ghostTimer[gi] === 0 && board[gi] === 4) board[gi] = 0;
+                if (ghostTimer[gi] > 0 && --ghostTimer[gi] === 0 && board[gi] === 4) {
+                    board[gi] = 0;
+                    fxSplash(gi, '#aabde0', 7);
+                }
             }
             updateUI();
 

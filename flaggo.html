@@ -1218,6 +1218,31 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            for (const p of [1, 2]) {
+                const fi = flagIdx[p];
+                if (fi < 0 || board[fi] !== p) continue;
+                const fx = fi % BOARD_SIZE, fy = Math.floor(fi / BOARD_SIZE);
+                const cx = padding + fx * cellSize, cy = padding + fy * cellSize;
+                ctx.save();
+                ctx.strokeStyle = p === 1 ? '#f8fafc' : '#1a1a1a';
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - cellSize * 0.30);
+                ctx.lineTo(cx + cellSize * 0.22, cy - cellSize * 0.20);
+                ctx.lineTo(cx, cy - cellSize * 0.10);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - cellSize * 0.30);
+                ctx.lineTo(cx, cy + cellSize * 0.06);
+                ctx.stroke();
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;

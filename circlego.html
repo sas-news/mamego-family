@@ -879,6 +879,18 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const cr = (BOARD_SIZE - 1) / 2;
+            const bx = pad + cr * cs, by = pad + cr * cs, rr = (cr + 0.55) * cs;
+            const a0 = now / 2400;
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(255,255,255,0.16)';
+            ctx2.lineWidth = Math.max(1.5, cs * 0.10);
+            ctx2.beginPath();
+            ctx2.arc(bx, by, rr, a0, a0 + Math.PI * 0.35);
+            ctx2.stroke();
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 

@@ -55,6 +55,38 @@ module.exports = {
             '近傍が上下左右+斜め2方向の計6方向になる六角形盤。連の形が大きく変わる。',
             'さらに地集計では盤端 (辺) の空点が1点2目で計算される。辺の取り合いが勝敗を分ける。',
         ])],
+        // 石は小さな六角形
+        [K.ONE, K.OBSTACLE_ANCHOR, `        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
+            if (!cellsAbs || cellsAbs.length === 0) return;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            cellsAbs.forEach(p => {
+                const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                const r = cellSize * 0.44;
+                const g = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.25, r * 0.1, cx, cy, r);
+                g.addColorStop(0, shiftColor(fill, 0.38));
+                g.addColorStop(1, shiftColor(fill, -0.22));
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                for (let k = 0; k < 6; k++) {
+                    const a = (k / 6) * Math.PI * 2 + Math.PI / 6;
+                    const vx = cx + r * Math.cos(a), vy = cy + r * Math.sin(a);
+                    if (k === 0) ctx.moveTo(vx, vy); else ctx.lineTo(vx, vy);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = stroke;
+                ctx.lineWidth = Math.max(1, cellSize * 0.035);
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(255,255,255,0.45)';
+                ctx.beginPath();
+                ctx.arc(cx - r * 0.28, cy - r * 0.28, cellSize * 0.05, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
+        }
+
+        // 障害物 (3:壁 4:幽霊など) のデフォルト描画 — obstaclePainter があればそちら優先`],
         ...K.STONE_SPEC,
     ],
     test: `

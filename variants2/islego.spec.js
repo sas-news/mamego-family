@@ -20,9 +20,11 @@ module.exports = {
                     if (sea || shore) board[y * BOARD_SIZE + x] = 3;
                 }
             }`],
-        // 海は青く
-        [K.ONE, '            const covered = new Set(); // ピース描画でカバー済みのマス', K.voidDraw('"#2b4a63"')],
+        // 海は揺れる水面
+        [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_WATER('#1a5d8f', '#0b3450'))],
         ...K.WALL_GUARD_SPEC,
+        // 海のきらめき
+        [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_WATER],
         // 橋に茶色い丸印
         K.CUE_STARS(`            {
                 const q = Math.floor(BOARD_SIZE / 3), c = Math.floor(BOARD_SIZE / 2);

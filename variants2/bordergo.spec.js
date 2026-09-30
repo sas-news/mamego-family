@@ -36,6 +36,22 @@ module.exports = {
                 }
             }`],
         ...K.LEGAL_DOTS_SPEC,
+        // 国境線: 敵石の周囲に脈動する接敵リング (接敵域が可視化される)
+        [K.ONE, K.FX_BOOT, K.FX_BOOT + `
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            const enemy = turn === 1 ? 2 : 1;
+            ctx2.strokeStyle = 'rgba(220,80,60,' + (0.22 + 0.14 * Math.sin(now / 500)) + ')';
+            ctx2.lineWidth = Math.max(1.2, cs * 0.05);
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== enemy) continue;
+                const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
+                ctx2.beginPath();
+                ctx2.arc(pad + x * cs, pad + y * cs, cs * 0.52, 0, Math.PI * 2);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は敵石に接する点 (斜め含む8近傍) のみ。敵が居ない間はどこにでも置ける。',
             '全ての石は国境線上で生まれる。接触戦から逃げられない激しい碁。',

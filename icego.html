@@ -883,6 +883,21 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            ctx2.fillStyle = '#dff1ff';
+            for (let k = 0; k < 14; k++) {
+                const tw = Math.sin(now / 420 + k * 1.7);
+                if (tw <= 0.55) continue;
+                const sx = pad + ((k * 37) % BOARD_SIZE) * cs + Math.sin(now / 900 + k) * cs * 0.3;
+                const sy = pad + ((k * 53) % BOARD_SIZE) * cs;
+                ctx2.globalAlpha = (tw - 0.55) * 1.3;
+                ctx2.beginPath();
+                ctx2.arc(sx, sy, cs * 0.045, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1767,6 +1782,7 @@
                         if (cx !== np.x || cy2 !== np.y) {
                             board[cy2 * N + cx] = player;
                             board[np.y * N + np.x] = 0;
+                            fxSlide(np.y * N + np.x, cy2 * N + cx, 180 + Math.hypot(cx - np.x, cy2 - np.y) * 80); // 滑走の軌跡
                         }
                     }
                 }

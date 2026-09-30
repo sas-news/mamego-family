@@ -1175,15 +1175,32 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // 専用テクスチャ: 壁セルをルールに合った質感で塗る
             {
+                const now = fxNow();
                 const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
                 ctx.save();
-                ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.48);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const i = y * BOARD_SIZE + x;
                     if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    // 煉瓦
+                    const g = ctx.createLinearGradient(cx, cy - hh, cx, cy + hh);
+                    g.addColorStop(0, '#6b4a3a'); g.addColorStop(1, '#402a20');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    ctx.strokeStyle = 'rgba(20,10,8,0.55)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.moveTo(cx - hh, cy); ctx.lineTo(cx + hh, cy);
+                    const off = (y % 2 === 0) ? 0 : cellSize * 0.25;
+                    ctx.moveTo(cx - cellSize * 0.25 + off, cy - hh); ctx.lineTo(cx - cellSize * 0.25 + off, cy);
+                    ctx.moveTo(cx + cellSize * 0.25 + off, cy); ctx.lineTo(cx + cellSize * 0.25 + off, cy + hh);
+                    ctx.stroke();
+                    ctx.fillStyle = 'rgba(255,235,200,0.08)';
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize * 0.2);
                 }
+                // 有効領域との境界を盤の縁線で締める
                 ctx.strokeStyle = currentTheme.lineColor;
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
                 ctx.beginPath();

@@ -1175,15 +1175,39 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // 専用テクスチャ: 壁セルをルールに合った質感で塗る
             {
+                const now = fxNow();
                 const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
                 ctx.save();
-                ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.48);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const i = y * BOARD_SIZE + x;
                     if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    // 墓地の地面
+                    ctx.fillStyle = 'rgba(62,64,70,0.5)';
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const tg = ctx.createLinearGradient(cx, cy - hh, cx, cy + hh);
+                    tg.addColorStop(0, '#b9bdc5'); tg.addColorStop(1, '#82878f');
+                    ctx.fillStyle = tg;
+                    const tw = cellSize * 0.62, tt = cy - cellSize * 0.30, tb = cy + cellSize * 0.34;
+                    ctx.beginPath();
+                    ctx.moveTo(cx - tw / 2, tb);
+                    ctx.lineTo(cx - tw / 2, tt + tw * 0.28);
+                    ctx.quadraticCurveTo(cx - tw / 2, tt - cellSize * 0.10, cx, tt - cellSize * 0.10);
+                    ctx.quadraticCurveTo(cx + tw / 2, tt - cellSize * 0.10, cx + tw / 2, tt + tw * 0.28);
+                    ctx.lineTo(cx + tw / 2, tb);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(35,38,44,0.65)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(cx - tw * 0.2, cy + cellSize * 0.02); ctx.lineTo(cx + tw * 0.2, cy + cellSize * 0.02);
+                    ctx.moveTo(cx - tw * 0.14, cy + cellSize * 0.13); ctx.lineTo(cx + tw * 0.14, cy + cellSize * 0.13);
+                    ctx.stroke();
                 }
+                // 有効領域との境界を盤の縁線で締める
                 ctx.strokeStyle = currentTheme.lineColor;
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
                 ctx.beginPath();
@@ -1737,7 +1761,7 @@
             const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 // 墓標ルール: 取られたマスは壁(墓標)になり、空点に戻らない
-                captured.forEach(idx => board[idx] = 3);
+                captured.forEach(idx => { board[idx] = 3; fxGlow(idx, 'rgba(226,232,240,0.85)', 700); });
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();

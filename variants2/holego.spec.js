@@ -18,7 +18,9 @@ module.exports = {
             '盤の所々に穴が空いている。穴には置けず、呼吸点にも地にもならない。',
             '穴は盤サイズごとに固定。欠けた呼吸点を計算に入れて戦う。',
         ])],
-        ...K.WALL_SPEC,
+        // 穴は底なしの丸い落とし穴
+        [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_PIT)],
+        ...K.WALL_GUARD_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `

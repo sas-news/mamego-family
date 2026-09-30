@@ -1217,6 +1217,27 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 鎖: 2石ペア同士を細い鎖線で結ぶ
+            {
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.8);
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                pieces.forEach(pc => {
+                    const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
+                    if (alive.length < 2) return;
+                    ctx.beginPath();
+                    ctx.moveTo(padding + alive[0].x * cellSize, padding + alive[0].y * cellSize);
+                    ctx.lineTo(padding + alive[1].x * cellSize, padding + alive[1].y * cellSize);
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;

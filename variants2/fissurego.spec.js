@@ -11,7 +11,7 @@ module.exports = {
         ...K.rb('FISSUREGO', '断裂碁', 'fissurego'),
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
-                captured.forEach(idx => board[idx] = 0);
+                captured.forEach(idx => { board[idx] = 0; fxBurst(idx, '#78716c', 8, 1.4); });
                 captures[player] += captured.length;
                 // 断裂: 取跡から亀裂が走り、接する敵石とその先の石が裂ける
                 const cracked = new Set();
@@ -29,8 +29,10 @@ module.exports = {
                     });
                 });
                 if (cracked.size > 0) {
-                    cracked.forEach(i => { board[i] = 0; });
+                    cracked.forEach(i => { board[i] = 0; fxBurst(i, '#a8a29e', 7, 1.3); fxGlow(i, '#ef4444', 480); });
                     captures[opponent] += cracked.size;
+                    fxShake(6, 320);
+                    fxText(captured[0], 'ザクッ', '#fca5a5', 850);
                 }
                 soundManager.playCapture();
                 cleanUpPieces();

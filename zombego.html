@@ -882,6 +882,23 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 漂う靄: 大きな半透明の帯がゆっくり盤面を横切る
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            for (let k = 0; k < 3; k++) {
+                const t = (now / 11000 + k / 3) % 1;
+                const mx = pad + (t * (BOARD_SIZE + 5) - 2.5) * cs;
+                const my = pad + (BOARD_SIZE - 1) * cs * (0.2 + 0.3 * k) + Math.sin(now / 2600 + k * 2) * cs * 0.5;
+                const g = ctx2.createRadialGradient(mx, my, 0, mx, my, cs * 2.8);
+                g.addColorStop(0, 'rgba(150,180,110,0.10)');
+                g.addColorStop(1, 'rgba(150,180,110,0)');
+                ctx2.fillStyle = g;
+                ctx2.beginPath();
+                ctx2.arc(mx, my, cs * 2.8, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1178,15 +1195,32 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // 専用テクスチャ: 壁セルをルールに合った質感で塗る
             {
+                const now = fxNow();
                 const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
                 ctx.save();
-                ctx.fillStyle = 'rgba(95,110,72,0.9)';
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const i = y * BOARD_SIZE + x;
                     if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    // 腐乱したゾンビ体
+                    const g = ctx.createRadialGradient(cx, cy, cellSize * 0.1, cx, cy, cellSize * 0.75);
+                    g.addColorStop(0, '#5e6e44'); g.addColorStop(1, '#39441f');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const hzs = Math.sin(i * 12.9898) * 43758.5453; const hz = hzs - Math.floor(hzs);
+                    ctx.fillStyle = 'rgba(22,28,12,0.5)';
+                    ctx.beginPath();
+                    ctx.arc(cx - hh + hz * cellSize, cy + cellSize * 0.24, cellSize * 0.09, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = Math.sin(now / 900 + i * 1.7) > -0.82 ? 'rgba(215,70,55,0.85)' : 'rgba(60,28,24,0.8)';
+                    ctx.beginPath();
+                    ctx.arc(cx - cellSize * 0.14, cy - cellSize * 0.06, cellSize * 0.055, 0, Math.PI * 2);
+                    ctx.arc(cx + cellSize * 0.14, cy - cellSize * 0.06, cellSize * 0.055, 0, Math.PI * 2);
+                    ctx.fill();
                 }
+                // 有効領域との境界を盤の縁線で締める
                 ctx.strokeStyle = currentTheme.lineColor;
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
                 ctx.beginPath();
@@ -1741,7 +1775,7 @@
             const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 // ゾンビ: 取られたマスは中立ゾンビ(壁)になる
-                captured.forEach(idx => { board[idx] = 3; zombies.push(idx); });
+                captured.forEach(idx => { board[idx] = 3; zombies.push(idx); fxGlow(idx, '#a3e635', 620); });
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -1764,6 +1798,7 @@
                 if (!cand.length) return;
                 const ni = cand[(Math.random() * cand.length) | 0];
                 board[ni] = 3; board[zi] = 0; zombies[k] = ni;
+                fxSlide(zi, ni, 520); // 徘徊の軌跡
             });
             updateUI();
 

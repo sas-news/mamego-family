@@ -18,7 +18,9 @@ module.exports = {
                     board[y2 * BOARD_SIZE + x] = 3;
                 }
             }`],
-        ...K.WALL_SPEC,
+        // 切れ目は青く光る深淵
+        [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_RIFT('rgba(96,140,200,0.5)'))],
+        ...K.WALL_GUARD_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '盤を横切る2本の切れ目 (行全体の壁) で3つの帯に分断。',
             '帯を越える手段はない。各帯で別々の地取り勝負。',

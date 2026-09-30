@@ -1242,6 +1242,28 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 幻影帯の石に薄紫の輪
+            {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(192, 132, 252, 0.55)';
+                ctx.setLineDash([cellSize * 0.08, cellSize * 0.08]);
+                ctx.lineWidth = Math.max(1.1, cellSize * 0.04);
+                board.forEach((v, i) => {
+                    if (v !== 1 && v !== 2) return;
+                    const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                    if (!inIllusion(x, y)) return;
+                    ctx.beginPath();
+                    ctx.arc(padding + x * cellSize, padding + y * cellSize, cellSize * 0.46, 0, Math.PI * 2);
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;

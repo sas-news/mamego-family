@@ -1175,15 +1175,29 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // 専用テクスチャ: 壁セルをルールに合った質感で塗る
             {
+                const now = fxNow();
                 const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
                 ctx.save();
-                ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.48);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const i = y * BOARD_SIZE + x;
                     if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    // 削り取られた盤外
+                    const g = ctx.createLinearGradient(cx, cy - hh, cx, cy + hh);
+                    g.addColorStop(0, '#4b5058'); g.addColorStop(1, '#24272d');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const hcl = Math.sin(i * 12.9898) * 43758.5453; const hc = hcl - Math.floor(hcl);
+                    ctx.strokeStyle = 'rgba(12,13,17,0.5)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.beginPath();
+                    ctx.moveTo(cx - hh, cy - hh + hc * cellSize);
+                    ctx.lineTo(cx + hh, cy - hh + ((hc + 0.3) % 1) * cellSize);
+                    ctx.stroke();
                 }
+                // 有効領域との境界を盤の縁線で締める
                 ctx.strokeStyle = currentTheme.lineColor;
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
                 ctx.beginPath();
