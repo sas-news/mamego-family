@@ -499,6 +499,7 @@ out('decaygo.html', apply(ALGO, [
     [ONE, RV_ALGO, rv([
         '碁石に寿命がある: 配置から8手 (自分+相手の着手計) 経過した石は崩壊して消える。',
         '崩壊した石はアゲハマにならない。石は古くなるほど薄く表示される。',
+        '崩壊で盤面が埋まり切らないため、盤面マス数と同じ手数で自動終了して地集計に入る。',
     ])],
     [ONE, INFO_ALGO,
 `            通常の囲碁 + 崩壊ルール<br>
@@ -524,6 +525,12 @@ out('decaygo.html', apply(ALGO, [
             if (decayed > 0) cleanUpPieces();
 
             // ネクストモードでは次のピースを供給`],
+    // 手数制限: 崩壊で盤面が飽和しないため盤面マス数の手数で自動終了
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;
+            if (history.length >= BOARD_SIZE * BOARD_SIZE) endGameByScore();`],
     // 古い石ほど薄く描画 (ピース単位)
     [ONE, `                drawPieceShape(alive, padding, cellSize, fill, stroke, isDead ? 0.35 : 1);`,
 `                // 経過ターンごとに透明度を変えて描画 (古い石ほど薄くなる)
@@ -594,9 +601,8 @@ const LIFE_FN = `
             const next = [...board];
             let changed = 0;
             for (let i = 0; i < board.length; i++) {
-                if (board[i] !== 0) {
-                    if (counts[i] < 2 || counts[i] > 3) { next[i] = 0; changed++; }
-                } else if (counts[i] === 3 && tint[i] !== -1) {
+                // 誕生のみ適用: 石はライフでは死なず、取り・呼吸点の処理に委ねる
+                if (board[i] === 0 && counts[i] === 3 && tint[i] !== -1) {
                     next[i] = tint[i]; changed++;
                 }
             }
@@ -615,13 +621,13 @@ const LIFE_FN = `
 out('lifego.html', apply(ALGO, [
     ...rb('LIFEGO', '生命碁', 'lifego'),
     [ONE, RV_ALGO, rv([
-        '着手ごとに盤面全体がライフゲーム1世代進化する (近傍=上下左右の4方向)。',
-        '石は2〜3個の生きた隣接石で生存、4近傍以上は過密死、0〜1は過疎死、空点はちょうど3近傍で誕生 (混色時は誕生しない)。',
-        '世代交代で呼吸点を失った連は両色とも除去される。',
+        '着手ごとに盤面全体へライフゲームの誕生ルールを1世代分適用する (近傍=上下左右の4方向)。',
+        '空点はちょうど3個の同色の隣接石で誕生 (混色時は誕生しない)。石はライフでは死なず、取り・呼吸点は通常の囲碁通り。',
+        '誕生で呼吸点を失った連は両色とも除去される。',
     ])],
     [ONE, INFO_ALGO,
 `            通常の囲碁 + ライフゲーム<br>
-            ※配置のたびに全碁石が1世代進化 (過疎・過密死・3近傍誕生)`],
+            ※配置のたびに空点がライフ誕生ルールで増殖 (3近傍・同色のみ)`],
     [ONE, `        function cleanUpPieces() {
             pieces = pieces.filter(pc =>
                 pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] !== 0)
@@ -870,6 +876,27 @@ let d3 = apply(ALGO, [
         }
 
         function drawLastMove(padding, cellSize) {`],
+    // AI の着手列挙は全層に拡張 (cells に z が無いと cellIndex が NaN になり合法手0で AI が動けない)
+    [ONE, `                    for (let ty = 0; ty + h <= BOARD_SIZE; ty++) {
+                        for (let tx = 0; tx + w <= BOARD_SIZE; tx++) {
+                            const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy }));
+                            if (isValidPlacement(cells, turn)) {
+                                const score = rateMove(cells, turn);
+                                candidates.push({ cells, type, rot, score });
+                            }
+                        }
+                    }`,
+`                    for (let tz = 0; tz < LAYERS; tz++) {
+                    for (let ty = 0; ty + h <= BOARD_SIZE; ty++) {
+                        for (let tx = 0; tx + w <= BOARD_SIZE; tx++) {
+                            const cells = shape.map(([dx, dy]) => ({ x: tx + dx, y: ty + dy, z: tz }));
+                            if (isValidPlacement(cells, turn)) {
+                                const score = rateMove(cells, turn);
+                                candidates.push({ cells, type, rot, score });
+                            }
+                        }
+                    }
+                    }`],
     // 層選択タブ
     [ONE, `        <!-- 碁カントレイ`,
 `        <!-- 層選択タブ -->
@@ -1715,6 +1742,21 @@ let draft = apply(ALGO, [
         const draftWhiteBox = document.getElementById('draftWhiteBox');`],
     // 着手・パス・回転・ホールドはドラフト中禁止
     [ALL, `gamePhase !== 'playing' || !isMyTurn()) return;`, `gamePhase !== 'playing' || draftState || !isMyTurn()) return;`],
+    // ドラフト中のパスは自動ピックとして扱う (ドラフト操作がない限り対局が進行しないデッドロックを防ぐ)
+    [ONE, `            if (gameOver || gamePhase !== 'playing' || draftState || !isMyTurn()) return;
+
+            prevBoard = null; // パスでコウ制限は解除`,
+`            if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
+            // ドラフト中のパス: 自分のピック順なら代わりにランダム自動ピック
+            if (draftState) {
+                const myPick = gameMode === 'online'
+                    ? draftState.turn === myOnlineRole
+                    : !(gameMode === 'ai' && draftState.turn === aiPlayer);
+                if (myPick) aiDraftPick();
+                return;
+            }
+
+            prevBoard = null; // パスでコウ制限は解除`],
     [ONE, `            if (!isMyTurn()) return;
 
             const anchor = getAnchorFromEvent(e);`,
@@ -2003,7 +2045,7 @@ out('growgo.html', apply(ALGO, [
     ...rb('GROWGO', '増殖碁', 'growgo'),
     [ONE, RV_ALGO, rv([
         '増殖ルール: 着手ごとに、石に隣接する空点のうち約30%へ同じ色の石が増殖する。',
-        '増殖で呼吸点を失った連は両色とも除去される。',
+        '増殖はどの連の最後の呼吸点も埋めない (増殖だけでは石は取られないが、アタリまで追い込める)。',
     ])],
     [ONE, INFO_ALGO,
 `            通常の囲碁 + 増殖ルール<br>
@@ -2025,11 +2067,19 @@ out('growgo.html', apply(ALGO, [
             const used = new Set();
             cand.forEach(([i, adj]) => {
                 if (used.has(i) || Math.random() > GROW_RATE) return;
+                // 増殖先がどの連の最後の呼吸点でもある場合は増殖しない (増殖による連鎖全滅を防ぐ)
+                const chokes = getNeighbors(i).some(n => {
+                    const c = board[n];
+                    if (c === 0) return false;
+                    const libs = new Set();
+                    getConnectedGroup(n, c).forEach(cell =>
+                        getNeighbors(cell).forEach(m => { if (board[m] === 0) libs.add(m); }));
+                    return libs.size === 1 && libs.has(i);
+                });
+                if (chokes) return;
                 const s = adj[(Math.random() * adj.length) | 0];
                 board[i] = board[s]; used.add(i);
             });
-            // 増殖で呼吸点を失った連を除去
-            [1, 2].forEach(pl => getCapturedStones(board, pl).forEach(i => { board[i] = 0; }));
             cleanUpPieces();
         }`],
     [ONE, `            // ネクストモードでは次のピースを供給`,
@@ -2046,6 +2096,7 @@ out('molego.html', apply(ALGO, [
     [ONE, RV_ALGO, rv([
         'もぐらルール: 着手ごとに盤上の各碁石が約18%の確率で隣の空点へ移動する。',
         '移動はランダム。移動で空いた点・新しい接続は通常ルールどおり機能する。',
+        '盤面がなかなか落ち着かないため、盤面マス数と同じ手数で自動終了して地集計に入る。',
     ])],
     [ONE, INFO_ALGO,
 `            通常の囲碁 + もぐらルール<br>
@@ -2074,6 +2125,12 @@ out('molego.html', apply(ALGO, [
             applyMole();
 
             // ネクストモードでは次のピースを供給`],
+    // 手数制限: もぐら移動で盤面が収束しないため盤面マス数の手数で自動終了
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;
+            if (history.length >= BOARD_SIZE * BOARD_SIZE) endGameByScore();`],
     ...STONE_SPEC,
 ], 'molego'));
 
@@ -2083,6 +2140,7 @@ out('blastgo.html', apply(ALGO, [
     [ONE, RV_ALGO, rv([
         '爆撃ルール: 置いた石に隣接する敵石の「連」は呼吸点に関係なくすべて破壊・取られる。',
         '通常の取り判定も有効。爆撃で取った石もアゲハマに数えられる。',
+        '爆撃で盤面が埋まり切らないため、盤面マス数と同じ手数で自動終了して地集計に入る。',
     ])],
     [ONE, INFO_ALGO,
 `            通常の囲碁 + 爆撃ルール<br>
@@ -2108,6 +2166,12 @@ out('blastgo.html', apply(ALGO, [
                     cleanUpPieces();
                 }
             }`],
+    // 手数制限: 爆撃で盤面が飽和しないため盤面マス数の手数で自動終了
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            turn = opponent;
+            if (history.length >= BOARD_SIZE * BOARD_SIZE) endGameByScore();`],
     ...STONE_SPEC,
 ], 'blastgo'));
 
@@ -2910,6 +2974,7 @@ out('orbitgo.html', apply(ALGO, [
     [ONE, RV_ALGO, rv([
         '周回ルール: 着手ごとに盤の最外周リング上の石が1マスずつ時計回りに移動する。',
         '外周に置いた石はぐるぐる回り続ける。連が裂かれることもある。',
+        '周回で盤面がなかなか落ち着かないため、盤面マス数と同じ手数で自動終了して地集計に入る。',
     ])],
     [ONE, INFO_ALGO,
 `            通常の囲碁 + 周回ルール<br>
@@ -2949,7 +3014,9 @@ out('orbitgo.html', apply(ALGO, [
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
             // 周回: 外周リングが1マス進む
-            applyOrbit();`],
+            applyOrbit();
+            // 手数制限: 周回で盤面が収束しないため盤面マス数の手数で自動終了
+            if (history.length >= BOARD_SIZE * BOARD_SIZE) endGameByScore();`],
     // 外周リングの回転方向 (時計回り) を枠外の矢印で示す
     CUE_STARS(`            // 外周リングの回転方向を示す矢印
             {

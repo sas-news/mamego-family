@@ -176,7 +176,11 @@ const SPECS = {
         board.fill(0);
         board[0] = 1;
         applyLifeStep();
-        assert('孤立石は消える', board[0] === 0);
+        assert('孤立石もライフでは死なない', board[0] === 1);
+        board.fill(0);
+        board[0] = 1; board[2] = 1; board[BOARD_SIZE + 1] = 1;
+        applyLifeStep();
+        assert('3近傍の空点に誕生', board[1] === 1);
     `,
     'rushgo.html': `
         assert('タイマーAPI', typeof armMoveTimer === 'function' && typeof clearMoveTimer === 'function');
