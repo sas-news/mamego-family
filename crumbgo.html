@@ -1215,29 +1215,6 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
-
-            // 特殊ルールの石マーク
-            drawStoneMarks(padding, cellSize);
-        }
-
-        function drawStoneMarks(padding, cellSize) {
-            // 崩れる端: 自連に1箇所しか繋がっていない石に亀裂点
-            for (let i = 0; i < board.length; i++) {
-                const v = board[i];
-                if (v !== 1 && v !== 2) continue;
-                const fn = getNeighbors(i).filter(n => board[n] === v).length;
-                if (fn > 1) continue;
-                const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
-                ctx.save();
-                ctx.strokeStyle = 'rgba(120, 90, 60, 0.9)';
-                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
-                const cx = padding + x * cellSize, cy = padding + y * cellSize;
-                const rr = cellSize * 0.14;
-                ctx.beginPath();
-                ctx.moveTo(cx - rr, cy - rr); ctx.lineTo(cx, cy); ctx.lineTo(cx + rr * 0.4, cy - rr * 0.6);
-                ctx.stroke();
-                ctx.restore();
-            }
         }
 
         function drawLastMove(padding, cellSize) {

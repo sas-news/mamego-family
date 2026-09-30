@@ -30,6 +30,46 @@ module.exports = {
                 if (!_allow.includes(_cur)) return false;
             }`],
         [K.ONE, K.RV_ALGO, K.rv(['着手は1x5の槍ピースのみ (回転=Rキー・右クリック・ホイール)。','ピースが入らない5マス未満の連結空領域は窒息領域。'])],
+        // 槍の質感: 5連セルに柄と穂先を重ねる (黒→右/下、白→左/上で対向)
+        ...K.STONE_MARKS_SPEC(`            {
+                ctx.save();
+                pieces.forEach(pc => {
+                    const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
+                    if (alive.length < 2) return;
+                    const xs = alive.map(p => p.x), ys = alive.map(p => p.y);
+                    const horiz = ys.every(y => y === ys[0]);
+                    let a, b;
+                    if (horiz) {
+                        a = alive.find(p => p.x === Math.min(...xs));
+                        b = alive.find(p => p.x === Math.max(...xs));
+                    } else {
+                        a = alive.find(p => p.y === Math.min(...ys));
+                        b = alive.find(p => p.y === Math.max(...ys));
+                    }
+                    const ax = padding + a.x * cellSize, ay = padding + a.y * cellSize;
+                    const bx = padding + b.x * cellSize, by = padding + b.y * cellSize;
+                    ctx.strokeStyle = pc.player === 1 ? 'rgba(166,124,74,0.95)' : 'rgba(92,74,54,0.9)';
+                    ctx.lineWidth = cellSize * 0.16;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+                    const tip = pc.player === 1 ? b : a;
+                    const base = pc.player === 1 ? a : b;
+                    const dx = tip.x - base.x, dy = tip.y - base.y;
+                    const len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
+                    const tx = padding + tip.x * cellSize, ty = padding + tip.y * cellSize;
+                    const g = ctx.createLinearGradient(tx, ty, tx + ux * cellSize, ty + uy * cellSize);
+                    g.addColorStop(0, '#e2e8f0'); g.addColorStop(1, '#64748b');
+                    ctx.fillStyle = g;
+                    const bw = cellSize * 0.20;
+                    ctx.beginPath();
+                    ctx.moveTo(tx - uy * bw, ty + ux * bw);
+                    ctx.lineTo(tx + ux * cellSize * 0.95, ty + uy * cellSize * 0.95);
+                    ctx.lineTo(tx + uy * bw, ty - ux * bw);
+                    ctx.closePath(); ctx.fill();
+                    ctx.strokeStyle = 'rgba(30,30,30,0.5)'; ctx.lineWidth = 1; ctx.stroke();
+                });
+                ctx.restore();
+            }`),
         ...K.STONE_SPEC,
     ],
     test: `

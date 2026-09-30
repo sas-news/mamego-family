@@ -29,6 +29,27 @@ module.exports = {
                 if (hasOwn && !onDiag) return false;
             }`],
         ...K.LEGAL_DOTS_SPEC,
+        // 角行: 手番の石から斜線の射程を薄く照射 (着手可能線の可視化)
+        ...K.CUE_STARS(`            {
+                ctx.save();
+                ctx.strokeStyle = turn === 1 ? 'rgba(20,20,20,0.18)' : 'rgba(235,235,235,0.30)';
+                ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                ctx.beginPath();
+                const n = BOARD_SIZE;
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== turn) continue;
+                    const x = i % n, y = (i / n) | 0;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                    const d1 = Math.min(x, y), d2 = Math.min(n - 1 - x, n - 1 - y);
+                    const d3 = Math.min(n - 1 - x, y), d4 = Math.min(x, n - 1 - y);
+                    ctx.moveTo(cx - d1 * cellSize, cy - d1 * cellSize);
+                    ctx.lineTo(cx + d2 * cellSize, cy + d2 * cellSize);
+                    ctx.moveTo(cx + d3 * cellSize, cy - d3 * cellSize);
+                    ctx.lineTo(cx - d4 * cellSize, cy + d4 * cellSize);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }`),
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は自分の石と同じ斜線上にある交点のみ。',
             '最初の1手はどこにでも置ける。角行のように斜めに盤を制する。',

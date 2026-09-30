@@ -1219,27 +1219,6 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
-
-            // 特殊ルールの石マーク
-            drawStoneMarks(padding, cellSize);
-        }
-
-        function drawStoneMarks(padding, cellSize) {
-            // 隠密石にかすかな輪郭 (持ち主にも場所の手掛かり)
-            ctx.save();
-            ctx.strokeStyle = 'rgba(148, 163, 184, 0.65)';
-            ctx.setLineDash([cellSize * 0.12, cellSize * 0.10]);
-            ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
-            pieces.forEach(pc => {
-                if (!pc.cloak) return;
-                pc.cells.forEach(p => {
-                    if (board[p.y * BOARD_SIZE + p.x] === 0) return;
-                    ctx.beginPath();
-                    ctx.arc(padding + p.x * cellSize, padding + p.y * cellSize, cellSize * 0.40, 0, Math.PI * 2);
-                    ctx.stroke();
-                });
-            });
-            ctx.restore();
         }
 
         function drawLastMove(padding, cellSize) {

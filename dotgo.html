@@ -1215,23 +1215,6 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
-
-            // 特殊ルールの石マーク
-            drawStoneMarks(padding, cellSize);
-        }
-
-        function drawStoneMarks(padding, cellSize) {
-            // 仮置きの1点目を金色の点で表示
-            if (pendingDot) {
-                const px = padding + pendingDot.x * cellSize;
-                const py = padding + pendingDot.y * cellSize;
-                ctx.save();
-                ctx.fillStyle = 'rgba(230,180,0,0.95)';
-                ctx.beginPath();
-                ctx.arc(px, py, Math.max(3, cellSize * 0.2), 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
         }
 
         function drawLastMove(padding, cellSize) {

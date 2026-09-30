@@ -60,6 +60,30 @@ out('torusgo.html', apply(ALGO, [
                 if (board[key] !== 0) return false;
             }`],
     ...WRAP_MARKS_SPEC(`chev(midC, padding * 0.55, 0, -1); chev(midC, width - padding * 0.55, 0, 1); chev(padding * 0.55, midC, -1, 0); chev(width - padding * 0.55, midC, 1, 0);`),
+    // トーラス: 端の石は対側の端にも半透明で映る (ループの可視化)
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // トーラス: 端の石は対側の端にも半透明で映る
+            {
+                ctx.save();
+                ctx.globalAlpha = 0.30;
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const v = board[y * BOARD_SIZE + x];
+                    if (v !== 1 && v !== 2) continue;
+                    ctx.fillStyle = v === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                    const ghost = (gx, gy) => {
+                        ctx.beginPath();
+                        ctx.arc(padding + gx * cellSize, padding + gy * cellSize, cellSize * 0.26, 0, Math.PI * 2);
+                        ctx.fill();
+                    };
+                    if (x === 0) ghost(BOARD_SIZE - 1, y);
+                    if (x === BOARD_SIZE - 1) ghost(0, y);
+                    if (y === 0) ghost(x, BOARD_SIZE - 1);
+                    if (y === BOARD_SIZE - 1) ghost(x, 0);
+                }
+                ctx.restore();
+            }`],
     ...STONE_SPEC,
 ], 'torusgo'));
 
@@ -114,6 +138,24 @@ out('diago.html', apply(ALGO, [
                 ctx.stroke();
                 ctx.restore();
             }`],
+    // 斜め盤の質感: 全交点に薄い斜め筋を散りばめる (斜め連結の盤)
+    [ONE, `            // 格子線`, `            // 斜め筋の地紋
+            {
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.12);
+                ctx.lineWidth = Math.max(1, cellSize * 0.03);
+                const t = cellSize * 0.11;
+                ctx.beginPath();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                    ctx.moveTo(cx - t, cy - t); ctx.lineTo(cx + t, cy + t);
+                    ctx.moveTo(cx - t, cy + t); ctx.lineTo(cx + t, cy - t);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 格子線`],
     ...STONE_SPEC,
 ], 'diago'));
 
@@ -205,6 +247,30 @@ out('spawngo.html', apply(ALGO, [
             if (board.includes(player) && !cells.some(p =>
                 getNeighbors(p.y * BOARD_SIZE + p.x).some(n => board[n] === player))) return false;`],
     ...LEGAL_DOTS_SPEC,
+    // 繁殖の雰囲気: 自石の周りを漂う胞子
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 繁殖: 石の周りに漂う胞子
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            for (let i = 0; i < board.length; i++) {
+                const v = board[i];
+                if (v !== 1 && v !== 2) continue;
+                const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
+                const cx = pad + x * cs, cy = pad + y * cs;
+                for (let k = 0; k < 2; k++) {
+                    const ph = now / 1400 + i * 0.37 + k * 1.9;
+                    const r = cs * (0.55 + 0.25 * Math.sin(ph * 0.7));
+                    const a = ph + k * Math.PI;
+                    ctx2.globalAlpha = 0.20 + 0.18 * Math.sin(ph * 1.3);
+                    ctx2.fillStyle = v === 1 ? 'rgba(60,60,60,0.85)' : 'rgba(255,255,255,0.95)';
+                    ctx2.beginPath();
+                    ctx2.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.6, Math.max(1, cs * 0.05), 0, Math.PI * 2);
+                    ctx2.fill();
+                }
+            }
+            ctx2.restore();
+        });`],
     ...STONE_SPEC,
 ], 'spawngo'));
 
@@ -378,6 +444,28 @@ ${PIECES_PUSH}`],
             } else {
                 soundManager.playPlace();
             }`],
+    // 王の威光: 黄金の光輪 + 連の呼吸点が1以下で赤い警告点滅
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 王の威光と窮地の警告
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            [1, 2].forEach(pl => {
+                const k = kings[pl];
+                if (k < 0 || board[k] !== pl) return;
+                const cx = pad + (k % BOARD_SIZE) * cs, cy = pad + ((k / BOARD_SIZE) | 0) * cs;
+                const libs = getLiberties(board, k);
+                const danger = libs <= 1;
+                const pulse = 0.5 + 0.5 * Math.sin(now / (danger ? 170 : 800));
+                ctx2.globalAlpha = danger ? 0.50 + 0.38 * pulse : 0.20 + 0.12 * pulse;
+                ctx2.strokeStyle = danger ? '#ef4444' : '#fbbf24';
+                ctx2.lineWidth = Math.max(1.5, cs * 0.07);
+                ctx2.beginPath();
+                ctx2.arc(cx, cy, cs * (0.62 + 0.07 * pulse), 0, Math.PI * 2);
+                ctx2.stroke();
+            });
+            ctx2.restore();
+        });`],
     // 王石の冠マーカー描画
     [ONE, `        function drawLastMove(padding, cellSize) {`,
 `        // 王石 (♛) の描画
@@ -463,7 +551,9 @@ out('maxgo.html', apply(ALGO, [
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
+                fxText(captured[0], '先取 ' + Math.min(captures[player], WIN_CAPTURES) + '/' + WIN_CAPTURES, '#f59e0b', 900);
                 if (captures[player] >= WIN_CAPTURES) {
+                    fxShake(6, 350);
                     winByRule(player, '先取', \`\${player === 1 ? '黒' : '白'}が先に \${WIN_CAPTURES} 石を取りました\`);
                     return;
                 }
@@ -474,6 +564,8 @@ out('maxgo.html', apply(ALGO, [
             }`],
     [ONE, `        function endGameByScore() {`, WIN_BY_RULE_FN + `
         function endGameByScore() {`],
+    // 先取カウント: 手番側のアゲハマ進捗を常時表示
+    ...EVENT_CHIP_SPEC(`'先取 ' + Math.min(captures[turn], WIN_CAPTURES) + '/' + WIN_CAPTURES`),
     ...STONE_SPEC,
 ], 'maxgo'));
 
@@ -505,7 +597,9 @@ out('sandgo.html', apply(ALGO, [
                     }
                 }
                 if (squeezed.length > 0) {
-                    squeezed.forEach(i => { board[i] = 0; });
+                    squeezed.forEach(i => { board[i] = 0; fxBurst(i, '#f59e0b', 7, 1.3); });
+                    fxText(squeezed[0], 'ハサミ!', '#d97706', 900);
+                    fxShake(3, 220);
                     captures[player] += squeezed.length;
                     soundManager.playCapture();
                     cleanUpPieces();
@@ -902,6 +996,7 @@ let d3 = apply(ALGO, [
             }
         }
 
+        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {`,
 `                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);
                     if (isDead) drawDeadMarker(cx, cy, r);
@@ -929,6 +1024,7 @@ let d3 = apply(ALGO, [
             }
         }
 
+        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {`],
     // AI の着手列挙は全層に拡張 (cells に z が無いと cellIndex が NaN になり合法手0で AI が動けない)
     [ONE, `                    for (let ty = 0; ty + h <= BOARD_SIZE; ty++) {
@@ -1338,6 +1434,39 @@ let alk = apply(ALGO, [
             btnRotate.disabled = true;
             btnRotate.classList.add('opacity-40', 'cursor-not-allowed');
             buildThemeList();`],
+    // 盤上でも多重結合を平行2本線で描く (ミニピース描画と同じ見た目)
+    ...STONE_MARKS_SPEC(`            {
+                ctx.save();
+                pieces.forEach(pc => {
+                    const pairs = DBONDS[pc.type];
+                    if (!pairs || !pairs.length) return;
+                    const minX = Math.min(...pc.cells.map(p => p.x));
+                    const minY = Math.min(...pc.cells.map(p => p.y));
+                    const at = (nx, ny) => pc.cells.find(p => p.x - minX === nx && p.y - minY === ny);
+                    const fill = pc.player === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                    ctx.strokeStyle = shiftColor(fill, -0.15);
+                    ctx.lineCap = 'round';
+                    ctx.lineWidth = cellSize * 0.10;
+                    pairs.forEach(([pa, pb]) => {
+                        const a = at(pa[0], pa[1]), b = at(pb[0], pb[1]);
+                        if (!a || !b) return;
+                        if (board[a.y * BOARD_SIZE + a.x] !== pc.player || board[b.y * BOARD_SIZE + b.x] !== pc.player) return;
+                        const ax = padding + a.x * cellSize, ay = padding + a.y * cellSize;
+                        const bx = padding + b.x * cellSize, by = padding + b.y * cellSize;
+                        const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1;
+                        const ux = dx / L, uy = dy / L;
+                        const ox = -uy * cellSize * 0.12, oy = ux * cellSize * 0.12;
+                        const r0 = cellSize * 0.30;
+                        ctx.beginPath();
+                        ctx.moveTo(ax + ux * r0 + ox, ay + uy * r0 + oy);
+                        ctx.lineTo(bx - ux * r0 + ox, by - uy * r0 + oy);
+                        ctx.moveTo(ax + ux * r0 - ox, ay + uy * r0 - oy);
+                        ctx.lineTo(bx - ux * r0 - ox, by - uy * r0 - oy);
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
+            }`),
 ], 'alkenego');
 
 // 二重結合描画: drawMiniPiece の結合ループを多重結合対応に差し替え
@@ -1525,6 +1654,7 @@ let poly = apply(ALGO, [
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
             if (chainCells.length !== MONOMERS || !isValidPlacement(chainCells, turn)) return;
             soundManager.playClick();
+            fxText(chainCells[0].y * BOARD_SIZE + chainCells[0].x, '鎖完成!', '#22c55e', 900);
             executeMove({ cells: chainCells.map(p => ({ ...p })), type: 'POLY', rot: 0 }, turn);
             chainCells = [];
             previewPos = null;
@@ -1565,6 +1695,7 @@ let poly = apply(ALGO, [
             if (onChain >= 0) {
                 if (chainCells.length === MONOMERS && isValidPlacement(chainCells, turn)) {
                     soundManager.playClick();
+                    fxText(chainCells[0].y * BOARD_SIZE + chainCells[0].x, '鎖完成!', '#22c55e', 900);
                     executeMove({ cells: chainCells.map(p => ({ ...p })), type: 'POLY', rot: 0 }, turn);
                     chainCells = [];
                     previewPos = null;
@@ -1581,11 +1712,14 @@ let poly = apply(ALGO, [
                     const last = chainCells[chainCells.length - 1];
                     if (chainCells.length === 0 || Math.abs(last.x - gx) + Math.abs(last.y - gy) === 1) {
                         chainCells.push({ x: gx, y: gy });
+                        fxGlow(gy * BOARD_SIZE + gx, 'rgba(34,197,94,0.9)', 400);
                     } else {
                         chainCells = [{ x: gx, y: gy }]; // 非隣接なら新しい鎖を開始
+                        fxBurst(gy * BOARD_SIZE + gx, 'rgba(148,163,184,0.9)', 5, 0.9);
                     }
                 } else {
                     chainCells = [{ x: gx, y: gy }]; // 完成済みなら新しい鎖を開始
+                    fxBurst(gy * BOARD_SIZE + gx, 'rgba(148,163,184,0.9)', 5, 0.9);
                 }
                 refreshChainPreview();
                 updatePieceTrayUI();
@@ -1652,6 +1786,25 @@ let poly = apply(ALGO, [
             const list = ORIENTATIONS[currentPieceType];
             const shape = list[currentRot % list.length];`],
     [ALL, '碁カン', 'ポリマー'],
+    // 構築中の鎖を駆け巡る重合パルス (fxAmbients 宣言後に登録)
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 構築中の鎖を駆け巡る重合パルス
+        fxAmbient((ctx2, now, pad, cs) => {
+            if (!chainCells.length) return;
+            ctx2.save();
+            const head = (now / 350) % (chainCells.length + 1);
+            chainCells.forEach((p, i) => {
+                const d = Math.abs(i - head);
+                if (d > 1) return;
+                ctx2.globalAlpha = Math.max(0, 0.55 - d * 0.45);
+                ctx2.fillStyle = '#22c55e';
+                ctx2.beginPath();
+                ctx2.arc(pad + p.x * cs, pad + p.y * cs, cs * (0.30 - d * 0.08), 0, Math.PI * 2);
+                ctx2.fill();
+            });
+            ctx2.restore();
+        });`],
 ], 'polygo');
 out('polygo.html', poly);
 
@@ -2094,12 +2247,58 @@ const ANY_VALID_FN = `
             }
             return false;
         }
+        // 合法手の数を数える (詰み警告・情報表示用)
+        function countLegalMoves(player) {
+            let n = 0;
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== 0) continue;
+                const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                if (isValidPlacement([{ x, y }], player)) n++;
+            }
+            return n;
+        }
 `;
 const STALEMATE_CHECK = `            // 詰み判定: 手番側に合法手がなければ敗北
             if (gamePhase === 'playing' && !gameOver && !anyValidMove(turn)) {
                 winByRule(turn === 1 ? 2 : 1, '手詰み', '合法手がありません');
             }
 `;
+
+// ポリオミノ質感: 隙間のない融合タイル描画 (drawPieceShape 差し替え。triogo/quadgo 等)
+const TILE_DRAW_SPEC = [ONE, `        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
+            if (!cellsAbs || cellsAbs.length === 0) return;`,
+`        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
+            if (!cellsAbs || cellsAbs.length === 0) return;
+            if (cellsAbs.length > 1) {
+                const tileSet = new Set(cellsAbs.map(p => p.y * BOARD_SIZE + p.x));
+                const ins = cellSize * 0.47;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = fill;
+                cellsAbs.forEach(p => {
+                    const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                    ctx.fillRect(cx - ins, cy - ins, ins * 2, ins * 2);
+                });
+                ctx.strokeStyle = shiftColor(fill, -0.3);
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                cellsAbs.forEach(p => {
+                    const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                    if (!tileSet.has(p.y * BOARD_SIZE + p.x - 1)) { ctx.moveTo(cx - ins, cy - ins); ctx.lineTo(cx + ins, cy - ins); }
+                    if (!tileSet.has(p.y * BOARD_SIZE + p.x + 1)) { ctx.moveTo(cx + ins, cy - ins); ctx.lineTo(cx + ins, cy + ins); }
+                    if (!tileSet.has((p.y + 1) * BOARD_SIZE + p.x)) { ctx.moveTo(cx + ins, cy + ins); ctx.lineTo(cx - ins, cy + ins); }
+                    if (!tileSet.has((p.y - 1) * BOARD_SIZE + p.x)) { ctx.moveTo(cx - ins, cy + ins); ctx.lineTo(cx - ins, cy - ins); }
+                });
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(255,255,255,0.22)';
+                cellsAbs.forEach(p => {
+                    const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                    if (!tileSet.has((p.y - 1) * BOARD_SIZE + p.x)) ctx.fillRect(cx - ins, cy - ins, ins * 2, cellSize * 0.10);
+                });
+                ctx.restore();
+                return;
+            }`];
 
 // 27. NOGO (禁取碁) — 取る手は禁止、詰んだら負け
 out('nogo.html', apply(ALGO, [
@@ -2121,7 +2320,40 @@ out('nogo.html', apply(ALGO, [
 ${STALEMATE_CHECK}`],
     [ONE, `        function endGameByScore() {`, WIN_BY_RULE_FN + `
         function endGameByScore() {`],
+    // 禁取の可視化: 相手連の最後の呼吸点 (取れば禁手の点) に赤い禁止マーク
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 禁取: 相手連の最後の呼吸点に取禁止マーク
+            {
+                const seen = new Set();
+                const noCap = [];
+                for (let i = 0; i < board.length; i++) {
+                    const c = board[i];
+                    if ((c !== 1 && c !== 2) || seen.has(i)) continue;
+                    const grp = getConnectedGroup(i, c);
+                    grp.forEach(g => seen.add(g));
+                    const libs = new Set();
+                    grp.forEach(g => getNeighbors(g).forEach(m => { if (board[m] === 0) libs.add(m); }));
+                    if (libs.size === 1) noCap.push([...libs][0]);
+                }
+                ctx.save();
+                ctx.strokeStyle = 'rgba(220,38,38,0.65)';
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
+                noCap.forEach(i => {
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + ((i / BOARD_SIZE) | 0) * cellSize;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.30, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(cx - cellSize * 0.21, cy - cellSize * 0.21);
+                    ctx.lineTo(cx + cellSize * 0.21, cy + cellSize * 0.21);
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }`],
     ...LEGAL_DOTS_SPEC,
+    ...EVENT_CHIP_SPEC(`'合法手 ' + countLegalMoves(turn)`),
     ...STONE_SPEC,
 ], 'nogo'));
 
@@ -2142,6 +2374,8 @@ ${STALEMATE_CHECK}`],
     [ONE, `        function endGameByScore() {`, WIN_BY_RULE_FN + `
         function endGameByScore() {`],
     ...LEGAL_DOTS_SPEC,
+    // 詰みの予兆: 残り合法手を常時表示
+    ...EVENT_CHIP_SPEC(`'合法手 ' + countLegalMoves(turn)`),
     ...STONE_SPEC,
 ], 'limitgo'));
 
@@ -2324,6 +2558,8 @@ out('handigo.html', apply(ALGO, [
                 getHandicapPoints(BOARD_SIZE).slice(0, handicap).forEach(([hx, hy], k) => {
                     board[hy * BOARD_SIZE + hx] = 1;
                     pieces.push({ id: Date.now() + k, player: 1, type: 'STONE', rot: 0, cells: [{ x: hx, y: hy }] });
+                    fxGlow(hy * BOARD_SIZE + hx, '#fbbf24', 700 + k * 60);
+                    if (k === 0) fxText(hy * BOARD_SIZE + hx, '置碁 ' + handicap + '子', '#f59e0b', 1300);
                 });
             }
             komi = handicap > 0 ? 0.5 : 6.5;
@@ -2425,6 +2661,7 @@ out('triogo.html', apply(ALGO, [
     [ALL, '碁カン', '碁リオ'],
     [ALL, '全7種1巡', '全2種1巡'],
     [ALL, '7種1巡', '2種1巡'],
+    TILE_DRAW_SPEC,
 ], 'triogo'));
 
 // 35. KOGO (孤立碁) — 自分の石に隣接して置けない
@@ -2443,6 +2680,27 @@ out('kogo.html', apply(ALGO, [
             // 孤立ルール: 自分の石に隣接する点には置けない
             if (cells.some(p =>
                 getNeighbors(p.y * BOARD_SIZE + p.x).some(n => board[n] === player))) return false;`],
+    // 孤立の可視化: 手番側の石に隣接する空点 (禁手) に小さな×
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 孤立: 手番側の石に隣接する空点は禁手 — 小さな×を刻む
+            {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(220,38,38,0.42)';
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                const t = cellSize * 0.13;
+                ctx.beginPath();
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== 0) continue;
+                    if (!getNeighbors(i).some(n => board[n] === turn)) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + ((i / BOARD_SIZE) | 0) * cellSize;
+                    ctx.moveTo(cx - t, cy - t); ctx.lineTo(cx + t, cy + t);
+                    ctx.moveTo(cx - t, cy + t); ctx.lineTo(cx + t, cy - t);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }`],
     ...LEGAL_DOTS_SPEC,
     ...STONE_SPEC,
 ], 'kogo'));
@@ -2711,6 +2969,7 @@ out('quadgo.html', apply(ALGO, [
     ...SIZE_91319,
     [ALL, '碁カン', '碁カク'],
     [ALL, '全7種1巡', '補充なし'],
+    TILE_DRAW_SPEC,
 ], 'quadgo'));
 
 // 44. CIRCLEGO (円盤碁) — 円形盤面
@@ -3000,6 +3259,27 @@ out('sparsego.html', apply(ALGO, [
             // 離散ルール: いかなる石の隣にも置けない
             if (cells.some(p =>
                 getNeighbors(p.y * BOARD_SIZE + p.x).some(n => board[n] === 1 || board[n] === 2))) return false;`],
+    // 離散の可視化: あらゆる石に隣接する空点 (禁手) に薄い×
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 離散: どの石にも隣接する空点は禁手 — 薄い×を刻む
+            {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(120,80,60,0.38)';
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                const t = cellSize * 0.13;
+                ctx.beginPath();
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== 0) continue;
+                    if (!getNeighbors(i).some(n => board[n] === 1 || board[n] === 2)) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + ((i / BOARD_SIZE) | 0) * cellSize;
+                    ctx.moveTo(cx - t, cy - t); ctx.lineTo(cx + t, cy + t);
+                    ctx.moveTo(cx - t, cy + t); ctx.lineTo(cx + t, cy - t);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }`],
     ...LEGAL_DOTS_SPEC,
     ...STONE_SPEC,
 ], 'sparsego'));
@@ -3023,6 +3303,9 @@ out('firstgo.html', apply(ALGO, [
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
                 if (captures[player] >= WIN_CAPTURES) {
+                    fxText(captured[0], '一撃!', '#ef4444', 1100);
+                    fxShake(7, 400);
+                    fxGlow(captured[0], '#f87171', 800);
                     winByRule(player, '一撃', \`\${player === 1 ? '黒' : '白'}が最初の取りを決めました\`);
                     return;
                 }
@@ -3033,6 +3316,8 @@ out('firstgo.html', apply(ALGO, [
             }`],
     [ONE, `        function endGameByScore() {`, WIN_BY_RULE_FN + `
         function endGameByScore() {`],
+    // 一撃未発生の緊張感を示す常時表示
+    ...EVENT_CHIP_SPEC(`captures[1] + captures[2] === 0 ? '一撃 未発生' : '一撃 決着'`),
     ...STONE_SPEC,
 ], 'firstgo'));
 
@@ -3082,6 +3367,37 @@ out('treasurego.html', apply(ALGO, [
     [ONE, `<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
 `<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の宝:</span> <strong>+\${whiteTreasure * TREASURE_BONUS}</strong></div>`],
+    // 宝マスのきらめき + 全近傍を囲んだ側の色で光彩 (得点予告)
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 宝: きらめきと囲み完成の光彩
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            getStarPoints(BOARD_SIZE).forEach((tp, ti) => {
+                if (board[tp.y * BOARD_SIZE + tp.x] !== 0) return;
+                const cx = pad + tp.x * cs, cy = pad + tp.y * cs;
+                const nb = getNeighbors(tp.y * BOARD_SIZE + tp.x).map(i => board[i]);
+                const owner = nb.length && nb.every(v => v === 1) ? 1 : (nb.length && nb.every(v => v === 2) ? 2 : 0);
+                if (owner) {
+                    const pulse = 0.5 + 0.5 * Math.sin(now / 400 + ti);
+                    ctx2.globalAlpha = 0.30 + 0.25 * pulse;
+                    ctx2.strokeStyle = owner === 1 ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.95)';
+                    ctx2.lineWidth = Math.max(1.5, cs * 0.07);
+                    ctx2.beginPath(); ctx2.arc(cx, cy, cs * 0.42, 0, Math.PI * 2); ctx2.stroke();
+                }
+                const tw = Math.sin(now / 500 + ti * 2.1);
+                if (tw > 0.6) {
+                    ctx2.globalAlpha = (tw - 0.6) * 2;
+                    ctx2.fillStyle = '#fde047';
+                    const sx = cx + Math.sin(ti * 13.7) * cs * 0.3, sy = cy + Math.cos(ti * 7.3) * cs * 0.3;
+                    const s = cs * 0.10;
+                    ctx2.beginPath();
+                    ctx2.moveTo(sx, sy - s); ctx2.lineTo(sx + s * 0.3, sy); ctx2.lineTo(sx, sy + s); ctx2.lineTo(sx - s * 0.3, sy);
+                    ctx2.closePath(); ctx2.fill();
+                }
+            });
+            ctx2.restore();
+        });`],
     ...STONE_SPEC,
 ], 'treasurego'));
 
@@ -3364,6 +3680,36 @@ out('connectgo.html', apply(ALGO, [
                 ctx.fillRect(x0, y1 - gb, x1 - x0, gb);
                 ctx.restore();
             }`),
+    // 連絡の進捗: 目標辺に接している連に色リング (どこまで繋がったか)
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 連絡: 目標辺に接地した連を色リングで強調
+            {
+                const n = BOARD_SIZE;
+                const mark = (pl, edges) => {
+                    const seen = new Set();
+                    edges.forEach(e => {
+                        if (board[e] !== pl || seen.has(e)) return;
+                        getConnectedGroup(e, pl).forEach(g => seen.add(g));
+                    });
+                    return seen;
+                };
+                const bEdge = [], wEdge = [];
+                for (let i = 0; i < n; i++) { bEdge.push(i); bEdge.push((n - 1) * n + i); wEdge.push(i * n); wEdge.push(i * n + n - 1); }
+                ctx.save();
+                [[mark(1, bEdge), 'rgba(30,30,30,0.55)'], [mark(2, wEdge), 'rgba(255,255,255,0.65)']].forEach(([set, col]) => {
+                    ctx.strokeStyle = col;
+                    ctx.lineWidth = Math.max(1.3, cellSize * 0.05);
+                    set.forEach(i => {
+                        const cx = padding + (i % n) * cellSize, cy = padding + ((i / n) | 0) * cellSize;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cellSize * 0.52, 0, Math.PI * 2);
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
+            }`],
     ...STONE_SPEC,
 ], 'connectgo'));
 
@@ -3412,6 +3758,17 @@ out('centgo.html', apply(ALGO, [
 
             // 星 (天元・星の点)`],
     ...EVENT_CHIP_SPEC(`'拡大' + (6 - history.length % 6) + '手'`),
+    // 領域拡大の瞬間: 中心からの波紋
+    [ONE, TURN_FLIP,
+`${TURN_FLIP}
+            // 中心: 6手ごとに許可領域が拡大する瞬間を可視化
+            if (history.length % 6 === 0) {
+                const cc = ((BOARD_SIZE - 1) / 2) | 0;
+                const ci = cc * BOARD_SIZE + cc;
+                fxText(ci, '領域拡大', '#3b82f6', 1100);
+                fxGlow(ci, '#60a5fa', 800);
+                fxBurst(ci, '#60a5fa', 18, 2.4);
+            }`],
     ...STONE_SPEC,
 ], 'centgo'));
 
@@ -3522,6 +3879,26 @@ out('cylindgo.html', apply(ALGO, [
             return neighbors;
         }`],
     ...WRAP_MARKS_SPEC(`chev(padding * 0.55, midC, -1, 0); chev(width - padding * 0.55, midC, 1, 0);`),
+    // 円筒: 左右端の石は対側の端にも半透明で映る (ループの可視化)
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 円筒: 左右端の石は対側の端にも半透明で映る
+            {
+                ctx.save();
+                ctx.globalAlpha = 0.30;
+                for (let y = 0; y < BOARD_SIZE; y++) {
+                    [[0, BOARD_SIZE - 1], [BOARD_SIZE - 1, 0]].forEach(([sx, gx]) => {
+                        const v = board[y * BOARD_SIZE + sx];
+                        if (v !== 1 && v !== 2) return;
+                        ctx.fillStyle = v === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                        ctx.beginPath();
+                        ctx.arc(padding + gx * cellSize, padding + y * cellSize, cellSize * 0.26, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+                ctx.restore();
+            }`],
     ...STONE_SPEC,
 ], 'cylindgo'));
 
@@ -3553,6 +3930,27 @@ out('moebiusgo.html', apply(ALGO, [
         }`],
     // 左右端が上下反転して繋がる印: 左は上寄り・右は下寄りのオフセットシェブロン
     ...WRAP_MARKS_SPEC(`chev(padding * 0.55, padding + (BOARD_SIZE - 1) * cellSize * 0.3, -1, 0); chev(width - padding * 0.55, padding + (BOARD_SIZE - 1) * cellSize * 0.7, 1, 0);`),
+    // メビウス: 左右端の石は対側の上下反転位置に半透明で映る
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // メビウス: 左右端の石は対側の反転位置に半透明で映る
+            {
+                ctx.save();
+                ctx.globalAlpha = 0.30;
+                for (let y = 0; y < BOARD_SIZE; y++) {
+                    const fy = BOARD_SIZE - 1 - y;
+                    [[0, BOARD_SIZE - 1], [BOARD_SIZE - 1, 0]].forEach(([sx, gx]) => {
+                        const v = board[y * BOARD_SIZE + sx];
+                        if (v !== 1 && v !== 2) return;
+                        ctx.fillStyle = v === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                        ctx.beginPath();
+                        ctx.arc(padding + gx * cellSize, padding + fy * cellSize, cellSize * 0.26, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+                ctx.restore();
+            }`],
     ...STONE_SPEC,
 ], 'moebiusgo'));
 
@@ -3652,6 +4050,32 @@ out('escapego.html', apply(ALGO, [
                 });
                 ctx.restore();
             }`),
+    // 不死の輝き: 辺に接する連に金色の脈動 (脱出=不死の可視化)
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 脱出: 辺に接する不死連に金色の脈動
+        fxAmbient((ctx2, now, pad, cs) => {
+            const n = BOARD_SIZE, seen = new Set(), imm = new Set();
+            for (let i = 0; i < n * n; i++) {
+                const c = board[i];
+                if ((c !== 1 && c !== 2) || seen.has(i)) continue;
+                const g = getConnectedGroup(i, c);
+                g.forEach(v => seen.add(v));
+                if (g.some(v => {
+                    const gx = v % n, gy = (v / n) | 0;
+                    return gx === 0 || gy === 0 || gx === n - 1 || gy === n - 1;
+                })) g.forEach(v => imm.add(v));
+            }
+            ctx2.save();
+            const pulse = 0.5 + 0.5 * Math.sin(now / 900);
+            imm.forEach(i => {
+                const cx = pad + (i % n) * cs, cy = pad + ((i / n) | 0) * cs;
+                ctx2.globalAlpha = 0.10 + 0.08 * pulse;
+                ctx2.fillStyle = '#fbbf24';
+                ctx2.beginPath(); ctx2.arc(cx, cy, cs * 0.64, 0, Math.PI * 2); ctx2.fill();
+            });
+            ctx2.restore();
+        });`],
     ...STONE_SPEC,
 ], 'escapego'));
 
@@ -3719,6 +4143,29 @@ out('monogo.html', apply(ALGO, [
                 }
                 ctx.restore();
             }`),
+    // 単石の危険度: 呼吸点1以下の孤立石 (次に取られる) を赤く点滅
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 単石の危険度: 呼吸点1以下の孤立石を赤く点滅
+        fxAmbient((ctx2, now, pad, cs) => {
+            const n = BOARD_SIZE, seen = new Set();
+            ctx2.save();
+            for (let i = 0; i < n * n; i++) {
+                const v = board[i];
+                if ((v !== 1 && v !== 2) || seen.has(i)) continue;
+                const g = getConnectedGroup(i, v);
+                g.forEach(j => seen.add(j));
+                if (g.length !== 1) continue;
+                if (getLiberties(board, i) > 1) continue;
+                const cx = pad + (i % n) * cs, cy = pad + ((i / n) | 0) * cs;
+                const pulse = 0.5 + 0.5 * Math.sin(now / 200);
+                ctx2.globalAlpha = 0.45 + 0.45 * pulse;
+                ctx2.strokeStyle = '#ef4444';
+                ctx2.lineWidth = Math.max(1.6, cs * 0.08);
+                ctx2.beginPath(); ctx2.arc(cx, cy, cs * 0.58, 0, Math.PI * 2); ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
     ...STONE_SPEC,
 ], 'monogo'));
 
@@ -3756,6 +4203,25 @@ out('reggo.html', apply(ALGO, [
             }
             return true;`],
     ...LEGAL_DOTS_SPEC,
+    // 上限3: 各連の石数を刻む (3=上限到達で赤強調)
+    ...STONE_MARKS_SPEC(`            {
+                const seen = new Set();
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold ' + Math.round(cellSize * 0.34) + 'px sans-serif';
+                for (let i = 0; i < board.length; i++) {
+                    const v = board[i];
+                    if ((v !== 1 && v !== 2) || seen.has(i)) continue;
+                    const g = getConnectedGroup(i, v);
+                    g.forEach(j => seen.add(j));
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + ((i / BOARD_SIZE) | 0) * cellSize;
+                    const full = g.length >= 3;
+                    ctx.fillStyle = full ? '#ef4444' : (v === 1 ? 'rgba(240,235,220,0.9)' : 'rgba(50,40,25,0.85)');
+                    ctx.fillText(String(g.length), cx + cellSize * 0.30, cy - cellSize * 0.30);
+                }
+                ctx.restore();
+            }`),
     ...STONE_SPEC,
 ], 'reggo'));
 
@@ -4157,6 +4623,30 @@ out('kleingo.html', apply(ALGO, [
         }`],
     // 左右=反転ループ(オフセット), 上下=通常ループ(中央)
     ...WRAP_MARKS_SPEC(`chev(padding * 0.55, padding + (BOARD_SIZE - 1) * cellSize * 0.3, -1, 0); chev(width - padding * 0.55, padding + (BOARD_SIZE - 1) * cellSize * 0.7, 1, 0); chev(midC, padding * 0.55, 0, -1); chev(midC, width - padding * 0.55, 0, 1);`),
+    // クライン瓶: 端の石は対側にも半透明で映る (左右は上下反転)
+    [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
+`            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // クライン瓶: 端の石は対側にも半透明で映る (左右は反転位置)
+            {
+                ctx.save();
+                ctx.globalAlpha = 0.30;
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const v = board[y * BOARD_SIZE + x];
+                    if (v !== 1 && v !== 2) continue;
+                    ctx.fillStyle = v === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                    const ghost = (gx, gy) => {
+                        ctx.beginPath();
+                        ctx.arc(padding + gx * cellSize, padding + gy * cellSize, cellSize * 0.26, 0, Math.PI * 2);
+                        ctx.fill();
+                    };
+                    if (x === 0) ghost(BOARD_SIZE - 1, BOARD_SIZE - 1 - y);
+                    if (x === BOARD_SIZE - 1) ghost(0, BOARD_SIZE - 1 - y);
+                    if (y === 0) ghost(x, BOARD_SIZE - 1);
+                    if (y === BOARD_SIZE - 1) ghost(x, 0);
+                }
+                ctx.restore();
+            }`],
     ...STONE_SPEC,
 ], 'kleingo'));
 
@@ -4311,6 +4801,8 @@ out('sumgo.html', apply(ALGO, [
     [ONE, `<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
 `<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の生き石:</span> <strong>\${whiteStones}</strong></div>`],
+    // 実子: 盤上の生き石数を常時表示 (石がそのまま得点)
+    ...EVENT_CHIP_SPEC(`'実子 ' + board.filter(v => v === 1).length + '-' + board.filter(v => v === 2).length`),
     ...STONE_SPEC,
 ], 'sumgo'));
 
@@ -4351,7 +4843,12 @@ out('fuelgo.html', apply(ALGO, [
             // 燃料ルール: 距離分の燃料が足りなければ置けない
             if (fuelCost(player, cells) > fuel[player]) return false;`],
     [ONE, PIECES_PUSH,
-`            fuel[player] -= fuelCost(player, move.cells);
+`            // 燃料消費を着手点に表示
+            {
+                const cost = fuelCost(player, move.cells);
+                fuel[player] -= cost;
+                if (cost > 0) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '-' + cost + '⛽', '#f59e0b', 1000);
+            }
 
 ${PIECES_PUSH}`],
     [ONE, TURN_LINE,
@@ -4505,6 +5002,8 @@ WIN_BY_RULE_FN + `
                 return;
             }
             const territory = calculateTerritory();`],
+    // 終着: 現状の「最後の着手者」(=そのまま終われば勝者) を常時表示
+    ...EVENT_CHIP_SPEC(`'終着権 ' + (lastMove ? (lastMove.player === 1 ? '黒' : '白') : '-')`),
     ...STONE_SPEC,
 ], 'lastgo'));
 
@@ -4547,6 +5046,46 @@ out('eyego.html', apply(ALGO, [
                 winByRule(player, '眼', \`\${player === 1 ? '黒' : '白'}が眼を完成させました\`);
                 return;
             }`],
+    // 形成中の眼: 単色で囲まれた空領域をその色で薄く照らす (6点以内=完成=即勝利)
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 眼: 単色で囲まれた空領域を所有者色で照らす (6点以内=完成=即勝利)
+        fxAmbient((ctx2, now, pad, cs) => {
+            const n = BOARD_SIZE, seen = new Set();
+            ctx2.save();
+            for (let i = 0; i < n * n; i++) {
+                if (board[i] !== 0 || seen.has(i)) continue;
+                const q = [i]; seen.add(i);
+                const region = [];
+                let owner = 0, mixed = false;
+                while (q.length) {
+                    const cur = q.pop(); region.push(cur);
+                    getNeighbors(cur).forEach(m => {
+                        if (board[m] === 0 && !seen.has(m)) { seen.add(m); q.push(m); }
+                        else if (board[m] !== 0) {
+                            if (owner === 0) owner = board[m];
+                            else if (board[m] !== owner) mixed = true;
+                        }
+                    });
+                }
+                if (mixed || owner === 0 || region.length > 9) continue;
+                const done = region.length <= 6;
+                const col = owner === 1 ? '30,30,30' : '255,255,255';
+                const pulse = 0.5 + 0.5 * Math.sin(now / 500);
+                ctx2.fillStyle = 'rgba(' + col + ',' + (done ? 0.30 + 0.2 * pulse : 0.10 + 0.06 * pulse) + ')';
+                region.forEach(r => {
+                    ctx2.fillRect(pad + (r % n - 0.42) * cs, pad + (((r / n) | 0) - 0.42) * cs, cs * 0.84, cs * 0.84);
+                });
+                if (done) {
+                    const cx0 = region.reduce((s, r) => s + (r % n), 0) / region.length;
+                    const cy0 = region.reduce((s, r) => s + ((r / n) | 0), 0) / region.length;
+                    ctx2.strokeStyle = 'rgba(' + col + ',0.8)';
+                    ctx2.lineWidth = Math.max(1.4, cs * 0.06);
+                    ctx2.beginPath(); ctx2.arc(pad + cx0 * cs, pad + cy0 * cs, cs * (0.28 + pulse * 0.08), 0, Math.PI * 2); ctx2.stroke();
+                }
+            }
+            ctx2.restore();
+        });`],
     ...STONE_SPEC,
 ], 'eyego'));
 
@@ -4570,11 +5109,32 @@ out('brawlgo.html', apply(ALGO, [
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
+                fxText(captured[0], '撃破!', '#ef4444', 900);
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {
                 soundManager.playPlace();
             }`],
+    // 乱闘: 周囲3方向以上が敵石の石 (個別撃破候補) を赤く点滅
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 乱闘: 個別撃破候補 (敵に3方向以上囲まれた石) を点滅
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            const pulse = 0.5 + 0.5 * Math.sin(now / 180);
+            ctx2.globalAlpha = 0.5 + 0.4 * pulse;
+            ctx2.lineWidth = Math.max(1.5, cs * 0.07);
+            for (let i = 0; i < board.length; i++) {
+                const v = board[i];
+                if (v !== 1 && v !== 2) continue;
+                const foes = getNeighbors(i).filter(n => board[n] !== 0 && board[n] !== v).length;
+                if (foes < 3) continue;
+                const cx = pad + (i % BOARD_SIZE) * cs, cy = pad + ((i / BOARD_SIZE) | 0) * cs;
+                ctx2.strokeStyle = '#ef4444';
+                ctx2.beginPath(); ctx2.arc(cx, cy, cs * 0.60, 0, Math.PI * 2); ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
     ...STONE_SPEC,
 ], 'brawlgo'));
 
@@ -4655,7 +5215,11 @@ out('finitego.html', apply(ALGO, [
                 const mine = pieces.filter(pc => pc.player === player);
                 if (mine.length > 12) {
                     const old = mine[0];
-                    old.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = 0; });
+                    old.cells.forEach(p => {
+                        board[p.y * BOARD_SIZE + p.x] = 0;
+                        fxBurst(p.y * BOARD_SIZE + p.x, '#a78bfa', 8, 1.4);
+                    });
+                    fxText(old.cells[0].y * BOARD_SIZE + old.cells[0].x, '消滅', '#a78bfa', 1100);
                     pieces = pieces.filter(pc => pc !== old);
                 }
             }`],
@@ -4663,6 +5227,25 @@ out('finitego.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限: 200手で自動終局
             if (history.length >= 200) { endGameByScore(); return; }`],
+    // 有限: 手持ち石数と上限表示 + 次に消える最古石を刻む
+    ...EVENT_CHIP_SPEC(`'石数 ' + board.filter(v => v === turn).length + '/12'`),
+    ...STONE_MARKS_SPEC(`            // 有限: 上限に達した自連の最古石 (次に消える石) に時限刻印
+            {
+                const mine = pieces.filter(pc => pc.player === turn && pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] === turn));
+                if (mine.length >= 12) {
+                    const p = mine[0].cells[0];
+                    const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                    ctx.save();
+                    ctx.strokeStyle = '#a78bfa';
+                    ctx.lineWidth = Math.max(1.5, cellSize * 0.07);
+                    ctx.beginPath(); ctx.arc(cx, cy, cellSize * 0.55, 0, Math.PI * 2); ctx.stroke();
+                    const t = cellSize * 0.09;
+                    ctx.beginPath();
+                    ctx.moveTo(cx - t, cy - t); ctx.lineTo(cx + t, cy - t); ctx.lineTo(cx - t, cy + t); ctx.lineTo(cx + t, cy + t);
+                    ctx.closePath(); ctx.stroke();
+                    ctx.restore();
+                }
+            }`),
     ...STONE_SPEC,
 ], 'finitego'));
 
@@ -5094,6 +5677,24 @@ out('libgo.html', apply(ALGO, [
 `<div class="flex justify-between"><span>黒の呼吸点:</span> <strong>\${blackLibs}</strong></div>`],
     [ONE, `<div class="flex justify-between"><span>白の地:</span> <strong>\${territory.white}</strong></div>`,
 `<div class="flex justify-between"><span>白の呼吸点:</span> <strong>\${whiteLibs}</strong></div>`],
+    // 呼吸: 全連の呼吸点合計を得点として常時表示
+    [ONE, `        function endGameByScore() {`,
+`        // 呼吸: 全連の呼吸点合計 (常時得点表示にも利用)
+        function libScore(p) {
+            const seen = new Set(); let total = 0;
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== p || seen.has(i)) continue;
+                const grp = getConnectedGroup(i, p);
+                grp.forEach(g => seen.add(g));
+                const libs = new Set();
+                grp.forEach(g => getNeighbors(g).forEach(n => { if (board[n] === 0) libs.add(n); }));
+                total += libs.size;
+            }
+            return total;
+        }
+
+        function endGameByScore() {`],
+    ...EVENT_CHIP_SPEC(`'呼吸 ' + libScore(1) + '-' + libScore(2)`),
     ...STONE_SPEC,
 ], 'libgo'));
 
@@ -5177,6 +5778,13 @@ out('minigo.html', apply(ALGO, [
             if (blackTotal < whiteTotal) winnerTitle = '黒の勝ち';
             else if (whiteTotal < blackTotal) winnerTitle = '白の勝ち';
             else winnerTitle = '引き分け';`],
+    [ONE, CAPTURE_BLOCK,
+`${CAPTURE_BLOCK}
+
+            // ミゼール: 大量に取るほど損 — 取り過ぎの警告
+            if (captured.length >= 3) fxText(captured[0], '取り過ぎ注意', '#f97316', 1100);`],
+    // ミゼール: 得点の少ない側が勝つ — アゲハマが増える側が劣勢
+    ...EVENT_CHIP_SPEC(`'ミゼール アゲハマ ' + captures[1] + '-' + captures[2]`),
     ...STONE_SPEC,
 ], 'minigo'));
 
@@ -5357,6 +5965,19 @@ out('rimgo.html', apply(ALGO, [
     [ONE, `<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
 `<div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の淵ボーナス:</span> <strong>+\${whiteEdge}</strong></div>`],
+    // 淵: 得点2倍の外周リングを金色に染める
+    CUE_GRID(`            // 淵: 得点2倍の外周リングを金色に染める
+            {
+                const o0 = padding - cellSize * 0.5, o1 = padding + (BOARD_SIZE - 0.5) * cellSize;
+                const i0 = padding + cellSize * 0.5, i1 = padding + (BOARD_SIZE - 1.5) * cellSize;
+                ctx.save();
+                ctx.fillStyle = 'rgba(217, 119, 6, 0.14)';
+                ctx.fillRect(o0, o0, o1 - o0, i0 - o0);
+                ctx.fillRect(o0, i1, o1 - o0, o1 - i1);
+                ctx.fillRect(o0, i0, i0 - o0, i1 - i0);
+                ctx.fillRect(i1, i0, o1 - i1, i1 - i0);
+                ctx.restore();
+            }`),
     // 淵の境界: 外周1列と内側を隔てる破線の方形
     CUE_STARS(`            // 淵の境界: 外周1列(得点2倍)と内側を隔てる破線
             {
@@ -5900,6 +6521,16 @@ out('nokogo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限: 200手で自動終局 (劫ループの膠着を防ぐ)
             if (history.length >= 200) { endGameByScore(); return; }`],
+    // 無コウ: 直前盤面への完全な逆戻り (劫返し) を可視化
+    [ONE, CAPTURE_BLOCK,
+`${CAPTURE_BLOCK}
+
+            // 無コウ: 相手の着手前と同一盤面に戻った = 劫返し
+            if (captured.length > 0 && prevBoard && board.every((v, i) => v === prevBoard[i])) {
+                fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '劫返し!', '#a78bfa', 1000);
+                fxGlow(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '#a78bfa', 700);
+            }`],
+    ...EVENT_CHIP_SPEC(`'無コウ 残' + Math.max(0, 200 - history.length) + '手'`),
     ...STONE_SPEC,
 ], 'nokogo'));
 

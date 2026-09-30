@@ -1218,37 +1218,6 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
-
-            // 特殊ルールの石マーク
-            drawStoneMarks(padding, cellSize);
-        }
-
-        function drawStoneMarks(padding, cellSize) {
-            {
-                // 軌跡: 徐々に薄くなる赤い残像
-                ctx.save();
-                ballTrail.forEach((ti, k) => {
-                    const tx = ti % BOARD_SIZE, ty = Math.floor(ti / BOARD_SIZE);
-                    ctx.globalAlpha = 0.07 + 0.05 * k;
-                    ctx.fillStyle = '#e04030';
-                    ctx.beginPath();
-                    ctx.arc(padding + tx * cellSize, padding + ty * cellSize, cellSize * 0.13, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-                ctx.restore();
-                const bx = ballPos % BOARD_SIZE, by = Math.floor(ballPos / BOARD_SIZE);
-                const cx = padding + bx * cellSize, cy = padding + by * cellSize;
-                ctx.save();
-                ctx.fillStyle = '#e04030';
-                ctx.beginPath();
-                ctx.arc(cx, cy, cellSize * 0.22, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                ctx.beginPath();
-                ctx.arc(cx - cellSize * 0.07, cy - cellSize * 0.08, cellSize * 0.07, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
         }
 
         function drawLastMove(padding, cellSize) {

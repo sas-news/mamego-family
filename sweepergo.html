@@ -1216,33 +1216,6 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
-
-            // 特殊ルールの石マーク
-            drawStoneMarks(padding, cellSize);
-        }
-
-        function drawStoneMarks(padding, cellSize) {
-            ctx.save();
-            ctx.font = 'bold ' + Math.floor(cellSize * 0.42) + 'px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            for (let i = 0; i < board.length; i++) {
-                if (board[i] !== 0 || mineSet.size === 0) continue;
-                const mx = i % BOARD_SIZE, my = Math.floor(i / BOARD_SIZE);
-                let n = 0;
-                for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-                    if (dx === 0 && dy === 0) continue;
-                    const nx = mx + dx, ny = my + dy;
-                    if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) continue;
-                    if (mineSet.has(ny * BOARD_SIZE + nx)) n++;
-                }
-                if (n > 0) {
-                    const colors = ['', '#3a6fd8', '#3c8a3c', '#d83c3c', '#8030a8', '#a06030', '#308a8a', '#444', '#666'];
-                    ctx.fillStyle = colors[Math.min(n, 8)];
-                    ctx.fillText(String(n), padding + mx * cellSize, padding + my * cellSize);
-                }
-            }
-            ctx.restore();
         }
 
         function drawLastMove(padding, cellSize) {

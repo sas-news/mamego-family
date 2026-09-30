@@ -1219,31 +1219,6 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
-
-            // 特殊ルールの石マーク
-            drawStoneMarks(padding, cellSize);
-        }
-
-        function drawStoneMarks(padding, cellSize) {
-            // 爆跡: 黒い焦げ跡と火花マークが残る
-            {
-                ctx.save();
-                (st.blasts || []).forEach(b => {
-                    const cx = padding + b.x * cellSize, cy = padding + b.y * cellSize;
-                    ctx.fillStyle = 'rgba(41, 37, 36, 0.35)';
-                    ctx.fillRect(cx - cellSize * 1.5, cy - cellSize * 1.5, cellSize * 3, cellSize * 3);
-                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
-                    ctx.lineWidth = Math.max(1.6, cellSize * 0.06);
-                    ctx.beginPath();
-                    for (let k = 0; k < 8; k++) {
-                        const a = k * Math.PI / 4;
-                        ctx.moveTo(cx + Math.cos(a) * cellSize * 0.15, cy + Math.sin(a) * cellSize * 0.15);
-                        ctx.lineTo(cx + Math.cos(a) * cellSize * 0.38, cy + Math.sin(a) * cellSize * 0.38);
-                    }
-                    ctx.stroke();
-                });
-                ctx.restore();
-            }
         }
 
         function drawLastMove(padding, cellSize) {

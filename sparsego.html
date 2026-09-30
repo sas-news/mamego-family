@@ -1197,6 +1197,24 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
+            // 離散: どの石にも隣接する空点は禁手 — 薄い×を刻む
+            {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(120,80,60,0.38)';
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                const t = cellSize * 0.13;
+                ctx.beginPath();
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== 0) continue;
+                    if (!getNeighbors(i).some(n => board[n] === 1 || board[n] === 2)) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + ((i / BOARD_SIZE) | 0) * cellSize;
+                    ctx.moveTo(cx - t, cy - t); ctx.lineTo(cx + t, cy + t);
+                    ctx.moveTo(cx - t, cy + t); ctx.lineTo(cx + t, cy - t);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
             // ピースごとに融合描画 (盤上に残っているセルのみ)
             pieces.forEach(pc => {
                 const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);

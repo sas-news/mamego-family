@@ -1228,37 +1228,6 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
-
-            // 特殊ルールの石マーク
-            drawStoneMarks(padding, cellSize);
-        }
-
-        function drawStoneMarks(padding, cellSize) {
-            // レア石にジェム印 (R=青、SSR=金)
-            {
-                ctx.save();
-                pieces.forEach(pc => {
-                    const r = pc.at === undefined ? 1 : rarityOf(pc.at);
-                    if (r < 2) return;
-                    pc.cells.forEach(p => {
-                        if (board[p.y * BOARD_SIZE + p.x] === 0) return;
-                        const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
-                        ctx.fillStyle = r === 3 ? '#facc15' : '#38bdf8';
-                        ctx.strokeStyle = r === 3 ? '#a16207' : '#0369a1';
-                        ctx.lineWidth = Math.max(1, cellSize * 0.03);
-                        const g = cellSize * 0.12;
-                        ctx.beginPath();
-                        ctx.moveTo(cx + cellSize * 0.26, cy - cellSize * 0.26 - g);
-                        ctx.lineTo(cx + cellSize * 0.26 + g, cy - cellSize * 0.26);
-                        ctx.lineTo(cx + cellSize * 0.26, cy - cellSize * 0.26 + g);
-                        ctx.lineTo(cx + cellSize * 0.26 - g, cy - cellSize * 0.26);
-                        ctx.closePath();
-                        ctx.fill();
-                        ctx.stroke();
-                    });
-                });
-                ctx.restore();
-            }
         }
 
         function drawLastMove(padding, cellSize) {

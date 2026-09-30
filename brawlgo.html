@@ -879,6 +879,23 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 乱闘: 個別撃破候補 (敵に3方向以上囲まれた石) を点滅
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            const pulse = 0.5 + 0.5 * Math.sin(now / 180);
+            ctx2.globalAlpha = 0.5 + 0.4 * pulse;
+            ctx2.lineWidth = Math.max(1.5, cs * 0.07);
+            for (let i = 0; i < board.length; i++) {
+                const v = board[i];
+                if (v !== 1 && v !== 2) continue;
+                const foes = getNeighbors(i).filter(n => board[n] !== 0 && board[n] !== v).length;
+                if (foes < 3) continue;
+                const cx = pad + (i % BOARD_SIZE) * cs, cy = pad + ((i / BOARD_SIZE) | 0) * cs;
+                ctx2.strokeStyle = '#ef4444';
+                ctx2.beginPath(); ctx2.arc(cx, cy, cs * 0.60, 0, Math.PI * 2); ctx2.stroke();
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1718,6 +1735,7 @@
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
+                fxText(captured[0], '撃破!', '#ef4444', 900);
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {

@@ -879,6 +879,34 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 宝: きらめきと囲み完成の光彩
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            getStarPoints(BOARD_SIZE).forEach((tp, ti) => {
+                if (board[tp.y * BOARD_SIZE + tp.x] !== 0) return;
+                const cx = pad + tp.x * cs, cy = pad + tp.y * cs;
+                const nb = getNeighbors(tp.y * BOARD_SIZE + tp.x).map(i => board[i]);
+                const owner = nb.length && nb.every(v => v === 1) ? 1 : (nb.length && nb.every(v => v === 2) ? 2 : 0);
+                if (owner) {
+                    const pulse = 0.5 + 0.5 * Math.sin(now / 400 + ti);
+                    ctx2.globalAlpha = 0.30 + 0.25 * pulse;
+                    ctx2.strokeStyle = owner === 1 ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.95)';
+                    ctx2.lineWidth = Math.max(1.5, cs * 0.07);
+                    ctx2.beginPath(); ctx2.arc(cx, cy, cs * 0.42, 0, Math.PI * 2); ctx2.stroke();
+                }
+                const tw = Math.sin(now / 500 + ti * 2.1);
+                if (tw > 0.6) {
+                    ctx2.globalAlpha = (tw - 0.6) * 2;
+                    ctx2.fillStyle = '#fde047';
+                    const sx = cx + Math.sin(ti * 13.7) * cs * 0.3, sy = cy + Math.cos(ti * 7.3) * cs * 0.3;
+                    const s = cs * 0.10;
+                    ctx2.beginPath();
+                    ctx2.moveTo(sx, sy - s); ctx2.lineTo(sx + s * 0.3, sy); ctx2.lineTo(sx, sy + s); ctx2.lineTo(sx - s * 0.3, sy);
+                    ctx2.closePath(); ctx2.fill();
+                }
+            });
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 

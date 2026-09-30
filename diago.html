@@ -1069,6 +1069,22 @@
             ctx.fillRect(0, 0, width, width);
             ctx.restore();
 
+            // 斜め筋の地紋
+            {
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.12);
+                ctx.lineWidth = Math.max(1, cellSize * 0.03);
+                const t = cellSize * 0.11;
+                ctx.beginPath();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                    ctx.moveTo(cx - t, cy - t); ctx.lineTo(cx + t, cy + t);
+                    ctx.moveTo(cx - t, cy + t); ctx.lineTo(cx + t, cy - t);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
             // 格子線
             ctx.strokeStyle = currentTheme.lineColor;
             ctx.lineWidth = Math.max(1, cellSize * 0.028);

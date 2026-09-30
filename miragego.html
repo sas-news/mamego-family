@@ -1218,34 +1218,6 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
-
-            // 特殊ルールの石マーク
-            drawStoneMarks(padding, cellSize);
-        }
-
-        function drawStoneMarks(padding, cellSize) {
-            // 蜃気楼石に揺らぐ二重輪郭
-            {
-                ctx.save();
-                ctx.setLineDash([cellSize * 0.10, cellSize * 0.08]);
-                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
-                pieces.forEach(pc => {
-                    if (!isMirage(pc)) return;
-                    pc.cells.forEach(p => {
-                        if (board[p.y * BOARD_SIZE + p.x] === 0) return;
-                        const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
-                        ctx.strokeStyle = 'rgba(103, 232, 249, 0.8)';
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, cellSize * 0.42, 0, Math.PI * 2);
-                        ctx.stroke();
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, cellSize * 0.34, 0, Math.PI * 2);
-                        ctx.stroke();
-                    });
-                });
-                ctx.restore();
-            }
         }
 
         function drawLastMove(padding, cellSize) {

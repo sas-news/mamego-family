@@ -1215,37 +1215,6 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
-
-            // 特殊ルールの石マーク
-            drawStoneMarks(padding, cellSize);
-        }
-
-        function drawStoneMarks(padding, cellSize) {
-            // 各連の呼吸点数を石の上に数字で表示 (同色連は同じ数)
-            {
-                ctx.save();
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.font = 'bold ' + Math.max(9, cellSize * 0.42) + 'px sans-serif';
-                board.forEach((v, i) => {
-                    if (v !== 1 && v !== 2) return;
-                    const cx = padding + (i % BOARD_SIZE) * cellSize;
-                    const cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
-                    const libs = getLiberties(board, i);
-                    // 呼吸1は警告色で強調
-                    ctx.fillStyle = libs <= 1 ? '#ef4444' : (v === 1 ? '#ffffff' : '#111827');
-                    ctx.fillText(String(libs), cx, cy);
-                    // 呼吸1は赤い警告リングでも強調
-                    if (libs <= 1) {
-                        ctx.strokeStyle = 'rgba(239,68,68,' + (0.55 + 0.3 * Math.sin(fxNow() / 280)) + ')';
-                        ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, cellSize * 0.44, 0, Math.PI * 2);
-                        ctx.stroke();
-                    }
-                });
-                ctx.restore();
-            }
         }
 
         function drawLastMove(padding, cellSize) {

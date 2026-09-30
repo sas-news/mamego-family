@@ -1751,6 +1751,14 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 中心: 6手ごとに許可領域が拡大する瞬間を可視化
+            if (history.length % 6 === 0) {
+                const cc = ((BOARD_SIZE - 1) / 2) | 0;
+                const ci = cc * BOARD_SIZE + cc;
+                fxText(ci, '領域拡大', '#3b82f6', 1100);
+                fxGlow(ci, '#60a5fa', 800);
+                fxBurst(ci, '#60a5fa', 18, 2.4);
+            }
             updateUI();
 
             // オンライン同期

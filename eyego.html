@@ -879,6 +879,43 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 眼: 単色で囲まれた空領域を所有者色で照らす (6点以内=完成=即勝利)
+        fxAmbient((ctx2, now, pad, cs) => {
+            const n = BOARD_SIZE, seen = new Set();
+            ctx2.save();
+            for (let i = 0; i < n * n; i++) {
+                if (board[i] !== 0 || seen.has(i)) continue;
+                const q = [i]; seen.add(i);
+                const region = [];
+                let owner = 0, mixed = false;
+                while (q.length) {
+                    const cur = q.pop(); region.push(cur);
+                    getNeighbors(cur).forEach(m => {
+                        if (board[m] === 0 && !seen.has(m)) { seen.add(m); q.push(m); }
+                        else if (board[m] !== 0) {
+                            if (owner === 0) owner = board[m];
+                            else if (board[m] !== owner) mixed = true;
+                        }
+                    });
+                }
+                if (mixed || owner === 0 || region.length > 9) continue;
+                const done = region.length <= 6;
+                const col = owner === 1 ? '30,30,30' : '255,255,255';
+                const pulse = 0.5 + 0.5 * Math.sin(now / 500);
+                ctx2.fillStyle = 'rgba(' + col + ',' + (done ? 0.30 + 0.2 * pulse : 0.10 + 0.06 * pulse) + ')';
+                region.forEach(r => {
+                    ctx2.fillRect(pad + (r % n - 0.42) * cs, pad + (((r / n) | 0) - 0.42) * cs, cs * 0.84, cs * 0.84);
+                });
+                if (done) {
+                    const cx0 = region.reduce((s, r) => s + (r % n), 0) / region.length;
+                    const cy0 = region.reduce((s, r) => s + ((r / n) | 0), 0) / region.length;
+                    ctx2.strokeStyle = 'rgba(' + col + ',0.8)';
+                    ctx2.lineWidth = Math.max(1.4, cs * 0.06);
+                    ctx2.beginPath(); ctx2.arc(pad + cx0 * cs, pad + cy0 * cs, cs * (0.28 + pulse * 0.08), 0, Math.PI * 2); ctx2.stroke();
+                }
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 

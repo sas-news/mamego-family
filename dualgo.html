@@ -1217,34 +1217,6 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
-
-            // 特殊ルールの石マーク
-            drawStoneMarks(padding, cellSize);
-        }
-
-        function drawStoneMarks(padding, cellSize) {
-            for (const p of [1, 2]) {
-                for (const ki of kingIdx[p]) {
-                    if (board[ki] !== p) continue;
-                    const kx = ki % BOARD_SIZE, ky = Math.floor(ki / BOARD_SIZE);
-                    const cx = padding + kx * cellSize, cy = padding + ky * cellSize;
-                    ctx.save();
-                    ctx.strokeStyle = '#d4a017';
-                    ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
-                    const w = cellSize * 0.24, h = cellSize * 0.18;
-                    ctx.beginPath();
-                    ctx.moveTo(cx - w, cy + h * 0.5);
-                    ctx.lineTo(cx - w, cy - h * 0.4);
-                    ctx.lineTo(cx - w * 0.4, cy);
-                    ctx.lineTo(cx, cy - h);
-                    ctx.lineTo(cx + w * 0.4, cy);
-                    ctx.lineTo(cx + w, cy - h * 0.4);
-                    ctx.lineTo(cx + w, cy + h * 0.5);
-                    ctx.closePath();
-                    ctx.stroke();
-                    ctx.restore();
-                }
-            }
         }
 
         function drawLastMove(padding, cellSize) {

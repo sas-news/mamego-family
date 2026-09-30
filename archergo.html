@@ -1731,7 +1731,14 @@
                         if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) break;
                         const v = board[ny * BOARD_SIZE + nx];
                         if (v === 0) continue;
-                        if (v === opponent) { board[ny * BOARD_SIZE + nx] = 0; shot++; }
+                        if (v === opponent) {
+                            board[ny * BOARD_SIZE + nx] = 0; shot++;
+                            // 矢の軌跡: 射手の発光と飛翔火花、着弾点で命中表示
+                            const ti = ny * BOARD_SIZE + nx;
+                            fxGlow(p0.y * BOARD_SIZE + p0.x, '#fbbf24', 500);
+                            for (let t = 1; t <= d; t++) fxBurst((p0.y + dy * t) * BOARD_SIZE + (p0.x + dx * t), '#fbbf24', 3, 1.5);
+                            fxText(ti, '射抜!', '#fbbf24', 900);
+                        }
                         break;
                     }
                 });

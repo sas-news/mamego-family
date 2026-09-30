@@ -772,7 +772,7 @@ const STONE_MARKS_SPEC = (body) => [
             }
         }
 
-        function drawLastMove(padding, cellSize) {`,
+        let fxPrevMove = null;`,
 `                    if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
@@ -785,7 +785,7 @@ const STONE_MARKS_SPEC = (body) => [
 ${body}
         }
 
-        function drawLastMove(padding, cellSize) {`],
+        let fxPrevMove = null;`],
 ];
 
 // render() 内に装飾コードを挿入する小ヘルパ

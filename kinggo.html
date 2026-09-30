@@ -883,6 +883,25 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 王の威光と窮地の警告
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            [1, 2].forEach(pl => {
+                const k = kings[pl];
+                if (k < 0 || board[k] !== pl) return;
+                const cx = pad + (k % BOARD_SIZE) * cs, cy = pad + ((k / BOARD_SIZE) | 0) * cs;
+                const libs = getLiberties(board, k);
+                const danger = libs <= 1;
+                const pulse = 0.5 + 0.5 * Math.sin(now / (danger ? 170 : 800));
+                ctx2.globalAlpha = danger ? 0.50 + 0.38 * pulse : 0.20 + 0.12 * pulse;
+                ctx2.strokeStyle = danger ? '#ef4444' : '#fbbf24';
+                ctx2.lineWidth = Math.max(1.5, cs * 0.07);
+                ctx2.beginPath();
+                ctx2.arc(cx, cy, cs * (0.62 + 0.07 * pulse), 0, Math.PI * 2);
+                ctx2.stroke();
+            });
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
