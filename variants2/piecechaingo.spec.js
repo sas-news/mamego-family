@@ -29,18 +29,25 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
-        ...K.STONE_MARKS_SPEC(`            // 鎖: 2石ペア同士を細い鎖線で結ぶ
+        ...K.STONE_MARKS_SPEC(`            // 鎖: 2石ペア同士を楕円リンクの鎖で結ぶ
             {
                 ctx.save();
-                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.8);
-                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
                 pieces.forEach(pc => {
                     const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
                     if (alive.length < 2) return;
-                    ctx.beginPath();
-                    ctx.moveTo(padding + alive[0].x * cellSize, padding + alive[0].y * cellSize);
-                    ctx.lineTo(padding + alive[1].x * cellSize, padding + alive[1].y * cellSize);
-                    ctx.stroke();
+                    const ax = padding + alive[0].x * cellSize, ay = padding + alive[0].y * cellSize;
+                    const bx = padding + alive[1].x * cellSize, by = padding + alive[1].y * cellSize;
+                    const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy);
+                    const ang = Math.atan2(dy, dx);
+                    ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.85);
+                    for (let k = 1; k <= 3; k++) {
+                        const t = k / 4;
+                        const lx = ax + dx * t, ly = ay + dy * t;
+                        ctx.lineWidth = Math.max(1.2, cellSize * 0.045);
+                        ctx.beginPath();
+                        ctx.ellipse(lx, ly, len * 0.11, cellSize * 0.09, ang + (k % 2 ? Math.PI / 2 : 0), 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
                 });
                 ctx.restore();
             }`),

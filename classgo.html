@@ -1224,6 +1224,30 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 兵種の文字印 (戦/弓/僧)
+            {
+                const marks = { W: '戦', A: '弓', M: '僧' };
+                for (const k in classMap) {
+                    const idx = +k;
+                    const v = board[idx];
+                    if (v !== 1 && v !== 2) continue;
+                    const x = idx % BOARD_SIZE, y = Math.floor(idx / BOARD_SIZE);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                    ctx.save();
+                    ctx.fillStyle = v === 1 ? '#ffffff' : '#333333';
+                    ctx.font = 'bold ' + Math.max(8, cellSize * 0.34) + 'px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(marks[classMap[k]] || '', cx, cy);
+                    ctx.restore();
+                }
+            }
         }
 
         function drawLastMove(padding, cellSize) {

@@ -59,7 +59,67 @@ module.exports = {
             'ネクサスを握れば4盤の連絡を支配できる。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
-        ...K.WALL_SPEC,
+        // 溝は深淵テクスチャで自前描画 (WALL_SPECの彫り込みを差し替え)
+        [K.ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`, `            const covered = new Set(); // ピース描画でカバー済みのマス
+
+            // 溝: 星屑の瞬く深淵
+            {
+                const now = fxNow();
+                const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (!isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, cellSize * 0.75);
+                    g.addColorStop(0, '#141433');
+                    g.addColorStop(1, '#07071a');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const tw = Math.sin(now / 500 + x * 2.7 + y * 3.9);
+                    if (tw > 0.55) {
+                        ctx.fillStyle = 'rgba(190,200,255,' + ((tw - 0.55) * 0.9).toFixed(3) + ')';
+                        ctx.beginPath();
+                        ctx.arc(cx + Math.sin(x * 13.7 + y * 7.1) * cellSize * 0.25, cy + Math.cos(x * 9.3 + y * 11.7) * cellSize * 0.25, Math.max(0.8, cellSize * 0.04), 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.5);
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.045);
+                ctx.beginPath();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    if (x > 0 && isV(x - 1, y)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
+                    if (x < BOARD_SIZE - 1 && isV(x + 1, y)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
+                    if (y > 0 && isV(x, y - 1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
+                    if (y < BOARD_SIZE - 1 && isV(x, y + 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
+                }
+                ctx.stroke();
+                ctx.restore();
+            }`],
+        ...K.WALL_GUARD_SPEC,
+        // ネクサスの鼓動: 斜め4点へ流れる光と脈動リング
+        [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const c = Math.floor(BOARD_SIZE / 2);
+            const nx = pad + c * cs, ny = pad + c * cs;
+            const ph = (Math.sin(now / 700) + 1) / 2;
+            ctx2.save();
+            [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([dx, dy]) => {
+                ctx2.strokeStyle = 'rgba(255,215,120,' + (0.10 + ph * 0.20).toFixed(3) + ')';
+                ctx2.lineWidth = Math.max(1, cs * 0.05);
+                ctx2.beginPath();
+                ctx2.moveTo(nx, ny);
+                ctx2.lineTo(pad + (c + dx) * cs, pad + (c + dy) * cs);
+                ctx2.stroke();
+            });
+            ctx2.strokeStyle = 'rgba(255,210,110,' + (0.35 + ph * 0.45).toFixed(3) + ')';
+            ctx2.lineWidth = Math.max(1.4, cs * 0.07);
+            ctx2.beginPath();
+            ctx2.arc(nx, ny, cs * (0.3 + ph * 0.14), 0, Math.PI * 2);
+            ctx2.stroke();
+            ctx2.restore();
+        });`],
         ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],

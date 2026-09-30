@@ -1217,6 +1217,27 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 再生済みヒドラ頭: 緑の小点 (もう取り切れる印)
+            {
+                ctx.save();
+                ctx.fillStyle = 'rgba(52,211,153,0.95)';
+                for (const idx of hydraUsed) {
+                    const v = board[idx];
+                    if (v !== 1 && v !== 2) continue;
+                    const cx = padding + (idx % BOARD_SIZE) * cellSize;
+                    const cy = padding + Math.floor(idx / BOARD_SIZE) * cellSize;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.10, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
         }
 
         function drawLastMove(padding, cellSize) {

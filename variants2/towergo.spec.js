@@ -30,17 +30,38 @@ module.exports = {
             return neighbors;
         }`],
         // 層の境目に太線
-        K.CUE_GRID(`            {
+        K.CUE_GRID(`            // 3層フロア: 階ごとの帯色 + 層ラベル + 二重の継目
+            {
                 const fh = Math.ceil(BOARD_SIZE / 3);
+                const tints = ['rgba(255,185,110,0.10)', 'rgba(255,255,255,0.04)', 'rgba(130,175,255,0.12)'];
                 ctx.save();
+                for (let b = 0; b < 3; b++) {
+                    const y0 = b * fh, y1 = Math.min(BOARD_SIZE, y0 + fh);
+                    ctx.fillStyle = tints[b];
+                    ctx.fillRect(padding - cellSize * 0.5, padding + y0 * cellSize - cellSize * 0.5, width - padding * 2 + cellSize, (y1 - y0) * cellSize);
+                }
                 ctx.strokeStyle = currentTheme.lineColor;
-                ctx.lineWidth = Math.max(2, cellSize * 0.09);
                 for (let k = 1; k <= 2; k++) {
                     const yy = padding + k * fh * cellSize - cellSize / 2;
+                    ctx.lineWidth = Math.max(2.4, cellSize * 0.1);
                     ctx.beginPath();
                     ctx.moveTo(padding - cellSize * 0.5, yy);
                     ctx.lineTo(width - padding + cellSize * 0.5, yy);
                     ctx.stroke();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.028);
+                    ctx.beginPath();
+                    ctx.moveTo(padding - cellSize * 0.5, yy - cellSize * 0.08);
+                    ctx.lineTo(width - padding + cellSize * 0.5, yy - cellSize * 0.08);
+                    ctx.stroke();
+                    ctx.strokeStyle = currentTheme.lineColor;
+                }
+                ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.8);
+                ctx.font = 'bold ' + (cellSize * 0.34).toFixed(1) + 'px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                for (let b = 0; b < 3; b++) {
+                    ctx.fillText((b + 1) + 'F', padding - cellSize * 0.62, padding + (b * fh + fh / 2) * cellSize - cellSize * 0.5);
                 }
                 ctx.restore();
             }`),

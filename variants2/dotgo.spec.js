@@ -67,6 +67,7 @@ module.exports = {
             const cells = [{ x: pendingDot.x, y: pendingDot.y }, { x: cell.x, y: cell.y }];
             if (isValidPlacement(cells, turn)) {
                 executeMove({ cells, type: currentPieceType, rot: 0 }, turn);
+                fxGlow(cells[1].y * BOARD_SIZE + cells[1].x, '#facc15', 650);
             }
             pendingDot = null;
             previewPos = null;
@@ -83,6 +84,20 @@ module.exports = {
                 ctx.restore();
             }`),
         [K.ONE, K.RV_ALGO, K.rv(['1手=盤上の任意の2点に1石ずつ置く。1点目をクリックすると金色の点で仮置き、2点目で確定。','仮置きは同じ点の再クリックか Rキー・右クリック・ホイールで取消。2石は別々の連。'])],
+        // 双点: 仮置き点に脈動リング (着手待ちを示す)
+        [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            if (!pendingDot) return;
+            const ph = (Math.sin(now / 350) + 1) / 2;
+            const px = pad + pendingDot.x * cs, py = pad + pendingDot.y * cs;
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(255,210,60,' + (0.45 + ph * 0.5).toFixed(3) + ')';
+            ctx2.lineWidth = Math.max(1.4, cs * 0.06);
+            ctx2.beginPath();
+            ctx2.arc(px, py, cs * (0.3 + ph * 0.12), 0, Math.PI * 2);
+            ctx2.stroke();
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

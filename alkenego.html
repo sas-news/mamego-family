@@ -1231,6 +1231,44 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            {
+                ctx.save();
+                pieces.forEach(pc => {
+                    const pairs = DBONDS[pc.type];
+                    if (!pairs || !pairs.length) return;
+                    const minX = Math.min(...pc.cells.map(p => p.x));
+                    const minY = Math.min(...pc.cells.map(p => p.y));
+                    const at = (nx, ny) => pc.cells.find(p => p.x - minX === nx && p.y - minY === ny);
+                    const fill = pc.player === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                    ctx.strokeStyle = shiftColor(fill, -0.15);
+                    ctx.lineCap = 'round';
+                    ctx.lineWidth = cellSize * 0.10;
+                    pairs.forEach(([pa, pb]) => {
+                        const a = at(pa[0], pa[1]), b = at(pb[0], pb[1]);
+                        if (!a || !b) return;
+                        if (board[a.y * BOARD_SIZE + a.x] !== pc.player || board[b.y * BOARD_SIZE + b.x] !== pc.player) return;
+                        const ax = padding + a.x * cellSize, ay = padding + a.y * cellSize;
+                        const bx = padding + b.x * cellSize, by = padding + b.y * cellSize;
+                        const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1;
+                        const ux = dx / L, uy = dy / L;
+                        const ox = -uy * cellSize * 0.12, oy = ux * cellSize * 0.12;
+                        const r0 = cellSize * 0.30;
+                        ctx.beginPath();
+                        ctx.moveTo(ax + ux * r0 + ox, ay + uy * r0 + oy);
+                        ctx.lineTo(bx - ux * r0 + ox, by - uy * r0 + oy);
+                        ctx.moveTo(ax + ux * r0 - ox, ay + uy * r0 - oy);
+                        ctx.lineTo(bx - ux * r0 - ox, by - uy * r0 - oy);
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
+            }
         }
 
         function drawLastMove(padding, cellSize) {

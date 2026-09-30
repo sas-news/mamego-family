@@ -1765,6 +1765,22 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+
+            if (lastMove && lastMove.cells[0]) {
+                const dp = lastMove.cells[0];
+                const didx = dp.y * BOARD_SIZE + dp.x;
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== player || i === didx) continue;
+                    const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
+                    const dx = Math.abs(dp.x - sx), dy = Math.abs(dp.y - sy);
+                    if ((dx === 1 && dy === 2) || (dx === 2 && dy === 1)) {
+                        fxSlide(i, didx, 380);
+                        fxText(didx, '跳!', '#a78bfa', 800);
+                        break;
+                    }
+                }
+            }
+
             turn = opponent;
             updateUI();
 

@@ -38,9 +38,15 @@ module.exports = {
                 // 壺ルール: 3個以上の大取なら壺ごと奪う、それ未満は壺に蓄積
                 if (captured.length >= 3) {
                     captures[player] += captured.length + pot;
+                    const ci = captured[0];
+                    fxGlow(ci, '#fbbf24', 850);
+                    fxBurst(ci, '#fbbf24', 16, 1.9);
+                    fxText(ci, '壺総取り!+' + (captured.length + pot), '#fbbf24', 1400);
+                    fxShake(5, 320);
                     pot = 0;
                 } else {
                     pot += captured.length;
+                    fxText(captured[0], '壺+' + captured.length, '#d4a017', 950);
                 }
                 soundManager.playCapture();
                 cleanUpPieces();

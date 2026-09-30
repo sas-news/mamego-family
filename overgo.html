@@ -882,6 +882,17 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const d = Math.abs(scoreDiff());
+            if (d < 7) return;
+            const ph = (Math.sin(now / 420) + 1) / 2;
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(220,60,60,' + (0.09 + ph * 0.11).toFixed(3) + ')';
+            ctx2.lineWidth = cs * 0.16;
+            ctx2.strokeRect(pad - cs * 0.55, pad - cs * 0.55, w + cs * 0.1, w + cs * 0.1);
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1735,6 +1746,12 @@
                 const d = scoreDiff();
                 if (Math.abs(d) >= 10) {
                     const w = d > 0 ? 1 : 2;
+                    fxShake(8, 420);
+                    if (lastMove && lastMove.cells[0]) {
+                        const oi = lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x;
+                        fxGlow(oi, '#facc15', 900);
+                        fxText(oi, '大差決着!', '#facc15', 1400);
+                    }
                     winByRule(w, '大差勝ち', '勢力差が10以上開きました (' + Math.abs(d) + ')'); return;
                 }
             }

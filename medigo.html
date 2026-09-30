@@ -1218,6 +1218,28 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 治癒マーク: 緑の十字を石の中央に
+            for (const idx of medMark) {
+                const v = board[idx];
+                if (v !== 1 && v !== 2) continue;
+                const x = idx % BOARD_SIZE, y = Math.floor(idx / BOARD_SIZE);
+                const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                const rr = cellSize * 0.13;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(40, 200, 110, 0.95)';
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
+                ctx.beginPath();
+                ctx.moveTo(cx - rr, cy); ctx.lineTo(cx + rr, cy);
+                ctx.moveTo(cx, cy - rr); ctx.lineTo(cx, cy + rr);
+                ctx.stroke();
+                ctx.restore();
+            }
         }
 
         function drawLastMove(padding, cellSize) {

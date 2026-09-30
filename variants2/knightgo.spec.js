@@ -29,6 +29,26 @@ module.exports = {
                 }
                 if (hasOwn && !canJump) return false;
             }`],
+        // 桂馬の跳躍: 跳び元の自石から着手点へ残像スライド
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            if (lastMove && lastMove.cells[0]) {
+                const dp = lastMove.cells[0];
+                const didx = dp.y * BOARD_SIZE + dp.x;
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== player || i === didx) continue;
+                    const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
+                    const dx = Math.abs(dp.x - sx), dy = Math.abs(dp.y - sy);
+                    if ((dx === 1 && dy === 2) || (dx === 2 && dy === 1)) {
+                        fxSlide(i, didx, 380);
+                        fxText(didx, '跳!', '#a78bfa', 800);
+                        break;
+                    }
+                }
+            }
+
+            turn = opponent;`],
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は自分の石から将棋の桂馬の動き (縦横1:2) で跳んだ点のみ。',

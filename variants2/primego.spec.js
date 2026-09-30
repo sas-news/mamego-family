@@ -33,7 +33,7 @@ module.exports = {
                     return true;
                 };
                 ctx.save();
-                ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.30);
+                ctx.fillStyle = alphaColor('#e8c766', 0.55);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     if (!isP(x) || !isP(y)) continue;
                     ctx.beginPath();
@@ -42,6 +42,25 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
+        // 素数点の瞬き (星座のような明滅)
+        [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const isP = n => { if (n < 2) return false; for (let d = 2; d * d <= n; d++) if (n % d === 0) return false; return true; };
+            ctx2.save();
+            for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                if (!isP(x) || !isP(y)) continue;
+                const tw = Math.sin(now / 480 + x * 2.9 + y * 4.1);
+                if (tw <= 0.55) continue;
+                const cx = pad + x * cs, cy = pad + y * cs, r = cs * 0.17;
+                ctx2.strokeStyle = 'rgba(255,235,170,' + ((tw - 0.55) * 0.9).toFixed(3) + ')';
+                ctx2.lineWidth = Math.max(0.8, cs * 0.03);
+                ctx2.beginPath();
+                ctx2.moveTo(cx - r, cy); ctx2.lineTo(cx + r, cy);
+                ctx2.moveTo(cx, cy - r); ctx2.lineTo(cx, cy + r);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は x,y 両座標が素数 (2,3,5,7,11,13,17) の交点のみ。',

@@ -29,6 +29,29 @@ module.exports = {
                 }
                 if (hasEnemy && !beside) return false;
             }`],
+        // 側面碁: 隣に空点のある敵石に赤い標的括弧
+        ...K.STONE_MARKS_SPEC(`            {
+                const enemy = turn === 1 ? 2 : 1;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(220,60,60,0.8)';
+                ctx.lineWidth = Math.max(1.5, cellSize * 0.055);
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== enemy) continue;
+                    let open = false;
+                    getNeighbors(i).forEach(n => { if (board[n] === 0) open = true; });
+                    if (!open) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
+                    const r = cellSize * 0.5, t = cellSize * 0.15;
+                    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx, sy]) => {
+                        ctx.beginPath();
+                        ctx.moveTo(cx + sx * r - sx * t, cy + sy * r);
+                        ctx.lineTo(cx + sx * r, cy + sy * r);
+                        ctx.lineTo(cx + sx * r, cy + sy * r - sy * t);
+                        ctx.stroke();
+                    });
+                }
+                ctx.restore();
+            }`),
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は敵石の上下左右に面した点のみ (敵石が無い間は自由)。',

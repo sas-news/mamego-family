@@ -1221,6 +1221,33 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 量子石に白黒の重ね合わせ輪 (半円ずつ二色)
+            {
+                ctx.save();
+                ctx.lineWidth = Math.max(1.6, cellSize * 0.07);
+                pieces.forEach(pc => {
+                    if (!pc.schro) return;
+                    pc.cells.forEach(p => {
+                        if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                        const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cellSize * 0.40, Math.PI * 0.5, Math.PI * 1.5);
+                        ctx.stroke();
+                        ctx.strokeStyle = 'rgba(15, 23, 42, 0.9)';
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cellSize * 0.40, -Math.PI * 0.5, Math.PI * 0.5);
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
+            }
         }
 
         function drawLastMove(padding, cellSize) {

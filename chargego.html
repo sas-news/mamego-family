@@ -1218,6 +1218,27 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 装甲中の石: 薄い青のリング
+            {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(80,130,220,0.75)';
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.045);
+                for (const k in armorUntil) {
+                    if (!(armorUntil[k] > history.length)) continue;
+                    const i = +k;
+                    if (board[i] !== 1 && board[i] !== 2) continue;
+                    ctx.beginPath();
+                    ctx.arc(padding + (i % BOARD_SIZE) * cellSize, padding + ((i / BOARD_SIZE) | 0) * cellSize, cellSize * 0.30, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
         }
 
         function drawLastMove(padding, cellSize) {

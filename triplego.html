@@ -1218,6 +1218,28 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 三手: この手番で置いた石に順序印
+            {
+                const nums = ['①', '②', '③'];
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold ' + Math.max(9, cellSize * 0.42) + 'px sans-serif';
+                turnPlaced.forEach((i, k) => {
+                    if (board[i] !== turn) return;
+                    const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                    ctx.fillStyle = turn === 1 ? '#fde68a' : '#92400e';
+                    ctx.fillText(nums[k] || '•', cx, cy);
+                });
+                ctx.restore();
+            }
         }
 
         function drawLastMove(padding, cellSize) {

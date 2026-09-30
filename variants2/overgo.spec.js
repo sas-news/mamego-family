@@ -27,6 +27,12 @@ module.exports = {
                 const d = scoreDiff();
                 if (Math.abs(d) >= 10) {
                     const w = d > 0 ? 1 : 2;
+                    fxShake(8, 420);
+                    if (lastMove && lastMove.cells[0]) {
+                        const oi = lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x;
+                        fxGlow(oi, '#facc15', 900);
+                        fxText(oi, '大差決着!', '#facc15', 1400);
+                    }
                     winByRule(w, '大差勝ち', '勢力差が10以上開きました (' + Math.abs(d) + ')'); return;
                 }
             }
@@ -37,6 +43,19 @@ module.exports = {
             '勢力 = 盤上の自石数 + アゲハマ数。毎手後に勢力差を計算し、10以上開けば即決着。',
             '大敗を早々に見切るレフリー制。追いつくなら早いうちに。',
         ])],
+        // 勢力差が7を超えると盤の縁が警告色で脈動
+        [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const d = Math.abs(scoreDiff());
+            if (d < 7) return;
+            const ph = (Math.sin(now / 420) + 1) / 2;
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(220,60,60,' + (0.09 + ph * 0.11).toFixed(3) + ')';
+            ctx2.lineWidth = cs * 0.16;
+            ctx2.strokeRect(pad - cs * 0.55, pad - cs * 0.55, w + cs * 0.1, w + cs * 0.1);
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

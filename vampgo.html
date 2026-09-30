@@ -1218,6 +1218,26 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 血の装甲: 装甲のある石に深紅の内リング
+            for (const idx of vampArmor) {
+                const v = board[idx];
+                if (v !== 1 && v !== 2) continue;
+                const x = idx % BOARD_SIZE, y = Math.floor(idx / BOARD_SIZE);
+                const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(200, 30, 50, 0.9)';
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
+                ctx.beginPath();
+                ctx.arc(cx, cy, cellSize * 0.24, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
         }
 
         function drawLastMove(padding, cellSize) {

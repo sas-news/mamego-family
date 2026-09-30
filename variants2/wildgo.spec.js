@@ -24,7 +24,12 @@ module.exports = {
                 return;
             }
 
-            if (moveCount % 5 !== 0) turn = opponent;`],
+            if (moveCount % 5 !== 0) turn = opponent;
+            else if (lastMove && lastMove.cells[0]) {
+                const wi = lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x;
+                fxText(wi, 'WILD!', '#f472b6', 1200);
+                fxGlow(wi, '#f472b6', 750);
+            }`],
         ...K.EVENT_CHIP_SPEC('moveCount % 5 === 4 ? "次はワイルド手!" : ""'),
         [K.ONE, K.INFO_ALGO, `            無手碁: 5手ごとのワイルド手は同じ側が続けてもう1手<br>
             PC: クリックで配置<br>

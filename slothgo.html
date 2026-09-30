@@ -1070,7 +1070,7 @@
             ctx.fillRect(0, 0, width, width);
             ctx.restore();
 
-            // 遅滞: 封鎖中の行と列を暗い帯で示す
+            // 遅滞: 直近2手の行列を赤熱の筋として表示 (新しいほど熱い)
             {
                 const rec = [];
                 if (lastMove && lastMove.cells.length > 0) rec.push(lastMove.cells[0]);
@@ -1079,13 +1079,18 @@
                     if (lm && lm.cells.length > 0) rec.push(lm.cells[0]);
                 }
                 ctx.save();
-                ctx.fillStyle = alphaColor(shiftColor(currentTheme.boardBg, -0.5), 0.30);
-                for (const m of rec) {
+                rec.forEach((m, k) => {
+                    const hot = k === 0 ? 0.34 : 0.17;
+                    ctx.fillStyle = 'rgba(230,80,40,' + hot.toFixed(2) + ')';
                     ctx.fillRect(-cellSize, padding + (m.y - 0.5) * cellSize,
                         padding * 2 + BOARD_SIZE * cellSize, cellSize);
                     ctx.fillRect(padding + (m.x - 0.5) * cellSize, -cellSize,
                         cellSize, padding * 2 + BOARD_SIZE * cellSize);
-                }
+                    ctx.fillStyle = 'rgba(255,170,80,' + (hot + 0.3).toFixed(2) + ')';
+                    ctx.beginPath();
+                    ctx.arc(padding + m.x * cellSize, padding + m.y * cellSize, cellSize * 0.2, 0, Math.PI * 2);
+                    ctx.fill();
+                });
                 ctx.restore();
             }
 

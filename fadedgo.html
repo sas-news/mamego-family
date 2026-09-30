@@ -1220,6 +1220,29 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 最古の石にはセピアの年輪マーク
+            {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(161, 98, 7, 0.5)';
+                ctx.setLineDash([cellSize * 0.07, cellSize * 0.07]);
+                ctx.lineWidth = Math.max(1.1, cellSize * 0.04);
+                pieces.forEach(pc => {
+                    if (pc.at === undefined || history.length - pc.at < 11) return;
+                    pc.cells.forEach(p => {
+                        if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                        ctx.beginPath();
+                        ctx.arc(padding + p.x * cellSize, padding + p.y * cellSize, cellSize * 0.44, 0, Math.PI * 2);
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
+            }
         }
 
         function drawLastMove(padding, cellSize) {

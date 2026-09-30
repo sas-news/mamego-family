@@ -28,9 +28,13 @@ module.exports = {
                         board[bi] = 0;
                         captures[opponent]++;
                         blasted = true;
+                        fxBurst(bi, '#ef4444', 18, 2.1);
+                        fxBurst(bi, '#fbbf24', 10, 1.4);
+                        fxGlow(bi, '#fb923c', 750);
+                        fxText(bi, '地雷!', '#ef4444', 1100);
                     }
                 });
-                if (blasted) cleanUpPieces();
+                if (blasted) { cleanUpPieces(); fxShake(6, 340); }
             }
 
             const captured = getCapturedStones(board, opponent);
