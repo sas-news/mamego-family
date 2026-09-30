@@ -1177,27 +1177,31 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // 壁セル: 石段の質感 (グレー石 + 目地 + 最上段は踏面ハイライト)
             {
                 const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
                 ctx.save();
-                ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.48);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                    const px = padding + (x - 0.5) * cellSize, py = padding + (y - 0.5) * cellSize;
+                    const g = ctx.createLinearGradient(px, py, px, py + cellSize);
+                    g.addColorStop(0, '#6d6a63'); g.addColorStop(0.25, '#55534d'); g.addColorStop(1, '#3c3a36');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(px, py, cellSize, cellSize);
+                    // 石の目地
+                    ctx.strokeStyle = 'rgba(30,28,25,0.55)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.strokeRect(px + 0.5, py + 0.5, cellSize - 1, cellSize - 1);
+                    ctx.beginPath();
+                    ctx.moveTo(px, py + cellSize * 0.55);
+                    ctx.lineTo(px + cellSize, py + cellSize * 0.55);
+                    ctx.stroke();
+                    // 段の小口 (直下が有効面なら明るい踏面)
+                    if (y + 1 < BOARD_SIZE && !isV(x, y + 1)) {
+                        ctx.fillStyle = 'rgba(200,196,185,0.85)';
+                        ctx.fillRect(px, py + cellSize * 0.72, cellSize, cellSize * 0.28);
+                    }
                 }
-                ctx.strokeStyle = currentTheme.lineColor;
-                ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
-                ctx.beginPath();
-                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if (isV(x, y)) continue;
-                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
-                    if (x > 0 && isV(x - 1, y)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
-                    if (x < BOARD_SIZE - 1 && isV(x + 1, y)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
-                    if (y > 0 && isV(x, y - 1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
-                    if (y < BOARD_SIZE - 1 && isV(x, y + 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
-                }
-                ctx.stroke();
                 ctx.restore();
             }
 

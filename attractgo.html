@@ -1720,6 +1720,7 @@
                         const ai = ay * BOARD_SIZE + ax, bi = by * BOARD_SIZE + bx;
                         if (board[bi] === opp2 && board[ai] === 0) {
                             board[ai] = opp2; board[bi] = 0;
+                            fxSlide(bi, ai, 360); // 引き寄せられる軌跡
                         }
                     });
                 });

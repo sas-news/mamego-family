@@ -32,6 +32,24 @@ module.exports = {
                 }
             }`],
         ...K.LEGAL_DOTS_SPEC,
+        // 跳躍の軌跡: 前の自石から今の着地点へ石が跳ぶ
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            {
+                let anchor = null;
+                for (let i = history.length - 1; i >= 0; i--) {
+                    const lm = history[i].lastMove;
+                    if (lm && lm.player === player) { anchor = lm.cells[0]; break; }
+                }
+                if (anchor && lastMove && lastMove.cells.length > 0) {
+                    const d = Math.max(Math.abs(lastMove.cells[0].x - anchor.x), Math.abs(lastMove.cells[0].y - anchor.y));
+                    if (d >= 3) {
+                        fxSlide(anchor.y * BOARD_SIZE + anchor.x, lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, 420); // 長跳の軌跡
+                    }
+                }
+            }
+
+            turn = opponent;`],
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は自分の直前の着手から3マス以上離れた点のみ (初手は自由)。',
             '自分の石は次々と長く跳んでいく。近場の攻防は他の石頼みになる。',

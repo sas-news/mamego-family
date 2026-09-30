@@ -27,7 +27,10 @@ module.exports = {
                     if (x === c) continue; // 谷底で停止
                     const nx = x + (x < c ? 1 : -1);
                     const j = y * N + nx;
-                    if (board[j] === 0) { board[j] = board[i]; board[i] = 0; }
+                    if (board[j] === 0) {
+                        board[j] = board[i]; board[i] = 0;
+                        fxSlide(i, j, 360); // 転がる軌跡
+                    }
                 }
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {

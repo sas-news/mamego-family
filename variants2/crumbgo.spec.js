@@ -37,9 +37,15 @@ module.exports = {
                         const fn = getNeighbors(g).filter(n => snapB[n] === v).length;
                         if (fn < tipN) { tipN = fn; tip = g; }
                     });
-                    if (board[tip] === v) { board[tip] = 0; fell++; }
+                    if (board[tip] === v) {
+                        board[tip] = 0; fell++;
+                        fxBurst(tip, 'rgba(140,110,80,0.85)', 9, 1.1); // 崩れ落ちる欠片
+                    }
                 });
-                if (fell > 0) cleanUpPieces();
+                if (fell > 0) {
+                    cleanUpPieces();
+                    if (fell >= 3) fxShake(3.5, 240); // 多数が崩れると盤が揺れる
+                }
             }
 
             // 崩落が盤を決して満たさないため、240手で自動的に点数計算して終局 (無期限の延命を防ぐ)
@@ -49,7 +55,23 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.STONE_MARKS_SPEC(`            // 崩れる端: 自連に1箇所しか繋がっていない石に亀裂点
+        // 崩れやすい端の石に亀裂マーク (※fxPrevMove 挿入後の現行アンカーを使用)
+        [K.ONE, `                    if (isDead) drawDeadMarker(cx, cy, r);
+                }
+            }
+        }
+
+        let fxPrevMove = null;`,
+`                    if (isDead) drawDeadMarker(cx, cy, r);
+                }
+            }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 崩れる端: 自連に1箇所しか繋がっていない石に亀裂点
             for (let i = 0; i < board.length; i++) {
                 const v = board[i];
                 if (v !== 1 && v !== 2) continue;
@@ -65,7 +87,10 @@ module.exports = {
                 ctx.moveTo(cx - rr, cy - rr); ctx.lineTo(cx, cy); ctx.lineTo(cx + rr * 0.4, cy - rr * 0.6);
                 ctx.stroke();
                 ctx.restore();
-            }`),
+            }
+        }
+
+        let fxPrevMove = null;`],
         [K.ONE, K.RV_ALGO, K.rv([
             '3手ごとに、盤上の全ての連 (2石以上) が最も露出した端から1石ずつ崩れる。',
             '崩れた石は誰の取り分にもならずただ消える。大きな連を保つには絶えず修復が要る。',

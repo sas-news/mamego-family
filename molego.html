@@ -600,6 +600,8 @@
                 if (!empty.length) return;
                 const dst = empty[(Math.random() * empty.length) | 0];
                 board[dst] = board[i]; board[i] = 0;
+                fxSlide(i, dst, 380); // もぐらが潜る軌跡
+                fxSplash(dst, 'rgba(150,115,75,0.8)', 6); // 顔を出す土
             });
             cleanUpPieces();
         }

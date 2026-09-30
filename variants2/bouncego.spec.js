@@ -22,6 +22,7 @@ module.exports = {
                 let dx = sx < c ? 1 : (sx > c ? -1 : 1);
                 let dy = sy < c ? 1 : (sy > c ? -1 : 1);
                 let rx = sx, ry = sy, steps = 0;
+                const path = [[sx, sy]]; // 弾道 (演出再生用)
                 while (steps++ < 4 * N) {
                     const px = rx + dx, py = ry + dy;
                     const blX = px < 0 || px >= N || board[py * N + px] !== 0;
@@ -31,8 +32,39 @@ module.exports = {
                     const nx = rx + dx, ny = ry + dy;
                     if (nx < 0 || nx >= N || ny < 0 || ny >= N || board[ny * N + nx] !== 0) break;
                     rx = nx; ry = ny;
+                    path.push([rx, ry]);
                 }
                 board[ry * N + rx] = player;
+                // 弾道をそのまま再生するワンショット演出 (石ゴーストが跳ね返りながら進む)
+                if (path.length > 1) {
+                    const t0 = fxNow(), seg = 80;
+                    let tracer;
+                    tracer = (ctx2, now, pad, cs) => {
+                        const total = path.length - 1;
+                        const t = (now - t0) / seg;
+                        if (t >= total) {
+                            const k = fxAmbients.indexOf(tracer);
+                            if (k >= 0) fxAmbients.splice(k, 1);
+                            return;
+                        }
+                        const k0 = Math.floor(t), f = t - k0;
+                        const gx = pad + (path[k0][0] + (path[k0 + 1][0] - path[k0][0]) * f) * cs;
+                        const gy = pad + (path[k0][1] + (path[k0 + 1][1] - path[k0][1]) * f) * cs;
+                        const fill2 = player === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                        const R = cs * 0.34;
+                        ctx2.save();
+                        ctx2.globalAlpha = 0.85;
+                        const g2 = ctx2.createRadialGradient(gx - R * 0.3, gy - R * 0.35, R * 0.08, gx, gy, R);
+                        g2.addColorStop(0, shiftColor(fill2, 0.5));
+                        g2.addColorStop(1, shiftColor(fill2, -0.2));
+                        ctx2.fillStyle = g2;
+                        ctx2.beginPath();
+                        ctx2.arc(gx, gy, R, 0, Math.PI * 2);
+                        ctx2.fill();
+                        ctx2.restore();
+                    };
+                    fxAmbient(tracer);
+                }
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
                     const dead = getCapturedStones(board, pl);

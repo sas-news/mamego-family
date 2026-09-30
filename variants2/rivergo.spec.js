@@ -26,11 +26,16 @@ module.exports = {
                     if (board[last] === 1 || board[last] === 2) {
                         lost[board[last]]++;
                         board[last] = 0;
+                        fxSplash(last, 'rgba(124,196,255,0.9)', 10); // 流れ落ちる水しぶき
+                        fxText(last, '流れ', 'rgba(150,210,255,0.95)', 900);
                     }
                     for (let x = N - 2; x >= 0; x--) {
                         const i = ry * N + x;
                         if (board[i] !== 1 && board[i] !== 2) continue;
-                        if (board[i + 1] === 0) { board[i + 1] = board[i]; board[i] = 0; }
+                        if (board[i + 1] === 0) {
+                            board[i + 1] = board[i]; board[i] = 0;
+                            fxSlide(i, i + 1, 380); // 川で運ばれる軌跡
+                        }
                     }
                 }
                 captures[1] += lost[2];
@@ -82,6 +87,41 @@ module.exports = {
             '右端まで運ばれた石は流れ落ちて相手のアゲハマになる。乗るなら早めに降りよ。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
+        // 川面のきらめきと流れる波紋 (常時)
+        [K.ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            const c = Math.floor(BOARD_SIZE / 2);
+            const y0 = pad + (c - 0.5) * cs;
+            const h = Math.min(2, BOARD_SIZE - c) * cs;
+            ctx2.save();
+            ctx2.strokeStyle = 'rgba(150,205,255,0.30)';
+            ctx2.lineWidth = Math.max(1, cs * 0.045);
+            ctx2.lineCap = 'round';
+            for (let k = 0; k < 4; k++) {
+                const ph = now / 1400 + k * 1.7;
+                const gy = y0 + h * (0.18 + 0.22 * k);
+                ctx2.beginPath();
+                for (let x = 0; x <= BOARD_SIZE; x++) {
+                    const px = pad + (x - 0.5) * cs;
+                    const py = gy + Math.sin(x * 1.4 + ph * 3) * cs * 0.09;
+                    if (x === 0) ctx2.moveTo(px, py); else ctx2.lineTo(px, py);
+                }
+                ctx2.stroke();
+            }
+            // 流れ筋 (右へ流れる短い筋)
+            ctx2.strokeStyle = 'rgba(190,225,255,0.35)';
+            for (let k = 0; k < 10; k++) {
+                const t = ((now / 1300) + k * 0.31) % 1;
+                const px = pad - cs * 0.5 + t * cs * BOARD_SIZE;
+                const py = y0 + (((k * 53.1) % 1) * (h - cs * 0.3)) + cs * 0.15;
+                ctx2.beginPath();
+                ctx2.moveTo(px - cs * 0.3, py);
+                ctx2.lineTo(px, py);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

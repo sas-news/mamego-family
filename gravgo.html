@@ -1069,6 +1069,22 @@
             ctx.fillRect(0, 0, width, width);
             ctx.restore();
 
+            // 地面: 最下段の下に地盤の帯
+            {
+                ctx.save();
+                const gy = padding + (BOARD_SIZE - 0.5) * cellSize;
+                const w = padding * 2 + (BOARD_SIZE - 1) * cellSize;
+                ctx.fillStyle = 'rgba(120,95,60,0.30)';
+                ctx.fillRect(0, gy, w, cellSize * 0.5);
+                ctx.strokeStyle = 'rgba(120,95,60,0.5)';
+                ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                ctx.beginPath();
+                ctx.moveTo(0, gy);
+                ctx.lineTo(w, gy);
+                ctx.stroke();
+                ctx.restore();
+            }
+
             // 格子線
             ctx.strokeStyle = currentTheme.lineColor;
             ctx.lineWidth = Math.max(1, cellSize * 0.028);
@@ -1746,6 +1762,12 @@
                 type: move.type,
                 rot: move.rot,
                 cells: move.cells
+            });
+
+            // 重力の見える化: 着手を支える直下の石/地面を光らせる
+            move.cells.forEach(p => {
+                if (p.y < BOARD_SIZE - 1) fxGlow((p.y + 1) * BOARD_SIZE + p.x, 'rgba(200,170,90,0.8)', 550);
+                else fxGlow(p.y * BOARD_SIZE + p.x, 'rgba(200,170,90,0.55)', 450);
             });
 
             // 捕獲処理
