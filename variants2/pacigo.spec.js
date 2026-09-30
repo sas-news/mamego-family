@@ -27,7 +27,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '平和条約: 一度も相手の石を取らなかった側が勝つ (両者取った、または両者無血なら通常採点)。',
             '取ると条約違反 — でも取らなければ地取りでは不利かもしれない。駆け引きの碁。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -42,5 +44,9 @@ module.exports = {
         endGameByScore();
         assert('両者無血も通常採点', !gameResultData.title.includes('平和'));
         assert('起動着手可', isValidPlacement([{ x: 0, y: 0 }], 1) === true);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

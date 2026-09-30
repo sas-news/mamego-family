@@ -505,6 +505,7 @@
         const RULES_VARIANT = [
             '着手に接した自分の連は治癒される (緑十字マーク)。',
             '治癒された連は包囲されても全滅せず、1石だけ散って持ち堪える (治癒は消費される)。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1510,6 +1511,13 @@
         }
 
         function executeMove(move, player) {
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }
             // 1手戻る用に着手前の状態を退避
             history.push({
                 board: [...board],

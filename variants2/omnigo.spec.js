@@ -52,7 +52,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '6手ごとに天変地異が襲来する。周期は 侵攻ブロック出現 → 流星で石1個消滅 → 全石の色反転。',
             '反転で優勢がひっくり返る大盤荒れの碁。イベントの手数を読んで布石せよ。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -67,5 +69,9 @@ module.exports = {
         board.fill(0); pieces = []; moveCount = 17;
         executeMove({ cells: [{ x: 1, y: 1 }] }, 1);
         assert('侵攻ブロックが上端に湧く', board.slice(0, BOARD_SIZE).includes(3));
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

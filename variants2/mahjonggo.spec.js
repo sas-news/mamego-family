@@ -55,7 +55,9 @@ module.exports = {
             '終局時、縦横の同色の連続した並びが役として加算される。',
             '2連=対子+1目 / 3連=刻子+3目 / 4連=槓子+6目 / 5連以上=役満+10目。',
             '並びを作る形と地取りを両立させる牌理の碁。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -66,5 +68,9 @@ module.exports = {
         board[BOARD_SIZE] = 1; board[BOARD_SIZE + 1] = 1; board[BOARD_SIZE + 2] = 1;
         assert('縦横で役が積み上がる', mahjongBonus()[1] === 6);
         assert('白には加点なし', mahjongBonus()[2] === 0);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

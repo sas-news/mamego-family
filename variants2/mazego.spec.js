@@ -37,7 +37,9 @@ module.exports = {
             '迷路のように掘り抜かれた盤。通路は1マス幅で行き止まりも多い。',
             '通路を押さえれば連を分断できる。袋小路の逃げ込みに注意。',
             '迷路の形は盤サイズごとに固定。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -51,5 +53,9 @@ module.exports = {
         for (const v of board) if (v === 3) w2++;
         assert('迷路は盤サイズで決定的', w2 === before);
         assert('壁には置けない', isValidPlacement([{ x: 0, y: 0 }], 1) === false);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

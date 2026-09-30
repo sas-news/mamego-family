@@ -65,7 +65,8 @@ module.exports = {
                 }
             }`],
         ...K.EVENT_CHIP_SPEC("'魔力 ' + (mpMap[turn] || 0) + '/5'"),
-        [K.ONE, K.RV_ALGO, K.rv(['着手する毎に魔力 (MP) が1溜まる。5に達すると呪文が自動発動:','着地点からマンハッタン距離2以内の敵石を全て焼き払う (自分の石は無事)。ヘッダのチップにMP表示。'])],
+        [K.ONE, K.RV_ALGO, K.rv(['着手する毎に魔力 (MP) が1溜まる。5に達すると呪文が自動発動:','着地点からマンハッタン距離2以内の敵石を全て焼き払う (自分の石は無事)。ヘッダのチップにMP表示。','打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。'])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -82,5 +83,9 @@ module.exports = {
         assert('遠い敵は無事', board[8 * BOARD_SIZE + 8] === 2);
         assert('MP消費で0に戻る', mpMap[1] === 0);
         
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

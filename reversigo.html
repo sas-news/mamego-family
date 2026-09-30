@@ -505,6 +505,7 @@
         const RULES_VARIANT = [
             '着手した石から上下左右の4方向を見て、自分の石で挟んだ敵石の列は全て自分の色に裏返る。',
             '裏返しの後にも通常の呼吸・取り判定は働く。盤面が激しく入れ替わる高速な陣取り合戦。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1485,6 +1486,13 @@
         }
 
         function executeMove(move, player) {
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }
             // 1手戻る用に着手前の状態を退避
             history.push({
                 board: [...board],

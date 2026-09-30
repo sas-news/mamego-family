@@ -506,6 +506,7 @@
         const RULES_VARIANT = [
             '着手点は (x+y) mod 3 が許可帯と一致する交点のみ。許可帯は着手ごとに 0→1→2→0… と巡回する。',
             'パスは帯を進めない。打てる点が無い帯の番ではパスを選ぶしかない。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1531,6 +1532,13 @@
         }
 
         function executeMove(move, player) {
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }
             // 1手戻る用に着手前の状態を退避
             history.push({
                 board: [...board],

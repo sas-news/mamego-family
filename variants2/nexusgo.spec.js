@@ -57,8 +57,10 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '十字の溝で4つの小盤に分断。中央の1点「ネクサス」だけが斜め4点を結ぶ。',
             'ネクサスを握れば4盤の連絡を支配できる。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
         ...K.WALL_SPEC,
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -69,5 +71,9 @@ module.exports = {
         assert('ネクサスの近傍は斜め4点', getNeighbors(nexus).length === 4 && getNeighbors(nexus).includes(nexus - BOARD_SIZE - 1));
         assert('斜め点はネクサスに繋がる', getNeighbors(nexus - BOARD_SIZE - 1).includes(nexus));
         assert('小盤の中は普通に置ける', isValidPlacement([{ x: 0, y: 0 }], 1) === true);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

@@ -57,7 +57,9 @@ module.exports = {
             '盤中央に10本のピンが三角形に立つ。ピンのマスには石を置けない障害物。',
             '打った石の隣にあるピンは倒れ、倒した側のアゲハマ得点になる。',
             'ピンを壁として活かすか、得点に変えるか — 通常の地取り勝負も残る。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -68,5 +70,9 @@ module.exports = {
         assert('ピンは得点になる', captures[1] === 1);
         resetGame();
         assert('対局開始にピンが立つ', board.filter(v => v === 3).length === 10);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

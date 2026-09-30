@@ -63,7 +63,9 @@ module.exports = {
             '盤上には常に「次の隕石落下点」が照準で示されている (落下は15の倍数手の後)。',
             '落下点の3x3の石は全て消し飛ぶ — 敵石は着手側のアゲハマに、自分の石はただ消える。',
             '隕石圏内に固めない / 敵を追い込む — 天災を読みに組み込む戦い。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -75,5 +77,9 @@ module.exports = {
         executeMove({ cells: [{ x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 }] }, 1); // 15手目 → 隕石落下
         assert('15手後に落下点の石は消える', board[mp.y * BOARD_SIZE + mp.x] === 0);
         assert('敵石は着手側のアゲハマに', captures[1] === 1);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

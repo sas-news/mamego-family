@@ -76,7 +76,9 @@ module.exports = {
             '石価は着手のたび1〜5で変動する (ヘッダのチップで確認)。',
             '各石には購入時の価格が刻まれ、終局時に盤上の自石の価格総額が資産得点になる。',
             '高値の時に置き、安値の時は取りに回れ。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -89,5 +91,9 @@ module.exports = {
         assert('2手目は変動後の価格', pieces[1].mv === mv);
         assert('資産合計', marketValue(1) === pieces[0].mv + pieces[1].mv);
         assert('起動着手可', isValidPlacement([{ x: 0, y: 0 }], 1) === true);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };

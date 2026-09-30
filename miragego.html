@@ -507,6 +507,7 @@
             '置いたばかりの石は3手の間「蜃気楼」(点線の輪郭)。3手経てば実体化する。',
             '蜃気楼の敵石の直交隣に着手すると、その石は幻だったと判明して消える。',
             '呼吸や取りは蜃気楼の間も普通に働く — 消される前に囲み切れるかが勝負。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1519,6 +1520,13 @@
         function isMirage(pc) { return pc.at !== undefined && (history.length - pc.at) < 3; }
 
         function executeMove(move, player) {
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }
             // 1手戻る用に着手前の状態を退避
             history.push({
                 board: [...board],

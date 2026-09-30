@@ -43,7 +43,9 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '盤は上に行くほど高い雪山 (白い斜面で標高を表示)。',
             '終局時、各自の石に標高 (上端が最高点) の合計が得点になる。高峰を目指せ。',
+            '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
+        ...K.MOVE_CAP_SPEC,
         ...K.STONE_SPEC,
     ],
     test: `
@@ -55,5 +57,9 @@ module.exports = {
         board[0 * BOARD_SIZE + 1] = 2;
         assert('白も同じ標高', peakScore(2) === BOARD_SIZE - 1);
         assert('起動着手可', isValidPlacement([{ x: 4, y: 4 }], 1) === true);
+        // 打ち切り手数
+        history.length = Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('上限手数で死に石選択へ', gamePhase === 'dead_stone_selection');
     `,
 };
