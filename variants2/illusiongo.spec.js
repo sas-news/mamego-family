@@ -1,0 +1,75 @@
+// ILLUSIONGO — 幻影碁: 中央3路帯の石は幻影となり、敵色に見える
+const K = require('../gen_kit.js');
+module.exports = {
+    file: 'illusiongo.html',
+    en: 'ILLUSIONGO',
+    jp: '幻影碁',
+    prefix: 'illusiongo',
+    desc: '中央の帯は幻影地帯。そこに置いた石は敵色に見える。',
+    kind: 'illusion',
+    spec: [
+        ...K.rb('ILLUSIONGO', '幻影碁', 'illusiongo'),
+        [K.ONE, '        function drawBoardElements(padding, cellSize) {',
+`        // 幻影碁: 中央3行の帯は幻影エリア — その中の石は敵色に見える
+        function inIllusion(x, y) {
+            const c = (BOARD_SIZE - 1) / 2;
+            return Math.abs(y - c) <= 1;
+        }
+
+        function drawBoardElements(padding, cellSize) {`],
+        K.CUE_GRID(`            // 幻影帯を虹のうねりで示す
+            {
+                const c = (BOARD_SIZE - 1) / 2;
+                ctx.save();
+                ctx.fillStyle = 'rgba(168, 85, 247, 0.10)';
+                ctx.fillRect(0, padding + (c - 1 - 0.5) * cellSize,
+                    padding * 2 + (BOARD_SIZE - 1) * cellSize, cellSize * 3);
+                ctx.strokeStyle = 'rgba(168, 85, 247, 0.45)';
+                ctx.setLineDash([cellSize * 0.18, cellSize * 0.14]);
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.045);
+                [-1, 1].forEach(s => {
+                    ctx.beginPath();
+                    ctx.moveTo(0, padding + (c + s * 1.5 - s * 0.5) * cellSize);
+                    ctx.lineTo(padding * 2 + (BOARD_SIZE - 1) * cellSize, padding + (c + s * 1.5 - s * 0.5) * cellSize);
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }`),
+        [K.ONE, '                drawPieceShape(alive, padding, cellSize, fill, stroke, isDead ? 0.35 : 1);',
+`                const ill = alive.length && inIllusion(alive[0].x, alive[0].y);
+                const if_ = ill ? (pc.player === 1 ? currentTheme.p2Fill : currentTheme.p1Fill) : fill;
+                const is_ = ill ? (pc.player === 1 ? currentTheme.p2Stroke : currentTheme.p1Stroke) : stroke;
+                drawPieceShape(alive, padding, cellSize, if_, is_, isDead ? 0.35 : 1);`],
+        ...K.STONE_MARKS_SPEC(`            // 幻影帯の石に薄紫の輪
+            {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(192, 132, 252, 0.55)';
+                ctx.setLineDash([cellSize * 0.08, cellSize * 0.08]);
+                ctx.lineWidth = Math.max(1.1, cellSize * 0.04);
+                board.forEach((v, i) => {
+                    if (v !== 1 && v !== 2) return;
+                    const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                    if (!inIllusion(x, y)) return;
+                    ctx.beginPath();
+                    ctx.arc(padding + x * cellSize, padding + y * cellSize, cellSize * 0.46, 0, Math.PI * 2);
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }`),
+        [K.ONE, K.INFO_ALGO, `            幻影碁: 中央3路の帯は幻影地帯。その中の石は敵色に見える<br>
+            PC: クリックで配置<br>
+            スマホ: 1タップ目プレビュー、2タップ目確定`],
+        [K.ONE, K.RV_ALGO, K.rv([
+            '盤の中央3行は幻影地帯 (薄紫の帯)。その中の石は全て敵色に見える。',
+            '幻影は見た目だけ — 取り・呼吸・地は実際の色で判定される。帯の中を疑ってかかれ。',
+        ])],
+        ...K.STONE_SPEC,
+    ],
+    test: `
+        const c = (BOARD_SIZE - 1) / 2;
+        assert('中央行は幻影帯', inIllusion(Math.floor(c), Math.floor(c)) === true);
+        assert('帯の端も幻影', inIllusion(0, Math.floor(c) - 1) === true);
+        assert('帯の外は幻影でない', inIllusion(0, 0) === false);
+        assert('幻影帯でも着手可', isValidPlacement([{ x: Math.floor(c), y: Math.floor(c) }], 1) === true);
+    `,
+};
