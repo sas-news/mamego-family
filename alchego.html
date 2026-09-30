@@ -1727,6 +1727,10 @@
                     if (src >= 0) {
                         board[src] = 0;
                         board[captured[0]] = player;
+                        // 錬成転移: 最弱の自石が取跡へ滑る
+                        fxSlide(src, captured[0], 460);
+                        fxGlow(captured[0], 'rgba(192,132,252,0.95)', 820);
+                        fxText(captured[0], '錬成', '#c084fc', 1000);
                     }
                 }
                 soundManager.playCapture();

@@ -30,6 +30,24 @@ module.exports = {
                 if (!_allow.includes(_cur)) return false;
             }`],
         [K.ONE, K.RV_ALGO, K.rv(['着手は桂馬飛びの位置にある2石ペア (向き=Rキー・右クリック・ホイール)。','2石は離れているので別々の連。桂馬の跳び先で制圧する。'])],
+        // 桂馬ペア: 生きている2石同士を淡い連携線で結ぶ
+        ...K.STONE_MARKS_SPEC(`            // 桂馬ペアの連携線
+            {
+                ctx.save();
+                ctx.setLineDash([cellSize * 0.12, cellSize * 0.10]);
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                pieces.forEach(pc => {
+                    const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
+                    if (alive.length !== 2) return;
+                    const a = alive[0], b = alive[1];
+                    ctx.strokeStyle = pc.player === 1 ? 'rgba(30,30,30,0.55)' : 'rgba(255,255,255,0.75)';
+                    ctx.beginPath();
+                    ctx.moveTo(padding + a.x * cellSize, padding + a.y * cellSize);
+                    ctx.lineTo(padding + b.x * cellSize, padding + b.y * cellSize);
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }`),
         ...K.STONE_SPEC,
     ],
     test: `

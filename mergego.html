@@ -1713,6 +1713,10 @@
             const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => { board[idx] = player; }); // 併合: 取った敵連は自分色になる
+                // 吸収演出: 紫の吸い込み飛沫と併合数
+                captured.forEach(idx => fxBurst(idx, '#a78bfa', 4, 0.9));
+                fxText(captured[0], '併合+' + captured.length, '#8b5cf6', 1100);
+                fxShake(3, 180);
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();

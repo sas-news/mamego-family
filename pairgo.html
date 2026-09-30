@@ -1217,6 +1217,29 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 桂馬ペアの連携線
+            {
+                ctx.save();
+                ctx.setLineDash([cellSize * 0.12, cellSize * 0.10]);
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                pieces.forEach(pc => {
+                    const alive = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
+                    if (alive.length !== 2) return;
+                    const a = alive[0], b = alive[1];
+                    ctx.strokeStyle = pc.player === 1 ? 'rgba(30,30,30,0.55)' : 'rgba(255,255,255,0.75)';
+                    ctx.beginPath();
+                    ctx.moveTo(padding + a.x * cellSize, padding + a.y * cellSize);
+                    ctx.lineTo(padding + b.x * cellSize, padding + b.y * cellSize);
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }
         }
 
         function drawLastMove(padding, cellSize) {

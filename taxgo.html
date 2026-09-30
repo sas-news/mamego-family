@@ -1736,8 +1736,13 @@
             // 関税: 敵陣半分への着手は相手に+1目
             {
                 const mid = Math.ceil(BOARD_SIZE / 2);
-                if (move.cells.some(p => player === 1 ? p.y >= mid : p.y < BOARD_SIZE - mid))
+                if (move.cells.some(p => player === 1 ? p.y >= mid : p.y < BOARD_SIZE - mid)) {
                     toll[player]++;
+                    // 課税: 金の飛沫と関税告知
+                    const ti = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                    fxBurst(ti, '#facc15', 6, 1.1);
+                    fxText(ti, '関税+1', '#eab308', 1000);
+                }
             }
 
             // 捕獲処理

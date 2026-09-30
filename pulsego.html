@@ -2089,6 +2089,10 @@
                 const ni = arr[(Math.random() * arr.length) | 0];
                 board[ni] = pc.player;
                 pc.cells.push({ x: ni % BOARD_SIZE, y: (ni / BOARD_SIZE) | 0 });
+                // 脈動増殖: 連から新しい芽が滑り出る
+                const src = getNeighbors(ni).find(n => pc.cells.slice(0, -1).some(p => p.y * BOARD_SIZE + p.x === n));
+                if (src !== undefined) fxSlide(src, ni, 420);
+                fxGlow(ni, 'rgba(52,211,153,0.8)', 560);
             });
         }
 

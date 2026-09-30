@@ -1727,6 +1727,15 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 残り手数の警告: 10/5/2手で盤中央に告知
+            {
+                const rem = 60 - history.length;
+                if (rem === 10 || rem === 5 || rem === 2) {
+                    const cc = Math.floor(BOARD_SIZE / 2) * (BOARD_SIZE + 1);
+                    fxText(cc, '残り' + rem + '手', '#f59e0b', 1200);
+                    if (rem <= 2) fxShake(3, 200);
+                }
+            }
             // 手数上限: 60手で自動終局
             if (history.length >= 60) { endGameByScore(); return; }
             updateUI();

@@ -35,6 +35,12 @@ module.exports = {
                 });
                 if (stolen.length > 0) {
                     stolen.forEach(i => { board[i] = player; });
+                    // 横取り: 金色の奪取エフェクト
+                    stolen.forEach(i => {
+                        fxGlow(i, 'rgba(245,158,11,0.95)', 700);
+                        fxBurst(i, '#fbbf24', 5, 1.1);
+                    });
+                    fxText(stolen[0], '横取!', '#f59e0b', 1100);
                     captures[player] += stolen.length;
                     soundManager.playCapture();
                     cleanUpPieces();

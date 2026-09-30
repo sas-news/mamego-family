@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html laeg="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -1745,6 +1745,10 @@
 
             // 請負ルール: 着手した側の秘密目標が達成されていれば即勝ち
             if (contractOf[player] && contractMet(player)) {
+                const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                fxGlow(ci, 'rgba(168,85,247,0.95)', 900);
+                fxShake(5, 320);
+                fxText(ci, '請負達成!', '#c084fc', 1200);
                 winByRule(player, '請負達成勝ち', '請負目標「' + CONTRACT_TYPES[contractOf[player]].name + '」を達成しました'); return;
             }
 

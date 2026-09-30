@@ -560,6 +560,7 @@
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         let stonesLeftInTurn = 3; // この手番であと何石置けるか
+        let turnPlaced = []; // この手番で置いた石の idx (順序印用)
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -1217,6 +1218,28 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 三手: この手番で置いた石に順序印
+            {
+                const nums = ['①', '②', '③'];
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold ' + Math.max(9, cellSize * 0.42) + 'px sans-serif';
+                turnPlaced.forEach((i, k) => {
+                    if (board[i] !== turn) return;
+                    const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                    ctx.fillStyle = turn === 1 ? '#fde68a' : '#92400e';
+                    ctx.fillText(nums[k] || '•', cx, cy);
+                });
+                ctx.restore();
+            }
         }
 
         function drawLastMove(padding, cellSize) {
@@ -1733,9 +1756,11 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 三手碁: 3石置き切るまで同一手番が続く
+            turnPlaced.push(move.cells[0].y * BOARD_SIZE + move.cells[0].x);
             stonesLeftInTurn--;
             if (stonesLeftInTurn <= 0) {
                 stonesLeftInTurn = 3;
+                turnPlaced = [];
                 turn = opponent;
             }
             updateUI();
@@ -2014,6 +2039,7 @@
             } else {
                 turn = turn === 1 ? 2 : 1;
                 stonesLeftInTurn = 3; // パスは残り手を放棄して交代
+                turnPlaced = [];
                 updateUI();
 
                 if (gameMode === 'online' && onlineRoomId) {
@@ -2633,6 +2659,7 @@
             currentRot = 0;
             heldPieces = { 1: null, 2: null };
             stonesLeftInTurn = 3;
+            turnPlaced = [];
             holdUsed = false;
             if (pieceMode === 'next') {
                 pieceQueue = shuffledBag();

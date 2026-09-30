@@ -1745,7 +1745,11 @@
                 // 成長: 取った石に接していた自分の石がLvUP
                 captured.forEach(idx => {
                     getNeighbors(idx).forEach(n => {
-                        if (board[n] === player) levelMap[n] = (levelMap[n] || 1) + 1;
+                        if (board[n] === player) {
+                            levelMap[n] = (levelMap[n] || 1) + 1;
+                            fxGlow(n, 'rgba(245,215,110,0.95)', 700);
+                            fxText(n, 'LvUP', '#eab308', 900);
+                        }
                     });
                 });
                 soundManager.playCapture();

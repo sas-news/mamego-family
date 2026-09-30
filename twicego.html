@@ -564,6 +564,7 @@
         let komi = 6.5;
         let consecutivePasses = 0;
         let turnPlacements = 0; // この手番で置いた石数 (2で手番交代)
+        let turnPlaced = []; // この手番で置いた石の idx (順序印用)
         let gameOver = false;
         let gameResultData = null;
         let gamePhase = 'playing'; // 'playing' | 'dead_stone_selection' | 'ended'
@@ -1216,6 +1217,28 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 二手: この手番で置いた石に順序印
+            {
+                const nums = ['①', '②'];
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold ' + Math.max(9, cellSize * 0.42) + 'px sans-serif';
+                turnPlaced.forEach((i, k) => {
+                    if (board[i] !== turn) return;
+                    const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                    ctx.fillStyle = turn === 1 ? '#fde68a' : '#92400e';
+                    ctx.fillText(nums[k] || '•', cx, cy);
+                });
+                ctx.restore();
+            }
         }
 
         function drawLastMove(padding, cellSize) {
@@ -1730,9 +1753,11 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+            turnPlaced.push(move.cells[0].y * BOARD_SIZE + move.cells[0].x);
             turnPlacements++;
             if (turnPlacements >= 2) {
                 turnPlacements = 0;
+                turnPlaced = [];
                 turn = opponent; // 2石置き切りで手番交代
             }
             updateUI();
@@ -2004,6 +2029,7 @@
             prevBoard = null; // パスでコウ制限は解除
             consecutivePasses++;
             turnPlacements = 0;
+            turnPlaced = [];
             if (consecutivePasses >= 2) {
                 startDeadStoneSelectionPhase();
                 if (gameMode === 'online' && onlineRoomId) {
