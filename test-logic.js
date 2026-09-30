@@ -56,6 +56,8 @@ const sandbox = {
     },
     window: { addEventListener: () => {}, devicePixelRatio: 1 },
     sessionStorage: sessionStorageStub,
+    performance: { now: () => Date.now() },
+    requestAnimationFrame: () => {},
     console,
 };
 vm.createContext(sandbox);
