@@ -27,16 +27,38 @@ module.exports = {
                     if (!touchOwn) return false;
                 }
             }`],
-        K.CUE_GRID(`            // 隅田川: 四隅の洲域を薄く照らす
+        K.CUE_GRID(`            // 隅田川: 四隅の洲域を浅瀬色で照らす
             {
                 const M = BOARD_SIZE - 1;
                 ctx.save();
-                ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.13);
-                const cell = (x, y) => ctx.fillRect(padding + (x - 0.5) * cellSize,
-                    padding + (y - 0.5) * cellSize, cellSize * 3, cellSize * 3);
+                const cell = (x, y) => {
+                    const gx = padding + (x - 0.5) * cellSize, gy = padding + (y - 0.5) * cellSize;
+                    const g = ctx.createLinearGradient(gx, gy, gx, gy + cellSize * 3);
+                    g.addColorStop(0, 'rgba(125,190,220,0.30)');
+                    g.addColorStop(1, 'rgba(80,140,190,0.16)');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(gx, gy, cellSize * 3, cellSize * 3);
+                };
                 cell(0, 0); cell(M - 2, 0); cell(0, M - 2); cell(M - 2, M - 2);
                 ctx.restore();
             }`),
+        // 洲に揺れるさざ波
+        [K.ONE, K.FX_BOOT, K.FX_BOOT + `
+        fxAmbient((ctx2, now, pad, cs) => {
+            const M = BOARD_SIZE - 1;
+            ctx2.save();
+            ctx2.strokeStyle = '#bee3f8';
+            ctx2.lineWidth = Math.max(1, cs * 0.04);
+            [[0, 0], [M - 2, 0], [0, M - 2], [M - 2, M - 2]].forEach(([sx, sy], k) => {
+                const cx = pad + (sx + 1) * cs, cy = pad + (sy + 1) * cs;
+                const ph = Math.sin(now / 620 + k * 1.5);
+                ctx2.globalAlpha = 0.18 + ph * 0.14;
+                ctx2.beginPath();
+                ctx2.arc(cx, cy, cs * (0.9 + ph * 0.2), 0, Math.PI * 2);
+                ctx2.stroke();
+            });
+            ctx2.restore();
+        });`],
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は四隅の3x3洲域か、自分の石に直交隣接する点のみ。',

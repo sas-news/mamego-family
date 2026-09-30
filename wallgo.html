@@ -1176,15 +1176,31 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // 専用テクスチャ: 壁セルをルールに合った質感で塗る
             {
+                const now = fxNow();
                 const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
                 ctx.save();
-                ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.48);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const i = y * BOARD_SIZE + x;
                     if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    // 岩面
+                    const g = ctx.createLinearGradient(cx - hh, cy - hh, cx + hh, cy + hh);
+                    g.addColorStop(0, '#6b6560'); g.addColorStop(1, '#3f3a35');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const hs1 = Math.sin(i * 12.9898) * 43758.5453; const h1 = hs1 - Math.floor(hs1);
+                    const hs2 = Math.sin(i * 78.233) * 12578.1459; const h2 = hs2 - Math.floor(hs2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.10)';
+                    ctx.fillRect(cx - hh + h1 * cellSize * 0.55, cy - hh + h2 * cellSize * 0.55, cellSize * 0.28, cellSize * 0.16);
+                    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+                    ctx.fillRect(cx - hh + h2 * cellSize * 0.55, cy - hh + h1 * cellSize * 0.55, cellSize * 0.20, cellSize * 0.12);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.strokeRect(cx - hh, cy - hh, cellSize, cellSize);
                 }
+                // 有効領域との境界を盤の縁線で締める
                 ctx.strokeStyle = currentTheme.lineColor;
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
                 ctx.beginPath();

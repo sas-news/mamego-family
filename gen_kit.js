@@ -797,6 +797,315 @@ const CUE_GRID = (code) => [ONE, `            // 格子線`, `${code}\n\n       
 
 
 // ============================================================
+// FXテクスチャ/常時演出ヘルパー
+// ============================================================
+// texDraw(paintBody): 壁セル(3) を「そのルール専用の質感」で塗る描画ブロックを生成。
+//   置換対象は drawBoardElements 冒頭の covered アンカー行。
+//   paintBody 内で使える変数: i, x, y, cx, cy (セル中心), cellSize, hh (=cellSize/2),
+//   now (fxNow), ctx, board, BOARD_SIZE, padding, currentTheme。
+//   仕上げに有効領域との境界を盤の縁線で締める (voidDraw と同じ)。
+const COVERED_ANCHOR = `            const covered = new Set(); // ピース描画でカバー済みのマス`;
+const OBSTACLE_ANCHOR = `        // 障害物 (3:壁 4:幽霊など) のデフォルト描画 — obstaclePainter があればそちら優先`;
+const FX_BOOT = `        let obstaclePainter = null;`;
+
+const texDraw = (paintBody) => `${COVERED_ANCHOR}
+
+            // 専用テクスチャ: 壁セルをルールに合った質感で塗る
+            {
+                const now = fxNow();
+                const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
+                ctx.save();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const i = y * BOARD_SIZE + x;
+                    if (!isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+${paintBody}
+                }
+                // 有効領域との境界を盤の縁線で締める
+                ctx.strokeStyle = currentTheme.lineColor;
+                ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
+                ctx.beginPath();
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (isV(x, y)) continue;
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    if (x > 0 && isV(x - 1, y)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
+                    if (x < BOARD_SIZE - 1 && isV(x + 1, y)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
+                    if (y > 0 && isV(x, y - 1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
+                    if (y < BOARD_SIZE - 1 && isV(x, y + 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
+                }
+                ctx.stroke();
+                ctx.restore();
+            }`;
+
+// 水 (堀・池・海・潮汐): 深い青のグラデ + 位相のずれた波紋弧 (fxAmbient で揺らぐ)
+const PAINT_WATER = (c0, c1) => `                    // 水面
+                    const g = ctx.createRadialGradient(cx, cy, cellSize * 0.1, cx, cy, cellSize * 0.8);
+                    g.addColorStop(0, '${c0}'); g.addColorStop(1, '${c1}');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const ph = Math.sin(now / 560 + x * 0.9 - y * 0.7);
+                    ctx.strokeStyle = 'rgba(150,215,255,' + (0.20 + ph * 0.14) + ')';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.arc(cx + Math.sin(now / 900 + i) * cellSize * 0.05, cy + Math.cos(now / 900 + i * 1.7) * cellSize * 0.05,
+                        cellSize * (0.22 + ph * 0.05), Math.PI * 0.1, Math.PI * 0.9);
+                    ctx.stroke();`;
+
+// 岩/瓦礫: 斜めグラデの石面 + 決定的な破片ハイライト + 目地
+const PAINT_ROCK = (c0, c1) => `                    // 岩面
+                    const g = ctx.createLinearGradient(cx - hh, cy - hh, cx + hh, cy + hh);
+                    g.addColorStop(0, '${c0}'); g.addColorStop(1, '${c1}');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const hs1 = Math.sin(i * 12.9898) * 43758.5453; const h1 = hs1 - Math.floor(hs1);
+                    const hs2 = Math.sin(i * 78.233) * 12578.1459; const h2 = hs2 - Math.floor(hs2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.10)';
+                    ctx.fillRect(cx - hh + h1 * cellSize * 0.55, cy - hh + h2 * cellSize * 0.55, cellSize * 0.28, cellSize * 0.16);
+                    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+                    ctx.fillRect(cx - hh + h2 * cellSize * 0.55, cy - hh + h1 * cellSize * 0.55, cellSize * 0.20, cellSize * 0.12);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.strokeRect(cx - hh, cy - hh, cellSize, cellSize);`;
+
+// 城壁レンガ: ずらし組の目地 + 天面の光
+const PAINT_BRICK = (c0, c1) => `                    // 煉瓦
+                    const g = ctx.createLinearGradient(cx, cy - hh, cx, cy + hh);
+                    g.addColorStop(0, '${c0}'); g.addColorStop(1, '${c1}');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    ctx.strokeStyle = 'rgba(20,10,8,0.55)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.moveTo(cx - hh, cy); ctx.lineTo(cx + hh, cy);
+                    const off = (y % 2 === 0) ? 0 : cellSize * 0.25;
+                    ctx.moveTo(cx - cellSize * 0.25 + off, cy - hh); ctx.lineTo(cx - cellSize * 0.25 + off, cy);
+                    ctx.moveTo(cx + cellSize * 0.25 + off, cy); ctx.lineTo(cx + cellSize * 0.25 + off, cy + hh);
+                    ctx.stroke();
+                    ctx.fillStyle = 'rgba(255,235,200,0.08)';
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize * 0.2);`;
+
+// 深淵/裂け目: ほぼ黒 + 内側の薄い縁光
+const PAINT_RIFT = (glow) => `                    // 深淵
+                    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, cellSize * 0.72);
+                    g.addColorStop(0, '#05060a'); g.addColorStop(1, '#141a26');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    ctx.strokeStyle = '${glow}';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.strokeRect(cx - hh + cellSize * 0.08, cy - hh + cellSize * 0.08, cellSize * 0.84, cellSize * 0.84);`;
+
+// 額縁: 木枠 + 有効領域に接する辺だけ金の内フチ
+const PAINT_FRAME = `                    // 額縁の木枠
+                    const g = ctx.createLinearGradient(cx - hh, cy - hh, cx + hh, cy + hh);
+                    g.addColorStop(0, '#5a3d1e'); g.addColorStop(1, '#33200f');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    ctx.strokeStyle = 'rgba(28,16,6,0.55)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.03);
+                    ctx.beginPath();
+                    ctx.moveTo(cx - hh, cy - cellSize * 0.22); ctx.lineTo(cx + hh, cy - cellSize * 0.22 + Math.sin(i * 1.7) * cellSize * 0.06);
+                    ctx.moveTo(cx - hh, cy + cellSize * 0.24); ctx.lineTo(cx + hh, cy + cellSize * 0.24 + Math.cos(i * 2.3) * cellSize * 0.06);
+                    ctx.stroke();
+                    {
+                        const adj = (dx, dy) => {
+                            const nx = x + dx, ny = y + dy;
+                            return nx >= 0 && ny >= 0 && nx < BOARD_SIZE && ny < BOARD_SIZE && board[ny * BOARD_SIZE + nx] !== 3;
+                        };
+                        ctx.strokeStyle = 'rgba(214,178,70,0.9)';
+                        ctx.lineWidth = Math.max(1.4, cellSize * 0.07);
+                        ctx.beginPath();
+                        if (adj(-1, 0)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx - hh, cy + hh); }
+                        if (adj(1, 0)) { ctx.moveTo(cx + hh, cy - hh); ctx.lineTo(cx + hh, cy + hh); }
+                        if (adj(0, -1)) { ctx.moveTo(cx - hh, cy - hh); ctx.lineTo(cx + hh, cy - hh); }
+                        if (adj(0, 1)) { ctx.moveTo(cx - hh, cy + hh); ctx.lineTo(cx + hh, cy + hh); }
+                        ctx.stroke();
+                    }`;
+
+// 墓標: 墓地の地面 + 丸みのある碑 + 刻字
+const PAINT_TOMB = `                    // 墓地の地面
+                    ctx.fillStyle = 'rgba(62,64,70,0.5)';
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const tg = ctx.createLinearGradient(cx, cy - hh, cx, cy + hh);
+                    tg.addColorStop(0, '#b9bdc5'); tg.addColorStop(1, '#82878f');
+                    ctx.fillStyle = tg;
+                    const tw = cellSize * 0.62, tt = cy - cellSize * 0.30, tb = cy + cellSize * 0.34;
+                    ctx.beginPath();
+                    ctx.moveTo(cx - tw / 2, tb);
+                    ctx.lineTo(cx - tw / 2, tt + tw * 0.28);
+                    ctx.quadraticCurveTo(cx - tw / 2, tt - cellSize * 0.10, cx, tt - cellSize * 0.10);
+                    ctx.quadraticCurveTo(cx + tw / 2, tt - cellSize * 0.10, cx + tw / 2, tt + tw * 0.28);
+                    ctx.lineTo(cx + tw / 2, tb);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(35,38,44,0.65)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(cx - tw * 0.2, cy + cellSize * 0.02); ctx.lineTo(cx + tw * 0.2, cy + cellSize * 0.02);
+                    ctx.moveTo(cx - tw * 0.14, cy + cellSize * 0.13); ctx.lineTo(cx + tw * 0.14, cy + cellSize * 0.13);
+                    ctx.stroke();`;
+
+// 鋼板 (融合ブロック): 金属面 + 四隅の鋲
+const PAINT_STEEL = `                    // 鋼板
+                    const g = ctx.createLinearGradient(cx - hh, cy - hh, cx + hh, cy + hh);
+                    g.addColorStop(0, '#808894'); g.addColorStop(1, '#484e58');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    ctx.strokeStyle = 'rgba(28,30,36,0.8)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.strokeRect(cx - hh + cellSize * 0.04, cy - hh + cellSize * 0.04, cellSize * 0.92, cellSize * 0.92);
+                    ctx.fillStyle = '#33383f';
+                    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {
+                        ctx.beginPath();
+                        ctx.arc(cx + sx * cellSize * 0.3, cy + sy * cellSize * 0.3, cellSize * 0.06, 0, Math.PI * 2);
+                        ctx.fill();
+                    });`;
+
+// ゾンビ (徘徊する壁): 腐ったオリーブ肌 + 瞬きする赤い目 + 腐食斑
+const PAINT_ZOMBIE = `                    // 腐乱したゾンビ体
+                    const g = ctx.createRadialGradient(cx, cy, cellSize * 0.1, cx, cy, cellSize * 0.75);
+                    g.addColorStop(0, '#5e6e44'); g.addColorStop(1, '#39441f');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const hzs = Math.sin(i * 12.9898) * 43758.5453; const hz = hzs - Math.floor(hzs);
+                    ctx.fillStyle = 'rgba(22,28,12,0.5)';
+                    ctx.beginPath();
+                    ctx.arc(cx - hh + hz * cellSize, cy + cellSize * 0.24, cellSize * 0.09, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = Math.sin(now / 900 + i * 1.7) > -0.82 ? 'rgba(215,70,55,0.85)' : 'rgba(60,28,24,0.8)';
+                    ctx.beginPath();
+                    ctx.arc(cx - cellSize * 0.14, cy - cellSize * 0.06, cellSize * 0.055, 0, Math.PI * 2);
+                    ctx.arc(cx + cellSize * 0.14, cy - cellSize * 0.06, cellSize * 0.055, 0, Math.PI * 2);
+                    ctx.fill();`;
+
+// 洞窟岩: 暗い岩肌 + 結晶の瞬き
+const PAINT_CAVE = `                    // 洞窟の岩肌
+                    const g = ctx.createLinearGradient(cx - hh, cy - hh, cx + hh, cy + hh);
+                    g.addColorStop(0, '#4a4238'); g.addColorStop(1, '#241f18');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.strokeRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const twk = Math.sin(now / 520 + i * 2.6);
+                    if (twk > 0.55) {
+                        const hcs = Math.sin(i * 12.9898) * 43758.5453; const hc1 = hcs - Math.floor(hcs);
+                        const hcs2 = Math.sin(i * 78.233) * 12578.1459; const hc2 = hcs2 - Math.floor(hcs2);
+                        ctx.fillStyle = 'rgba(140,220,255,' + ((twk - 0.55) * 1.3) + ')';
+                        ctx.beginPath();
+                        ctx.arc(cx - hh + hc1 * cellSize, cy - hh + hc2 * cellSize, cellSize * 0.06, 0, Math.PI * 2);
+                        ctx.fill();
+                    }`;
+
+// 苔むした迷路壁: 緑がかった石 + 苔の斑点
+const PAINT_MOSS = `                    // 苔むした石壁
+                    const g = ctx.createLinearGradient(cx - hh, cy - hh, cx + hh, cy + hh);
+                    g.addColorStop(0, '#414d36'); g.addColorStop(1, '#232b1d');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const hms = Math.sin(i * 12.9898) * 43758.5453; const hm1 = hms - Math.floor(hms);
+                    const hms2 = Math.sin(i * 78.233) * 12578.1459; const hm2 = hms2 - Math.floor(hms2);
+                    ctx.fillStyle = 'rgba(122,166,88,0.28)';
+                    ctx.beginPath();
+                    ctx.arc(cx - hh + hm1 * cellSize, cy - hh + hm2 * cellSize, cellSize * 0.10, 0, Math.PI * 2);
+                    ctx.arc(cx - hh + hm2 * cellSize, cy - hh + hm1 * cellSize, cellSize * 0.06, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(8,12,6,0.55)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.strokeRect(cx - hh, cy - hh, cellSize, cellSize);`;
+
+// 隕石 (石雨): 玄武岩 + クレーター縁
+const PAINT_METEOR = `                    // 落下してきた玄武岩
+                    const g = ctx.createRadialGradient(cx - cellSize * 0.12, cy - cellSize * 0.12, cellSize * 0.05, cx, cy, cellSize * 0.72);
+                    g.addColorStop(0, '#4d453f'); g.addColorStop(1, '#1b1614');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.30, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.strokeStyle = 'rgba(255,200,120,0.28)';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.30, Math.PI * 1.1, Math.PI * 1.6);
+                    ctx.stroke();`;
+
+// 底なしの穴 (穴あき碁): 円い穴とリム (枡一杯には塗らない)
+const PAINT_PIT = `                    // 丸い落とし穴
+                    const g = ctx.createRadialGradient(cx, cy, cellSize * 0.05, cx, cy, cellSize * 0.42);
+                    g.addColorStop(0, '#04050a'); g.addColorStop(0.72, '#131822'); g.addColorStop(1, 'rgba(19,24,34,0)');
+                    ctx.fillStyle = g;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.42, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(130,95,55,0.75)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.40, 0, Math.PI * 2);
+                    ctx.stroke();`;
+
+// 削り取られた崖面 (盤外の切り欠き)
+const PAINT_CLIFF = `                    // 削り取られた盤外
+                    const g = ctx.createLinearGradient(cx, cy - hh, cx, cy + hh);
+                    g.addColorStop(0, '#4b5058'); g.addColorStop(1, '#24272d');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    const hcl = Math.sin(i * 12.9898) * 43758.5453; const hc = hcl - Math.floor(hcl);
+                    ctx.strokeStyle = 'rgba(12,13,17,0.5)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.beginPath();
+                    ctx.moveTo(cx - hh, cy - hh + hc * cellSize);
+                    ctx.lineTo(cx + hh, cy - hh + ((hc + 0.3) % 1) * cellSize);
+                    ctx.stroke();`;
+
+// ============================================================
+// fxAmbient 常時オーバーレイ snippets
+//   spec で [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_*] と書く。
+//   fxAmbient は render ループを起動し続けるのでアニメ壁とも相性が良い。
+// ============================================================
+
+// 水面の揺らぎハイライト (壁=水 の盤)
+const AMBIENT_WATER = `
+        // 水面の揺らぎ: 壁セル上を波のきらめきが流れる
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] !== 3) continue;
+                const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
+                const ph = Math.sin(now / 700 + x * 1.3 + y * 0.9);
+                if (ph > 0.78) {
+                    ctx2.globalAlpha = (ph - 0.78) * 1.5;
+                    ctx2.strokeStyle = '#bfe8ff';
+                    ctx2.lineWidth = Math.max(1, cs * 0.05);
+                    ctx2.beginPath();
+                    ctx2.arc(pad + x * cs, pad + y * cs, cs * 0.20, 0, Math.PI * 2);
+                    ctx2.stroke();
+                }
+            }
+            ctx2.restore();
+        });`;
+
+// 漂う靄 (幽霊・ゾンビなど不気味系): 半透明の帯がゆっくり盤面を横切る
+const AMBIENT_MIST = (tint) => `
+        // 漂う靄: 大きな半透明の帯がゆっくり盤面を横切る
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            for (let k = 0; k < 3; k++) {
+                const t = (now / 11000 + k / 3) % 1;
+                const mx = pad + (t * (BOARD_SIZE + 5) - 2.5) * cs;
+                const my = pad + (BOARD_SIZE - 1) * cs * (0.2 + 0.3 * k) + Math.sin(now / 2600 + k * 2) * cs * 0.5;
+                const g = ctx2.createRadialGradient(mx, my, 0, mx, my, cs * 2.8);
+                g.addColorStop(0, 'rgba(${tint},0.10)');
+                g.addColorStop(1, 'rgba(${tint},0)');
+                ctx2.fillStyle = g;
+                ctx2.beginPath();
+                ctx2.arc(mx, my, cs * 2.8, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`;
+
+// ============================================================
 // exports
 // ============================================================
 module.exports = {
@@ -883,6 +1192,25 @@ module.exports = {
     STONE_MARKS_SPEC,
     CUE_STARS,
     CUE_GRID,
+    COVERED_ANCHOR,
+    OBSTACLE_ANCHOR,
+    FX_BOOT,
+    texDraw,
+    PAINT_WATER,
+    PAINT_ROCK,
+    PAINT_BRICK,
+    PAINT_RIFT,
+    PAINT_FRAME,
+    PAINT_TOMB,
+    PAINT_STEEL,
+    PAINT_ZOMBIE,
+    PAINT_CAVE,
+    PAINT_MOSS,
+    PAINT_METEOR,
+    PAINT_PIT,
+    PAINT_CLIFF,
+    AMBIENT_WATER,
+    AMBIENT_MIST,
     ALL,
     get failures() { return failures; },
 };

@@ -1175,15 +1175,31 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // 専用テクスチャ: 壁セルをルールに合った質感で塗る
             {
+                const now = fxNow();
                 const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
                 ctx.save();
-                ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.48);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const i = y * BOARD_SIZE + x;
                     if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    // 鋼板
+                    const g = ctx.createLinearGradient(cx - hh, cy - hh, cx + hh, cy + hh);
+                    g.addColorStop(0, '#808894'); g.addColorStop(1, '#484e58');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    ctx.strokeStyle = 'rgba(28,30,36,0.8)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.strokeRect(cx - hh + cellSize * 0.04, cy - hh + cellSize * 0.04, cellSize * 0.92, cellSize * 0.92);
+                    ctx.fillStyle = '#33383f';
+                    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {
+                        ctx.beginPath();
+                        ctx.arc(cx + sx * cellSize * 0.3, cy + sy * cellSize * 0.3, cellSize * 0.06, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
                 }
+                // 有効領域との境界を盤の縁線で締める
                 ctx.strokeStyle = currentTheme.lineColor;
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
                 ctx.beginPath();
@@ -1741,8 +1757,11 @@
                         if (board[n] === opp2) fused.push(n);
                     });
                 });
-                fused.forEach(i => { board[i] = 3; });
-                if (fused.length) cleanUpPieces();
+                fused.forEach(i => { board[i] = 3; fxGlow(i, '#f59e0b', 560); fxBurst(i, '#d6d3d1', 6, 1.1); });
+                if (fused.length) {
+                    fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '中和!', '#fbbf24', 900);
+                    cleanUpPieces();
+                }
             }
 
             // 捕獲処理

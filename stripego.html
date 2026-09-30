@@ -1176,15 +1176,25 @@
             const r = cellSize * 0.46;
             const covered = new Set(); // ピース描画でカバー済みのマス
 
-            // 壁セル: 格子ごと暗い面で覆い、境界は盤の縁線で締める
+            // 専用テクスチャ: 壁セルをルールに合った質感で塗る
             {
+                const now = fxNow();
                 const isV = (x, y) => board[y * BOARD_SIZE + x] === 3;
                 ctx.save();
-                ctx.fillStyle = shiftColor(currentTheme.boardBg, -0.48);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const i = y * BOARD_SIZE + x;
                     if (!isV(x, y)) continue;
-                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize, hh = cellSize * 0.5;
+                    // 深淵
+                    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, cellSize * 0.72);
+                    g.addColorStop(0, '#05060a'); g.addColorStop(1, '#141a26');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(cx - hh, cy - hh, cellSize, cellSize);
+                    ctx.strokeStyle = 'rgba(185,150,95,0.4)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.strokeRect(cx - hh + cellSize * 0.08, cy - hh + cellSize * 0.08, cellSize * 0.84, cellSize * 0.84);
                 }
+                // 有効領域との境界を盤の縁線で締める
                 ctx.strokeStyle = currentTheme.lineColor;
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
                 ctx.beginPath();

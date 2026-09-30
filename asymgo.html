@@ -1736,6 +1736,7 @@
                 rot: move.rot,
                 cells: move.cells
             });
+            move.cells.forEach(p => fxGlow(p.y * BOARD_SIZE + p.x, player === 1 ? '#f59e0b' : '#38bdf8', 520));
 
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;

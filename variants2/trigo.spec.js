@@ -54,6 +54,38 @@ module.exports = {
             }
 
             turn = opponent;`],
+        // 石は三角: 格子の向き (上向き/下向き) に合わせた正三角形
+        [K.ONE, K.OBSTACLE_ANCHOR, `        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
+            if (!cellsAbs || cellsAbs.length === 0) return;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            cellsAbs.forEach(p => {
+                const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                const dir = (p.x + p.y) % 2 === 0 ? -1 : 1; // 3方向格子の向きに揃える
+                const r = cellSize * 0.46;
+                const g = ctx.createLinearGradient(cx, cy + dir * r, cx, cy - dir * r);
+                g.addColorStop(0, shiftColor(fill, -0.22));
+                g.addColorStop(1, shiftColor(fill, 0.38));
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy + dir * r);
+                ctx.lineTo(cx - r * 0.92, cy - dir * r * 0.6);
+                ctx.lineTo(cx + r * 0.92, cy - dir * r * 0.6);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = stroke;
+                ctx.lineWidth = Math.max(1, cellSize * 0.035);
+                ctx.stroke();
+                // 先端のハイライト
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.beginPath();
+                ctx.arc(cx, cy + dir * r * 0.55, cellSize * 0.05, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
+        }
+
+        // 障害物 (3:壁 4:幽霊など) のデフォルト描画 — obstaclePainter があればそちら優先`],
         ...K.STONE_SPEC,
     ],
     test: `

@@ -36,7 +36,11 @@ module.exports = {
                         const fn = getNeighbors(g).filter(n => snapB[n] === opponent).length;
                         if (fn < tipN) { tipN = fn; tip = g; }
                     });
-                    if (board[tip] === opponent) { board[tip] = 0; rusted++; }
+                    if (board[tip] === opponent) {
+                        board[tip] = 0; rusted++;
+                        fxSplash(tip, '#a16207'); // 錆が散る
+                        fxGlow(tip, '#b45309', 450);
+                    }
                 });
                 if (rusted > 0) { captures[player] += rusted; cleanUpPieces(); }
             }

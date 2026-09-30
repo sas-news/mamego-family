@@ -23,7 +23,11 @@ module.exports = {
                 let spread = 0;
                 loners.forEach(l => {
                     const spot = getNeighbors(l).find(n => board[n] === 0);
-                    if (spot !== undefined) { board[spot] = player; spread++; }
+                    if (spot !== undefined) {
+                        board[spot] = player; spread++;
+                        fxSplash(spot, '#84cc16', 6); // 胞子が飛ぶ
+                        fxGlow(spot, '#65a30d', 480);
+                    }
                 });
                 if (spread > 0) cleanUpPieces();
             }

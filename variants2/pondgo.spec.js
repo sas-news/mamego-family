@@ -17,9 +17,11 @@ module.exports = {
                     if (Math.abs(x - c) <= k && Math.abs(y - c) <= k) board[y * BOARD_SIZE + x] = 3;
                 }
             }`],
-        // 池は深い青
-        [K.ONE, '            const covered = new Set(); // ピース描画でカバー済みのマス', K.voidDraw('"#274a66"')],
+        // 池は深く揺れる水面
+        [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_WATER('#14476e', '#07233a'))],
         ...K.WALL_GUARD_SPEC,
+        // 池のさざ波
+        [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_WATER],
         [K.ONE, K.RV_ALGO, K.rv([
             '盤中央に大きな池が広がる。池には置けず呼吸にもならない。',
             '池を囲む環状の庭が唯一の戦場。回遊するように地を取れ。',

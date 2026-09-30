@@ -23,7 +23,12 @@ module.exports = {
                         const onEdge = cx === 0 || cx === BOARD_SIZE - 1 || cy === 0 || cy === BOARD_SIZE - 1;
                         if (!onEdge) return;
                         const port = ports.find(p => board[p] === 0);
-                        if (port !== undefined) board[port] = opponent; // 再入港
+                        if (port !== undefined) {
+                            board[port] = opponent; // 再入港
+                            fxSlide(ci, port, 560); // 捕虜は港から帰ってくる
+                            fxGlow(port, '#3b82f6', 650);
+                            fxText(port, '入港', '#93c5fd', 900);
+                        }
                     });
                 }
                 soundManager.playCapture();

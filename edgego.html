@@ -880,6 +880,15 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            ctx2.setLineDash([cs * 0.22, cs * 0.16]);
+            ctx2.lineDashOffset = -now / 55;
+            ctx2.strokeStyle = 'rgba(235,90,70,0.55)';
+            ctx2.lineWidth = Math.max(1.5, cs * 0.07);
+            ctx2.strokeRect(pad + 1.5 * cs, pad + 1.5 * cs, (BOARD_SIZE - 3) * cs, (BOARD_SIZE - 3) * cs);
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 

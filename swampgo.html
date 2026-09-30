@@ -884,6 +884,22 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            swamp.forEach(i => {
+                const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
+                const t = (now / 2600 + (i % 7) * 0.35) % 1;
+                const bx = pad + x * cs + Math.sin(i * 3.3) * cs * 0.25;
+                const by = pad + y * cs + cs * 0.3 - t * cs * 0.5;
+                ctx2.globalAlpha = 0.5 * (1 - t);
+                ctx2.strokeStyle = '#bef264';
+                ctx2.lineWidth = Math.max(1, cs * 0.03);
+                ctx2.beginPath();
+                ctx2.arc(bx, by, cs * (0.05 + t * 0.09), 0, Math.PI * 2);
+                ctx2.stroke();
+            });
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1179,12 +1195,15 @@
         function drawBoardElements(padding, cellSize) {
             const r = cellSize * 0.46;
 
-            // 沼地
+            // 沼地: 泥水のグラデーション
             swamp.forEach(i => {
                 const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
-                ctx.fillStyle = 'rgba(101, 163, 13, 0.30)';
-                ctx.fillRect(padding + x * cellSize - cellSize / 2, padding + y * cellSize - cellSize / 2,
-                    cellSize, cellSize);
+                const sx = padding + x * cellSize, sy = padding + y * cellSize, hh = cellSize * 0.5;
+                const g = ctx.createRadialGradient(sx, sy, cellSize * 0.1, sx, sy, cellSize * 0.75);
+                g.addColorStop(0, 'rgba(84,120,20,0.60)');
+                g.addColorStop(1, 'rgba(50,78,12,0.30)');
+                ctx.fillStyle = g;
+                ctx.fillRect(sx - hh, sy - hh, cellSize, cellSize);
             });
             const covered = new Set(); // ピース描画でカバー済みのマス
 
@@ -1775,7 +1794,11 @@
             Object.keys(swampSink).forEach(k => {
                 const i = +k;
                 if (swampSink[i] <= history.length || board[i] === 0) {
-                    if (board[i] !== 0) board[i] = 0;
+                    if (board[i] !== 0) {
+                        board[i] = 0;
+                        fxSplash(i, '#84a02a', 10); // 泥が弾ける
+                        fxText(i, 'ぐぽっ', '#a3e635', 750);
+                    }
                     delete swampSink[i];
                 }
             });

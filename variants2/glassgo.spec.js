@@ -31,7 +31,12 @@ module.exports = {
                     const v = board[idx];
                     board[idx] = 0;
                     captures[v === player ? player : opponent]++;
+                    fxBurst(idx, 'rgba(200,235,255,0.9)', 7, 1.5); // ガラスの破片
                 });
+                if (shattered.length > captured.length) {
+                    fxShake(4 + Math.min(6, shattered.length), 340);
+                    fxText(captured[0], 'パリン!', '#bae6fd', 900);
+                }
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {
