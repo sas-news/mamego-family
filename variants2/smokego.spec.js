@@ -43,6 +43,12 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
             // 煙幕碁: 6の倍数手の着地点を中心に煙幕を張る
             if (history.length % 6 === 0) {
                 const sc = move.cells[0];
@@ -73,6 +79,7 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '6の倍数手で打たれた石の周囲3x3に煙幕が張られ、中の石は3手の間不可視になる。',
             '煙幕内の石も呼吸・取り・地には普通に働く — 霧の中の暗闘を読み合え。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],

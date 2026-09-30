@@ -505,6 +505,7 @@
         const RULES_VARIANT = [
             '盤は右へ2列ごとに1段高くなる階段状。削れた部分には置けない。',
             '低い段から高い段へ石を進めていく立体的な攻防。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1556,6 +1557,11 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
             turn = opponent;
             updateUI();
 

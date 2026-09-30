@@ -12,6 +12,12 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
             // 錆碁: 相手の連 (2石以上) が最も露出した端から1石ずつ錆びる
             {
                 const snapB = [...board];
@@ -58,6 +64,7 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '自分が着手するたび、相手の連 (2石以上) は最も露出した端の1石が錆びて落ちる。',
             '錆びた石は相手のアゲハマになる。小さな連はみるみる溶ける — 固めるか早く取るか。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],

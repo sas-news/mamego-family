@@ -1818,6 +1818,7 @@
                 }
             } else {
                 turn = turn === 1 ? 2 : 1;
+                stonesLeftInTurn = 3; // パスは残り手を放棄して交代
                 updateUI();
 
                 if (gameMode === 'online' && onlineRoomId) {

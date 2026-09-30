@@ -32,7 +32,17 @@ module.exports = {
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は自分の石と同じ行か列にある交点のみ。',
             '最初の1手はどこにでも置ける。飛車のように筋を結んで盤を制する。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
+        // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
+            turn = opponent;`],
         ...K.STONE_SPEC,
     ],
     test: `

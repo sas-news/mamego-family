@@ -50,6 +50,12 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
             // 斥候碁: 斥候石 (各側4手目) が盤を照らし、2手の間その側に敵の全呼吸数を見せる
             if (pieces.length && pieces[pieces.length - 1].scout && pieces[pieces.length - 1].player === player) {
                 st.until[player] = history.length + 2;
@@ -109,6 +115,7 @@ module.exports = {
             '各プレイヤーの4手目の着手は「斥候」になる (緑のX印)。',
             '斥候が出ると以後2手の間、自分から見た敵の全石に呼吸点数が表示される。',
             '呼吸1・2の敵連を見逃すな — 斥候の短い視界で仕留め切れるかが勝負。',
+            '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
         ...K.STONE_SPEC,
     ],
