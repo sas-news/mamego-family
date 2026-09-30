@@ -884,6 +884,45 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // グラフ碁: 除去された辺は断線痕、残った辺は石の近くで電子火花が走る
+        fxAmbient((ctx2, now, pad, cs) => {
+            const all = gridEdges();
+            const rem = new Set(graphRemoved);
+            ctx2.save();
+            // 断線痕: 除去された辺の中点に薄い「×」 (辺が無いことを示す)
+            ctx2.strokeStyle = 'rgba(120,113,108,0.45)';
+            ctx2.lineWidth = Math.max(1, cs * 0.05);
+            all.forEach(([a, b], i) => {
+                if (!rem.has(i)) return;
+                const ax = a % BOARD_SIZE, ay = Math.floor(a / BOARD_SIZE);
+                const bx = b % BOARD_SIZE, by = Math.floor(b / BOARD_SIZE);
+                const mx = pad + (ax + bx) / 2 * cs, my = pad + (ay + by) / 2 * cs;
+                const dx = (bx - ax) * cs * 0.10, dy = (by - ay) * cs * 0.10;
+                ctx2.beginPath();
+                ctx2.moveTo(mx - dy, my - dx);
+                ctx2.lineTo(mx + dy, my + dx);
+                ctx2.moveTo(mx - dx * 0.4 - dy, my - dy * 0.4 - dx);
+                ctx2.lineTo(mx - dx * 0.4 + dy, my - dy * 0.4 + dx);
+                ctx2.moveTo(mx + dx * 0.4 - dy, my + dy * 0.4 - dx);
+                ctx2.lineTo(mx + dx * 0.4 + dy, my + dy * 0.4 + dx);
+                ctx2.stroke();
+            });
+            // 電子火花: 石がある頂点から出る辺を小さな光が巡回 (結合が生きている)
+            ctx2.fillStyle = '#fbbf24';
+            all.forEach(([a, b], i) => {
+                if (rem.has(i)) return;
+                if (board[a] === 0 && board[b] === 0) return;
+                const ax = a % BOARD_SIZE, ay = Math.floor(a / BOARD_SIZE);
+                const bx = b % BOARD_SIZE, by = Math.floor(b / BOARD_SIZE);
+                const ph = (now / 1400 + i * 0.37) % 1;
+                const t = board[a] !== 0 ? ph : 1 - ph;
+                ctx2.globalAlpha = 0.28 + 0.2 * Math.sin(ph * Math.PI);
+                ctx2.beginPath();
+                ctx2.arc(pad + (ax + (bx - ax) * t) * cs, pad + (ay + (by - ay) * t) * cs, cs * 0.07, 0, Math.PI * 2);
+                ctx2.fill();
+            });
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 

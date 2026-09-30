@@ -66,6 +66,44 @@ module.exports = {
             '各プレイヤーの最初の3個の着手は「隠密石」になり、点線の輪郭だけが残る不可視の石。',
             '隠密石も盤上では普通の石として呼吸・取り・地に関与する — 序盤の布石が読めない。',
         ])],
+        // 隠密石が置かれた瞬間に煙が立つ + 隠密石の上を薄煙が漂う
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            // 隠密碁: クローク発動時に煙を上げて「隠密」と表示
+            {
+                const np = pieces[pieces.length - 1];
+                if (np && np.player === player && np.cloak) {
+                    const ci = np.cells[0].y * BOARD_SIZE + np.cells[0].x;
+                    fxBurst(ci, 'rgba(148,163,184,0.8)', 8, 1.0);
+                    fxText(ci, '隠密', '#cbd5e1', 1000);
+                }
+            }
+
+            turn = opponent;`],
+        [K.ONE, '        let obstaclePainter = null;',
+`        let obstaclePainter = null;
+        // 隠密碁: 隠密石の上を薄い煙がゆらめく常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            pieces.forEach(pc => {
+                if (!pc.cloak) return;
+                pc.cells.forEach(p => {
+                    if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                    const cx = pad + p.x * cs;
+                    for (let k = 0; k < 3; k++) {
+                        const ph = (now / 2400 + k * 0.33) % 1;
+                        const cy = pad + p.y * cs - ph * cs * 0.8;
+                        ctx2.globalAlpha = 0.16 * (1 - ph);
+                        ctx2.fillStyle = '#94a3b8';
+                        ctx2.beginPath();
+                        ctx2.arc(cx + Math.sin(now / 500 + k * 2.1) * cs * 0.12, cy, cs * (0.10 + ph * 0.10), 0, Math.PI * 2);
+                        ctx2.fill();
+                    }
+                });
+            });
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

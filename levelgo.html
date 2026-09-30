@@ -1217,6 +1217,29 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // Lv2以上の石にレベル数を描く
+            for (const k in levelMap) {
+                const idx = +k;
+                const v = board[idx];
+                if (v !== 1 && v !== 2) continue;
+                const lv = levelMap[k];
+                if (!lv || lv < 2) continue;
+                const x = idx % BOARD_SIZE, y = Math.floor(idx / BOARD_SIZE);
+                const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                ctx.save();
+                ctx.fillStyle = v === 1 ? '#f5d76e' : '#b8860b';
+                ctx.font = 'bold ' + Math.max(9, cellSize * 0.38) + 'px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(String(lv), cx, cy);
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;

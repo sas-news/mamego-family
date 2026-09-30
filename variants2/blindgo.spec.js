@@ -57,6 +57,43 @@ module.exports = {
             '黒は左下、白は右上の三角エリアが「死角」。死角内の自分の石は幽霊のように見える。',
             '死角の石も呼吸・取り・地には普通に働く — 見えにくい石を巡る読み合いが生まれる。',
         ])],
+        // 死角に打った手は「死角」と一瞬表示して分かるようにする
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            // 盲点碁: 自分の死角に置いた石は「死角」テキストと輪で発火
+            {
+                const bc = move.cells[0];
+                if (bc && inBlind(bc.x, bc.y, player)) {
+                    const bi = bc.y * BOARD_SIZE + bc.x;
+                    fxGlow(bi, '#818cf8', 700);
+                    fxText(bi, '死角', '#a5b4fc', 1000);
+                }
+            }
+
+            turn = opponent;`],
+        // 死角エリアに漂う影の靄 — 「ここが見えない領域」を常時演出
+        [K.ONE, '        let obstaclePainter = null;',
+`        let obstaclePainter = null;
+        // 盲点碁: 死角エリアに影の靄が漂う常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            for (let k = 0; k < 10; k++) {
+                const ph = now / 2600 + k * 1.93;
+                const pl = k % 2 === 0 ? 1 : 2;
+                const bx = (Math.sin(ph * 0.83 + k * 2.7) * 0.5 + 0.5) * BOARD_SIZE;
+                const by = (Math.sin(ph * 1.17 + k * 4.1) * 0.5 + 0.5) * BOARD_SIZE;
+                const x = Math.max(0, Math.min(BOARD_SIZE - 1, bx));
+                const y = Math.max(0, Math.min(BOARD_SIZE - 1, by));
+                if (!inBlind(x, y, pl)) continue;
+                const cx = pad + x * cs, cy = pad + y * cs;
+                ctx2.fillStyle = pl === 1 ? 'rgba(67,56,202,0.10)' : 'rgba(30,41,82,0.10)';
+                ctx2.beginPath();
+                ctx2.arc(cx, cy, cs * (0.55 + 0.2 * Math.sin(ph * 2)), 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

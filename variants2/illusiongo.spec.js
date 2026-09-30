@@ -63,6 +63,46 @@ module.exports = {
             '盤の中央3行は幻影地帯 (薄紫の帯)。その中の石は全て敵色に見える。',
             '幻影は見た目だけ — 取り・呼吸・地は実際の色で判定される。帯の中を疑ってかかれ。',
         ])],
+        // 幻影帯に打つと「幻影」と一瞬表示
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            // 幻影碁: 幻影帯への着手は「幻影」テキストと虹色の輪で発火
+            {
+                const ic = move.cells[0];
+                if (ic && inIllusion(ic.x, ic.y)) {
+                    const ii = ic.y * BOARD_SIZE + ic.x;
+                    fxGlow(ii, '#c084fc', 700);
+                    fxText(ii, '幻影', '#d8b4fe', 1000);
+                }
+            }
+
+            turn = opponent;`],
+        // 幻影帯を横切る虹のうねり — 「ここは見た目が嘘をつく帯」を常時演出
+        [K.ONE, '        let obstaclePainter = null;',
+`        let obstaclePainter = null;
+        // 幻影碁: 幻影帯を虹の光の筋が揺らめきながら流れる常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            const c = (BOARD_SIZE - 1) / 2;
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            for (let k = 0; k < 3; k++) {
+                const ph = (now / 2200 + k * 0.33) % 1;
+                const lx = ph * w;
+                const ly = pad + (c - 0.5 + k) * cs + Math.sin(now / 600 + k * 2.4) * cs * 0.2;
+                const g = ctx2.createLinearGradient(lx - cs * 2, ly, lx + cs * 2, ly);
+                g.addColorStop(0, 'rgba(192,132,252,0)');
+                g.addColorStop(0.5, 'rgba(192,132,252,0.28)');
+                g.addColorStop(1, 'rgba(192,132,252,0)');
+                ctx2.strokeStyle = g;
+                ctx2.lineWidth = Math.max(1.5, cs * 0.10);
+                ctx2.beginPath();
+                ctx2.moveTo(lx - cs * 2, ly);
+                ctx2.lineTo(lx + cs * 2, ly);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

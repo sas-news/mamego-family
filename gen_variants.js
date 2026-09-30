@@ -784,7 +784,8 @@ let d3 = apply(ALGO, [
         const LAYERS = 3; // 立体盤の層数`],
     [ONE, BOARD_DECL,
 `        let board = Array(BOARD_SIZE * BOARD_SIZE * LAYERS).fill(0); // 0:空, 1:黒, 2:白 (3層)
-        let activeLayer = 0; // 表示・入力中の層`],
+        let activeLayer = 0; // 表示・入力中の層
+        let layerSwAt = 0;   // 層切替シーンの発火時刻`],
     // 全セル→idx変換を z 対応に (ピースセルは {x,y,z})
     // ※getNeighbors挿入より先に行うこと (cellIndex本体が置換対象文字列を含むため)
     [ALL, 'p.y * BOARD_SIZE + p.x', 'cellIndex(p)'],
@@ -848,6 +849,7 @@ let d3 = apply(ALGO, [
             }
         }
 
+        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {`,
 `                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);
                     if (isDead) drawDeadMarker(cx, cy, r);
@@ -913,6 +915,7 @@ let d3 = apply(ALGO, [
             btn.addEventListener('click', (e) => {
                 soundManager.playClick();
                 activeLayer = parseInt(e.target.dataset.layer);
+                layerSwAt = fxNow(); // 層切替シーン発火時刻
                 updateUI();
             });
         });
@@ -949,6 +952,45 @@ let d3 = apply(ALGO, [
                 activeLayer = 0;
                 resizeCanvas();
             }`],
+    // 縦連結の可視化 + 層切替シーン — 「上下も近傍」が一目で分かる
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 立体碁: 上下層に同色石がある石に▲▼印、層切替時に光のシーンが走る
+        fxAmbient((ctx2, now, pad, cs) => {
+            const ls = layerCells();
+            ctx2.save();
+            // 縦連結マーカー: 真上(▲)/真下(▼)に同色の石がある交点の縁に小さな三角
+            board.slice(activeLayer * ls, (activeLayer + 1) * ls).forEach((v, i) => {
+                if (v !== 1 && v !== 2) return;
+                const gi = activeLayer * ls + i;
+                const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                const cx = pad + x * cs, cy = pad + y * cs;
+                const col = v === 1 ? 'rgba(255,255,255,0.85)' : 'rgba(15,23,42,0.85)';
+                const tri = (ux, uy, dx, dy) => {
+                    ctx2.fillStyle = col;
+                    ctx2.beginPath();
+                    ctx2.moveTo(cx + ux * cs * 0.42, cy + uy * cs * 0.42);
+                    ctx2.lineTo(cx + (ux - dy) * cs * 0.30, cy + (uy + dx) * cs * 0.30);
+                    ctx2.lineTo(cx + (ux + dy) * cs * 0.30, cy + (uy - dx) * cs * 0.30);
+                    ctx2.closePath();
+                    ctx2.fill();
+                };
+                if (activeLayer < LAYERS - 1 && board[gi + ls] === v) tri(0, -1, 0, -1); // 上層に連続 ▲
+                if (activeLayer > 0 && board[gi - ls] === v) tri(0, 1, 0, 1);          // 下層に連続 ▼
+            });
+            // 層切替シーン: 上から下へ光の帯が走る (0.6秒)
+            const st2 = (now - layerSwAt) / 600;
+            if (layerSwAt && st2 < 1) {
+                const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+                const ly = st2 * w;
+                const g = ctx2.createLinearGradient(0, ly - cs, 0, ly + cs * 0.3);
+                g.addColorStop(0, 'rgba(125,211,252,0)');
+                g.addColorStop(1, 'rgba(125,211,252,0.5)');
+                ctx2.fillStyle = g;
+                ctx2.fillRect(0, ly - cs, w, cs * 1.3);
+            }
+            ctx2.restore();
+        });`],
     ...STONE_SPEC,
 ], '3dgo');
 out('3dgo.html', d3);
@@ -1089,6 +1131,48 @@ let graph = apply(ALGO, [
                 lastMove,
                 graphRemoved,
                 pieceMode,`],
+    // 切断された辺の痕跡 + 結合を走る電子火花 — 「辺の有無」が一目で分かる
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // グラフ碁: 除去された辺は断線痕、残った辺は石の近くで電子火花が走る
+        fxAmbient((ctx2, now, pad, cs) => {
+            const all = gridEdges();
+            const rem = new Set(graphRemoved);
+            ctx2.save();
+            // 断線痕: 除去された辺の中点に薄い「×」 (辺が無いことを示す)
+            ctx2.strokeStyle = 'rgba(120,113,108,0.45)';
+            ctx2.lineWidth = Math.max(1, cs * 0.05);
+            all.forEach(([a, b], i) => {
+                if (!rem.has(i)) return;
+                const ax = a % BOARD_SIZE, ay = Math.floor(a / BOARD_SIZE);
+                const bx = b % BOARD_SIZE, by = Math.floor(b / BOARD_SIZE);
+                const mx = pad + (ax + bx) / 2 * cs, my = pad + (ay + by) / 2 * cs;
+                const dx = (bx - ax) * cs * 0.10, dy = (by - ay) * cs * 0.10;
+                ctx2.beginPath();
+                ctx2.moveTo(mx - dy, my - dx);
+                ctx2.lineTo(mx + dy, my + dx);
+                ctx2.moveTo(mx - dx * 0.4 - dy, my - dy * 0.4 - dx);
+                ctx2.lineTo(mx - dx * 0.4 + dy, my - dy * 0.4 + dx);
+                ctx2.moveTo(mx + dx * 0.4 - dy, my + dy * 0.4 - dx);
+                ctx2.lineTo(mx + dx * 0.4 + dy, my + dy * 0.4 + dx);
+                ctx2.stroke();
+            });
+            // 電子火花: 石がある頂点から出る辺を小さな光が巡回 (結合が生きている)
+            ctx2.fillStyle = '#fbbf24';
+            all.forEach(([a, b], i) => {
+                if (rem.has(i)) return;
+                if (board[a] === 0 && board[b] === 0) return;
+                const ax = a % BOARD_SIZE, ay = Math.floor(a / BOARD_SIZE);
+                const bx = b % BOARD_SIZE, by = Math.floor(b / BOARD_SIZE);
+                const ph = (now / 1400 + i * 0.37) % 1;
+                const t = board[a] !== 0 ? ph : 1 - ph;
+                ctx2.globalAlpha = 0.28 + 0.2 * Math.sin(ph * Math.PI);
+                ctx2.beginPath();
+                ctx2.arc(pad + (ax + (bx - ax) * t) * cs, pad + (ay + (by - ay) * t) * cs, cs * 0.07, 0, Math.PI * 2);
+                ctx2.fill();
+            });
+            ctx2.restore();
+        });`],
     ...STONE_SPEC,
 ], 'graphgo');
 out('graphgo.html', graph);
@@ -2534,6 +2618,61 @@ out('wormgo.html', apply(ALGO, [
     [ONE, `            lastMove = data.lastMove || null;`,
 `            lastMove = data.lastMove || null;
             if (Array.isArray(data.wormholes)) WORMHOLES = data.wormholes;`],
+    // ワームホール上への着手は「転送」の表示と渦の光で発火
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            // 転送碁: ワームホール端点への着手は対側にも繋がる「転送」演出
+            {
+                const wc = move.cells[0];
+                if (wc) {
+                    const wi = wc.y * BOARD_SIZE + wc.x;
+                    const pair = WORMHOLES.find(([a, b]) => a === wi || b === wi);
+                    if (pair) {
+                        const other = pair[0] === wi ? pair[1] : pair[0];
+                        fxGlow(wi, '#a78bfa', 700);
+                        fxGlow(other, '#a78bfa', 700);
+                        fxText(wi, '転送', '#c4b5fd', 1100);
+                    }
+                }
+            }
+
+            turn = opponent;`],
+    // ワームホールの脈動と対側へ飛ぶ火花 — 「遠隔で繋がっている」を常時演出
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 転送碁: ワームホールが脈動し、ペア間を火花が行き来する常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            WORMHOLES.forEach(([a, b], pi) => {
+                // 端点の渦巻きリング (回転する弧で転送口を演出)
+                [a, b].forEach((i, ei) => {
+                    const cx = pad + (i % BOARD_SIZE) * cs;
+                    const cy = pad + Math.floor(i / BOARD_SIZE) * cs;
+                    const rot = now / 700 * (pi === 0 ? 1 : -1) + ei * Math.PI;
+                    ctx2.strokeStyle = '#a78bfa';
+                    ctx2.globalAlpha = 0.5 + 0.2 * Math.sin(now / 400 + i);
+                    ctx2.lineWidth = Math.max(1.5, cs * 0.07);
+                    ctx2.beginPath();
+                    ctx2.arc(cx, cy, cs * 0.36, rot, rot + Math.PI * 1.4);
+                    ctx2.stroke();
+                });
+                // ペア間を往復する火花 (トンネルを通る粒子)
+                for (let k = 0; k < 3; k++) {
+                    const ph = (now / 1800 + k * 0.33 + pi * 0.5) % 1;
+                    const ax = pad + (a % BOARD_SIZE) * cs, ay = pad + Math.floor(a / BOARD_SIZE) * cs;
+                    const bx = pad + (b % BOARD_SIZE) * cs, by = pad + Math.floor(b / BOARD_SIZE) * cs;
+                    const t = ph < 0.5 ? ph * 2 : 2 - ph * 2;
+                    ctx2.globalAlpha = 0.5 * (1 - Math.abs(ph - 0.5) * 2) + 0.15;
+                    ctx2.fillStyle = '#c4b5fd';
+                    ctx2.beginPath();
+                    ctx2.arc(ax + (bx - ax) * t, ay + (by - ay) * t, cs * 0.09, 0, Math.PI * 2);
+                    ctx2.fill();
+                }
+            });
+            ctx2.restore();
+        });`],
     ...STONE_SPEC,
 ], 'wormgo'));
 
@@ -3037,6 +3176,37 @@ out('darkgo.html', apply(ALGO, [
                 }
                 ctx.restore();
             }`],
+    // 暗闇の演出: 霧の中を這う影の塊 + 自石の周りに灯りの縁
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 暗闇碁: 視界外を影の塊が静かに這い、自石の周りに灯りの輪が揺れる
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            for (let k = 0; k < 12; k++) {
+                const ph = now / 3200 + k * 1.71;
+                const x = (Math.sin(ph * 0.77 + k * 3.3) * 0.5 + 0.5) * BOARD_SIZE;
+                const y = (Math.sin(ph * 1.03 + k * 1.9) * 0.5 + 0.5) * BOARD_SIZE;
+                const xi = Math.max(0, Math.min(BOARD_SIZE - 1, x | 0));
+                const yi = Math.max(0, Math.min(BOARD_SIZE - 1, y | 0));
+                if (isFogVisible(yi * BOARD_SIZE + xi)) continue;
+                ctx2.fillStyle = 'rgba(10,12,26,0.30)';
+                ctx2.beginPath();
+                ctx2.arc(pad + x * cs, pad + y * cs, cs * (0.6 + 0.25 * Math.sin(ph * 2)), 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            // 自石の周りに薄い灯りの輪 — 「ここだけが見える」を強調
+            ctx2.strokeStyle = 'rgba(253,224,71,0.12)';
+            ctx2.lineWidth = Math.max(1, cs * 0.05);
+            board.forEach((v, i) => {
+                if (v !== fogViewer()) return;
+                const cx = pad + (i % BOARD_SIZE) * cs;
+                const cy = pad + Math.floor(i / BOARD_SIZE) * cs;
+                ctx2.beginPath();
+                ctx2.arc(cx, cy, cs * (0.55 + 0.08 * Math.sin(now / 500 + i)), 0, Math.PI * 2);
+                ctx2.stroke();
+            });
+            ctx2.restore();
+        });`],
     ...STONE_SPEC,
 ], 'darkgo'));
 
@@ -3813,6 +3983,51 @@ out('twilightgo.html', apply(ALGO, [
                 ctx.fillRect(0, 0, width, width);
                 ctx.restore();
             }`),
+    // 昼夜の切替を「昼/夜」のフラッシュで知らせる
+    [ONE, TURN_FLIP,
+`            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            // 黄昏碁: 6手ごとの昼夜切替を盤上の表示で発火
+            if (history.length % 6 === 0 && history.length > 0) {
+                const tc = move.cells[0];
+                if (tc) {
+                    const ti = tc.y * BOARD_SIZE + tc.x;
+                    fxText(ti, isNight() ? '夜 ☾' : '昼 ☀', isNight() ? '#93c5fd' : '#fde68a', 1200);
+                    fxGlow(ti, isNight() ? '#60a5fa' : '#fbbf24', 800);
+                }
+            }
+
+            turn = opponent;`],
+    // 夜の星空と昼の陽光の燦めき — フェーズが一目で分かる常時演出
+    [ONE, `        let obstaclePainter = null;`,
+`        let obstaclePainter = null;
+        // 黄昏碁: 夜は瞬く星、昼は陽光の燦めきが舞う常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            if (isNight()) {
+                for (let k = 0; k < 16; k++) {
+                    const tw = Math.sin(now / 400 + k * 2.7);
+                    if (tw < 0.2) continue;
+                    ctx2.globalAlpha = 0.10 + tw * 0.20;
+                    ctx2.fillStyle = '#e0e7ff';
+                    ctx2.beginPath();
+                    ctx2.arc((Math.sin(k * 12.9898) * 0.5 + 0.5) * w, (Math.sin(k * 78.233) * 0.5 + 0.5) * w, cs * 0.05, 0, Math.PI * 2);
+                    ctx2.fill();
+                }
+            } else {
+                for (let k = 0; k < 8; k++) {
+                    const ph = now / 2600 + k * 1.9;
+                    ctx2.globalAlpha = 0.06 + 0.07 * Math.sin(ph * 2 + k);
+                    ctx2.fillStyle = '#fbbf24';
+                    ctx2.beginPath();
+                    ctx2.arc((Math.sin(ph * 0.6 + k * 2.9) * 0.5 + 0.5) * w, (Math.cos(ph * 0.8 + k * 1.7) * 0.5 + 0.5) * w, cs * 0.14, 0, Math.PI * 2);
+                    ctx2.fill();
+                }
+            }
+            ctx2.restore();
+        });`],
     ...LEGAL_DOTS_SPEC,
     ...STONE_SPEC,
 ], 'twilightgo'));

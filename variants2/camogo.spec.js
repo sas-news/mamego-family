@@ -52,6 +52,22 @@ module.exports = {
             '置いてから5手の間、その石は敵色に見える (緑の破線が迷彩の目印)。',
             '取り・呼吸・地は実際の色で判定される — 見た目と裏腹な連ができて混乱する。',
         ])],
+        // 迷彩が解けた瞬間に「正体」フラッシュ — 化けていた石が一目で分かる
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            // 迷彩碁: 迷彩が解けた石は本来の色で発光し「正体」と表示
+            pieces.forEach(pc => {
+                if (pc.at === undefined || history.length - pc.at !== 5) return;
+                pc.cells.forEach(p => {
+                    const i = p.y * BOARD_SIZE + p.x;
+                    if (board[i] !== pc.player) return;
+                    fxGlow(i, pc.player === 1 ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.95)', 800);
+                    fxText(i, '正体', '#4ade80', 1000);
+                });
+            });
+
+            turn = opponent;`],
         ...K.STONE_SPEC,
     ],
     test: `

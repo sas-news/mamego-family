@@ -55,6 +55,12 @@ module.exports = {
                 board.forEach((v, i) => {
                     if (v === opponent && !st.seen[player].includes(i)) st.seen[player].push(i);
                 });
+                // X線発射: 記録した敵石を照準で発光 + 走査線の一瞬表示 + 「X線」表示
+                st.seen[player].forEach(i => fxGlow(i, '#22d3ee', 900));
+                st.xrayAt = fxNow();
+                const mc = move.cells[0];
+                if (mc) fxText(mc.y * BOARD_SIZE + mc.x, 'X線', '#67e8f9', 1100);
+                fxShake(2, 180);
             }
 
 
@@ -99,6 +105,31 @@ module.exports = {
             'X線後に置かれた敵石は再び闇の中 — 一度きりの透視をどこで使うか。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
+        // X線発射時の走査線 — 上から下へ掃く緑がかった光の帯
+        [K.ONE, '        let obstaclePainter = null;',
+`        let obstaclePainter = null;
+        // 透視碁: X線発射から1.2秒、上から下へ走査線が走る
+        fxAmbient((ctx2, now, pad, cs) => {
+            if (!st.xrayAt) return;
+            const t = (now - st.xrayAt) / 1200;
+            if (t >= 1) return;
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            const ly = t * w;
+            ctx2.save();
+            const g = ctx2.createLinearGradient(0, ly - cs * 1.5, 0, ly + cs * 0.4);
+            g.addColorStop(0, 'rgba(34,211,238,0)');
+            g.addColorStop(1, 'rgba(34,211,238,0.45)');
+            ctx2.fillStyle = g;
+            ctx2.fillRect(0, ly - cs * 1.5, w, cs * 1.9);
+            ctx2.globalAlpha = (1 - t) * 0.8;
+            ctx2.strokeStyle = '#22d3ee';
+            ctx2.lineWidth = Math.max(1.5, cs * 0.08);
+            ctx2.beginPath();
+            ctx2.moveTo(0, ly + cs * 0.4);
+            ctx2.lineTo(w, ly + cs * 0.4);
+            ctx2.stroke();
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

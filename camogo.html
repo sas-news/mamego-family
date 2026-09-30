@@ -1222,6 +1222,29 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 迷彩中の石にはごく薄い破線の輪 (よく見ると迷彩と分かる)
+            {
+                ctx.save();
+                ctx.setLineDash([cellSize * 0.09, cellSize * 0.09]);
+                ctx.strokeStyle = 'rgba(34, 197, 94, 0.55)';
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.045);
+                pieces.forEach(pc => {
+                    if (!isCamo(pc)) return;
+                    pc.cells.forEach(p => {
+                        if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                        ctx.beginPath();
+                        ctx.arc(padding + p.x * cellSize, padding + p.y * cellSize, cellSize * 0.44, 0, Math.PI * 2);
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;
@@ -1737,6 +1760,18 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+
+            // 迷彩碁: 迷彩が解けた石は本来の色で発光し「正体」と表示
+            pieces.forEach(pc => {
+                if (pc.at === undefined || history.length - pc.at !== 5) return;
+                pc.cells.forEach(p => {
+                    const i = p.y * BOARD_SIZE + p.x;
+                    if (board[i] !== pc.player) return;
+                    fxGlow(i, pc.player === 1 ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.95)', 800);
+                    fxText(i, '正体', '#4ade80', 1000);
+                });
+            });
+
             turn = opponent;
             updateUI();
 

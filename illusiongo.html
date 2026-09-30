@@ -880,6 +880,28 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 幻影碁: 幻影帯を虹の光の筋が揺らめきながら流れる常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            const c = (BOARD_SIZE - 1) / 2;
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            for (let k = 0; k < 3; k++) {
+                const ph = (now / 2200 + k * 0.33) % 1;
+                const lx = ph * w;
+                const ly = pad + (c - 0.5 + k) * cs + Math.sin(now / 600 + k * 2.4) * cs * 0.2;
+                const g = ctx2.createLinearGradient(lx - cs * 2, ly, lx + cs * 2, ly);
+                g.addColorStop(0, 'rgba(192,132,252,0)');
+                g.addColorStop(0.5, 'rgba(192,132,252,0.28)');
+                g.addColorStop(1, 'rgba(192,132,252,0)');
+                ctx2.strokeStyle = g;
+                ctx2.lineWidth = Math.max(1.5, cs * 0.10);
+                ctx2.beginPath();
+                ctx2.moveTo(lx - cs * 2, ly);
+                ctx2.lineTo(lx + cs * 2, ly);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1241,6 +1263,28 @@
                     drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
+            }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 幻影帯の石に薄紫の輪
+            {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(192, 132, 252, 0.55)';
+                ctx.setLineDash([cellSize * 0.08, cellSize * 0.08]);
+                ctx.lineWidth = Math.max(1.1, cellSize * 0.04);
+                board.forEach((v, i) => {
+                    if (v !== 1 && v !== 2) return;
+                    const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                    if (!inIllusion(x, y)) return;
+                    ctx.beginPath();
+                    ctx.arc(padding + x * cellSize, padding + y * cellSize, cellSize * 0.46, 0, Math.PI * 2);
+                    ctx.stroke();
+                });
+                ctx.restore();
             }
         }
 
@@ -1756,6 +1800,17 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+
+            // 幻影碁: 幻影帯への着手は「幻影」テキストと虹色の輪で発火
+            {
+                const ic = move.cells[0];
+                if (ic && inIllusion(ic.x, ic.y)) {
+                    const ii = ic.y * BOARD_SIZE + ic.x;
+                    fxGlow(ii, '#c084fc', 700);
+                    fxText(ii, '幻影', '#d8b4fe', 1000);
+                }
+            }
+
             turn = opponent;
             updateUI();
 

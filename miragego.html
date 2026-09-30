@@ -884,6 +884,31 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 蜃気楼碁: 蜃気楼石から陽炎が揺らめき上る常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            pieces.forEach(pc => {
+                if (!isMirage(pc)) return;
+                pc.cells.forEach(p => {
+                    if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                    const cx = pad + p.x * cs, cy = pad + p.y * cs;
+                    ctx2.strokeStyle = 'rgba(103,232,249,0.35)';
+                    ctx2.lineWidth = Math.max(1, cs * 0.05);
+                    for (let k = 0; k < 2; k++) {
+                        const ph = (now / 900 + k * 0.5) % 1;
+                        ctx2.globalAlpha = 0.5 * (1 - ph);
+                        ctx2.beginPath();
+                        ctx2.moveTo(cx - cs * 0.2 + k * cs * 0.4, cy - cs * 0.3);
+                        ctx2.quadraticCurveTo(
+                            cx - cs * 0.2 + k * cs * 0.4 + Math.sin(now / 300 + k * 3) * cs * 0.15,
+                            cy - cs * (0.5 + ph * 0.4),
+                            cx - cs * 0.2 + k * cs * 0.4, cy - cs * (0.4 + ph * 0.6));
+                        ctx2.stroke();
+                    }
+                });
+            });
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1217,6 +1242,34 @@
                     drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
+            }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 蜃気楼石に揺らぐ二重輪郭
+            {
+                ctx.save();
+                ctx.setLineDash([cellSize * 0.10, cellSize * 0.08]);
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                pieces.forEach(pc => {
+                    if (!isMirage(pc)) return;
+                    pc.cells.forEach(p => {
+                        if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                        const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
+                        ctx.strokeStyle = 'rgba(103, 232, 249, 0.8)';
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cellSize * 0.42, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cellSize * 0.34, 0, Math.PI * 2);
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
             }
         }
 
@@ -1758,12 +1811,26 @@
                     if (pc.player === player || !isMirage(pc)) return;
                     if (!pc.cells.some(p => adj.has(p.y * BOARD_SIZE + p.x))) return;
                     pc.cells.forEach(p => {
-                        if (board[p.y * BOARD_SIZE + p.x] === pc.player) board[p.y * BOARD_SIZE + p.x] = 0;
+                        const pi = p.y * BOARD_SIZE + p.x;
+                        if (board[pi] === pc.player) {
+                            board[pi] = 0;
+                            fxSplash(pi, 'rgba(103,232,249,0.9)', 9);
+                            fxText(pi, '掻き消え', '#67e8f9', 1000);
+                        }
                     });
                     gone = true;
                 });
-                if (gone) cleanUpPieces();
+                if (gone) { cleanUpPieces(); fxShake(3, 200); }
             }
+
+            // 蜃気楼碁: 3手経って実体化した石は青白く発光して確定を知らせる
+            pieces.forEach(pc => {
+                if (pc.at === undefined || history.length - pc.at !== 3) return;
+                pc.cells.forEach(p => {
+                    const i = p.y * BOARD_SIZE + p.x;
+                    if (board[i] === pc.player) fxGlow(i, '#67e8f9', 600);
+                });
+            });
 
             turn = opponent;
             updateUI();

@@ -880,6 +880,32 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 黄昏碁: 夜は瞬く星、昼は陽光の燦めきが舞う常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            const w = pad * 2 + (BOARD_SIZE - 1) * cs;
+            ctx2.save();
+            if (isNight()) {
+                for (let k = 0; k < 16; k++) {
+                    const tw = Math.sin(now / 400 + k * 2.7);
+                    if (tw < 0.2) continue;
+                    ctx2.globalAlpha = 0.10 + tw * 0.20;
+                    ctx2.fillStyle = '#e0e7ff';
+                    ctx2.beginPath();
+                    ctx2.arc((Math.sin(k * 12.9898) * 0.5 + 0.5) * w, (Math.sin(k * 78.233) * 0.5 + 0.5) * w, cs * 0.05, 0, Math.PI * 2);
+                    ctx2.fill();
+                }
+            } else {
+                for (let k = 0; k < 8; k++) {
+                    const ph = now / 2600 + k * 1.9;
+                    ctx2.globalAlpha = 0.06 + 0.07 * Math.sin(ph * 2 + k);
+                    ctx2.fillStyle = '#fbbf24';
+                    ctx2.beginPath();
+                    ctx2.arc((Math.sin(ph * 0.6 + k * 2.9) * 0.5 + 0.5) * w, (Math.cos(ph * 0.8 + k * 1.7) * 0.5 + 0.5) * w, cs * 0.14, 0, Math.PI * 2);
+                    ctx2.fill();
+                }
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1767,6 +1793,17 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+
+            // 黄昏碁: 6手ごとの昼夜切替を盤上の表示で発火
+            if (history.length % 6 === 0 && history.length > 0) {
+                const tc = move.cells[0];
+                if (tc) {
+                    const ti = tc.y * BOARD_SIZE + tc.x;
+                    fxText(ti, isNight() ? '夜 ☾' : '昼 ☀', isNight() ? '#93c5fd' : '#fde68a', 1200);
+                    fxGlow(ti, isNight() ? '#60a5fa' : '#fbbf24', 800);
+                }
+            }
+
             turn = opponent;
             updateUI();
 

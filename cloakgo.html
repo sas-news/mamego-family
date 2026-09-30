@@ -885,6 +885,27 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 隠密碁: 隠密石の上を薄い煙がゆらめく常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            pieces.forEach(pc => {
+                if (!pc.cloak) return;
+                pc.cells.forEach(p => {
+                    if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                    const cx = pad + p.x * cs;
+                    for (let k = 0; k < 3; k++) {
+                        const ph = (now / 2400 + k * 0.33) % 1;
+                        const cy = pad + p.y * cs - ph * cs * 0.8;
+                        ctx2.globalAlpha = 0.16 * (1 - ph);
+                        ctx2.fillStyle = '#94a3b8';
+                        ctx2.beginPath();
+                        ctx2.arc(cx + Math.sin(now / 500 + k * 2.1) * cs * 0.12, cy, cs * (0.10 + ph * 0.10), 0, Math.PI * 2);
+                        ctx2.fill();
+                    }
+                });
+            });
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1219,6 +1240,27 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 隠密石にかすかな輪郭 (持ち主にも場所の手掛かり)
+            ctx.save();
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.65)';
+            ctx.setLineDash([cellSize * 0.12, cellSize * 0.10]);
+            ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+            pieces.forEach(pc => {
+                if (!pc.cloak) return;
+                pc.cells.forEach(p => {
+                    if (board[p.y * BOARD_SIZE + p.x] === 0) return;
+                    ctx.beginPath();
+                    ctx.arc(padding + p.x * cellSize, padding + p.y * cellSize, cellSize * 0.40, 0, Math.PI * 2);
+                    ctx.stroke();
+                });
+            });
+            ctx.restore();
         }
 
         let fxPrevMove = null;
@@ -1736,6 +1778,17 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+
+            // 隠密碁: クローク発動時に煙を上げて「隠密」と表示
+            {
+                const np = pieces[pieces.length - 1];
+                if (np && np.player === player && np.cloak) {
+                    const ci = np.cells[0].y * BOARD_SIZE + np.cells[0].x;
+                    fxBurst(ci, 'rgba(148,163,184,0.8)', 8, 1.0);
+                    fxText(ci, '隠密', '#cbd5e1', 1000);
+                }
+            }
+
             turn = opponent;
             updateUI();
 

@@ -48,6 +48,14 @@ module.exports = {
             if (history.length % 6 === 0) {
                 const sc = move.cells[0];
                 st.smoke = { x: sc.x, y: sc.y, at: history.length };
+                // 煙幕の発生: 3x3全区で煙の噴霧 + 盤面の振動 + 「煙幕」表示
+                for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+                    const sx = sc.x + dx, sy = sc.y + dy;
+                    if (sx < 0 || sx >= BOARD_SIZE || sy < 0 || sy >= BOARD_SIZE) continue;
+                    fxBurst(sy * BOARD_SIZE + sx, 'rgba(148,163,184,0.9)', 6, 0.8);
+                }
+                fxText(sc.y * BOARD_SIZE + sc.x, '煙幕', '#cbd5e1', 1100);
+                fxShake(3, 220);
             }
 
 
@@ -83,6 +91,26 @@ module.exports = {
             '煙幕内の石も呼吸・取り・地には普通に働く — 霧の中の暗闘を読み合え。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',
         ])],
+        // 煙幕内を渦巻く煙の塊 — 静止した灰面ではなく「立ち込める煙」に
+        [K.ONE, '        let obstaclePainter = null;',
+`        let obstaclePainter = null;
+        // 煙幕碁: 発生中の煙幕内を煙の塊が渦巻く常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            if (!st.smoke || history.length - st.smoke.at >= 3) return;
+            ctx2.save();
+            for (let k = 0; k < 8; k++) {
+                const ph = now / 1600 + k * 1.31;
+                const dx = Math.sin(ph * 0.9 + k * 2.4) * 0.9;
+                const dy = Math.cos(ph * 0.7 + k * 1.9) * 0.9;
+                const cx = pad + (st.smoke.x + dx) * cs, cy = pad + (st.smoke.y + dy) * cs;
+                ctx2.globalAlpha = 0.10 + 0.08 * Math.sin(ph * 2.3 + k);
+                ctx2.fillStyle = '#94a3b8';
+                ctx2.beginPath();
+                ctx2.arc(cx, cy, cs * (0.5 + 0.2 * Math.sin(ph + k)), 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });`],
         ...K.STONE_SPEC,
     ],
     test: `

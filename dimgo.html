@@ -880,6 +880,24 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 薄暮碁: 外周の薄暮に蛍火が漂い、夕日の残照が境界で揺れる
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            for (let k = 0; k < 14; k++) {
+                const ph = now / 3000 + k * 2.39;
+                const x = (Math.sin(ph * 0.71 + k * 3.1) * 0.5 + 0.5) * (BOARD_SIZE - 1);
+                const y = (Math.sin(ph * 0.97 + k * 1.7) * 0.5 + 0.5) * (BOARD_SIZE - 1);
+                if (!isDim(x, y)) continue;
+                const tw = Math.sin(ph * 3.3 + k);
+                if (tw < 0.1) continue;
+                ctx2.globalAlpha = 0.10 + tw * 0.22;
+                ctx2.fillStyle = '#fdba74';
+                ctx2.beginPath();
+                ctx2.arc(pad + x * cs, pad + y * cs, cs * 0.07, 0, Math.PI * 2);
+                ctx2.fill();
+            }
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 

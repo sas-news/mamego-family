@@ -883,6 +883,37 @@
         let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
+        // 転送碁: ワームホールが脈動し、ペア間を火花が行き来する常時オーバーレイ
+        fxAmbient((ctx2, now, pad, cs) => {
+            ctx2.save();
+            WORMHOLES.forEach(([a, b], pi) => {
+                // 端点の渦巻きリング (回転する弧で転送口を演出)
+                [a, b].forEach((i, ei) => {
+                    const cx = pad + (i % BOARD_SIZE) * cs;
+                    const cy = pad + Math.floor(i / BOARD_SIZE) * cs;
+                    const rot = now / 700 * (pi === 0 ? 1 : -1) + ei * Math.PI;
+                    ctx2.strokeStyle = '#a78bfa';
+                    ctx2.globalAlpha = 0.5 + 0.2 * Math.sin(now / 400 + i);
+                    ctx2.lineWidth = Math.max(1.5, cs * 0.07);
+                    ctx2.beginPath();
+                    ctx2.arc(cx, cy, cs * 0.36, rot, rot + Math.PI * 1.4);
+                    ctx2.stroke();
+                });
+                // ペア間を往復する火花 (トンネルを通る粒子)
+                for (let k = 0; k < 3; k++) {
+                    const ph = (now / 1800 + k * 0.33 + pi * 0.5) % 1;
+                    const ax = pad + (a % BOARD_SIZE) * cs, ay = pad + Math.floor(a / BOARD_SIZE) * cs;
+                    const bx = pad + (b % BOARD_SIZE) * cs, by = pad + Math.floor(b / BOARD_SIZE) * cs;
+                    const t = ph < 0.5 ? ph * 2 : 2 - ph * 2;
+                    ctx2.globalAlpha = 0.5 * (1 - Math.abs(ph - 0.5) * 2) + 0.15;
+                    ctx2.fillStyle = '#c4b5fd';
+                    ctx2.beginPath();
+                    ctx2.arc(ax + (bx - ax) * t, ay + (by - ay) * t, cs * 0.09, 0, Math.PI * 2);
+                    ctx2.fill();
+                }
+            });
+            ctx2.restore();
+        });
         const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
@@ -1755,6 +1786,22 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+
+            // 転送碁: ワームホール端点への着手は対側にも繋がる「転送」演出
+            {
+                const wc = move.cells[0];
+                if (wc) {
+                    const wi = wc.y * BOARD_SIZE + wc.x;
+                    const pair = WORMHOLES.find(([a, b]) => a === wi || b === wi);
+                    if (pair) {
+                        const other = pair[0] === wi ? pair[1] : pair[0];
+                        fxGlow(wi, '#a78bfa', 700);
+                        fxGlow(other, '#a78bfa', 700);
+                        fxText(wi, '転送', '#c4b5fd', 1100);
+                    }
+                }
+            }
+
             turn = opponent;
             updateUI();
 

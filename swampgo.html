@@ -1226,6 +1226,31 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // 沼の上の石は沈む — 小さな▽を刻む
+            {
+                ctx.save();
+                ctx.lineWidth = Math.max(1, cellSize * 0.045);
+                ctx.lineJoin = 'round';
+                for (const i of swamp) {
+                    const v = board[i];
+                    if (v !== 1 && v !== 2) continue;
+                    const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + ((i / BOARD_SIZE) | 0) * cellSize, s = cellSize * 0.09;
+                    ctx.strokeStyle = v === 1 ? 'rgba(240,235,220,0.85)' : 'rgba(50,40,25,0.8)';
+                    ctx.beginPath();
+                    ctx.moveTo(cx - s, cy - s * 0.6);
+                    ctx.lineTo(cx, cy + s);
+                    ctx.lineTo(cx + s, cy - s * 0.6);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;
