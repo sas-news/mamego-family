@@ -504,7 +504,8 @@
         ];
         const RULES_VARIANT = [
             '盤が回る遠心機: 着手ごとに全石が中心から遠ざかる向きへ1マス放たれる。',
-            '盤外へ飛び出した石は相手のアゲハマに。中心真ん中の石だけ均衡で動かない。',
+            '盤端に追い込まれた石はこれ以上飛び出せず渋滞して留まる。中心真ん中の石だけ均衡で動かない。',
+            '240手に達したら自動的に点数計算して終局。',
         ];
         const RULES_CONTROLS = [
             '配置: 盤上をクリック/タップ。',
@@ -1551,10 +1552,9 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 遠心ルール: 全石が中心から遠ざかる向きに1マス放たれる。
-            //             盤外へ飛び出した石は相手のアゲハマになる。真ん中の石は均衡で静止。
+            //             盤端に着いた石はこれ以上飛び出せず渋滞して留まる。真ん中の石は均衡で静止。
             {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
-                const lost = { 1: 0, 2: 0 };
                 // 外側から処理して追い越しを防ぐ
                 const idxs = [...board.keys()].sort((a, b) => {
                     const da = Math.max(Math.abs(a % N - c), Math.abs(Math.floor(a / N) - c));
@@ -1570,13 +1570,11 @@
                     for (const [tx2, ty2] of tries) {
                         if (tx2 === 0 && ty2 === 0) continue;
                         const nx = x + tx2, ny = y + ty2;
-                        if (nx < 0 || nx >= N || ny < 0 || ny >= N) { lost[board[i]]++; board[i] = 0; break; }
+                        if (nx < 0 || nx >= N || ny < 0 || ny >= N) continue; // 盤端では外へ出られず留まる
                         const j = ny * N + nx;
                         if (board[j] === 0) { board[j] = board[i]; board[i] = 0; break; }
                     }
                 }
-                captures[1] += lost[2];
-                captures[2] += lost[1];
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
                     const dead = getCapturedStones(board, pl);
@@ -1586,6 +1584,12 @@
                     }
                 }
                 cleanUpPieces();
+            }
+
+            // 遠心渋滞で盤が埋まるのが遅いため、240手で自動的に点数計算して終局
+            if (history.length >= 240 && !gameOver) {
+                endGameByScore();
+                return;
             }
 
             turn = opponent;
