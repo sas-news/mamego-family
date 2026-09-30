@@ -42,7 +42,8 @@ const strip = (s, b, e) => s.replace(new RegExp(`${b.replace(/[.*+?^${}()|[\]\\]
 // 既存ブロックを除去してから再挿入
 html = strip(html, CATALOG_BEGIN.trim(), CATALOG_END.trim());
 html = strip(html, ICON_BEGIN.trim(), ICON_END.trim());
-html = html.replace('            // ==== WAVE2 GAMES END ====', catalogBlock);
+if (!html.includes('                    ];')) throw new Error('GAMES配列終端アンカーが見つかりません');
+html = html.replace('                    ];', catalogBlock + '\n                    ];');
 html = html.replace('                default: // 未定義kind: 石+スパークル (wave2汎用)', iconBlock + '\n                default: // 未定義kind: 石+スパークル (wave2汎用)');
 
 fs.writeFileSync(indexPath, html);
