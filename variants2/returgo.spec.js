@@ -1,0 +1,75 @@
+// RETURGO — 帰還碁: 取られた石は持ち主の手元に戻り、次の着手時に隣へ再打される
+const K = require('../gen_kit.js');
+module.exports = {
+    file: 'returgo.html',
+    en: 'RETURGO',
+    jp: '帰還碁',
+    prefix: 'returgo',
+    desc: '取られた石は手元に戻り、次の着手時に隣へ再打される。',
+    kind: 'stone',
+    spec: [
+        ...K.rb('RETURGO', '帰還碁', 'returgo'),
+        // 戻り石ストック retStock[player] の状態登録
+        [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
+        let retStock = { 1: 0, 2: 0 }; // 手元に戻って再打待ちの石数`],
+        [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
+            retStock = { 1: 0, 2: 0 };`],
+        [K.ONE, K.SNAP_PUSH, `                heldPieces: { ...heldPieces },
+                retStock: { ...retStock },
+                holdUsed
+            });`],
+        [K.ONE, K.SNAP_POP, K.SNAP_POP + `
+            retStock = snap.retStock ? { ...snap.retStock } : { 1: 0, 2: 0 };`],
+        [K.ONE, K.SAVE_TAIL, `                    heldPieces,
+                    retStock,
+                    holdUsed,
+                    gameMode,`],
+        [K.ONE, K.LOAD_HOLD, K.LOAD_HOLD + `
+            retStock = (s.retStock && typeof s.retStock === 'object') ? { ...s.retStock } : { 1: 0, 2: 0 };`],
+        [K.ONE, K.ONLINE_SEND, `                heldPieces,
+                retStock,
+                holdUsed,
+                deadStones: [...deadStones],`],
+        [K.ONE, K.ONLINE_RECV, K.ONLINE_RECV + `
+            retStock = (data.retStock && typeof data.retStock === 'object') ? { ...data.retStock } : { 1: 0, 2: 0 };`],
+        // 取られた側はアゲハマでなく自分の手元に戻る
+        [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
+            if (captured.length > 0) {
+                captured.forEach(idx => board[idx] = 0);
+                captures[player] += captured.length;
+                retStock[opponent] += captured.length; // 帰還: 持ち主の手元へ
+                soundManager.playCapture();
+                cleanUpPieces();
+            } else {
+                soundManager.playPlace();
+            }`],
+        // 着手後、戻り石があれば着手した石の隣に1個補充配置
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            // 帰還: 手元に戻った石を着手点の隣に1個再打する
+            if (retStock[player] > 0) {
+                const retIdx = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                const spot = getNeighbors(retIdx).find(n => board[n] === 0);
+                if (spot !== undefined) { board[spot] = player; retStock[player]--; cleanUpPieces(); }
+            }
+
+            turn = opponent;`],
+        ...K.EVENT_CHIP_SPEC(`retStock[turn] > 0 ? '帰還石+' + retStock[turn] : ''`),
+        [K.ONE, K.RV_ALGO, K.rv([
+            '取られた石は相手のアゲハマに加わると同時に自分の手元にも戻る。',
+            '次に着手したとき、戻り石があれば打った石の隣の空点に1個自動で補充配置される。',
+        ])],
+        ...K.STONE_SPEC,
+    ],
+    test: `
+        board.fill(0); pieces = []; captures[1] = 0; captures[2] = 0; retStock = { 1: 0, 2: 0 };
+        board[5 * BOARD_SIZE + 5] = 2;
+        board[5 * BOARD_SIZE + 4] = 1; board[4 * BOARD_SIZE + 5] = 1; board[5 * BOARD_SIZE + 6] = 1;
+        executeMove({ cells: [{ x: 5, y: 6 }] }, 1); // 白石を取る
+        assert('白石が取れる', board[5 * BOARD_SIZE + 5] === 0 && captures[1] === 1);
+        assert('取られた側の手元に戻る', retStock[2] === 1);
+        executeMove({ cells: [{ x: 8, y: 8 }] }, 2);
+        assert('戻り石が隣に再打される', retStock[2] === 0 && getNeighbors(8 * BOARD_SIZE + 8).some(n => board[n] === 2));
+    `,
+};
