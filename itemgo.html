@@ -1220,6 +1220,33 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // アイテム: 金色の★を点滅表示
+            if (st.item >= 0) {
+                const ix = st.item % BOARD_SIZE, iy = Math.floor(st.item / BOARD_SIZE);
+                const cx = padding + ix * cellSize, cy = padding + iy * cellSize;
+                ctx.save();
+                ctx.fillStyle = '#facc15';
+                ctx.strokeStyle = '#a16207';
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.04);
+                const R = cellSize * 0.34, r2 = cellSize * 0.15;
+                ctx.beginPath();
+                for (let k = 0; k < 10; k++) {
+                    const rr = k % 2 === 0 ? R : r2;
+                    const a = -Math.PI / 2 + k * Math.PI / 5;
+                    const px = cx + rr * Math.cos(a), py = cy + rr * Math.sin(a);
+                    if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;
@@ -1741,6 +1768,10 @@
                 const ic = move.cells[0];
                 if (Math.max(Math.abs(ic.x - st.item % BOARD_SIZE), Math.abs(ic.y - Math.floor(st.item / BOARD_SIZE))) <= 1) {
                     captures[player] += 1;
+                    // 拾得: 金の飛沫と +1目
+                    fxBurst(st.item, '#facc15', 12, 1.7);
+                    fxGlow(st.item, '#fde047', 650);
+                    fxText(st.item, '+1目', '#fde047', 1000);
                     st.item = -1;
                 }
             }
@@ -1750,6 +1781,11 @@
                 for (let k = 0; k < board.length; k++) {
                     const j = (seed + k) % board.length;
                     if (board[j] === 0) { st.item = j; break; }
+                }
+                // アイテム出現のキラリ
+                if (st.item >= 0) {
+                    fxGlow(st.item, '#facc15', 900);
+                    fxBurst(st.item, '#fde047', 8, 1.2);
                 }
             }
 

@@ -2646,10 +2646,19 @@
             const timerText = document.getElementById('timerText');
             const remain = Math.max(0, moveDeadline - Date.now());
             if (timerText) timerText.textContent = (remain / 1000).toFixed(1);
-            if (timerFill) timerFill.style.width = (remain / (timeLimit * 1000) * 100) + '%';
+            if (timerFill) {
+                timerFill.style.width = (remain / (timeLimit * 1000) * 100) + '%';
+                timerFill.style.background = remain < 2500 ? '#ef4444' : ''; // 残り2.5秒で赤点滅
+            }
             if (remain <= 0) {
                 clearMoveTimer();
-                if (!gameOver && gamePhase === 'playing' && isMyTurn()) handlePass();
+                if (!gameOver && gamePhase === 'playing' && isMyTurn()) {
+                    // 時間切れ: 盤中央に警告と揺れ
+                    const cc = Math.floor(BOARD_SIZE / 2) * (BOARD_SIZE + 1);
+                    fxShake(4, 220);
+                    fxText(cc, '時間切れ!', '#ef4444', 1100);
+                    handlePass();
+                }
             }
         }
         function clearMoveTimer() {

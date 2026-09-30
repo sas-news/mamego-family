@@ -50,6 +50,31 @@ module.exports = {
                 }
             }`),
         ...K.LEGAL_DOTS_SPEC,
+        // 残響: アンカーから広がる共鳴リングを常時描画
+        [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
+        fxAmbient((ctx2, now, pad, cs) => {
+            let anc = null;
+            if (lastMove && lastMove.player === turn) anc = lastMove.cells[0];
+            if (!anc) {
+                for (let i = history.length - 1; i >= 0; i--) {
+                    const lm = history[i].lastMove;
+                    if (lm && lm.player === turn) { anc = lm.cells[0]; break; }
+                }
+            }
+            if (!anc) return;
+            const cx = pad + anc.x * cs, cy = pad + anc.y * cs;
+            ctx2.save();
+            for (let k = 0; k < 3; k++) {
+                const ph = ((now / 1400) + k / 3) % 1;
+                ctx2.globalAlpha = (1 - ph) * 0.35;
+                ctx2.strokeStyle = '#7dd3fc';
+                ctx2.lineWidth = Math.max(1, cs * 0.05);
+                ctx2.beginPath();
+                ctx2.arc(cx, cy, cs * (0.5 + ph * 2.2), 0, Math.PI * 2);
+                ctx2.stroke();
+            }
+            ctx2.restore();
+        });`],
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は自分が直前に打った石の周囲2マス以内のみ (初手は自由)。',
             '自分の石の残響が連なっていく。離れた場所を攻めるにはまず残残響を繋げること。',

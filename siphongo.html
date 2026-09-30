@@ -1714,6 +1714,9 @@
             if (captured.length > 0) {
                 // 吸収: 取った連は自分の色に変わる
                 captured.forEach(idx => board[idx] = player);
+                // 吸収演出: 水色の吸い込み飛沫と吸収数
+                captured.forEach(idx => fxBurst(idx, '#22d3ee', 4, 0.9));
+                fxText(captured[0], '吸収+' + captured.length, '#0891b2', 1100);
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {

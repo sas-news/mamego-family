@@ -1733,7 +1733,13 @@
                     if ((l === player && r === player) || (u === player && d === player)) flipped.push(i);
                 }
                 if (flipped.length > 0) {
-                    flipped.forEach(i => { board[i] = player; });
+                    flipped.forEach(i => {
+                        board[i] = player;
+                        // 寝返りの瞬間を青白い火花で
+                        fxGlow(i, 'rgba(147,197,253,0.9)', 540);
+                        fxBurst(i, '#93c5fd', 4, 0.9);
+                    });
+                    fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '反転×' + flipped.length, '#60a5fa', 1000);
                     soundManager.playCapture();
                     cleanUpPieces();
                 }

@@ -47,7 +47,14 @@ module.exports = {
 `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
             move.cells.forEach(p => { classMap[p.y * BOARD_SIZE + p.x] = CLASS_KEYS[currentClass]; });`],
         [K.ONE, K.CAPTURE_BLOCK, `            // 僧侶('M')は包囲されても取れない
-            const captured = getCapturedStones(board, opponent).filter(idx => classMap[idx] !== 'M');
+            const allCap = getCapturedStones(board, opponent);
+            const captured = allCap.filter(idx => classMap[idx] !== 'M');
+            // 僧侶が包囲に耐えた: 聖盾の光
+            if (allCap.some(idx => classMap[idx] === 'M')) {
+                allCap.filter(idx => classMap[idx] === 'M')
+                    .forEach(i => fxGlow(i, 'rgba(147,197,253,0.95)', 850));
+                fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '僧侶は取れない', '#93c5fd', 950);
+            }
             if (captured.length > 0) {
                 captured.forEach(idx => { board[idx] = 0; delete classMap[idx]; });
                 captures[player] += captured.length;
@@ -68,11 +75,19 @@ module.exports = {
                             if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) break;
                             const v = board[ny * BOARD_SIZE + nx];
                             if (v === 0) continue;
-                            if (v === opponent) { board[ny * BOARD_SIZE + nx] = 0; delete classMap[ny * BOARD_SIZE + nx]; shot++; }
+                            if (v === opponent) {
+                                board[ny * BOARD_SIZE + nx] = 0; delete classMap[ny * BOARD_SIZE + nx]; shot++;
+                                // 着弾: 矢が刺さった火花
+                                fxBurst(ny * BOARD_SIZE + nx, '#fbbf24', 10, 1.8);
+                                fxGlow(ny * BOARD_SIZE + nx, '#facc15', 650);
+                            }
                             break;
                         }
                     });
-                    if (shot > 0) { captures[player] += shot; cleanUpPieces(); }
+                    if (shot > 0) {
+                        captures[player] += shot; cleanUpPieces();
+                        fxText(p0.y * BOARD_SIZE + p0.x, '射抜!', '#facc15', 950);
+                    }
                 }
             }`],
         ...K.EVENT_CHIP_SPEC("'兵種 ' + CLASS_NAMES[CLASS_KEYS[currentClass]]"),

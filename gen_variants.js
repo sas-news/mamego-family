@@ -235,7 +235,11 @@ out('mirrgo.html', apply(ALGO, [
                 const opp2 = player === 1 ? 2 : 1;
                 getCapturedStones(sim, opp2).forEach(i => { sim[i] = 0; });
                 if (getCapturedStones(sim, player).length === 0) {
-                    mirrored.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
+                    mirrored.forEach(p => {
+                        board[p.y * BOARD_SIZE + p.x] = player;
+                        // 鏡映転移: 本体から対称軸を跨いで石が飛ぶ
+                        fxSlide(p.y * BOARD_SIZE + (BOARD_SIZE - 1 - p.x), p.y * BOARD_SIZE + p.x, 420);
+                    });
                     pieces.push({ id: Date.now() + Math.random(), player, type: move.type, rot: move.rot, cells: mirrored });
                     lastMove.cells.push(...mirrored.map(p => ({ ...p })));
                 }
@@ -271,20 +275,24 @@ out('twicego.html', apply(ALGO, [
             ※各手番で2石置く (途中パスで残りを放棄)`],
     [ONE, `        let consecutivePasses = 0;`,
 `        let consecutivePasses = 0;
-        let turnPlacements = 0; // この手番で置いた石数 (2で手番交代)`],
+        let turnPlacements = 0; // この手番で置いた石数 (2で手番交代)
+        let turnPlaced = []; // この手番で置いた石の idx (順序印用)`],
     [ONE, TURN_FLIP,
 `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+            turnPlaced.push(move.cells[0].y * BOARD_SIZE + move.cells[0].x);
             turnPlacements++;
             if (turnPlacements >= 2) {
                 turnPlacements = 0;
+                turnPlaced = [];
                 turn = opponent; // 2石置き切りで手番交代
             }`],
     // パスは残り着手を放棄して手番を渡す
     [ONE, PASS_INC,
 `            prevBoard = null; // パスでコウ制限は解除
             consecutivePasses++;
-            turnPlacements = 0;`],
+            turnPlacements = 0;
+            turnPlaced = [];`],
     // 手番表示に「n手目/2」を追加
     [ONE, TURN_LINE,
 `            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + \` · \${turnPlacements + 1}手目/2\`;`],
@@ -313,6 +321,23 @@ out('twicego.html', apply(ALGO, [
     [ONE, ONLINE_RECV,
 `            holdUsed = !!data.holdUsed;
             turnPlacements = data.turnPlacements || 0;`],
+    // この手番で置いた石に①②の順序印
+    ...STONE_MARKS_SPEC(`            // 二手: この手番で置いた石に順序印
+            {
+                const nums = ['①', '②'];
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold ' + Math.max(9, cellSize * 0.42) + 'px sans-serif';
+                turnPlaced.forEach((i, k) => {
+                    if (board[i] !== turn) return;
+                    const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
+                    const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                    ctx.fillStyle = turn === 1 ? '#fde68a' : '#92400e';
+                    ctx.fillText(nums[k] || '•', cx, cy);
+                });
+                ctx.restore();
+            }`),
     ...STONE_SPEC,
 ], 'twicego'));
 
@@ -600,14 +625,19 @@ const LIFE_FN = `
             }
             const next = [...board];
             let changed = 0;
+            const born = [];
             for (let i = 0; i < board.length; i++) {
                 // 誕生のみ適用: 石はライフでは死なず、取り・呼吸点の処理に委ねる
                 if (board[i] === 0 && counts[i] === 3 && tint[i] !== -1) {
-                    next[i] = tint[i]; changed++;
+                    next[i] = tint[i]; changed++; born.push(i);
                 }
             }
             board = next;
-            if (changed > 0) cleanUpPieces();
+            if (changed > 0) {
+                cleanUpPieces();
+                // ライフ誕生: 生まれた石に緑の輪
+                born.forEach(i => fxGlow(i, 'rgba(74,222,128,0.9)', 620));
+            }
             // 世代交代で呼吸点を失った連を両色とも除去 (安定するまで)
             for (let k = 0; k < 8; k++) {
                 const dead = [...getCapturedStones(board, 1), ...getCapturedStones(board, 2)];
@@ -667,10 +697,19 @@ const RUSH_TIMER_FN = `
             const timerText = document.getElementById('timerText');
             const remain = Math.max(0, moveDeadline - Date.now());
             if (timerText) timerText.textContent = (remain / 1000).toFixed(1);
-            if (timerFill) timerFill.style.width = (remain / (timeLimit * 1000) * 100) + '%';
+            if (timerFill) {
+                timerFill.style.width = (remain / (timeLimit * 1000) * 100) + '%';
+                timerFill.style.background = remain < 2500 ? '#ef4444' : ''; // 残り2.5秒で赤点滅
+            }
             if (remain <= 0) {
                 clearMoveTimer();
-                if (!gameOver && gamePhase === 'playing' && isMyTurn()) handlePass();
+                if (!gameOver && gamePhase === 'playing' && isMyTurn()) {
+                    // 時間切れ: 盤中央に警告と揺れ
+                    const cc = Math.floor(BOARD_SIZE / 2) * (BOARD_SIZE + 1);
+                    fxShake(4, 220);
+                    fxText(cc, '時間切れ!', '#ef4444', 1100);
+                    handlePass();
+                }
             }
         }
         function clearMoveTimer() {
@@ -848,6 +887,7 @@ let d3 = apply(ALGO, [
             }
         }
 
+        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {`,
 `                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);
                     if (isDead) drawDeadMarker(cx, cy, r);
@@ -875,6 +915,7 @@ let d3 = apply(ALGO, [
             }
         }
 
+        let fxPrevMove = null;
         function drawLastMove(padding, cellSize) {`],
     // AI の着手列挙は全層に拡張 (cells に z が無いと cellIndex が NaN になり合法手0で AI が動けない)
     [ONE, `                    for (let ty = 0; ty + h <= BOARD_SIZE; ty++) {
@@ -1661,6 +1702,15 @@ let draft = apply(ALGO, [
             draftState.pool = draftState.pool.filter(t => t !== type);
             draftState.picks[draftState.turn].push(type);
             soundManager.playPlace();
+            // ピック演出: 選ばれたボタンを金色に瞬かせる
+            {
+                const btn = draftPool && draftPool.querySelector('button[data-type="' + type + '"]');
+                if (btn) {
+                    btn.style.outline = '3px solid #f59e0b';
+                    btn.style.outlineOffset = '2px';
+                    setTimeout(() => { btn.style.outline = 'none'; btn.style.outlineOffset = '0'; }, 450);
+                }
+            }
             if (draftState.picks[1].length >= DRAFT_PICKS && draftState.picks[2].length >= DRAFT_PICKS) {
                 finishDraft();
             } else {
@@ -1696,6 +1746,10 @@ let draft = apply(ALGO, [
             pieceQueues = { 1: shuffleTypes(PLAYER_PIECES[1]), 2: shuffleTypes(PLAYER_PIECES[2]) };
             turn = 1;
             currentPieceType = drawNextPiece();
+            // ドラフト完了の告知 (パネルが隠れる直前に盤中央へ)
+            const dc = Math.floor(BOARD_SIZE / 2) * (BOARD_SIZE + 1);
+            fxGlow(dc, 'rgba(245,158,11,0.9)', 900);
+            fxText(dc, 'ドラフト完了!', '#f59e0b', 1200);
         }
 
         function buildDraftPool() {
@@ -1849,7 +1903,13 @@ out('reversego.html', apply(ALGO, [
                     if ((l === player && r === player) || (u === player && d === player)) flipped.push(i);
                 }
                 if (flipped.length > 0) {
-                    flipped.forEach(i => { board[i] = player; });
+                    flipped.forEach(i => {
+                        board[i] = player;
+                        // 寝返りの瞬間を青白い火花で
+                        fxGlow(i, 'rgba(147,197,253,0.9)', 540);
+                        fxBurst(i, '#93c5fd', 4, 0.9);
+                    });
+                    fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '反転×' + flipped.length, '#60a5fa', 1000);
                     soundManager.playCapture();
                     cleanUpPieces();
                 }
@@ -3327,6 +3387,11 @@ out('switchgo.html', apply(ALGO, [
             pieces.forEach(pc => { pc.player = pc.player === 1 ? 2 : 1; });
             deadStones = new Set([...deadStones]); // 死に石表示は維持
             soundManager.playCapture();
+            // 転換演出: 盤全体の反転を大きな揺れと告知で
+            const cc = Math.floor(BOARD_SIZE / 2) * (BOARD_SIZE + 1);
+            fxShake(6, 360);
+            fxGlow(cc, 'rgba(244,114,182,0.8)', 800);
+            fxText(cc, '転換!', '#f472b6', 1100);
         }
 
         function endGameByScore() {`],
@@ -3563,6 +3628,9 @@ out('siphongo.html', apply(ALGO, [
             if (captured.length > 0) {
                 // 吸収: 取った連は自分の色に変わる
                 captured.forEach(idx => board[idx] = player);
+                // 吸収演出: 水色の吸い込み飛沫と吸収数
+                captured.forEach(idx => fxBurst(idx, '#22d3ee', 4, 0.9));
+                fxText(captured[0], '吸収+' + captured.length, '#0891b2', 1100);
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {
@@ -3848,6 +3916,9 @@ out('hydrago.html', apply(ALGO, [
                         const ni = cand[(Math.random() * cand.length) | 0];
                         board[ni] = opponent;
                         hydraUsed.add(ni);
+                        // 再生: 取跡から新しい頭が生える
+                        fxSlide(idx, ni, 420);
+                        fxGlow(ni, 'rgba(52,211,153,0.85)', 650);
                     }
                 });
                 cleanUpPieces();
@@ -3858,6 +3929,22 @@ out('hydrago.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限: 200手で自動終局
             if (history.length >= 200) { endGameByScore(); return; }`],
+    // 再生済みヒドラ頭に緑の小点
+    ...STONE_MARKS_SPEC(`            // 再生済みヒドラ頭: 緑の小点 (もう取り切れる印)
+            {
+                ctx.save();
+                ctx.fillStyle = 'rgba(52,211,153,0.95)';
+                for (const idx of hydraUsed) {
+                    const v = board[idx];
+                    if (v !== 1 && v !== 2) continue;
+                    const cx = padding + (idx % BOARD_SIZE) * cellSize;
+                    const cy = padding + Math.floor(idx / BOARD_SIZE) * cellSize;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.10, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }`),
     [ONE, `                prevBoard,
                 lastMove,
                 currentPieceType,`,
@@ -4130,6 +4217,28 @@ out('relaygo.html', apply(ALGO, [
                     Math.abs(lp.x - p.x) + Math.abs(lp.y - p.y) <= 4));
                 if (!ok) return false;
             }`],
+    // 追撃域: 相手の直前着手から距離4の菱形を示す
+    CUE_GRID(`            // 追撃域: 相手の直前着手からマンハッタン距離4の範囲
+            if (lastMove && lastMove.player !== turn && !gameOver) {
+                ctx.save();
+                lastMove.cells.forEach(lp => {
+                    const cx = padding + lp.x * cellSize, cy = padding + lp.y * cellSize;
+                    const r = 4.4 * cellSize;
+                    ctx.fillStyle = 'rgba(251,146,60,0.06)';
+                    ctx.strokeStyle = 'rgba(251,146,60,0.5)';
+                    ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                    ctx.setLineDash([cellSize * 0.14, cellSize * 0.10]);
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy - r);
+                    ctx.lineTo(cx + r, cy);
+                    ctx.lineTo(cx, cy + r);
+                    ctx.lineTo(cx - r, cy);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }`),
     ...LEGAL_DOTS_SPEC,
     ...STONE_SPEC,
 ], 'relaygo'));
@@ -4525,6 +4634,34 @@ out('copygo.html', apply(ALGO, [
                     cells.every((p, i) => p.x === need[i].x && p.y === need[i].y);
                 if (mirrorOk && !isMirror) return false;
             }`],
+    // 模倣: 相手の手と点対称位置を破線リンクと目印で示す
+    CUE_STARS(`            // 模倣: 次の一手は点対称位置 — リンク線と必着手リング
+            if (lastMove && lastMove.player !== turn && !gameOver) {
+                const need = lastMove.cells.map(p => ({ x: BOARD_SIZE - 1 - p.x, y: BOARD_SIZE - 1 - p.y }));
+                if (need.every(p => board[p.y * BOARD_SIZE + p.x] === 0)) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(217,70,239,0.7)';
+                    ctx.lineWidth = Math.max(1.2, cellSize * 0.045);
+                    // 元の石と模倣点を結ぶ薄いリンク
+                    ctx.setLineDash([cellSize * 0.10, cellSize * 0.09]);
+                    lastMove.cells.forEach((p, i) => {
+                        const m = need[i];
+                        ctx.beginPath();
+                        ctx.moveTo(padding + p.x * cellSize, padding + p.y * cellSize);
+                        ctx.lineTo(padding + m.x * cellSize, padding + m.y * cellSize);
+                        ctx.stroke();
+                    });
+                    // 模倣点の必着手リング
+                    ctx.setLineDash([cellSize * 0.16, cellSize * 0.12]);
+                    ctx.lineWidth = Math.max(1.5, cellSize * 0.06);
+                    need.forEach(m => {
+                        ctx.beginPath();
+                        ctx.arc(padding + m.x * cellSize, padding + m.y * cellSize, cellSize * 0.40, 0, Math.PI * 2);
+                        ctx.stroke();
+                    });
+                    ctx.restore();
+                }
+            }`),
     ...LEGAL_DOTS_SPEC,
     ...STONE_SPEC,
 ], 'copygo'));
@@ -4755,6 +4892,10 @@ out('pulsego.html', apply(ALGO, [
                 const ni = arr[(Math.random() * arr.length) | 0];
                 board[ni] = pc.player;
                 pc.cells.push({ x: ni % BOARD_SIZE, y: (ni / BOARD_SIZE) | 0 });
+                // 脈動増殖: 連から新しい芽が滑り出る
+                const src = getNeighbors(ni).find(n => pc.cells.slice(0, -1).some(p => p.y * BOARD_SIZE + p.x === n));
+                if (src !== undefined) fxSlide(src, ni, 420);
+                fxGlow(ni, 'rgba(52,211,153,0.8)', 560);
             });
         }
 
@@ -4812,6 +4953,10 @@ out('recyclego.html', apply(ALGO, [
                 const ni = empties[(Math.random() * empties.length) | 0];
                 board[ni] = q.player;
                 revivedUsed.add(ni);
+                // 復活演出: 緑の光と飛沫
+                fxGlow(ni, 'rgba(74,222,128,0.9)', 800);
+                fxBurst(ni, '#4ade80', 8, 1.2);
+                fxText(ni, '復活', '#34d399', 1000);
                 pieces.push({
                     id: Date.now() + Math.random(), player: q.player, type: 'STONE', rot: 0,
                     cells: [{ x: ni % BOARD_SIZE, y: (ni / BOARD_SIZE) | 0 }]
@@ -4945,6 +5090,10 @@ out('splitgo.html', apply(ALGO, [
                     grp.forEach(g => seenS.add(g));
                     if (grp.length >= 7) {
                         grp.slice(Math.ceil(grp.length / 2)).forEach(g => { board[g] = opponent; });
+                        // 分裂演出: 連が割れる衝撃
+                        fxShake(3, 200);
+                        fxText(grp[0], '分裂!', '#fb7185', 1000);
+                        grp.slice(Math.ceil(grp.length / 2)).forEach(g => fxGlow(g, 'rgba(251,113,133,0.8)', 640));
                     }
                 }
                 cleanUpPieces();
@@ -5181,6 +5330,15 @@ out('budgetgo.html', apply(ALGO, [
             ※合計60手で自動終局。手番横が残り手数`],
     [ONE, TURN_FLIP,
 `${TURN_FLIP}
+            // 残り手数の警告: 10/5/2手で盤中央に告知
+            {
+                const rem = 60 - history.length;
+                if (rem === 10 || rem === 5 || rem === 2) {
+                    const cc = Math.floor(BOARD_SIZE / 2) * (BOARD_SIZE + 1);
+                    fxText(cc, '残り' + rem + '手', '#f59e0b', 1200);
+                    if (rem <= 2) fxShake(3, 200);
+                }
+            }
             // 手数上限: 60手で自動終局
             if (history.length >= 60) { endGameByScore(); return; }`],
     [ONE, TURN_LINE,
@@ -5361,9 +5519,18 @@ out('shufflego.html', apply(ALGO, [
 `${TURN_FLIP}
             // 混成: 15手ごとに全石が50%で反転しピース再構成
             if (history.length % 15 === 0) {
+                const flipped = [];
                 for (let i = 0; i < board.length; i++)
-                    if ((board[i] === 1 || board[i] === 2) && Math.random() < 0.5)
+                    if ((board[i] === 1 || board[i] === 2) && Math.random() < 0.5) {
                         board[i] = 3 - board[i];
+                        flipped.push(i);
+                    }
+                // 混成演出: 盤が大きく揺れ反転した石に紫の飛沫
+                if (flipped.length) {
+                    fxShake(7, 420);
+                    flipped.forEach(i => fxBurst(i, '#a78bfa', 3, 0.8));
+                    fxText(flipped[0], '混成!', '#8b5cf6', 1100);
+                }
                 pieces = [];
                 for (let i = 0; i < board.length; i++) {
                     const c = board[i];
@@ -5400,8 +5567,13 @@ out('taxgo.html', apply(ALGO, [
             // 関税: 敵陣半分への着手は相手に+1目
             {
                 const mid = Math.ceil(BOARD_SIZE / 2);
-                if (move.cells.some(p => player === 1 ? p.y >= mid : p.y < BOARD_SIZE - mid))
+                if (move.cells.some(p => player === 1 ? p.y >= mid : p.y < BOARD_SIZE - mid)) {
                     toll[player]++;
+                    // 課税: 金の飛沫と関税告知
+                    const ti = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                    fxBurst(ti, '#facc15', 6, 1.1);
+                    fxText(ti, '関税+1', '#eab308', 1000);
+                }
             }`],
     [ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
@@ -5485,19 +5657,22 @@ out('greedgo.html', apply(ALGO, [
             ※敵連がアタリ状態なら取る手しか打てない。200手で自動終局`],
     [ONE, `        function endGameByScore() {`,
 `        // 強欲: 敵連の呼吸点が1つのものがあれば取る手のみ合法
-        function canCaptureMove(player) {
+        // (強制される取り点の盤面 idx 一覧も返せるよう分離)
+        function forcedCaptureCells(player) {
             const opp = player === 1 ? 2 : 1;
             const seen = new Set();
+            const out = [];
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== opp || seen.has(i)) continue;
                 const grp = getConnectedGroup(i, opp);
                 grp.forEach(g => seen.add(g));
                 const libs = new Set();
                 grp.forEach(g => getNeighbors(g).forEach(n => { if (board[n] === 0) libs.add(n); }));
-                if (libs.size === 1) return true;
+                if (libs.size === 1) out.push([...libs][0]);
             }
-            return false;
+            return out;
         }
+        function canCaptureMove(player) { return forcedCaptureCells(player).length > 0; }
 
         function endGameByScore() {`],
     [ONE, `            const opponent = player === 1 ? 2 : 1;
@@ -5511,6 +5686,26 @@ out('greedgo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限: 200手で自動終局
             if (history.length >= 200) { endGameByScore(); return; }`],
+    // 強欲: 取る手が必須のとき、その点を赤リングと「取」で強調
+    CUE_STARS(`            // 強欲: 強制される取り点を赤く強調
+            if (!gameOver && gamePhase === 'playing' && canCaptureMove(turn)) {
+                ctx.save();
+                forcedCaptureCells(turn).forEach(i => {
+                    const cx = padding + (i % BOARD_SIZE) * cellSize;
+                    const cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
+                    ctx.strokeStyle = 'rgba(239,68,68,0.9)';
+                    ctx.lineWidth = Math.max(1.6, cellSize * 0.07);
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize * 0.40, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.fillStyle = 'rgba(239,68,68,0.9)';
+                    ctx.font = 'bold ' + Math.round(cellSize * 0.34) + 'px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('取', cx, cy);
+                });
+                ctx.restore();
+            }`),
     ...LEGAL_DOTS_SPEC,
     ...STONE_SPEC,
 ], 'greedgo'));

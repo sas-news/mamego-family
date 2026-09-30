@@ -2085,6 +2085,11 @@
             pieces.forEach(pc => { pc.player = pc.player === 1 ? 2 : 1; });
             deadStones = new Set([...deadStones]); // 死に石表示は維持
             soundManager.playCapture();
+            // 転換演出: 盤全体の反転を大きな揺れと告知で
+            const cc = Math.floor(BOARD_SIZE / 2) * (BOARD_SIZE + 1);
+            fxShake(6, 360);
+            fxGlow(cc, 'rgba(244,114,182,0.8)', 800);
+            fxText(cc, '転換!', '#f472b6', 1100);
         }
 
         function endGameByScore() {

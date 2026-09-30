@@ -1725,6 +1725,7 @@
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;
             // 裏返碁: 打った石から4方向に走査し、自石で挟んだ敵石列を全て裏返す
+            let flipCnt = 0;
             move.cells.forEach(p => {
                 [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
                     const run = [];
@@ -1736,10 +1737,17 @@
                     }
                     if (run.length > 0 && nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE
                         && board[ny * BOARD_SIZE + nx] === player) {
-                        run.forEach(i => { board[i] = player; });
+                        run.forEach(i => {
+                            board[i] = player;
+                            // 裏返りの瞬間を銀の火花で
+                            fxGlow(i, 'rgba(226,232,240,0.95)', 520);
+                            fxBurst(i, '#cbd5e1', 4, 0.9);
+                        });
+                        flipCnt += run.length;
                     }
                 });
             });
+            if (flipCnt > 0) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '裏返×' + flipCnt, '#e2e8f0', 1000);
 
             const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {

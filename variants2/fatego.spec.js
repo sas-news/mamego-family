@@ -16,6 +16,11 @@ module.exports = {
             // 運命碁: 10の倍数手に運命の加護 — その手を打った側に+2目
             if (history.length % 10 === 0) {
                 captures[player] += 2;
+                // 運命降臨: 紫の光と飛沫
+                const fi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                fxGlow(fi, 'rgba(168,85,247,0.95)', 900);
+                fxBurst(fi, '#c084fc', 12, 1.6);
+                fxText(fi, '運命+2!', '#a855f7', 1200);
             }
 
             turn = opponent;`],

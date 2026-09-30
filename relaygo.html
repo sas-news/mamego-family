@@ -1069,6 +1069,28 @@
             ctx.fillRect(0, 0, width, width);
             ctx.restore();
 
+            // 追撃域: 相手の直前着手からマンハッタン距離4の範囲
+            if (lastMove && lastMove.player !== turn && !gameOver) {
+                ctx.save();
+                lastMove.cells.forEach(lp => {
+                    const cx = padding + lp.x * cellSize, cy = padding + lp.y * cellSize;
+                    const r = 4.4 * cellSize;
+                    ctx.fillStyle = 'rgba(251,146,60,0.06)';
+                    ctx.strokeStyle = 'rgba(251,146,60,0.5)';
+                    ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                    ctx.setLineDash([cellSize * 0.14, cellSize * 0.10]);
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy - r);
+                    ctx.lineTo(cx + r, cy);
+                    ctx.lineTo(cx, cy + r);
+                    ctx.lineTo(cx - r, cy);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }
+
             // 格子線
             ctx.strokeStyle = currentTheme.lineColor;
             ctx.lineWidth = Math.max(1, cellSize * 0.028);

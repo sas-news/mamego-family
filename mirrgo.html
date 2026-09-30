@@ -1734,7 +1734,11 @@
                 const opp2 = player === 1 ? 2 : 1;
                 getCapturedStones(sim, opp2).forEach(i => { sim[i] = 0; });
                 if (getCapturedStones(sim, player).length === 0) {
-                    mirrored.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
+                    mirrored.forEach(p => {
+                        board[p.y * BOARD_SIZE + p.x] = player;
+                        // 鏡映転移: 本体から対称軸を跨いで石が飛ぶ
+                        fxSlide(p.y * BOARD_SIZE + (BOARD_SIZE - 1 - p.x), p.y * BOARD_SIZE + p.x, 420);
+                    });
                     pieces.push({ id: Date.now() + Math.random(), player, type: move.type, rot: move.rot, cells: mirrored });
                     lastMove.cells.push(...mirrored.map(p => ({ ...p })));
                 }

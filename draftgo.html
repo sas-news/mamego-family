@@ -1399,6 +1399,15 @@
             draftState.pool = draftState.pool.filter(t => t !== type);
             draftState.picks[draftState.turn].push(type);
             soundManager.playPlace();
+            // ピック演出: 選ばれたボタンを金色に瞬かせる
+            {
+                const btn = draftPool && draftPool.querySelector('button[data-type="' + type + '"]');
+                if (btn) {
+                    btn.style.outline = '3px solid #f59e0b';
+                    btn.style.outlineOffset = '2px';
+                    setTimeout(() => { btn.style.outline = 'none'; btn.style.outlineOffset = '0'; }, 450);
+                }
+            }
             if (draftState.picks[1].length >= DRAFT_PICKS && draftState.picks[2].length >= DRAFT_PICKS) {
                 finishDraft();
             } else {
@@ -1434,6 +1443,10 @@
             pieceQueues = { 1: shuffleTypes(PLAYER_PIECES[1]), 2: shuffleTypes(PLAYER_PIECES[2]) };
             turn = 1;
             currentPieceType = drawNextPiece();
+            // ドラフト完了の告知 (パネルが隠れる直前に盤中央へ)
+            const dc = Math.floor(BOARD_SIZE / 2) * (BOARD_SIZE + 1);
+            fxGlow(dc, 'rgba(245,158,11,0.9)', 900);
+            fxText(dc, 'ドラフト完了!', '#f59e0b', 1200);
         }
 
         function buildDraftPool() {

@@ -1730,6 +1730,10 @@
                     grp.forEach(g => seenS.add(g));
                     if (grp.length >= 7) {
                         grp.slice(Math.ceil(grp.length / 2)).forEach(g => { board[g] = opponent; });
+                        // 分裂演出: 連が割れる衝撃
+                        fxShake(3, 200);
+                        fxText(grp[0], '分裂!', '#fb7185', 1000);
+                        grp.slice(Math.ceil(grp.length / 2)).forEach(g => fxGlow(g, 'rgba(251,113,133,0.8)', 640));
                     }
                 }
                 cleanUpPieces();

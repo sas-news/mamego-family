@@ -10,14 +10,17 @@ module.exports = {
     spec: [
         ...K.rb('PINGGO', '乒乓碁', 'pinggo'),
         [K.ONE, K.BOARD_DECL, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        let ballPos = 0, ballDx = 1, ballDy = 1; // ボールの位置と進行方向`],
+        let ballPos = 0, ballDx = 1, ballDy = 1; // ボールの位置と進行方向
+        let ballTrail = []; // 直近の軌跡 (idx)`],
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            ballPos = 0; ballDx = 1; ballDy = 1;`],
+            ballPos = 0; ballDx = 1; ballDy = 1;
+            ballTrail = [];`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 乒乓: ボールが1マス進み、石に当たれば押し出して跳ね返る
             {
+                ballTrail.push(ballPos); if (ballTrail.length > 6) ballTrail.shift();
                 const bx = ballPos % BOARD_SIZE, by = Math.floor(ballPos / BOARD_SIZE);
                 let nx = bx + ballDx, ny = by + ballDy;
                 if (nx < 0 || nx >= BOARD_SIZE) ballDx = -ballDx;
@@ -32,7 +35,12 @@ module.exports = {
                             board[qy * BOARD_SIZE + qx] = board[ni];
                             board[ni] = 0;
                             cleanUpPieces();
+                            // 着弾: 石がボールに弾かれて滑る
+                            fxSlide(ni, qy * BOARD_SIZE + qx, 300);
+                            fxBurst(ni, '#e04030', 8, 1.6);
                         }
+                        // 跳ね返り衝撃
+                        fxGlow(ni, 'rgba(224,64,48,0.8)', 420);
                         ballDx = -ballDx; ballDy = -ballDy;
                     } else if (board[ni] === 0) {
                         ballPos = ni;
@@ -43,6 +51,17 @@ module.exports = {
             turn = opponent;`],
         // ボール描画 (赤い小球)
         ...K.STONE_MARKS_SPEC(`            {
+                // 軌跡: 徐々に薄くなる赤い残像
+                ctx.save();
+                ballTrail.forEach((ti, k) => {
+                    const tx = ti % BOARD_SIZE, ty = Math.floor(ti / BOARD_SIZE);
+                    ctx.globalAlpha = 0.07 + 0.05 * k;
+                    ctx.fillStyle = '#e04030';
+                    ctx.beginPath();
+                    ctx.arc(padding + tx * cellSize, padding + ty * cellSize, cellSize * 0.13, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.restore();
                 const bx = ballPos % BOARD_SIZE, by = Math.floor(ballPos / BOARD_SIZE);
                 const cx = padding + bx * cellSize, cy = padding + by * cellSize;
                 ctx.save();

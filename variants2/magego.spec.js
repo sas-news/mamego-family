@@ -45,6 +45,12 @@ module.exports = {
             mpMap[player] = (mpMap[player] || 0) + 1;
             if (mpMap[player] >= 5) {
                 mpMap[player] = 0;
+                // 火球発動: 着地点に炎の輪・揺れ・文字
+                const mc0 = move.cells[0];
+                const mi0 = mc0.y * BOARD_SIZE + mc0.x;
+                fxGlow(mi0, '#f97316', 800);
+                fxShake(6, 320);
+                fxText(mi0, '火球!', '#fb923c', 950);
                 const blast = new Set();
                 move.cells.forEach(p => {
                     for (let dy = -2; dy <= 2; dy++) {
@@ -57,12 +63,19 @@ module.exports = {
                     }
                 });
                 let burned = 0;
-                blast.forEach(idx => { if (board[idx] === opponent) { board[idx] = 0; burned++; } });
+                blast.forEach(idx => {
+                    fxBurst(idx, '#f97316', 6, 1.4);
+                    if (board[idx] === opponent) { board[idx] = 0; burned++; }
+                });
                 if (burned > 0) {
                     captures[player] += burned;
                     soundManager.playCapture();
                     cleanUpPieces();
                 }
+            } else if (mpMap[player] === 4) {
+                // 次で呪文発動 — 魔力充填の警告光
+                const wi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                fxGlow(wi, 'rgba(245,158,11,0.85)', 900);
             }`],
         ...K.EVENT_CHIP_SPEC("'魔力 ' + (mpMap[turn] || 0) + '/5'"),
         [K.ONE, K.RV_ALGO, K.rv(['着手する毎に魔力 (MP) が1溜まる。5に達すると呪文が自動発動:','着地点からマンハッタン距離2以内の敵石を全て焼き払う (自分の石は無事)。ヘッダのチップにMP表示。','打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。'])],

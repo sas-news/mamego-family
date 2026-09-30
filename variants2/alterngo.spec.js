@@ -21,7 +21,7 @@ module.exports = {
                     if ((p.y % 2 === 0) !== evenRows) return false;
                 }
             }`],
-        K.CUE_GRID(`            // 番兵: 担当外の行を薄く沈める (偶数行=黒区、奇数行=白区)
+        K.CUE_GRID(`            // 番兵: 担当外の行を薄く沈め、行の持ち主を端の●○で示す
             {
                 ctx.save();
                 for (let y = 0; y < BOARD_SIZE; y++) {
@@ -30,6 +30,11 @@ module.exports = {
                         isBlackRow ? 'rgba(30,30,30,1)' : 'rgba(240,240,240,1)', 0.07);
                     ctx.fillRect(-cellSize, padding + (y - 0.5) * cellSize,
                         padding * 2 + BOARD_SIZE * cellSize, cellSize);
+                    // 番兵印: 左端に行の持ち主の●○
+                    ctx.fillStyle = isBlackRow ? 'rgba(30,30,30,0.55)' : 'rgba(255,255,255,0.8)';
+                    ctx.beginPath();
+                    ctx.arc(padding - cellSize * 0.55, padding + y * cellSize, cellSize * 0.10, 0, Math.PI * 2);
+                    ctx.fill();
                 }
                 ctx.restore();
             }`),

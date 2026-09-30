@@ -1094,6 +1094,34 @@
             ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
             ctx.globalAlpha = 1;
 
+            // 模倣: 次の一手は点対称位置 — リンク線と必着手リング
+            if (lastMove && lastMove.player !== turn && !gameOver) {
+                const need = lastMove.cells.map(p => ({ x: BOARD_SIZE - 1 - p.x, y: BOARD_SIZE - 1 - p.y }));
+                if (need.every(p => board[p.y * BOARD_SIZE + p.x] === 0)) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(217,70,239,0.7)';
+                    ctx.lineWidth = Math.max(1.2, cellSize * 0.045);
+                    // 元の石と模倣点を結ぶ薄いリンク
+                    ctx.setLineDash([cellSize * 0.10, cellSize * 0.09]);
+                    lastMove.cells.forEach((p, i) => {
+                        const m = need[i];
+                        ctx.beginPath();
+                        ctx.moveTo(padding + p.x * cellSize, padding + p.y * cellSize);
+                        ctx.lineTo(padding + m.x * cellSize, padding + m.y * cellSize);
+                        ctx.stroke();
+                    });
+                    // 模倣点の必着手リング
+                    ctx.setLineDash([cellSize * 0.16, cellSize * 0.12]);
+                    ctx.lineWidth = Math.max(1.5, cellSize * 0.06);
+                    need.forEach(m => {
+                        ctx.beginPath();
+                        ctx.arc(padding + m.x * cellSize, padding + m.y * cellSize, cellSize * 0.40, 0, Math.PI * 2);
+                        ctx.stroke();
+                    });
+                    ctx.restore();
+                }
+            }
+
             // 星 (天元・星の点)
             const starPoints = getStarPoints(BOARD_SIZE);
             ctx.fillStyle = currentTheme.starColor;

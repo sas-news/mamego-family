@@ -1730,6 +1730,14 @@
                 const keep = captured.length === 1 ? 0 : Math.ceil(captured.length / 2);
                 const gone = [];
                 captured.forEach((idx, k) => { if (k >= keep) { board[idx] = 0; gone.push(idx); } });
+                // 不死鳥: その場で蘇る石に炎の輪と飛火
+                if (keep > 0) {
+                    captured.slice(0, keep).forEach(i => {
+                        fxGlow(i, 'rgba(251,146,60,0.95)', 760);
+                        fxBurst(i, '#fbbf24', 6, 1.0);
+                    });
+                    fxText(captured[0], '蘇生', '#fb923c', 1000);
+                }
                 if (gone.length > 0) {
                     captures[player] += gone.length;
                     soundManager.playCapture();

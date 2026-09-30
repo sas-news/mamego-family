@@ -1769,14 +1769,19 @@
             }
             const next = [...board];
             let changed = 0;
+            const born = [];
             for (let i = 0; i < board.length; i++) {
                 // 誕生のみ適用: 石はライフでは死なず、取り・呼吸点の処理に委ねる
                 if (board[i] === 0 && counts[i] === 3 && tint[i] !== -1) {
-                    next[i] = tint[i]; changed++;
+                    next[i] = tint[i]; changed++; born.push(i);
                 }
             }
             board = next;
-            if (changed > 0) cleanUpPieces();
+            if (changed > 0) {
+                cleanUpPieces();
+                // ライフ誕生: 生まれた石に緑の輪
+                born.forEach(i => fxGlow(i, 'rgba(74,222,128,0.9)', 620));
+            }
             // 世代交代で呼吸点を失った連を両色とも除去 (安定するまで)
             for (let k = 0; k < 8; k++) {
                 const dead = [...getCapturedStones(board, 1), ...getCapturedStones(board, 2)];

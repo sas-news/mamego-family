@@ -1732,9 +1732,18 @@
             turn = opponent;
             // 混成: 15手ごとに全石が50%で反転しピース再構成
             if (history.length % 15 === 0) {
+                const flipped = [];
                 for (let i = 0; i < board.length; i++)
-                    if ((board[i] === 1 || board[i] === 2) && Math.random() < 0.5)
+                    if ((board[i] === 1 || board[i] === 2) && Math.random() < 0.5) {
                         board[i] = 3 - board[i];
+                        flipped.push(i);
+                    }
+                // 混成演出: 盤が大きく揺れ反転した石に紫の飛沫
+                if (flipped.length) {
+                    fxShake(7, 420);
+                    flipped.forEach(i => fxBurst(i, '#a78bfa', 3, 0.8));
+                    fxText(flipped[0], '混成!', '#8b5cf6', 1100);
+                }
                 pieces = [];
                 for (let i = 0; i < board.length; i++) {
                     const c = board[i];

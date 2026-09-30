@@ -1217,6 +1217,29 @@
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
+
+            // 特殊ルールの石マーク
+            drawStoneMarks(padding, cellSize);
+        }
+
+        function drawStoneMarks(padding, cellSize) {
+            // Lv2以上の石にレベル数を描く
+            for (const k in levelMap) {
+                const idx = +k;
+                const v = board[idx];
+                if (v !== 1 && v !== 2) continue;
+                const lv = levelMap[k];
+                if (!lv || lv < 2) continue;
+                const x = idx % BOARD_SIZE, y = Math.floor(idx / BOARD_SIZE);
+                const cx = padding + x * cellSize, cy = padding + y * cellSize;
+                ctx.save();
+                ctx.fillStyle = v === 1 ? '#f5d76e' : '#b8860b';
+                ctx.font = 'bold ' + Math.max(9, cellSize * 0.38) + 'px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(String(lv), cx, cy);
+                ctx.restore();
+            }
         }
 
         let fxPrevMove = null;
@@ -1723,7 +1746,11 @@
                 // 成長: 取った石に接していた自分の石がLvUP
                 captured.forEach(idx => {
                     getNeighbors(idx).forEach(n => {
-                        if (board[n] === player) levelMap[n] = (levelMap[n] || 1) + 1;
+                        if (board[n] === player) {
+                            levelMap[n] = (levelMap[n] || 1) + 1;
+                            fxGlow(n, 'rgba(245,215,110,0.95)', 700);
+                            fxText(n, 'LvUP', '#eab308', 900);
+                        }
                     });
                 });
                 soundManager.playCapture();
