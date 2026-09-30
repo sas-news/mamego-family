@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#e4bb70"/>
+  <g stroke="rgba(62,34,17,0.4)" stroke-width="1.5">
+    <path d="M12 12h40M12 26.7h40M12 41.3h40M12 56h40M12 12v44M26.7 12v44M41.3 12v44M56 12v44"/>
+  </g>
+  <!-- 黒ドミノ石 (左上, 横1×2) -->
+  <circle cx="17" cy="17" r="7.5" fill="#1c1917" stroke="#000" stroke-width="1.5"/>
+  <circle cx="29" cy="17" r="7.5" fill="#1c1917" stroke="#000" stroke-width="1.5"/>
+  <!-- 白ドミノ石 (右下, 縦1×2) -->
+  <circle cx="45" cy="37" r="7.5" fill="#fef3c7" stroke="#78350f" stroke-width="1.5"/>
+  <circle cx="45" cy="49" r="7.5" fill="#fef3c7" stroke="#78350f" stroke-width="1.5"/>
+</svg>
