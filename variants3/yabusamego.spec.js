@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,13 +47,21 @@ module.exports = {
     icon: 'yabusamego',
     spec: [
         ...K.rb('YABUSAMEGO', '流鏑碁', 'yabusamego'),
+        K.params([
+            { key: 'target_dist', label: '的の距離', min: 1, max: 5, def: 2, hint: '辺からの距離 (行/列)' },
+            { key: 'target_pts', label: '命中の点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         ...ST(ST_INIT),
         // 補助関数をページスコープへ注入
-        [K.ONE, `        function executeMove(move, player) {`, `        // 流鏑馬の的: 盤の四隅寄り4箇所
-const TARGETS = (() => {
-    const c = Math.floor(BOARD_SIZE / 2);
-    return [2 * BOARD_SIZE + c, (BOARD_SIZE - 3) * BOARD_SIZE + c, c * BOARD_SIZE + 2, c * BOARD_SIZE + (BOARD_SIZE - 3)];
-})();
+        [K.ONE, `        function executeMove(move, player) {`, `        // 流鏑馬の的: 盤の四辺寄り4箇所 (辺からdの距離)
+let TARGETS = [];
+function rebuildTargets() {
+    const c = Math.floor(BOARD_SIZE / 2), d = Math.min(Math.floor(BOARD_SIZE / 2) - 1, P('target_dist') || 2);
+    TARGETS = [d * BOARD_SIZE + c, (BOARD_SIZE - 1 - d) * BOARD_SIZE + c, c * BOARD_SIZE + d, c * BOARD_SIZE + (BOARD_SIZE - 1 - d)];
+}
+rebuildTargets();
+function onVariantParam(p) { if (p.key === 'target_dist') rebuildTargets(); }
 
         function executeMove(move, player) {`],
 
@@ -96,7 +104,7 @@ const TARGETS = (() => {
                         const i = y * BOARD_SIZE + x;
                         if (TARGETS.includes(i) && !st.hit[i]) {
                             st.hit[i] = player;
-                            captures[player]++;
+                            captures[player] += (P('target_pts') ?? 1);
                             fxText(i, '命中!', '#f43f5e', 1200);
                             fxBurst(i, '#f43f5e', 10, 1.6);
                             return;
@@ -109,7 +117,7 @@ const TARGETS = (() => {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'的 ' + Object.keys(st.hit || {}).length + '/4'`),
+        ...K.EVENT_CHIP_SPEC(`'的 ' + Object.keys(st.hit || {}).length + '/' + TARGETS.length`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            流鏑碁: 着手した石の行・列を馬が走り、一直線上に見える的を射抜く。的ごと+1目 (各1回)<br>
             PC: クリックで配置<br>

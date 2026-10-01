@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'yuzengo',
     spec: [
         ...K.rb('YUZENGO', '友禅碁', 'yuzengo'),
+        K.params([
+            { key: 'motif_pts', label: '模様1本の点', min: 0, max: 9, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let yuzenDone = false;
         // 絵羽模様: 同色で3連以上の縦・横・斜め直線の数
@@ -53,8 +57,8 @@ module.exports = {
 `        function endGameByScore() {
             if (!yuzenDone) {
                 yuzenDone = true;
-                captures[1] += motifCount(1) * 2;
-                captures[2] += motifCount(2) * 2;
+                captures[1] += motifCount(1) * (P('motif_pts') ?? 2);
+                captures[2] += motifCount(2) * (P('motif_pts') ?? 2);
             }
             _endGameByScoreCore();
         }

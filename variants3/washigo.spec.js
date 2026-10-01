@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'washigo',
     spec: [
         ...K.rb('WASHIGO', '和紙碁', 'washigo'),
+        K.params([
+            { key: 'rain_interval', label: '雨の間隔', min: 2, max: 20, def: 8, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 水路: 中央の用水路1行。その上の石は濡れて破れやすい
         const WASHI_Y = Math.floor(BOARD_SIZE / 2);
@@ -40,8 +44,8 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 和紙碁: 8手ごとに雨が降り、水路の濡れた石が破れて消える
-            if (history.length > 0 && history.length % 8 === 0) {
+            // 和紙碁: N手ごとに雨が降り、水路の濡れた石が破れて消える
+            if (history.length > 0 && history.length % (P('rain_interval') || 8) === 0) {
                 const torn = [];
                 for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
                     if ((board[i] === 1 || board[i] === 2) && washiWet(i)) torn.push(i);
@@ -85,7 +89,7 @@ module.exports = {
                     ctx.restore();
                 }
             }`),
-        ...K.EVENT_CHIP_SPEC(`'雨まで ' + (8 - history.length % 8) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'雨まで ' + ((P('rain_interval') || 8) - history.length % (P('rain_interval') || 8)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            和紙碁: 水路の石は濡れ、8手ごとの雨で破れて消える<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

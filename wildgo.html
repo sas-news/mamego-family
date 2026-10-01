@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"wild_interval","label":"ワイルド手の間隔","min":2,"max":10,"def":5,"unit":"手"},{"key":"cap_rows","label":"打ち切りの余裕","min":0,"max":9,"def":2,"hint":"交点数+N行分の着手で終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1845,12 +1845,12 @@
             moveCount++;
 
             // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_rows') ?? 2))) {
                 endGameByScore();
                 return;
             }
 
-            if (moveCount % 5 !== 0) turn = opponent;
+            if (moveCount % (P('wild_interval') || 5) !== 0) turn = opponent;
             else if (lastMove && lastMove.cells[0]) {
                 const wi = lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x;
                 fxText(wi, 'WILD!', '#f472b6', 1200);
@@ -2725,7 +2725,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (moveCount % 5 === 4 ? "次はワイルド手!" : "");
+                const et = gameOver ? '' : (moveCount % (P("wild_interval") || 5) === (P("wild_interval") || 5) - 1 ? "次はワイルド手!" : "");
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

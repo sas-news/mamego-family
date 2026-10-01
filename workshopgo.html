@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"mat_interval","label":"素材スポーン間隔","min":2,"max":20,"def":8,"unit":"手"},{"key":"mat_max","label":"素材の盤上最大数","min":1,"max":9,"def":3,"unit":"個"},{"key":"tool_cost","label":"道具の素材コスト","min":1,"max":5,"def":2,"unit":"個"},{"key":"cap_ratio","label":"打ち切り手数 (交点数比)","min":0.3,"max":1.5,"step":0.05,"def":0.75}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1796,7 +1796,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1875,8 +1875,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 素材スポーン: 8手毎に空点へ (盤上最大3個)
-            if (history.length % 8 === 0 && st.mats.length < 3) {
+            // 素材スポーン: N手毎に空点へ (盤上最大M個)
+            if (history.length % (P('mat_interval') || 8) === 0 && st.mats.length < (P('mat_max') || 3)) {
                 let mi = (history.length * 37 + 11) % board.length;
                 for (let k = 0; k < board.length; k++) {
                     const c = (mi + k) % board.length;
@@ -1887,9 +1887,9 @@
                     fxGlow(mi, '#a78bfa', 900);
                 }
             }
-            // 鍛錬: 素材2個で道具1個
-            while (st.mat[player] >= 2) {
-                st.mat[player] -= 2;
+            // 鍛錬: 素材N個で道具1個
+            while (st.mat[player] >= (P('tool_cost') || 2)) {
+                st.mat[player] -= (P('tool_cost') || 2);
                 st.tools[player]++;
             }
 

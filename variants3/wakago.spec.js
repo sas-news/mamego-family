@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,24 +27,33 @@ module.exports = {
     icon: 'wakago',
     spec: [
         ...K.rb('WAKAGO', '和歌碁', 'wakago'),
-        // 結び集計: (x,y) と (x+3,y) / (x,y+3) が同色で間の2点が空なら+1目
-        [K.ONE, `        function endGameByScore() {`, `        // 歌の結び: 2点空けて向かい合う同色の句を数える (各向き1回ずつ)
+        K.params([
+            { key: 'waka_dist', label: '結びの間隔', min: 2, max: 6, def: 3, hint: '向かい合う石の距離' },
+            { key: 'waka_pts', label: '1結びの点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
+        // 結び集計: (x,y) と (x+d,y) / (x,y+d) が同色で間の点が空なら結ばれる
+        [K.ONE, `        function endGameByScore() {`, `        // 歌の結び: d-1点空けて向かい合う同色の句を数える (各向き1回ずつ)
         function wakaBonus() {
             const b = { 1: 0, 2: 0 };
+            const d = P('waka_dist') || 3;
             for (let y = 0; y < BOARD_SIZE; y++)
                 for (let x = 0; x < BOARD_SIZE; x++) {
                     const i = y * BOARD_SIZE + x;
                     const v = board[i];
                     if (v !== 1 && v !== 2) continue;
-                    // 右に2点空け (x+3)
-                    if (x + 3 < BOARD_SIZE &&
-                        board[i + 1] === 0 && board[i + 2] === 0 && board[i + 3] === v)
-                        b[v]++;
-                    // 下に2点空け (y+3)
-                    if (y + 3 < BOARD_SIZE &&
-                        board[i + BOARD_SIZE] === 0 && board[i + 2 * BOARD_SIZE] === 0 &&
-                        board[i + 3 * BOARD_SIZE] === v)
-                        b[v]++;
+                    // 右に間を空け (x+d)
+                    if (x + d < BOARD_SIZE && board[i + d] === v) {
+                        let open = true;
+                        for (let k = 1; k < d; k++) if (board[i + k] !== 0) { open = false; break; }
+                        if (open) b[v]++;
+                    }
+                    // 下に間を空け (y+d)
+                    if (y + d < BOARD_SIZE && board[i + d * BOARD_SIZE] === v) {
+                        let open = true;
+                        for (let k = 1; k < d; k++) if (board[i + k * BOARD_SIZE] !== 0) { open = false; break; }
+                        if (open) b[v]++;
+                    }
                 }
             return b;
         }
@@ -52,18 +61,19 @@ module.exports = {
         function endGameByScore() {`],
         [K.ONE, `            const territory = calculateTerritory();`,
 `            const territory = calculateTerritory();
-            // 和歌ルール: 結ばれた句は+1目
+            // 和歌ルール: 結ばれた句は+N目
             {
                 const wb = wakaBonus();
-                territory.black += wb[1];
-                territory.white += wb[2];
+                territory.black += wb[1] * (P('waka_pts') ?? 1);
+                territory.white += wb[2] * (P('waka_pts') ?? 1);
             }`],
         // 結ばれた句を短冊の線で示す
-        ...K.STONE_MARKS_SPEC(`            // 結ばれた句: 2点を跨ぐ短冊の線
+        ...K.STONE_MARKS_SPEC(`            // 結ばれた句: 間を跨ぐ短冊の線
             {
                 ctx.save();
                 ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
                 ctx.lineCap = 'round';
+                const d = P('waka_dist') || 3;
                 for (let y = 0; y < BOARD_SIZE; y++)
                     for (let x = 0; x < BOARD_SIZE; x++) {
                         const i = y * BOARD_SIZE + x;
@@ -71,17 +81,25 @@ module.exports = {
                         if (v !== 1 && v !== 2) continue;
                         const cx = padding + x * cellSize, cy = padding + y * cellSize;
                         ctx.strokeStyle = v === 1 ? 'rgba(244, 114, 182, 0.9)' : 'rgba(190, 24, 93, 0.8)';
-                        if (x + 3 < BOARD_SIZE && board[i + 1] === 0 && board[i + 2] === 0 && board[i + 3] === v) {
-                            ctx.beginPath();
-                            ctx.moveTo(cx, cy);
-                            ctx.lineTo(cx + cellSize * 3, cy);
-                            ctx.stroke();
+                        if (x + d < BOARD_SIZE && board[i + d] === v) {
+                            let open = true;
+                            for (let k = 1; k < d; k++) if (board[i + k] !== 0) { open = false; break; }
+                            if (open) {
+                                ctx.beginPath();
+                                ctx.moveTo(cx, cy);
+                                ctx.lineTo(cx + cellSize * d, cy);
+                                ctx.stroke();
+                            }
                         }
-                        if (y + 3 < BOARD_SIZE && board[i + BOARD_SIZE] === 0 && board[i + 2 * BOARD_SIZE] === 0 && board[i + 3 * BOARD_SIZE] === v) {
-                            ctx.beginPath();
-                            ctx.moveTo(cx, cy);
-                            ctx.lineTo(cx, cy + cellSize * 3);
-                            ctx.stroke();
+                        if (y + d < BOARD_SIZE && board[i + d * BOARD_SIZE] === v) {
+                            let open = true;
+                            for (let k = 1; k < d; k++) if (board[i + k * BOARD_SIZE] !== 0) { open = false; break; }
+                            if (open) {
+                                ctx.beginPath();
+                                ctx.moveTo(cx, cy);
+                                ctx.lineTo(cx, cy + cellSize * d);
+                                ctx.stroke();
+                            }
                         }
                     }
                 ctx.restore();

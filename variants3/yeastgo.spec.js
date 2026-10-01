@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -31,6 +31,7 @@ module.exports = {
             { key: 'bud_interval', label: '出芽の間隔', min: 2, max: 16, def: 8, unit: '手' },
             { key: 'pool_radius', label: '糖蜜窪みの半径', min: 1, max: 6, def: 2 },
             { key: 'pool_offset', label: '窪みの中心位置', min: 2, max: 9, def: 4, hint: '端からの距離' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
         ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 糖蜜: 盤に点在する2つの甘区域 (対称の糖蜜窪み)

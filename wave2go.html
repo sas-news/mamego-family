@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"ring","label":"波の距離","min":1,"max":4,"def":2,"hint":"押される石のリング距離"},{"key":"cap","label":"打ち切り手数","min":40,"max":400,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1850,13 +1850,14 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 波動ルール: 距離2リングの石が外側へ1マス押される (押し先が空の時のみ)
+            // 波動ルール: 距離Rリングの石が外側へ1マス押される (押し先が空の時のみ)
             {
+                const ring = Math.max(1, P('ring') || 2);
                 const px = move.cells[0].x, py = move.cells[0].y;
                 const pushes = [];
-                for (let dy = -2; dy <= 2; dy++) {
-                    for (let dx = -2; dx <= 2; dx++) {
-                        if (Math.max(Math.abs(dx), Math.abs(dy)) !== 2) continue;
+                for (let dy = -ring; dy <= ring; dy++) {
+                    for (let dx = -ring; dx <= ring; dx++) {
+                        if (Math.max(Math.abs(dx), Math.abs(dy)) !== ring) continue;
                         const sx = Math.sign(dx), sy = Math.sign(dy);
                         const fx = px + dx, fy = py + dy;
                         const tx = fx + sx, ty = fy + sy;
@@ -1875,8 +1876,8 @@
                     cleanUpPieces();
                 }
             }
-            // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 長期戦防止: 一定手数経過でその時点の地数判定
+            if (history.length >= (P('cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

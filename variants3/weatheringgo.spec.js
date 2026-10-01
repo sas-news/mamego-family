@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'weatheringgo',
     spec: [
         ...K.rb('WEATHERINGGO', '風化碁', 'weatheringgo'),
+        K.params([
+            { key: 'weather_age', label: '風化までの手数', min: 8, max: 90, def: 30, unit: '手' },
+            { key: 'sand_age', label: '砂の寿命', min: 4, max: 40, def: 12, unit: '手' },
+            { key: 'cap', label: '打ち切り手数', min: 60, max: 400, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { age: {}, sand: {} }; // 石の誕生手数・砂の生成手数`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -59,7 +64,7 @@ module.exports = {
                 Object.keys(st.age).forEach(k => {
                     const i = +k;
                     if (board[i] !== 1 && board[i] !== 2) { delete st.age[i]; return; }
-                    if (history.length - st.age[i] >= 30) {
+                    if (history.length - st.age[i] >= (P('weather_age') || 30)) {
                         board[i] = 4; // 風化して砂になる
                         st.sand[i] = history.length;
                         delete st.age[i];
@@ -69,7 +74,7 @@ module.exports = {
                 Object.keys(st.sand).forEach(k => {
                     const i = +k;
                     if (board[i] !== 4) { delete st.sand[i]; return; }
-                    if (history.length - st.sand[i] >= 12) {
+                    if (history.length - st.sand[i] >= (P('sand_age') || 12)) {
                         board[i] = 0;
                         delete st.sand[i];
                         fxGlow(i, '#d6d3d1', 500);
@@ -106,7 +111,7 @@ module.exports = {
                 Object.keys(st.age || {}).forEach(k => {
                     const i = +k;
                     if (board[i] !== 1 && board[i] !== 2) return;
-                    if (history.length - st.age[i] < 20) return;
+                    if (history.length - st.age[i] < (P('weather_age') || 30) - 10) return;
                     const cx = padding + (i % BOARD_SIZE) * cellSize;
                     const cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
                     ctx.beginPath();

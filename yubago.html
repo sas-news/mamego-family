@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"film_min","label":"膜になる連の長さ","min":2,"max":8,"def":4,"unit":"連"},{"key":"cap_ratio","label":"打ち切り手数 (交点数比)","min":0.3,"max":1.5,"step":0.05,"def":0.9}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1337,7 +1337,7 @@
                         let x2 = x;
                         while (x2 + 1 < BOARD_SIZE && board[y * BOARD_SIZE + x2 + 1] === v) x2++;
                         const len = x2 - x + 1;
-                        if (len >= 4) {
+                        if (len >= (P('film_min') || 4)) {
                             const y0 = padding + y * cellSize;
                             ctx.strokeStyle = v === 1 ? 'rgba(250, 240, 200, 0.85)' : 'rgba(190, 160, 60, 0.9)';
                             ctx.lineWidth = Math.max(1.4, cellSize * 0.08);
@@ -1823,7 +1823,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -2224,12 +2224,13 @@
         // 湯葉: 横の連なりを数える
         function yubaBonus() {
             const b = { 1: 0, 2: 0 };
+            const fm = P('film_min') || 4;
             for (let y = 0; y < BOARD_SIZE; y++) {
                 let run = 0, pl = 0;
                 for (let x = 0; x <= BOARD_SIZE; x++) {
                     const v = x < BOARD_SIZE ? board[y * BOARD_SIZE + x] : -1;
                     if (v === pl && (pl === 1 || pl === 2)) { run++; continue; }
-                    if ((pl === 1 || pl === 2) && run >= 4) b[pl] += run - 3;
+                    if ((pl === 1 || pl === 2) && run >= fm) b[pl] += run - fm + 1;
                     pl = v; run = (v === 1 || v === 2) ? 1 : 0;
                 }
             }
@@ -2767,7 +2768,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('湯葉 ' + (() => { let n = 0; for (let y = 0; y < BOARD_SIZE; y++) { let r = 0; for (let x = 0; x < BOARD_SIZE; x++) { const v = board[y * BOARD_SIZE + x]; if (v === turn) { r++; if (r === 4) n++; } else r = 0; } } return n + '膜'; })());
+                const et = gameOver ? '' : ('湯葉 ' + (() => { let n = 0; for (let y = 0; y < BOARD_SIZE; y++) { let r = 0; for (let x = 0; x < BOARD_SIZE; x++) { const v = board[y * BOARD_SIZE + x]; if (v === turn) { r++; if (r === (P('film_min') || 4)) n++; } else r = 0; } } return n + '膜'; })());
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

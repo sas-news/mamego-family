@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"suff_min","label":"窒息領域の閾値","min":1,"max":9,"def":5,"hint":"このマス数未満の連結空領域は窒息"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1788,7 +1788,7 @@
                         }
                     });
                 }
-                if (region.length < PIECE_SIZE) {
+                if (region.length < (P('suff_min') || PIECE_SIZE)) {
                     region.forEach(idx => { dead[idx] = 1; });
                 }
             }

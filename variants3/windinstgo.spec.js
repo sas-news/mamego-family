@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,16 +27,22 @@ module.exports = {
     icon: 'windinstgo',
     spec: [
         ...K.rb('WINDINSTGO', '管楽碁', 'windinstgo'),
+        K.params([
+            { key: 'edge_rows', label: '音域の幅', min: 1, max: 4, def: 2, unit: '段' },
+            { key: 'res_min', label: '響きに必要な連', min: 2, max: 9, def: 3, unit: '石' },
+            { key: 'res_pts', label: '響きボーナス', min: 0, max: 3, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         // 高音域制限: 上2段への孤立着手は不可 (息が続かない) — 既存の連に接続するなら可
         [K.ONE, K.VALID_BOUNDS, `        for (const p of cells) {
             const x = p.x, y = p.y;
             if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) return false;
             if (board[y * BOARD_SIZE + x] !== 0) return false;
         }
-        // 高音域は息が続かない: 上2段には孤立石を置けない (自分の連に接するなら可)
+        // 高音域は息が続かない: 上N段には孤立石を置けない (自分の連に接するなら可)
         {
             const y = cells[0].y;
-            if (y < 2) {
+            if (y < (P('edge_rows') || 2)) {
                 const idx = y * BOARD_SIZE + cells[0].x;
                 const ownAdj = getNeighbors(idx).some(n => board[n] === player);
                 if (!ownAdj) return false;
@@ -50,10 +56,10 @@ module.exports = {
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const y = move.cells[0].y;
-                if (board[mi] === player && (y < 2 || y >= BOARD_SIZE - 2)) {
+                if (board[mi] === player && (y < (P('edge_rows') || 2) || y >= BOARD_SIZE - (P('edge_rows') || 2))) {
                     const g = getConnectedGroup(mi, player);
-                    if (g.length >= 3) {
-                        captures[player]++;
+                    if (g.length >= (P('res_min') || 3)) {
+                        captures[player] += (P('res_pts') ?? 1);
                         g.forEach(j => fxGlow(j, '#a5b4fc', 700));
                         fxText(mi, '低音の響き +1', '#818cf8', 1200);
                     }
@@ -66,8 +72,8 @@ module.exports = {
             {
                 ctx.save();
                 ctx.fillStyle = 'rgba(165,180,252,0.12)';
-                ctx.fillRect(padding - cellSize * 0.5, padding - cellSize * 0.5, BOARD_SIZE * cellSize, 2 * cellSize);
-                ctx.fillRect(padding - cellSize * 0.5, padding + (BOARD_SIZE - 2 - 0.5) * cellSize, BOARD_SIZE * cellSize, 2 * cellSize);
+                ctx.fillRect(padding - cellSize * 0.5, padding - cellSize * 0.5, BOARD_SIZE * cellSize, (P('edge_rows') || 2) * cellSize);
+                ctx.fillRect(padding - cellSize * 0.5, padding + (BOARD_SIZE - (P('edge_rows') || 2) - 0.5) * cellSize, BOARD_SIZE * cellSize, (P('edge_rows') || 2) * cellSize);
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'上2段=高音(孤立不可) / 端の連3石で+1'`),

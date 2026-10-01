@@ -10,8 +10,13 @@ module.exports = {
     icon: 'zigguratgo',
     spec: [
         ...K.rb('ZIGGURATGO', '神殿碁', 'zigguratgo'),
+        K.params([
+            { key: 'zig_max', label: '神殿の高さ (頂点)', min: 2, max: 8, def: 4, unit: '段' },
+            { key: 'cap', label: '打ち切り手数', min: 40, max: 400, def: 140, unit: '手' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
-        const ZIG_MAX = 4; // 神殿の高さ上限=頂点
+        // 神殿の高さ上限=頂点 (設定で調整可能)
+        function zigMax() { return Math.max(2, P('zig_max') || 4); }
 
         function endGameByScore() {`],
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
@@ -40,7 +45,7 @@ module.exports = {
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 const vi = p.y * BOARD_SIZE + p.x;
-                if (board[vi] !== 0 && !(board[vi] === player && lv[vi] < ZIG_MAX)) return false;
+                if (board[vi] !== 0 && !(board[vi] === player && lv[vi] < zigMax())) return false;
             }`],
         // 積層着手では新しいピースを積まない (積層で lv>1 になった着手はピース追加をスキップ)
         [K.ONE, K.PIECES_PUSH, `            if ((lv[move.cells[0].y * BOARD_SIZE + move.cells[0].x] || 0) <= 1) {
@@ -60,7 +65,7 @@ module.exports = {
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
 `            move.cells.forEach(p => {
                 const ii = p.y * BOARD_SIZE + p.x;
-                if (board[ii] === player && lv[ii] < ZIG_MAX) {
+                if (board[ii] === player && lv[ii] < zigMax()) {
                     lv[ii]++;
                     fxBurst(ii, '#fbbf24', 6, 1.2);
                 } else {
@@ -71,18 +76,18 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 神殿ルール: Lv4の頂点に到達した側が即勝ち
+            // 神殿ルール: 頂点に到達した側が即勝ち
             {
                 const zi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                if (lv[zi] >= ZIG_MAX) {
+                if (lv[zi] >= zigMax()) {
                     fxGlow(zi, '#fbbf24', 1100);
                     fxText(zi, '登頂!', '#d97706', 1500);
                     fxShake(7, 420);
-                    winByRule(player, '登頂勝ち', '神殿の頂点 (Lv' + ZIG_MAX + ') に到達しました'); return;
+                    winByRule(player, '登頂勝ち', '神殿の頂点 (Lv' + zigMax() + ') に到達しました'); return;
                 }
             }
-            // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 長期戦防止: 一定手数経過でその時点の地数判定
+            if (history.length >= (P('cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         // 積層レベルのピップ描画

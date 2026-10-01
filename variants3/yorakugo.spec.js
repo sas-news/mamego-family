@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,13 +27,19 @@ module.exports = {
     icon: 'yorakugo',
     spec: [
         ...K.rb('YORAKUGO', '瓔珞碁', 'yorakugo'),
+        K.params([
+            { key: 'hall_rad', label: '堂の半径', min: 1, max: 4, def: 1, hint: '中央からの距離 (1=3x3)' },
+            { key: 'hall_pts', label: '連の石1個の点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         // 瓔珞ボーナス: 堂区域に接する自軍連の総石数
         [K.ONE, `        function endGameByScore() {`,
 `        // 堂区域: 中央3x3
         function hallIdxs() {
             const c = Math.floor(BOARD_SIZE / 2);
+            const hr = P('hall_rad') || 1;
             const idx = [];
-            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++)
+            for (let dy = -hr; dy <= hr; dy++) for (let dx = -hr; dx <= hr; dx++)
                 idx.push((c + dy) * BOARD_SIZE + c + dx);
             return new Set(idx);
         }
@@ -53,7 +59,7 @@ module.exports = {
                 }
                 const touches = grp.some(g => hall.has(g) ||
                     getNeighbors(g).some(n => hall.has(n)));
-                if (touches) bonus += grp.length;
+                if (touches) bonus += grp.length * (P('hall_pts') ?? 1);
             }
             return bonus;
         }
@@ -70,14 +76,16 @@ module.exports = {
         K.CUE_STARS(`            // 堂区域: 中央3x3に朱の堂枠と瓔珞飾り
             {
                 const c0 = Math.floor(BOARD_SIZE / 2);
-                const zx = padding + (c0 - 1) * cellSize - cellSize / 2;
-                const zy = padding + (c0 - 1) * cellSize - cellSize / 2;
+                const hr = P('hall_rad') || 1;
+                const zx = padding + (c0 - hr) * cellSize - cellSize / 2;
+                const zy = padding + (c0 - hr) * cellSize - cellSize / 2;
+                const hs = cellSize * (hr * 2 + 1);
                 ctx.save();
                 ctx.fillStyle = 'rgba(185,60,45,0.12)';
-                ctx.fillRect(zx, zy, cellSize * 3, cellSize * 3);
+                ctx.fillRect(zx, zy, hs, hs);
                 ctx.strokeStyle = 'rgba(160,50,40,0.75)';
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
-                ctx.strokeRect(zx, zy, cellSize * 3, cellSize * 3);
+                ctx.strokeRect(zx, zy, hs, hs);
                 // 瓔珞の弧
                 ctx.strokeStyle = 'rgba(212,175,55,0.65)';
                 ctx.lineWidth = Math.max(1.2, cellSize * 0.04);

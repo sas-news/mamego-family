@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('WINGGO', '翼碁', 'winggo'),
+        K.params([
+            { key: 'suff_min', label: '窒息領域の閾値', min: 1, max: 9, def: 5, hint: 'このマス数未満の連結空領域は窒息' },
+        ]),
         [K.ONE, `            ORIENTATIONS[type] = list;
         });`, `            ORIENTATIONS[type] = list;
         });
@@ -16,6 +19,8 @@ module.exports = {
         // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
         ORIENTATIONS.STONE = [[[0,0],[1,0],[2,0],[0,1],[0,2]],[[0,0],[1,0],[2,0],[2,1],[2,2]],[[2,0],[2,1],[0,2],[1,2],[2,2]],[[0,0],[0,1],[0,2],[1,2],[2,2]]];`],
         [K.ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`, `        const PIECE_SIZE = 5;`],
+        // 窒息領域の閾値は設定で調整可能
+        [K.ONE, `                if (region.length < PIECE_SIZE) {`, `                if (region.length < (P('suff_min') || PIECE_SIZE)) {`],
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
 
             // 形状チェック: 着手できるのはこのゲームの専用の形のみ

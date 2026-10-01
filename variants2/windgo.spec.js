@@ -9,13 +9,17 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('WINDGO', '風碁', 'windgo'),
+        K.params([
+            { key: 'wind_every', label: '風の間隔', min: 1, max: 5, def: 1, unit: '手ごと' },
+            { key: 'cap_rows', label: '打ち切りの余裕', min: 0, max: 9, def: 2, hint: '交点数+N行分の着手で終局' },
+        ]),
         // 着手ごと、全石をその時刻の風向きへ1マス流す
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
 
             // 風ルール: 全石が風向きに1マス流れる。風は 東→南→西→北 の順に巡る
-            {
+            if (history.length % (P('wind_every') || 1) === 0) {
                 const N = BOARD_SIZE;
                 const dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]];
                 const d = dirs[history.length % 4];
@@ -47,7 +51,7 @@ module.exports = {
 
 
             // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_rows') ?? 2))) {
                 endGameByScore();
                 return;
             }

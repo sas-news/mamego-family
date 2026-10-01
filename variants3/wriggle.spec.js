@@ -10,6 +10,9 @@ module.exports = {
     icon: 'wriggle',
     spec: [
         ...K.rb('WRIGGLE', '蠕動碁', 'wriggle'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { crawlMode: false, sel: -1 }; // 蠕動モードと選択石`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -69,7 +72,7 @@ module.exports = {
             }
             consecutivePasses = 0;
             turn = turn === 1 ? 2 : 1;
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 endGameByScore();
                 return;
             }
@@ -120,8 +123,8 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            // 打ち切り終局: 交点数の比率倍の手数を超えたら強制終局して採点
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 endGameByScore();
                 return;
             }

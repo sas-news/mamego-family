@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"weather_age","label":"風化までの手数","min":8,"max":90,"def":30,"unit":"手"},{"key":"sand_age","label":"砂の寿命","min":4,"max":40,"def":12,"unit":"手"},{"key":"cap","label":"打ち切り手数","min":60,"max":400,"def":150,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1352,7 +1352,7 @@
                 Object.keys(st.age || {}).forEach(k => {
                     const i = +k;
                     if (board[i] !== 1 && board[i] !== 2) return;
-                    if (history.length - st.age[i] < 20) return;
+                    if (history.length - st.age[i] < (P('weather_age') || 30) - 10) return;
                     const cx = padding + (i % BOARD_SIZE) * cellSize;
                     const cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
                     ctx.beginPath();
@@ -1835,7 +1835,7 @@
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1896,7 +1896,7 @@
                 Object.keys(st.age).forEach(k => {
                     const i = +k;
                     if (board[i] !== 1 && board[i] !== 2) { delete st.age[i]; return; }
-                    if (history.length - st.age[i] >= 30) {
+                    if (history.length - st.age[i] >= (P('weather_age') || 30)) {
                         board[i] = 4; // 風化して砂になる
                         st.sand[i] = history.length;
                         delete st.age[i];
@@ -1906,7 +1906,7 @@
                 Object.keys(st.sand).forEach(k => {
                     const i = +k;
                     if (board[i] !== 4) { delete st.sand[i]; return; }
-                    if (history.length - st.sand[i] >= 12) {
+                    if (history.length - st.sand[i] >= (P('sand_age') || 12)) {
                         board[i] = 0;
                         delete st.sand[i];
                         fxGlow(i, '#d6d3d1', 500);

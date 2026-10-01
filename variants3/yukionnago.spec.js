@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'yukionnago',
     spec: [
         ...K.rb('YUKIONNAGO', '雪女碁', 'yukionnago'),
+        K.params([
+            { key: 'freeze_max', label: '1着手で凍る敵石数', min: 1, max: 4, def: 1, unit: '石' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         ...ST(ST_INIT),
         // 手番処理: 自分が凍らせた敵石は、隣に自分の石が残っていれば凍死 (いなければ解凍)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -65,15 +69,16 @@ module.exports = {
                 }
                 delete st.frz[k];
             });
-            // 置いた石に触れた敵石を1つ凍らせる
+            // 置いた石に触れた敵石を凍らせる
             {
                 const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                const tgt = getNeighbors(ci).find(n => board[n] === opponent);
-                if (tgt !== undefined) {
-                    st.frz[tgt] = player;
-                    fxGlow(tgt, '#bae6fd', 800);
-                    fxText(tgt, '凍結', '#e0f2fe', 800);
-                }
+                getNeighbors(ci).filter(n => board[n] === opponent)
+                    .slice(0, Math.max(1, P('freeze_max') || 1))
+                    .forEach(tgt => {
+                        st.frz[tgt] = player;
+                        fxGlow(tgt, '#bae6fd', 800);
+                        fxText(tgt, '凍結', '#e0f2fe', 800);
+                    });
             }
             cleanUpPieces();
 

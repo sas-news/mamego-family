@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"wind_every","label":"風の間隔","min":1,"max":5,"def":1,"unit":"手ごと"},{"key":"cap_rows","label":"打ち切りの余裕","min":0,"max":9,"def":2,"hint":"交点数+N行分の着手で終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1872,7 +1872,7 @@
 
 
             // 風ルール: 全石が風向きに1マス流れる。風は 東→南→西→北 の順に巡る
-            {
+            if (history.length % (P('wind_every') || 1) === 0) {
                 const N = BOARD_SIZE;
                 const dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]];
                 const d = dirs[history.length % 4];
@@ -1904,7 +1904,7 @@
 
 
             // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_rows') ?? 2))) {
                 endGameByScore();
                 return;
             }

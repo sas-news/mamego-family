@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,17 +27,23 @@ module.exports = {
     icon: 'yataigo',
     spec: [
         ...K.rb('YATAIGO', '屋台碁', 'yataigo'),
+        K.params([
+            { key: 'stall_min', label: '屋台になる連の長さ', min: 2, max: 8, def: 3, unit: '連' },
+            { key: 'stall_pts', label: '列の石1個の点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 屋台の列: 同色が横/縦に3個以上まっすぐ連なると賑わう (列の石1個につき+1目)
         function stallBonus(player) {
             let bonus = 0;
+            const sm = P('stall_min') || 3;
             const scan = (vals) => {
                 let run = 0;
                 for (const v of vals) {
                     if (v === player) run++;
-                    else { if (run >= 3) bonus += run; run = 0; }
+                    else { if (run >= sm) bonus += run * (P('stall_pts') ?? 1); run = 0; }
                 }
-                if (run >= 3) bonus += run;
+                if (run >= sm) bonus += run * (P('stall_pts') ?? 1);
             };
             for (let y = 0; y < BOARD_SIZE; y++)
                 scan(Array.from({ length: BOARD_SIZE }, (_, x) => board[y * BOARD_SIZE + x]));

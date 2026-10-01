@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,13 +27,17 @@ module.exports = {
     icon: 'watago',
     spec: [
         ...K.rb('WATAGO', '綿石碁', 'watago'),
+        K.params([
+            { key: 'squash_div', label: '綿の潰れ具合', min: 1, max: 4, def: 2, hint: 'アゲハマは連の1/n (切り上げ)' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         // 綿は潰れる: 取った連は半分しかアゲハマにならない (切り上げ・双方同じ)
         [K.ONE, `            if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;`,
 `            if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
-                captures[player] += Math.ceil(captured.length / 2); // 綿は潰れて半分のアゲハマ
+                captures[player] += Math.ceil(captured.length / (P('squash_div') || 2)); // 綿は潰れて1/nのアゲハマ
                 fxText(captured[captured.length - 1], 'ふわっ', '#fbcfe8', 700);`],
         // 綿のふわふわハロー
         ...K.STONE_MARKS_SPEC(`            for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {

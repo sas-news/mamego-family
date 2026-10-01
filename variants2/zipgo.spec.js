@@ -9,6 +9,9 @@ module.exports = {
     kind: 'zip',
     spec: [
         ...K.rb('ZIPGO', '縞封碁', 'zipgo'),
+        K.params([
+            { key: 'even_axis', label: '偶数手の制約', options: [{ v: 'row', l: '行 (横縞)' }, { v: 'col', l: '列 (縦縞)' }], def: 'row' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -20,8 +23,9 @@ module.exports = {
                 if (lastMove && lastMove.cells.length > 0) {
                     const mv = history.length + 1;
                     const tgt = lastMove.cells[0];
+                    const rowEven = (P('even_axis') || 'row') === 'row';
                     for (const p of cells) {
-                        if (mv % 2 === 0) {
+                        if ((mv % 2 === 0) === rowEven) {
                             if (p.y !== tgt.y) return false;
                         } else {
                             if (p.x !== tgt.x) return false;
@@ -34,9 +38,10 @@ module.exports = {
                 if (lastMove && lastMove.cells.length > 0) {
                     const mv2 = history.length + 1;
                     const tg = lastMove.cells[0];
+                    const rowEven2 = (P('even_axis') || 'row') === 'row';
                     ctx.save();
                     ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.14);
-                    if (mv2 % 2 === 0) {
+                    if ((mv2 % 2 === 0) === rowEven2) {
                         ctx.fillRect(-cellSize, padding + (tg.y - 0.5) * cellSize,
                             padding * 2 + BOARD_SIZE * cellSize, cellSize);
                     } else {
@@ -58,6 +63,7 @@ module.exports = {
             if (!lastMove || !lastMove.cells || lastMove.cells.length === 0) return;
             const mv2 = history.length + 1;
             const tg = lastMove.cells[0];
+            const rowEven3 = (P('even_axis') || 'row') === 'row';
             const w = pad * 2 + (BOARD_SIZE - 1) * cs;
             const t = (now % 1400) / 1400;
             const p = t < 0.5 ? t * 2 : (1 - t) * 2; // 往復
@@ -66,7 +72,7 @@ module.exports = {
             ctx2.lineWidth = Math.max(1.5, cs * 0.08);
             ctx2.lineCap = 'round';
             const span = cs * 1.6;
-            if (mv2 % 2 === 0) {
+            if ((mv2 % 2 === 0) === rowEven3) {
                 const y = pad + tg.y * cs;
                 const px = pad - cs * 0.5 + p * (w - cs * 0);
                 ctx2.beginPath();

@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('WHEELGO', '車輪碁', 'wheelgo'),
+        K.params([
+            { key: 'cap_rows', label: '打ち切りの余裕', min: 0, max: 9, def: 2, hint: '交点数+N行分の着手で終局' },
+        ]),
         // 近傍は同じスポーク上の前後のみ (ハブは8方向)
         [K.ONE, K.NBRS_GRID, `        function getNeighbors(idx) {
             const x = idx % BOARD_SIZE;
@@ -90,7 +93,7 @@ module.exports = {
         // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_rows') ?? 2))) {
                 endGameByScore();
                 return;
             }

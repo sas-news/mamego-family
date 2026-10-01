@@ -10,16 +10,21 @@ module.exports = {
     icon: 'wave2go',
     spec: [
         ...K.rb('WAVE2GO', '波動碁', 'wave2go'),
+        K.params([
+            { key: 'ring', label: '波の距離', min: 1, max: 4, def: 2, hint: '押される石のリング距離' },
+            { key: 'cap', label: '打ち切り手数', min: 40, max: 400, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 波動ルール: 距離2リングの石が外側へ1マス押される (押し先が空の時のみ)
+            // 波動ルール: 距離Rリングの石が外側へ1マス押される (押し先が空の時のみ)
             {
+                const ring = Math.max(1, P('ring') || 2);
                 const px = move.cells[0].x, py = move.cells[0].y;
                 const pushes = [];
-                for (let dy = -2; dy <= 2; dy++) {
-                    for (let dx = -2; dx <= 2; dx++) {
-                        if (Math.max(Math.abs(dx), Math.abs(dy)) !== 2) continue;
+                for (let dy = -ring; dy <= ring; dy++) {
+                    for (let dx = -ring; dx <= ring; dx++) {
+                        if (Math.max(Math.abs(dx), Math.abs(dy)) !== ring) continue;
                         const sx = Math.sign(dx), sy = Math.sign(dy);
                         const fx = px + dx, fy = py + dy;
                         const tx = fx + sx, ty = fy + sy;
@@ -38,8 +43,8 @@ module.exports = {
                     cleanUpPieces();
                 }
             }
-            // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 長期戦防止: 一定手数経過でその時点の地数判定
+            if (history.length >= (P('cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         // 波紋の描画
