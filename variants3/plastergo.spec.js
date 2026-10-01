@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,7 @@ module.exports = {
     icon: 'plastergo',
     spec: [
         ...K.rb('PLASTERGO', '左官碁', 'plastergo'),
+        K.params([{ key: 'edge_cost', label: '辺連の呼吸減', min: 0, max: 3, def: 1, unit: '点' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' }]),
         // 辺に接した連は「漆喰の壁」= 呼吸点として数えない (相手から見ても自分から見ても)
         [K.ONE, `                    let hasLiberty = false;`, `                    let liberties = 0;`],
         [K.ONE, `                                hasLiberty = true;`, `                                liberties++;`],
@@ -37,7 +38,7 @@ module.exports = {
 `                        });
                         // 辺に張り付いた連は漆喰の壁として機能: 呼吸点を1消費
                         const edgeStone = group.some(g => g < BOARD_SIZE || g >= BOARD_SIZE * (BOARD_SIZE - 1) || g % BOARD_SIZE === 0 || g % BOARD_SIZE === BOARD_SIZE - 1);
-                        if (edgeStone) liberties = Math.max(0, liberties - 1);
+                        if (edgeStone) liberties = Math.max(0, liberties - (P('edge_cost') || 1));
                     }
 
                     if (liberties <= 0) {`],
@@ -49,7 +50,7 @@ module.exports = {
             // 辺に張り付いた連は壁として呼吸点を1消費
             const grp = [...visited.map((v, k) => v ? k : -1)].filter(k => k >= 0);
             const edgeStone = grp.some(g => g < BOARD_SIZE || g >= BOARD_SIZE * (BOARD_SIZE - 1) || g % BOARD_SIZE === 0 || g % BOARD_SIZE === BOARD_SIZE - 1);
-            if (edgeStone) liberties = Math.max(0, liberties - 1);
+            if (edgeStone) liberties = Math.max(0, liberties - (P('edge_cost') || 1));
             return liberties;`],
         // 辺の石には漆喰のこて跡 (白い刷毛筋)
         ...K.STONE_MARKS_SPEC(`            // 辺の石は漆喰が固まった印: 白い刷毛筋2本

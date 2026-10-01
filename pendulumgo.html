@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"turn_pat","label":"手番の巡り","options":[{"v":"pend","l":"振子 (1,2,2,1)"},{"v":"half","l":"半々 (1,1,2,2)"}],"def":"pend"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":2.2,"def":1.1,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1843,10 +1843,10 @@
 
             // 振子手番: 1,2,2,1,1,2,2,1… の繰り返し (2連続番が交互に巡る)
             st.ply++;
-            turn = [1, 2, 2, 1][st.ply % 4];
+            turn = ((P('turn_pat') || 'pend') === 'half' ? [1, 1, 2, 2] : [1, 2, 2, 1])[st.ply % 4];
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -2127,7 +2127,7 @@
                 }
             } else {
                 st.ply++;
-                turn = [1, 2, 2, 1][st.ply % 4];
+                turn = ((P('turn_pat') || 'pend') === 'half' ? [1, 1, 2, 2] : [1, 2, 2, 1])[st.ply % 4];
                 updateUI();
 
                 if (gameMode === 'online' && onlineRoomId) {

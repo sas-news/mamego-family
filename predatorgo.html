@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"lv_max","label":"強さLvの上限","min":2,"max":6,"def":3},{"key":"ply_cap","label":"打ち切り手数","min":60,"max":300,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1785,7 +1785,7 @@
         function predLv(i, player) {
             let n = 0;
             getNeighbors(i).forEach(m => { if (board[m] === player) n++; });
-            return Math.min(3, 1 + n);
+            return Math.min((P('lv_max') || 3), 1 + n);
         }
 
         function isValidPlacement(cells, player) {
@@ -1887,7 +1887,7 @@
                 }
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"pot_min","label":"壺を奪える大取の個数","min":1,"max":10,"def":3,"unit":"個"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1840,7 +1840,7 @@
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 // 壺ルール: 3個以上の大取なら壺ごと奪う、それ未満は壺に蓄積
-                if (captured.length >= 3) {
+                if (captured.length >= (P('pot_min') || 3)) {
                     captures[player] += captured.length + pot;
                     const ci = captured[0];
                     fxGlow(ci, '#fbbf24', 850);

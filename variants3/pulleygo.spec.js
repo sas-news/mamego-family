@@ -10,6 +10,7 @@ module.exports = {
     icon: 'pulleygo',
     spec: [
         ...K.rb('PULLEYGO', '滑車碁', 'pulleygo'),
+        K.params([{ key: 'drop_d', label: '敵石の落下幅', min: 1, max: 3, def: 1, unit: 'マス' }, { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 300, def: 140, unit: '手' }]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
@@ -19,7 +20,7 @@ module.exports = {
                 const mx = BOARD_SIZE - 1 - px;
                 const mi = py * BOARD_SIZE + mx;
                 if (board[mi] === opponent) {
-                    const ny = py + 1;
+                    const ny = py + Math.max(1, P('drop_d') || 1);
                     if (ny >= BOARD_SIZE) {
                         // 盤から落下 → 捕獲
                         board[mi] = 0; captures[player]++;
@@ -37,7 +38,7 @@ module.exports = {
                 }
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         // 縦軸の滑車軸を描画

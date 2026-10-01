@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,7 @@ module.exports = {
     icon: 'percussiongo',
     spec: [
         ...K.rb('PERCUSSIONGO', '打楽碁', 'percussiongo'),
+        K.params([{ key: 'don_every', label: '大太鼓の間隔', min: 2, max: 16, def: 8, unit: '打' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.6, def: 0.8, step: 0.05, hint: '交点数×倍率' }]),
         // 大太鼓: 8の倍数の自分の着手は震盪 — 隣接する孤立敵石を跳ね飛ばす
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -34,7 +35,7 @@ module.exports = {
             // 大太鼓: 自分の8手ごとの着手は震盪 — 隣の孤立敵石 (連1石) が跳ねて消える
             {
                 const movesP = history.filter(h => h.turn === player).length;
-                if (movesP % 8 === 0 && movesP > 0) {
+                if (movesP % Math.max(1, P('don_every') || 8) === 0 && movesP > 0) {
                     const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                     let bounced = 0;
                     getNeighbors(mi).forEach(n => {
@@ -70,7 +71,7 @@ module.exports = {
             ctx2.stroke();
             ctx2.restore();
         });`],
-        ...K.EVENT_CHIP_SPEC(`((history.filter(h => h.turn === turn).length + 1) % 8 === 0 || history.filter(h => h.turn === turn).length === 7) ? '次は大太鼓!' : '次の大太鼓まであと ' + (8 - (history.filter(h => h.turn === turn).length % 8)) + ' 打'`),
+        ...K.EVENT_CHIP_SPEC(`((history.filter(h => h.turn === turn).length + 1) % (P('don_every') || 8) === 0 || history.filter(h => h.turn === turn).length === (P('don_every') || 8) - 1) ? '次は大太鼓!' : '次の大太鼓まであと ' + ((P('don_every') || 8) - (history.filter(h => h.turn === turn).length % (P('don_every') || 8))) + ' 打'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            打楽碁: 着手は鼓の一打。自分の8手ごとの着手は大太鼓 — 盤が震え、隣の孤立敵石が跳ねて消える<br>
             PC: クリックで配置<br>

@@ -36,6 +36,7 @@ module.exports = {
     icon: 'pendulumgo',
     spec: [
         ...K.rb('PENDULUMGO', '振子碁', 'pendulumgo'),
+        K.params([{ key: 'turn_pat', label: '手番の巡り', options: [{ v: 'pend', l: '振子 (1,2,2,1)' }, { v: 'half', l: '半々 (1,1,2,2)' }], def: 'pend' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 2.2, def: 1.1, step: 0.05, hint: '交点数×倍率' }]),
         ...PERSIST('{ ply: 0 }'),
         // 着手後の手番は振り子パターンで決まる (交互ではない)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -43,10 +44,10 @@ module.exports = {
 
             // 振子手番: 1,2,2,1,1,2,2,1… の繰り返し (2連続番が交互に巡る)
             st.ply++;
-            turn = [1, 2, 2, 1][st.ply % 4];
+            turn = ((P('turn_pat') || 'pend') === 'half' ? [1, 1, 2, 2] : [1, 2, 2, 1])[st.ply % 4];
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -54,7 +55,7 @@ module.exports = {
             }`],
         // パスも1振れとして振子を進める
         [K.ONE, `                turn = turn === 1 ? 2 : 1;`, `                st.ply++;
-                turn = [1, 2, 2, 1][st.ply % 4];`],
+                turn = ((P('turn_pat') || 'pend') === 'half' ? [1, 1, 2, 2] : [1, 2, 2, 1])[st.ply % 4];`],
         ...K.EVENT_CHIP_SPEC(`'振子 ' + (st.ply % 4 + 1) + '/4'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '手番は交互ではなく振り子式: 黒,白,白,黒,黒,白,白,黒… の繰り返し。',

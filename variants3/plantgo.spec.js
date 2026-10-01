@@ -10,16 +10,20 @@ module.exports = {
     icon: 'plantgo',
     spec: [
         ...K.rb('PLANTGO', '植物碁', 'plantgo'),
+        K.params([{ key: 'grow_every', label: '成長の間隔', min: 2, max: 15, def: 6, unit: '手' }, { key: 'sun_ratio', label: '日差しゾーン幅', min: 0.1, max: 2, step: 0.05, def: 1, hint: '盤幅1/3を1とする' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.6, def: 0.8, step: 0.05, hint: '交点数×倍率' }]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 植物: 左1/3が日差しゾーン。6手ごとに日差しに触れる連が1つ芽を出す
-        const SUN_W = Math.ceil(BOARD_SIZE / 3);
+        let SUN_W = Math.ceil(BOARD_SIZE / 3);
+        function rebuildSun() { SUN_W = Math.ceil(BOARD_SIZE / 3 * (P('sun_ratio') || 1)); }
+        rebuildSun();
+        function onVariantParam() { rebuildSun(); }
         function inSun(x) { return x < SUN_W; }`],
         // 成長: 6手ごとに日差しゾーンの連が芽を出す (両者共通)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 植物: 6手ごとに日差しゾーンの連が成長
-            if (history.length > 0 && history.length % 6 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('grow_every') || 6) === 0) {
                 // 連を集めて日差しに触れるものを特定
                 const visited = Array(board.length).fill(false);
                 const grown = [];
@@ -71,7 +75,7 @@ module.exports = {
             }
 
             // 打ち切り: 長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 endGameByScore();
                 return;
             }

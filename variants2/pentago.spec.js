@@ -9,6 +9,7 @@ module.exports = {
     kind: 'penta',
     spec: [
         ...K.rb('PENTAGO', '五連碁', 'pentago'),
+        K.params([{ key: 'need', label: '勝利に必要な連数', min: 3, max: 8, def: 5, unit: '連' }]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         // 5連判定: 任意方向に自石が5連続していればその連のidx配列を返す
         function hasFiveInARow(player) {
@@ -21,7 +22,7 @@ module.exports = {
                     if (isP(x - dx, y - dy)) continue; // 起点のみ走査
                     let run = 0;
                     while (isP(x + dx * run, y + dy * run)) run++;
-                    if (run >= 5) {
+                    if (run >= (P('need') || 5)) {
                         const cells = [];
                         for (let k = 0; k < run; k++) cells.push((y + dy * k) * BOARD_SIZE + (x + dx * k));
                         return cells;
@@ -38,7 +39,7 @@ module.exports = {
             // 五連ルール: 着手した側が5連を作れば即勝ち
             const five = hasFiveInARow(player);
             if (five) {
-                five.slice(0, 5).forEach(i => fxGlow(i, '#facc15', 1000));
+                five.slice(0, (P('need') || 5)).forEach(i => fxGlow(i, '#facc15', 1000));
                 fxText(five[Math.min(2, five.length - 1)], '五連!', '#facc15', 1500);
                 fxShake(6, 380);
                 winByRule(player, '五連勝ち', '自分の石を5個連続で並べました'); return;

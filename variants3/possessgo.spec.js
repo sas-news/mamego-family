@@ -35,7 +35,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -51,6 +51,7 @@ module.exports = {
     icon: 'possessgo',
     spec: [
         ...K.rb('POSSESSGO', '憑物碁', 'possessgo'),
+        K.params([{ key: 'ghost_every', label: '幽霊の移動間隔', min: 2, max: 15, def: 5, unit: '手' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 2.2, def: 1.1, step: 0.05, hint: '交点数×倍率' }]),
         ...PERSIST('{ ghost: -1 }'),
         // 幽霊の初期位置: 盤の中央
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -60,7 +61,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 幽霊ルール: 5手ごとに隣へ漂い、乗っ取る
-            if (st.ghost >= 0 && history.length % 5 === 0) {
+            if (st.ghost >= 0 && history.length % Math.max(1, P('ghost_every') || 5) === 0) {
                 const ns = getNeighbors(st.ghost);
                 if (ns.length) {
                     const ni = ns[(Math.random() * ns.length) | 0];

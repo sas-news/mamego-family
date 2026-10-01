@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"pond_ratio","label":"池の大きさ","min":0.5,"max":2,"step":0.05,"def":1,"hint":"盤幅の1/4を1とする"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2781,7 +2781,7 @@
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
-                const c = Math.floor(BOARD_SIZE / 2), k = Math.floor(BOARD_SIZE / 4);
+                const c = Math.floor(BOARD_SIZE / 2), k = Math.floor(BOARD_SIZE / 4 * (P('pond_ratio') || 1));
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     if (Math.abs(x - c) <= k && Math.abs(y - c) <= k) board[y * BOARD_SIZE + x] = 3;
                 }

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"push_d","label":"押し出し幅","min":1,"max":3,"def":1,"unit":"マス"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.5,"def":0.75,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1844,7 +1844,7 @@
                 for (let y = 0; y < BOARD_SIZE; y++) {
                     const i = y * BOARD_SIZE + px;
                     if (board[i] !== opponent || y === py) continue;
-                    const ny = y < py ? y - 1 : y + 1;
+                    const _pd2 = Math.max(1, P('push_d') || 1), ny = y < py ? y - _pd2 : y + _pd2;
                     if (ny < 0 || ny >= BOARD_SIZE) {
                         moves.push({ from: i, to: -1 }); // 盤外に押し出されて潰れる
                         continue;
@@ -1877,7 +1877,7 @@
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 endGameByScore();
                 return;
             }

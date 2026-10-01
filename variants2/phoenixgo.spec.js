@@ -9,10 +9,11 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('PHOENIXGO', '不死鳥碁', 'phoenixgo'),
+        K.params([{ key: 'revive_div', label: '蘇生する石の割合', options: [{ v: 2, l: '半分が蘇生' }, { v: 3, l: '1/3が蘇生' }, { v: 4, l: '1/4が蘇生' }], def: 2 }]),
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 // 不死鳥: 取られた連は半分だけ散り、残り半分が即復活する
-                const keep = captured.length === 1 ? 0 : Math.ceil(captured.length / 2);
+                const keep = captured.length === 1 ? 0 : Math.ceil(captured.length / Math.max(1, P('revive_div') || 2));
                 const gone = [];
                 captured.forEach((idx, k) => { if (k >= keep) { board[idx] = 0; gone.push(idx); } });
                 // 不死鳥: その場で蘇る石に炎の輪と飛火

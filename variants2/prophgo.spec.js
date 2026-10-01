@@ -9,12 +9,13 @@ module.exports = {
     kind: 'meteor',
     spec: [
         ...K.rb('PROPHGO', '預言碁', 'prophgo'),
+        K.params([{ key: 'meteor_every', label: '隕石の間隔', min: 5, max: 40, def: 15, unit: '手' }, { key: 'blast_r', label: '爆風の半径', min: 1, max: 3, def: 1 }]),
         [K.ONE, '        function drawBoardElements(padding, cellSize) {',
 `        // 預言碁: n 手目の着手後に落下する隕石の中心 (決定論的)
         function meteorPoint(n) {
             return { x: (n * 5 + 3) % BOARD_SIZE, y: (n * 7 + 2) % BOARD_SIZE };
         }
-        function nextMeteorMove() { return (Math.floor(history.length / 15) + 1) * 15; }
+        function nextMeteorMove() { const _me = Math.max(1, P('meteor_every') || 15); return (Math.floor(history.length / _me) + 1) * _me; }
 
         function drawBoardElements(padding, cellSize) {`],
         // 15の倍数手の後、予告地点に隕石落下 → 3x3の石を破壊 (敵石はアゲハマに)
@@ -22,15 +23,16 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 預言碁: 15の倍数手の後に隕石落下。落下点の3x3の石を全て消し飛ばす
-            if (history.length % 15 === 0) {
+            if (history.length % Math.max(1, P('meteor_every') || 15) === 0) {
                 const mp = meteorPoint(history.length);
                 // 着弾演出: 預言どおりの着点で衝撃波・火花・画面揺れ
                 const mi = mp.y * BOARD_SIZE + mp.x;
                 fxGlow(mi, '#fdba74', 850);
                 fxText(mi, '着弾!', '#fb923c', 1000);
                 fxShake(8, 400);
-                for (let dy = -1; dy <= 1; dy++) {
-                    for (let dx = -1; dx <= 1; dx++) {
+                const _br = Math.max(1, P('blast_r') || 1);
+                for (let dy = -_br; dy <= _br; dy++) {
+                    for (let dx = -_br; dx <= _br; dx++) {
                         const nx = mp.x + dx, ny = mp.y + dy;
                         if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) continue;
                         const i0 = ny * BOARD_SIZE + nx;

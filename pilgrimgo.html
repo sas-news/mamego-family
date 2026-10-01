@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"need","label":"奉納に必要な聖地数","min":2,"max":5,"def":3,"unit":"箇所"},{"key":"ply_cap","label":"打ち切り手数","min":60,"max":300,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1863,7 +1863,7 @@
             {
                 const shrines = getStarPoints(BOARD_SIZE);
                 const held = shrines.filter(pt => board[pt.y * BOARD_SIZE + pt.x] === player);
-                if (held.length >= 3) {
+                if (held.length >= (P('need') || 3)) {
                     held.forEach(pt => fxGlow(pt.y * BOARD_SIZE + pt.x, '#f87171', 900));
                     fxShake(6, 380);
                     winByRule(player, '奉納達成', '3つの聖地に石を奉納しました'); return;
@@ -1871,7 +1871,7 @@
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();
@@ -2756,7 +2756,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ((function(){ const s = getStarPoints(BOARD_SIZE).filter(pt => board[pt.y * BOARD_SIZE + pt.x] === turn).length; return '聖地 ' + s + '/3'; })());
+                const et = gameOver ? '' : ((function(){ const s = getStarPoints(BOARD_SIZE).filter(pt => board[pt.y * BOARD_SIZE + pt.x] === turn).length; return '聖地 ' + s + '/' + (P('need') || 3); })());
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

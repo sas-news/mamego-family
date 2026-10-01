@@ -10,10 +10,11 @@ module.exports = {
     icon: 'pollengo',
     spec: [
         ...K.rb('POLLENGO', '花粉碁', 'pollengo'),
+        K.params([{ key: 'wind_turn', label: '風向きの変わる間隔', min: 2, max: 20, def: 8, unit: '手' }, { key: 'fly_dist', label: '花粉の飛距離', min: 1, max: 4, def: 2, unit: 'マス' }, { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 300, def: 140, unit: '手' }]),
         // 風向き: 手数で巡回 (東→南→西→北)
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        function windDir() {
-            return [[1, 0], [0, 1], [-1, 0], [0, -1]][Math.floor(history.length / 8) % 4];
+            return [[1, 0], [0, 1], [-1, 0], [0, -1]][Math.floor(history.length / Math.max(1, P('wind_turn') || 8)) % 4];
         }
 
         function isValidPlacement(cells, player) {`],
@@ -26,7 +27,7 @@ module.exports = {
             {
                 const [wdx, wdy] = windDir();
                 const last = move.cells[0];
-                const tx = last.x + wdx * 2, ty = last.y + wdy * 2;
+                const _fd = Math.max(1, P('fly_dist') || 2), tx = last.x + wdx * _fd, ty = last.y + wdy * _fd;
                 if (tx >= 0 && ty >= 0 && tx < BOARD_SIZE && ty < BOARD_SIZE) {
                     const ti = ty * BOARD_SIZE + tx;
                     if (board[ti] === 0) {
@@ -40,7 +41,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,
@@ -69,7 +70,7 @@ module.exports = {
                 ctx.fill();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'風' + ['→','↓','←','↑'][Math.floor(history.length / 8) % 4]`),
+        ...K.EVENT_CHIP_SPEC(`'風' + ['→','↓','←','↑'][Math.floor(history.length / Math.max(1, P('wind_turn') || 8)) % 4]`),
         [K.ONE, K.INFO_ALGO, `            花粉碁: 風下2マスに花粉が飛び、空きマスに自分の石が芽吹く<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

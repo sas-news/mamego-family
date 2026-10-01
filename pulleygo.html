@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"drop_d","label":"敵石の落下幅","min":1,"max":3,"def":1,"unit":"マス"},{"key":"ply_cap","label":"打ち切り手数","min":60,"max":300,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1857,7 +1857,7 @@
                 const mx = BOARD_SIZE - 1 - px;
                 const mi = py * BOARD_SIZE + mx;
                 if (board[mi] === opponent) {
-                    const ny = py + 1;
+                    const ny = py + Math.max(1, P('drop_d') || 1);
                     if (ny >= BOARD_SIZE) {
                         // 盤から落下 → 捕獲
                         board[mi] = 0; captures[player]++;
@@ -1875,7 +1875,7 @@
                 }
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

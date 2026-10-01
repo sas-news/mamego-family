@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,7 @@ module.exports = {
     icon: 'platego',
     spec: [
         ...K.rb('PLATEGO', '皿回碁', 'platego'),
+        K.params([{ key: 'spin_max', label: '皿の回転数', min: 2, max: 10, def: 4, unit: '手' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' }]),
         ...ST(ST_INIT),
 
         // 皿回し: 孤立自石の回転が毎手落ちる。隣に置くと回し直し
@@ -61,14 +62,14 @@ module.exports = {
                     if (board[i] !== player) { if (st.spin[i] !== undefined) delete st.spin[i]; continue; }
                     if (i === pi) continue;
                     const lone = !getNeighbors(i).some(n => board[n] === player);
-                    if (!lone) { st.spin[i] = 4; continue; }
-                    if (st.spin[i] === undefined) st.spin[i] = 4;
+                    if (!lone) { st.spin[i] = (P('spin_max') || 4); continue; }
+                    if (st.spin[i] === undefined) st.spin[i] = (P('spin_max') || 4);
                     else st.spin[i]--;
                     if (st.spin[i] <= 0) fell.push(i);
                 }
                 // 新たに置いた石と、その隣の自石は回し直される
-                st.spin[pi] = 4;
-                getNeighbors(pi).forEach(n => { if (board[n] === player) st.spin[n] = 4; });
+                st.spin[pi] = (P('spin_max') || 4);
+                getNeighbors(pi).forEach(n => { if (board[n] === player) st.spin[n] = (P('spin_max') || 4); });
                 if (fell.length) {
                     fell.forEach(i => { board[i] = 0; delete st.spin[i]; fxSplash(i, '#94a3b8', 9); });
                     fxText(fell[0], '皿が落ちた!', '#94a3b8', 1200);

@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"cycle","label":"極夜の周期","min":8,"max":48,"def":24,"unit":"手"},{"key":"night_len","label":"極夜の長さ","min":2,"max":12,"def":6,"unit":"手"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.5,"def":0.75,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1151,7 +1151,7 @@
             ctx.restore();
 
             // 極夜は盤面を深い藍に染める
-            if ((history.length % 24) >= 18) {
+            if ((history.length % (P('cycle') || 24)) >= ((P('cycle') || 24) - (P('night_len') || 6))) {
                 ctx.save();
                 ctx.fillStyle = 'rgba(15,23,42,0.40)';
                 ctx.fillRect(padding - cellSize / 2, padding - cellSize / 2, BOARD_SIZE * cellSize, BOARD_SIZE * cellSize);
@@ -1809,7 +1809,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1845,7 +1845,7 @@
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;
             // 極夜碁: 周期の18-23手目は極夜。一切の取りが凍る
-            const pn = (history.length % 24) >= 18;
+            const pn = (history.length % (P('cycle') || 24)) >= ((P('cycle') || 24) - (P('night_len') || 6));
             const captured = pn ? [] : getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
@@ -2735,7 +2735,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ((history.length % 24) >= 18 ? '極夜' : '極夜まで' + (((18 - history.length % 24) + 24) % 24) + '手');
+                const et = gameOver ? '' : (((history.length % (P('cycle') || 24)) >= ((P('cycle') || 24) - (P('night_len') || 6))) ? '極夜' : '極夜まで' + (((((P('cycle') || 24) - (P('night_len') || 6)) - history.length % (P('cycle') || 24)) + (P('cycle') || 24)) % (P('cycle') || 24)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

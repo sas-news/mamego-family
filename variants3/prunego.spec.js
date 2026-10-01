@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -36,7 +36,7 @@ const ST = (init) => [
                 deadStones: [...deadStones],`],
     [K.ONE, K.ONLINE_RECV, K.ONLINE_RECV + `\n            st = data.st ? JSON.parse(JSON.stringify(data.st)) : ${init};`],
 ];
-const ST_INIT = `{ uses: { 1: 5, 2: 5 }, armed: { 1: false, 2: false }, paid: {} }`;
+const ST_INIT = `{ uses: { 1: (P('prune_uses') || 5), 2: (P('prune_uses') || 5) }, armed: { 1: false, 2: false }, paid: {} }`;
 module.exports = {
     file: 'prunego.html',
     en: 'PRUNEGO',
@@ -47,6 +47,7 @@ module.exports = {
     icon: 'prunego',
     spec: [
         ...K.rb('PRUNEGO', '剪定碁', 'prunego'),
+        K.params([{ key: 'prune_uses', label: '剪定の回数', min: 1, max: 15, def: 5, unit: '回' }, { key: 'tree_min', label: '樹形ボーナスの連サイズ', min: 3, max: 12, def: 5, unit: '石' }, { key: 'tree_pts', label: '樹形ボーナス', min: 1, max: 8, def: 2, unit: '目' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' }]),
         ...ST(ST_INIT),
         // 補助関数をページスコープへ注入
         [K.ONE, `        function executeMove(move, player) {`, `        const pruneCut = (idx, player) => {
@@ -76,7 +77,7 @@ module.exports = {
     consecutivePasses = 0;
     holdUsed = false;
     turn = player === 1 ? 2 : 1;
-    if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) { endGameByScore(); return true; }
+    if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) { endGameByScore(); return true; }
     updateUI();
     if (gameMode === 'online' && onlineRoomId) syncOnlineState();
     saveState();
@@ -97,13 +98,13 @@ module.exports = {
                     if (board[i] !== player || seen.has(i)) continue;
                     const g = getConnectedGroup(i, player);
                     g.forEach(j => seen.add(j));
-                    if (g.length < 5) continue;
+                    if (g.length < (P('tree_min') || 5)) continue;
                     const tree = g.every(j => getNeighbors(j).filter(n => board[n] === player).length <= 2);
                     if (!tree) continue;
                     const key = g.slice().sort((a, b) => a - b).join(',');
                     if (st.paid[key]) continue;
                     st.paid[key] = 1;
-                    captures[player] += 2;
+                    captures[player] += (P('tree_pts') || 2);
                     fxText(i, '見事な樹形 +2', '#22c55e', 1300);
                     fxGlow(i, '#4ade80', 850);
                 }

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"num_max","label":"当たり数字の種類","min":3,"max":10,"def":6,"unit":"種類"},{"key":"hit_pts","label":"命中1点の得点","min":1,"max":9,"def":3,"unit":"目"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.5,"def":0.75,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1816,7 +1816,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -2221,9 +2221,9 @@
             const territory = calculateTerritory();
 
             const nums = prizeNums();
-            if (st.roll == null) st.roll = 1 + Math.floor(Math.random() * 6);
-            const hitB = nums.filter((n, i) => n === st.roll && board[i] === 1).length * 3;
-            const hitW = nums.filter((n, i) => n === st.roll && board[i] === 2).length * 3;
+            if (st.roll == null) st.roll = 1 + Math.floor(Math.random() * (P('num_max') || 6));
+            const hitB = nums.filter((n, i) => n === st.roll && board[i] === 1).length * (P('hit_pts') || 3);
+            const hitW = nums.filter((n, i) => n === st.roll && board[i] === 2).length * (P('hit_pts') || 3);
             const blackTotal = territory.black + captures[1] + hitB;
             const whiteTotal = territory.white + captures[2] + komi + hitW;
             const diff = Math.abs(blackTotal - whiteTotal);
@@ -2741,7 +2741,7 @@
         // 宝盤: 各着手点に1〜6の当たり数字 (盤サイズに合わせて生成)
         function prizeNums() {
             if (!st.nums || st.nums.length !== board.length) {
-                st.nums = board.map(() => 1 + Math.floor(Math.random() * 6));
+                st.nums = board.map(() => 1 + Math.floor(Math.random() * (P('num_max') || 6)));
             }
             return st.nums;
         }

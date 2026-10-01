@@ -10,6 +10,7 @@ module.exports = {
     icon: 'pushrowgo',
     spec: [
         ...K.rb('PUSHROWGO', '列推碁', 'pushrowgo'),
+        K.params([{ key: 'push_d', label: '押し出し幅', min: 1, max: 3, def: 1, unit: 'マス' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' }]),
         // 列押し: 着手筋の敵石を着手点から遠ざかる方向に1マスずらす
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -22,7 +23,7 @@ module.exports = {
                 for (let y = 0; y < BOARD_SIZE; y++) {
                     const i = y * BOARD_SIZE + px;
                     if (board[i] !== opponent || y === py) continue;
-                    const ny = y < py ? y - 1 : y + 1;
+                    const _pd2 = Math.max(1, P('push_d') || 1), ny = y < py ? y - _pd2 : y + _pd2;
                     if (ny < 0 || ny >= BOARD_SIZE) {
                         moves.push({ from: i, to: -1 }); // 盤外に押し出されて潰れる
                         continue;
@@ -55,7 +56,7 @@ module.exports = {
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 endGameByScore();
                 return;
             }

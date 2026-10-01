@@ -9,12 +9,24 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('PIECECHAINGO', '鎖碁', 'piecechaingo'),
+        K.params([{ key: 'link_len', label: '鎖の長さ', options: [{ v: 2, l: '2マス以内' }, { v: 3, l: '3マス以内' }], def: 2 }]),
         [K.ONE, `            ORIENTATIONS[type] = list;
         });`, `            ORIENTATIONS[type] = list;
         });
 
         // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
-        ORIENTATIONS.STONE = [[[0,0],[1,0]],[[0,0],[0,1]],[[0,0],[1,1]],[[0,1],[1,0]],[[0,0],[2,0]],[[0,0],[0,2]],[[0,1],[2,0]],[[0,0],[1,2]],[[0,0],[2,1]],[[0,2],[1,0]],[[0,0],[2,2]],[[0,2],[2,0]]];`],
+        function rebuildChain() {
+            const L = Math.max(1, P('link_len') || 2);
+            const shapes = [];
+            for (let dy = 0; dy <= L; dy++) for (let dx = -L; dx <= L; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                if (dy === 0 && dx < 0) continue;
+                shapes.push(dx < 0 ? [[0, dy], [-dx, 0]] : [[0, 0], [dx, dy]]);
+            }
+            ORIENTATIONS.STONE = shapes;
+        }
+        rebuildChain();
+        function onVariantParam() { rebuildChain(); }`],
         [K.ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`, `        const PIECE_SIZE = 1;`],
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
 

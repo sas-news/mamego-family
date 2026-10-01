@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"axis_r","label":"極軸の太さ","min":0,"max":3,"def":0,"unit":"マス","hint":"0=中央1本線"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1170,10 +1170,11 @@
                 const c = (BOARD_SIZE - 1) / 2;
                 ctx.save();
                 ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.14);
-                ctx.fillRect(-cellSize, padding + (c - 0.5) * cellSize,
-                    padding * 2 + BOARD_SIZE * cellSize, cellSize);
-                ctx.fillRect(padding + (c - 0.5) * cellSize, -cellSize,
-                    cellSize, padding * 2 + BOARD_SIZE * cellSize);
+                const _ar = P('axis_r') || 0;
+                ctx.fillRect(-cellSize, padding + (c - 0.5 - _ar) * cellSize,
+                    padding * 2 + BOARD_SIZE * cellSize, cellSize * (1 + 2 * _ar));
+                ctx.fillRect(padding + (c - 0.5 - _ar) * cellSize, -cellSize,
+                    cellSize * (1 + 2 * _ar), padding * 2 + BOARD_SIZE * cellSize);
                 ctx.restore();
             }
 
@@ -1819,7 +1820,7 @@
             {
                 const c = (BOARD_SIZE - 1) / 2;
                 for (const p of cells) {
-                    if (p.x === c || p.y === c) continue; // 極軸上は常に可
+                    if (Math.abs(p.x - c) <= (P('axis_r') || 0) || Math.abs(p.y - c) <= (P('axis_r') || 0)) continue; // 極軸上は常に可
                     const idx = p.y * BOARD_SIZE + p.x;
                     const touchOwn = getNeighbors(idx).some(n => board[n] === player);
                     if (!touchOwn) return false;

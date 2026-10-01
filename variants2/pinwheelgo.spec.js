@@ -9,13 +9,15 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('PINWHEELGO', '風車碁', 'pinwheelgo'),
+        K.params([{ key: 'notch_len', label: '切れ込みの長さ', min: 2, max: 8, def: 5, unit: 'マス' }, { key: 'notch_wid', label: '切れ込みの幅', min: 1, max: 4, def: 2, unit: 'マス' }]),
         // 各隅を90°回転対称にノッチ状に削る
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
                 const m = BOARD_SIZE - 1;
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    const notch = (x < 2 && y < 5) || (x > m - 5 && y < 2)
-                        || (x > m - 2 && y > m - 5) || (x < 5 && y > m - 2);
+                    const _nw = Math.max(1, P('notch_wid') || 2), _nl = Math.max(2, P('notch_len') || 5);
+                    const notch = (x < _nw && y < _nl) || (x > m - _nl && y < _nw)
+                        || (x > m - _nw && y > m - _nl) || (x < _nl && y > m - _nw);
                     if (notch) board[y * BOARD_SIZE + x] = 3;
                 }
             }`],

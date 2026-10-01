@@ -10,6 +10,7 @@ module.exports = {
     icon: 'pilgrimgo',
     spec: [
         ...K.rb('PILGRIMGO', '巡礼碁', 'pilgrimgo'),
+        K.params([{ key: 'need', label: '奉納に必要な聖地数', min: 2, max: 5, def: 3, unit: '箇所' }, { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 300, def: 140, unit: '手' }]),
         [K.ONE, '        function endGameByScore() {', K.WIN_BY_RULE_FN + `
         function endGameByScore() {`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -19,7 +20,7 @@ module.exports = {
             {
                 const shrines = getStarPoints(BOARD_SIZE);
                 const held = shrines.filter(pt => board[pt.y * BOARD_SIZE + pt.x] === player);
-                if (held.length >= 3) {
+                if (held.length >= (P('need') || 3)) {
                     held.forEach(pt => fxGlow(pt.y * BOARD_SIZE + pt.x, '#f87171', 900));
                     fxShake(6, 380);
                     winByRule(player, '奉納達成', '3つの聖地に石を奉納しました'); return;
@@ -27,7 +28,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,
@@ -53,7 +54,7 @@ module.exports = {
                     ctx.restore();
                 });
             }`),
-        ...K.EVENT_CHIP_SPEC(`(function(){ const s = getStarPoints(BOARD_SIZE).filter(pt => board[pt.y * BOARD_SIZE + pt.x] === turn).length; return '聖地 ' + s + '/3'; })()`),
+        ...K.EVENT_CHIP_SPEC(`(function(){ const s = getStarPoints(BOARD_SIZE).filter(pt => board[pt.y * BOARD_SIZE + pt.x] === turn).length; return '聖地 ' + s + '/' + (P('need') || 3); })()`),
         [K.ONE, K.INFO_ALGO, `            巡礼碁: 5つの聖地 (星の点) のうち3つを同時に制すると奉納達成で即勝ち<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

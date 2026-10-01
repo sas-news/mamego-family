@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"don_every","label":"大太鼓の間隔","min":2,"max":16,"def":8,"unit":"打"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.6,"def":0.8,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1805,7 +1805,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1861,7 +1861,7 @@
             // 大太鼓: 自分の8手ごとの着手は震盪 — 隣の孤立敵石 (連1石) が跳ねて消える
             {
                 const movesP = history.filter(h => h.turn === player).length;
-                if (movesP % 8 === 0 && movesP > 0) {
+                if (movesP % Math.max(1, P('don_every') || 8) === 0 && movesP > 0) {
                     const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                     let bounced = 0;
                     getNeighbors(mi).forEach(n => {
@@ -2752,7 +2752,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (((history.filter(h => h.turn === turn).length + 1) % 8 === 0 || history.filter(h => h.turn === turn).length === 7) ? '次は大太鼓!' : '次の大太鼓まであと ' + (8 - (history.filter(h => h.turn === turn).length % 8)) + ' 打');
+                const et = gameOver ? '' : (((history.filter(h => h.turn === turn).length + 1) % (P('don_every') || 8) === 0 || history.filter(h => h.turn === turn).length === (P('don_every') || 8) - 1) ? '次は大太鼓!' : '次の大太鼓まであと ' + ((P('don_every') || 8) - (history.filter(h => h.turn === turn).length % (P('don_every') || 8))) + ' 打');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

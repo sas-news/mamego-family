@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('ply_cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,7 @@ module.exports = {
     icon: 'pharmacygo',
     spec: [
         ...K.rb('PHARMACYGO', '薬籠碁', 'pharmacygo'),
+        K.params([{ key: 'dose_len', label: '調合に必要な連数', min: 3, max: 8, def: 3, unit: '連' }, { key: 'dose_pts', label: '調合の得点', min: 1, max: 15, def: 5, unit: '目' }, { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 400, def: 150, unit: '手' }]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { bonus: { 1: 0, 2: 0 }, used: {} }; // 調合点・調合済みの生薬`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -69,7 +70,7 @@ module.exports = {
                             run.push(cy * BOARD_SIZE + cx);
                             cx += dx; cy += dy;
                         }
-                        if (run.length >= 3 && run.every(i2 => !st.used[i2])) {
+                        if (run.length >= (P('dose_len') || 3) && run.every(i2 => !st.used[i2])) {
                             run.forEach(i2 => hits.add(i2));
                             doses++;
                         }
@@ -77,8 +78,8 @@ module.exports = {
                 });
                 if (doses) {
                     hits.forEach(i => { st.used[i] = true; fxBurst(i, '#34d399', 8, 1.5); });
-                    st.bonus[player] += doses * 5;
-                    fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '調合! +' + (doses * 5) + '目', '#34d399', 1200);
+                    st.bonus[player] += doses * (P('dose_pts') || 5);
+                    fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '調合! +' + (doses * (P('dose_pts') || 5)) + '目', '#34d399', 1200);
                 }
                 Object.keys(st.used).forEach(i => { if (board[i] === 0) delete st.used[i]; });
             }

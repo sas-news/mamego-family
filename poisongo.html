@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"doom_max","label":"毒死する連の最大サイズ","min":0,"max":40,"def":0,"unit":"石","hint":"0=無制限 (全連が毒死)"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1858,7 +1858,10 @@
                 const seen = new Set();
                 captured.forEach(idx => getNeighbors(idx).forEach(n => {
                     if (board[n] === player && !seen.has(n)) {
-                        getConnectedGroup(n, player).forEach(g => { seen.add(g); doomed.add(g); });
+                        const _grp = getConnectedGroup(n, player);
+                        _grp.forEach(g => seen.add(g));
+                        const _dm = P('doom_max') || 0;
+                        if (_dm === 0 || _grp.length <= _dm) _grp.forEach(g => doomed.add(g));
                     }
                 }));
                 if (doomed.size > 0) {

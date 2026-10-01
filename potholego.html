@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"hole_pos","label":"甌穴の位置","min":0.1,"max":0.5,"step":0.02,"def":0.3,"hint":"盤辺からの比率"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.8,"def":0.9,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -638,13 +638,16 @@
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         // 甌穴: 盤に点在する5つの深い穴。空いている穴に隣接する石は落ち込む
-        const HOLE_SET = new Set();
-        {
+        let HOLE_SET = new Set();
+        function rebuildHoles() {
+            HOLE_SET = new Set();
             const m = Math.floor(BOARD_SIZE / 2);
-            const a = Math.max(2, Math.round(BOARD_SIZE * 0.30));
+            const a = Math.max(2, Math.round(BOARD_SIZE * (P('hole_pos') || 0.30)));
             [[m, 1], [1, m], [BOARD_SIZE - 2, m], [m, BOARD_SIZE - 2], [m, m]]
                 .forEach(([x, y]) => HOLE_SET.add(y * BOARD_SIZE + x));
         }
+        rebuildHoles();
+        function onVariantParam() { rebuildHoles(); }
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -1822,7 +1825,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

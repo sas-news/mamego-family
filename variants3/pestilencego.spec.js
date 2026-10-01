@@ -35,7 +35,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -127,6 +127,7 @@ module.exports = {
     icon: 'pestilencego',
     spec: [
         ...K.rb('PESTILENCEGO', '黒死碁', 'pestilencego'),
+        K.params([{ key: 'plague_every', label: '疫病の蔓延間隔', min: 2, max: 20, def: 8, unit: '手' }, { key: 'plague_max', label: '蔓延の上限', min: 5, max: 120, def: 40, unit: 'マス' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 2.2, def: 1.1, step: 0.05, hint: '交点数×倍率' }]),
         ...PERSIST('{ plague: {} }'),
         // 感染マスには着手できない
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
@@ -217,12 +218,12 @@ module.exports = {
 
             // 疫病ルール: 8手ごとに蔓延 (中心を種に、既感染の全隣が感染)
             // 隔離帯: 感染は最大40マスで封じ込められる (全滅防止)
-            if (history.length % 8 === 0) {
+            if (history.length % Math.max(1, P('plague_every') || 8) === 0) {
                 const center = ((BOARD_SIZE / 2) | 0) * BOARD_SIZE + ((BOARD_SIZE / 2) | 0);
                 if (!st.plague[center]) st.plague[center] = 1;
                 const prev = Object.keys(st.plague).map(Number);
                 const newly = [];
-                if (prev.length < 40) {
+                if (prev.length < (P('plague_max') || 40)) {
                     prev.forEach(i => getNeighbors(i).forEach(n => {
                         if (!st.plague[n]) { st.plague[n] = 1; newly.push(n); }
                     }));
@@ -267,7 +268,7 @@ ${CAP}
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'疫病 ' + Object.keys(st.plague).length + 'マス 蔓延まで' + (8 - history.length % 8) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'疫病 ' + Object.keys(st.plague).length + 'マス 蔓延まで' + ((P('plague_every') || 8) - history.length % (P('plague_every') || 8)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            黒死碁: 8手ごとに盤中央から疫病が蔓延。感染マスは打てず・呼吸せず・地にならない<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

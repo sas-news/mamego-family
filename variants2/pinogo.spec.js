@@ -9,16 +9,14 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('PINOGO', '擲碁', 'pinogo'),
+        K.params([{ key: 'pin_rows', label: 'ピンの段数', min: 2, max: 6, def: 4, unit: '段' }, { key: 'pin_pts', label: 'ピン1本の得点', min: 1, max: 5, def: 1, unit: '点' }]),
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             // 擲碁: 盤の中央寄りに10本のピンを三角形に立てる
             {
                 const pc = Math.floor(BOARD_SIZE / 2);
-                const pins = [
-                    [pc, 1],
-                    [pc - 1, 2], [pc + 1, 2],
-                    [pc - 2, 3], [pc, 3], [pc + 2, 3],
-                    [pc - 3, 4], [pc - 1, 4], [pc + 1, 4], [pc + 3, 4]
-                ];
+                const pins = [];
+                const _pr = Math.max(1, P('pin_rows') || 4);
+                for (let r = 1; r <= _pr; r++) for (let k = 0; k < r; k++) pins.push([pc - (r - 1) + 2 * k, r]);
                 pins.forEach(([px, py]) => {
                     if (px >= 0 && px < BOARD_SIZE && py < BOARD_SIZE) board[py * BOARD_SIZE + px] = 3;
                 });
@@ -30,7 +28,7 @@ module.exports = {
             move.cells.forEach(p => {
                 getNeighbors(p.y * BOARD_SIZE + p.x).forEach(n => {
                     if (board[n] === 3) {
-                        board[n] = 0; captures[player]++;
+                        board[n] = 0; captures[player] += (P('pin_pts') || 1);
                         // ピンが弾け倒れて得点になる
                         fxBurst(n, '#f2f0e4', 10, 1.6);
                         fxGlow(n, '#fca5a5', 700);

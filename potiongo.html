@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"brew_pts","label":"調合の得点","min":1,"max":9,"def":3,"unit":"目"},{"key":"ply_cap","label":"打ち切り手数","min":0.5,"max":2.2,"def":1.1,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1888,14 +1888,14 @@
                 });
                 if (fresh && types[0] && types[1] && types[2]) {
                     grp.forEach(i => { st.brewed[i] = 1; });
-                    st.brewPts[player] += 3;
-                    fxText(i0, '調合成功+3', '#4ade80', 1200);
+                    st.brewPts[player] += (P('brew_pts') || 3);
+                    fxText(i0, '調合成功+' + (P('brew_pts') || 3), '#4ade80', 1200);
                     fxGlow(i0, '#22c55e', 800);
                 }
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 return;
             }

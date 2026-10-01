@@ -9,6 +9,7 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('PLAGUEGO', '疫病碁', 'plaguego'),
+        K.params([{ key: 'rot_every', label: '疫病で蝕む間隔', min: 1, max: 5, def: 1, unit: '手ごと' }]),
         // 疫地 plague (idx の Set) の状態登録
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let plague = new Set(); // 取跡が残した疫地 (idx)`],
@@ -45,7 +46,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 疫病: 疫地の上の石は手番終わりに蝕まれて消える (相手のアゲハマへ)
-            {
+            if (history.length % Math.max(1, P('rot_every') || 1) === 0) {
                 let rot = 0;
                 plague.forEach(idx => {
                     const v = board[idx];
