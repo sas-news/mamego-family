@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,10 @@ module.exports = {
     icon: 'sotchigo',
     spec: [
         ...K.rb('SOTCHIGO', '装丁碁', 'sotchigo'),
+        K.params([
+            { key: 'sotchi_pts', label: '綴じ目の得点', min: 0, max: 9, def: 3, unit: '点' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -74,7 +78,7 @@ module.exports = {
             const soIdx = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             getNeighbors(soIdx).forEach(nb => {
                 if (board[nb] === 0 && getNeighbors(nb).every(n => board[n] === player)) {
-                    st.score[player] += 3;
+                    st.score[player] += (P('sotchi_pts') ?? 3);
                 }
             });
 

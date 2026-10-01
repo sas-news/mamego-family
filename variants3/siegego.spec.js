@@ -10,6 +10,9 @@ module.exports = {
     icon: 'siegego',
     spec: [
         ...K.rb('SIEGEGO', '攻城碁', 'siegego'),
+        K.params([
+            { key: 'move_cap', label: '打ち切り手数', min: 60, max: 280, def: 140, step: 10, unit: '手' },
+        ]),
         // 初期盤: 中央行を城壁 (3) で塞ぐ。門は3箇所
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             // 城壁: 中央行を塀で塞ぎ、3つの門を残す
@@ -39,7 +42,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('move_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

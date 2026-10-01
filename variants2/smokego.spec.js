@@ -9,6 +9,10 @@ module.exports = {
     kind: 'smoke',
     spec: [
         ...K.rb('SMOKEGO', '煙幕碁', 'smokego'),
+        K.params([
+            { key: 'smoke_interval', label: '煙幕の間隔', min: 2, max: 15, def: 6, unit: '手' },
+            { key: 'smoke_turns', label: '煙幕の持続', min: 1, max: 8, def: 3, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { smoke: null }; // 煙幕碁: { x, y, at } 発生中の煙幕`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -34,7 +38,7 @@ module.exports = {
         [K.ONE, '        function drawBoardElements(padding, cellSize) {',
 `        // 煙幕碁: 煙幕は発生から3手の間有効。その3x3内は不可視
         function inSmoke(x, y) {
-            return !!(st.smoke && history.length - st.smoke.at < 3
+            return !!(st.smoke && history.length - st.smoke.at < (P('smoke_turns') || 3)
                 && Math.abs(x - st.smoke.x) <= 1 && Math.abs(y - st.smoke.y) <= 1);
         }
 
@@ -45,7 +49,7 @@ module.exports = {
 
 
             // 煙幕碁: 6の倍数手の着地点を中心に煙幕を張る
-            if (history.length % 6 === 0) {
+            if (history.length % (P('smoke_interval') || 6) === 0) {
                 const sc = move.cells[0];
                 st.smoke = { x: sc.x, y: sc.y, at: history.length };
                 // 煙幕の発生: 3x3全区で煙の噴霧 + 盤面の振動 + 「煙幕」表示
@@ -70,7 +74,7 @@ module.exports = {
 `                const smokeA = (alive.length && inSmoke(alive[0].x, alive[0].y)) ? 0.10 : 1;
                 drawPieceShape(alive, padding, cellSize, fill, stroke, isDead ? 0.35 : smokeA);`],
         K.CUE_STARS(`            // 煙幕: 3x3に灰色の煙を描く
-            if (st.smoke && history.length - st.smoke.at < 3) {
+            if (st.smoke && history.length - st.smoke.at < (P('smoke_turns') || 3)) {
                 const sx = padding + (st.smoke.x - 1.5) * cellSize;
                 const sy = padding + (st.smoke.y - 1.5) * cellSize;
                 ctx.save();
@@ -82,7 +86,7 @@ module.exports = {
                 ctx.strokeRect(sx, sy, cellSize * 3, cellSize * 3);
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`st.smoke && history.length - st.smoke.at < 3 ? '煙幕 残り' + (3 - (history.length - st.smoke.at)) + '手' : '煙幕まで ' + (history.length % 6 === 0 ? 6 : 6 - history.length % 6) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`st.smoke && history.length - st.smoke.at < (P('smoke_turns') || 3) ? '煙幕 残り' + ((P('smoke_turns') || 3) - (history.length - st.smoke.at)) + '手' : '煙幕まで ' + (history.length % (P('smoke_interval') || 6) === 0 ? (P('smoke_interval') || 6) : (P('smoke_interval') || 6) - history.length % (P('smoke_interval') || 6)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            煙幕碁: 6手ごとの着地点を中心に3x3の煙幕。区内の石は3手の間見えない<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
@@ -96,7 +100,7 @@ module.exports = {
 `        let obstaclePainter = null;
         // 煙幕碁: 発生中の煙幕内を煙の塊が渦巻く常時オーバーレイ
         fxAmbient((ctx2, now, pad, cs) => {
-            if (!st.smoke || history.length - st.smoke.at >= 3) return;
+            if (!st.smoke || history.length - st.smoke.at >= (P('smoke_turns') || 3)) return;
             ctx2.save();
             for (let k = 0; k < 8; k++) {
                 const ph = now / 1600 + k * 1.31;

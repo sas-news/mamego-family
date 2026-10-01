@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"snow_cycle","label":"雪の周期","min":10,"max":80,"def":30,"step":2,"unit":"手","hint":"半分で雪解け"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.5,"def":0.75,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1796,7 +1796,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1851,7 +1851,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 大雪: 30手ごとに全石が雪に埋まる (1個だけ残る)
-            if (history.length > 0 && history.length % 30 === 0) {
+            if (history.length > 0 && history.length % (P('snow_cycle') || 30) === 0) {
                 const stones = [];
                 board.forEach((v, i) => { if (v === 1 || v === 2) stones.push(i); });
                 stones.forEach((i, k) => {
@@ -1865,7 +1865,7 @@
                 }
             }
             // 春: 埋まった石が解けて復活
-            if (history.length > 0 && history.length % 30 === 15) {
+            if (history.length > 0 && history.length % (P('snow_cycle') || 30) === Math.floor((P('snow_cycle') || 30) / 2)) {
                 let revived = 0;
                 Object.keys(st.snow).forEach(k => {
                     const i = +k;
@@ -2752,7 +2752,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (history.length % 30 < 15 ? '雪期' : '雪予報' + (30 - (history.length % 30)));
+                const et = gameOver ? '' : (history.length % (P('snow_cycle') || 30) < Math.floor((P('snow_cycle') || 30) / 2) ? '雪期' : '雪予報' + ((P('snow_cycle') || 30) - (history.length % (P('snow_cycle') || 30))));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

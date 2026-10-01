@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"slit_count","label":"切れ目の本数","min":1,"max":4,"def":2,"unit":"本"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2752,10 +2752,10 @@
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
-                const y1 = Math.floor(BOARD_SIZE / 3), y2 = Math.floor(2 * BOARD_SIZE / 3);
-                for (let x = 0; x < BOARD_SIZE; x++) {
-                    board[y1 * BOARD_SIZE + x] = 3;
-                    board[y2 * BOARD_SIZE + x] = 3;
+                const cnt = Math.max(1, P('slit_count') || 2);
+                for (let k = 1; k <= cnt; k++) {
+                    const wy = Math.floor(k * BOARD_SIZE / (cnt + 1));
+                    for (let x = 0; x < BOARD_SIZE; x++) board[wy * BOARD_SIZE + x] = 3;
                 }
             }
             pieces = [];

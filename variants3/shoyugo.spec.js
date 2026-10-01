@@ -47,6 +47,11 @@ module.exports = {
     icon: 'shoyugo',
     spec: [
         ...K.rb('SHOYUGO', '醤油碁', 'shoyugo'),
+        K.params([
+            { key: 'age_interval', label: '熟成の間隔', min: 2, max: 16, def: 6, unit: '手' },
+            { key: 'age_max', label: '熟成の上限', min: 1, max: 8, def: 3, unit: '段' },
+            { key: 'flavor_pts', label: '熟成1段の風味', min: 0, max: 3, def: 1, unit: '目' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 醤油蔵: 対角位置の2つの3x3区域
@@ -64,12 +69,12 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 醤油の熟成: 6手ごとに蔵の石の熟成が一段階進む
-            if (history.length > 0 && history.length % 6 === 0) {
+            if (history.length > 0 && history.length % (P('age_interval') || 6) === 0) {
                 Object.keys(st.aged).forEach(k => { if (board[+k] !== 1 && board[+k] !== 2) delete st.aged[k]; });
                 let aged = 0;
                 KURA_SET.forEach(i => {
                     if (board[i] === 1 || board[i] === 2) {
-                        st.aged[i] = Math.min(3, (st.aged[i] || 0) + 1);
+                        st.aged[i] = Math.min(P('age_max') || 3, (st.aged[i] || 0) + 1);
                         fxGlow(i, '#92400e', 500);
                         aged++;
                     }
@@ -95,8 +100,8 @@ module.exports = {
             // 醤油ルール: 蔵の石の熟成度×1目の風味
             {
                 const sb = shoyuBonus();
-                territory.black += sb[1];
-                territory.white += sb[2];
+                territory.black += sb[1] * (P('flavor_pts') ?? 1);
+                territory.white += sb[2] * (P('flavor_pts') ?? 1);
             }`],
         // 蔵の地色
         K.CUE_GRID(`            // 醤油蔵: 深い琥珀の木樽区域
@@ -132,7 +137,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'熟成まで ' + (6 - (history.length % 6)) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`'熟成まで ' + ((P('age_interval') || 6) - (history.length % (P('age_interval') || 6))) + ' 手'`),
         [K.ONE, K.INFO_ALGO, `            醤油碁: 蔵区域の石は6手ごとに熟成 (最大3段階)。終局時に熟成度×1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

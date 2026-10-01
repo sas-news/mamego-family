@@ -9,19 +9,22 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('SHOGIGO', '将棋碁', 'shogigo'),
+        K.params([
+            { key: 'uchikomi_cost', label: '打ち込みの持ち駒コスト', min: 1, max: 4, def: 1, unit: '個' },
+        ]),
         // 持ち駒があれば敵石の上に打ち込める
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 const pv = board[p.y * BOARD_SIZE + p.x];
                 // 将棋碁: 持ち駒 (アゲハマ) があれば敵石の上に打ち込める
-                if (pv !== 0 && !(pv === (player === 1 ? 2 : 1) && captures[player] > 0)) return false;
+                if (pv !== 0 && !(pv === (player === 1 ? 2 : 1) && captures[player] >= (P('uchikomi_cost') || 1))) return false;
             }`],
         // 打ち込みは持ち駒を消費
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
 `            move.cells.forEach(p => {
                 const bi = p.y * BOARD_SIZE + p.x;
                 if (board[bi] !== 0) {
-                    captures[player]--; // 打ち込みは持ち駒を消費
+                    captures[player] -= (P('uchikomi_cost') || 1); // 打ち込みは持ち駒を消費
                     // 打ち込み: 駒台から駒が叩き込まれる閃き
                     fxGlow(bi, '#fbbf24', 900);
                     fxBurst(bi, '#fbbf24', 8, 1.3);

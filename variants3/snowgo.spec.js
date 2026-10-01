@@ -10,15 +10,20 @@ module.exports = {
     icon: 'snowgo',
     spec: [
         ...K.rb('SNOWGO', '雪崩碁', 'snowgo'),
+        K.params([
+            { key: 'snow_interval', label: '雪線の下降間隔', min: 3, max: 20, def: 8, unit: '手' },
+            { key: 'snow_cycle', label: '雪線の周期 (段数)', min: 2, max: 9, def: 5, hint: 'この段数で雪解けに戻る' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 2.0, def: 1.1, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // 雪線: 8手ごとに1段ずつ下り、4段で解けて元に戻る (5段階周期)
-        [K.ONE, K.VALID_BOUNDS, `            const snowDepth = Math.floor(history.length / 8) % 5;
+        [K.ONE, K.VALID_BOUNDS, `            const snowDepth = Math.floor(history.length / (P('snow_interval') || 8)) % (P('snow_cycle') || 5);
             for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
                 if (p.y < snowDepth) return false; // 凍結帯には着手できない
             }`],
         // 凍結帯の連は取られない
-        [K.ONE, K.CAPTURE_BLOCK, `            const snowDepth2 = Math.floor(history.length / 8) % 5;
+        [K.ONE, K.CAPTURE_BLOCK, `            const snowDepth2 = Math.floor(history.length / (P('snow_interval') || 8)) % (P('snow_cycle') || 5);
             const captured = getCapturedStones(board, opponent).filter(i => Math.floor(i / BOARD_SIZE) >= snowDepth2);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
@@ -32,15 +37,15 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 雪線の下降/融解の演出
-            if (history.length % 8 === 0) {
-                const sd = Math.floor(history.length / 8) % 5;
+            if (history.length % (P('snow_interval') || 8) === 0) {
+                const sd = Math.floor(history.length / (P('snow_interval') || 8)) % (P('snow_cycle') || 5);
                 const cm = Math.floor(BOARD_SIZE / 2) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2);
                 if (sd === 0) fxText(cm, '雪解け!', '#7dd3fc', 1100);
                 else fxText(cm, '雪崩!', '#e0f2fe', 1100);
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -50,7 +55,7 @@ module.exports = {
             turn = opponent;`],
         ...K.STONE_MARKS_SPEC(`            // 雪線: 凍結帯を雪で覆い、石には雪帽を被せる
             {
-                const sd = Math.floor(history.length / 8) % 5;
+                const sd = Math.floor(history.length / (P('snow_interval') || 8)) % (P('snow_cycle') || 5);
                 if (sd > 0) {
                     ctx.save();
                     ctx.fillStyle = 'rgba(224,242,254,0.55)';
@@ -70,7 +75,7 @@ module.exports = {
                     ctx.restore();
                 }
             }`),
-        ...K.EVENT_CHIP_SPEC(`'雪線 ' + (Math.floor(history.length / 8) % 5) + '段'`),
+        ...K.EVENT_CHIP_SPEC(`'雪線 ' + (Math.floor(history.length / (P('snow_interval') || 8)) % (P('snow_cycle') || 5)) + '段'`),
         // 連続パスは雪に埋もれて即終局 — 死石は自動判定で採点 (対話的死石確認は省略)
         [K.ONE, `                startDeadStoneSelectionPhase();`, `                endGameByScore();`],
         [K.ONE, K.RV_ALGO, K.rv([

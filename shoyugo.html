@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"age_interval","label":"熟成の間隔","min":2,"max":16,"def":6,"unit":"手"},{"key":"age_max","label":"熟成の上限","min":1,"max":8,"def":3,"unit":"段"},{"key":"flavor_pts","label":"熟成1段の風味","min":0,"max":3,"def":1,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1900,12 +1900,12 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 醤油の熟成: 6手ごとに蔵の石の熟成が一段階進む
-            if (history.length > 0 && history.length % 6 === 0) {
+            if (history.length > 0 && history.length % (P('age_interval') || 6) === 0) {
                 Object.keys(st.aged).forEach(k => { if (board[+k] !== 1 && board[+k] !== 2) delete st.aged[k]; });
                 let aged = 0;
                 KURA_SET.forEach(i => {
                     if (board[i] === 1 || board[i] === 2) {
-                        st.aged[i] = Math.min(3, (st.aged[i] || 0) + 1);
+                        st.aged[i] = Math.min(P('age_max') || 3, (st.aged[i] || 0) + 1);
                         fxGlow(i, '#92400e', 500);
                         aged++;
                     }
@@ -2276,8 +2276,8 @@
             // 醤油ルール: 蔵の石の熟成度×1目の風味
             {
                 const sb = shoyuBonus();
-                territory.black += sb[1];
-                territory.white += sb[2];
+                territory.black += sb[1] * (P('flavor_pts') ?? 1);
+                territory.white += sb[2] * (P('flavor_pts') ?? 1);
             }
 
             const blackTotal = territory.black + captures[1];
@@ -2803,7 +2803,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('熟成まで ' + (6 - (history.length % 6)) + ' 手');
+                const et = gameOver ? '' : ('熟成まで ' + ((P('age_interval') || 6) - (history.length % (P('age_interval') || 6))) + ' 手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"shinogi_pts","label":"シノギ得点","min":0,"max":5,"def":1,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1855,8 +1855,8 @@
                 delete st.threat[__k];
                 if (getLiberties(board, __r) <= 1) {
                     st.shinogiDone[__r] = 1;
-                    st.bonus[player] = (st.bonus[player] || 0) + 1;
-                    fxText(__r, 'シノギ +1', '#2dd4bf', 1000);
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('shinogi_pts') ?? 1);
+                    fxText(__r, 'シノギ +' + (P('shinogi_pts') ?? 1), '#2dd4bf', 1000);
                     fxGlow(__r, '#2dd4bf', 700);
                 }
             }

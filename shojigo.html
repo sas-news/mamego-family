@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"shoji_pts","label":"建具完成の得点","min":0,"max":12,"def":4,"unit":"点"},{"key":"frame_liberty","label":"枠内の呼吸ボーナス","min":0,"max":3,"def":1,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1880,9 +1880,9 @@
                 if (st.done[fi]) return;
                 if (f.every(i => board[i] === player)) {
                     st.done[fi] = player;
-                    st.score[player] += 4;
+                    st.score[player] += (P('shoji_pts') ?? 4);
                     f.forEach(i => fxGlow(i, '#fbbf24', 1200));
-                    fxText(f[0], '建具完成 +4', '#fbbf24', 1500);
+                    fxText(f[0], '建具完成 +' + (P('shoji_pts') ?? 4), '#fbbf24', 1500);
                 }
             });
 
@@ -1933,7 +1933,7 @@
                                 queue.push(n);
                             }
                         });
-                        if (inShoji(curr)) liberties++; // 枠内の石は建具に守られる
+                        if (inShoji(curr)) liberties += (P('frame_liberty') ?? 1); // 枠内の石は建具に守られる
                     }
 
                     if (liberties <= 0) {
@@ -1965,7 +1965,7 @@
                         queue.push(n);
                     }
                 });
-                if (inShoji(curr)) liberties++; // 枠内の石は建具に守られる
+                if (inShoji(curr)) liberties += (P('frame_liberty') ?? 1); // 枠内の石は建具に守られる
             }
             return liberties;
         }

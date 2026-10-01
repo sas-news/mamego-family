@@ -10,6 +10,10 @@ module.exports = {
     icon: 'skeletongo',
     spec: [
         ...K.rb('SKELETONGO', '骨格碁', 'skeletongo'),
+        K.params([
+            { key: 'skeleton_pts', label: '骨格連1つの得点', min: 0, max: 6, def: 2, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.2, max: 1.0, def: 0.4, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // 骨ピース (2連結ドミノ) — 碁石を骨に差し替える
         [K.ONE, K.MOLECULES_ALGO, `        // 骨格碁の骨: 2連結した碁石 (ドミノ)
         const MOLECULES = {
@@ -39,8 +43,8 @@ module.exports = {
                             });
                         }
                         if (n >= 2) {
-                            if (p === 1) { territory.black += 2; skeletonDetail[1]++; }
-                            else { territory.white += 2; skeletonDetail[2]++; }
+                            if (p === 1) { territory.black += (P('skeleton_pts') ?? 2); skeletonDetail[1]++; }
+                            else { territory.white += (P('skeleton_pts') ?? 2); skeletonDetail[2]++; }
                         }
                     }
                 }
@@ -92,7 +96,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 骨2マス×0.8手で即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.4)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.4))) {
                 endGameByScore();
                 return;
             }

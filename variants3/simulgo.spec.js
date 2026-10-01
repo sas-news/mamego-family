@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,9 @@ module.exports = {
     icon: 'simulgo',
     spec: [
         ...K.rb('SIMULGO', '見合碁', 'simulgo'),
+        K.params([
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 見合い: 着手点が相手の直前の着手点の点対称なら、双方の石が消える (無効)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;

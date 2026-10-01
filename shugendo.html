@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"asc_pts","label":"修行石1つの法力点","min":0,"max":6,"def":2,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2243,7 +2243,7 @@
             shugendoSites().forEach(i => {
                 if (st.asc[i] === pl && board[i] === pl) n++;
             });
-            return n * 2;
+            return n * (P('asc_pts') ?? 2);
         }
 
         function endGameByScore() {

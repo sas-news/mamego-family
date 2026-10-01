@@ -9,13 +9,16 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('SLITGO', '切れ目碁', 'slitgo'),
+        K.params([
+            { key: 'slit_count', label: '切れ目の本数', min: 1, max: 4, def: 2, unit: '本' },
+        ]),
         // 行全体の壁が2本
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
-                const y1 = Math.floor(BOARD_SIZE / 3), y2 = Math.floor(2 * BOARD_SIZE / 3);
-                for (let x = 0; x < BOARD_SIZE; x++) {
-                    board[y1 * BOARD_SIZE + x] = 3;
-                    board[y2 * BOARD_SIZE + x] = 3;
+                const cnt = Math.max(1, P('slit_count') || 2);
+                for (let k = 1; k <= cnt; k++) {
+                    const wy = Math.floor(k * BOARD_SIZE / (cnt + 1));
+                    for (let x = 0; x < BOARD_SIZE; x++) board[wy * BOARD_SIZE + x] = 3;
                 }
             }`],
         // 切れ目は青く光る深淵

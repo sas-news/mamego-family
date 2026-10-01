@@ -47,6 +47,11 @@ module.exports = {
     icon: 'shiohigo',
     spec: [
         ...K.rb('SHIOHIGO', '潮干碁', 'shiohigo'),
+        K.params([
+            { key: 'tide_cycle', label: '潮の周期', min: 4, max: 24, def: 12, step: 2, unit: '手' },
+            { key: 'low_tide', label: '干潮の長さ', min: 1, max: 12, def: 6, unit: '手' },
+            { key: 'dug_pts', label: '拾い得点', min: 0, max: 5, def: 1, unit: '目' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 浜: 下2列 (潮の満ち引きで置けたり拾われたりする)
@@ -58,7 +63,7 @@ module.exports = {
             }
         }
         // 12手周期: 0-5=干潮 (浜に置ける)、6-11=満潮 (置けない)
-        function shiohigariOpen() { return history.length % 12 < 6; }`],
+        function shiohigariOpen() { return history.length % (P('tide_cycle') || 12) < (P('low_tide') || 6); }`],
         // 満潮時は浜に置けない
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
@@ -71,12 +76,12 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 潮干狩り: 満潮 (周期6) になった瞬間、浜の石は拾われて持ち主+1目
-            if (history.length % 12 === 6) {
+            if (history.length % (P('tide_cycle') || 12) === (P('low_tide') || 6)) {
                 let dug = 0;
                 HAMA_SET.forEach(i => {
                     const v = board[i];
                     if (v === 1 || v === 2) {
-                        st.dug[v]++;
+                        st.dug[v] += (P('dug_pts') ?? 1);
                         board[i] = 0;
                         fxSplash(i, '#7dd3fc', 8);
                         fxText(i, '拾った!', '#0ea5e9', 1000);

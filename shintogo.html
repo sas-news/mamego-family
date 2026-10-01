@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"shrine_need","label":"鎮座に必要な聖域数","min":1,"max":6,"def":3,"unit":"ヶ所"},{"key":"move_cap","label":"打ち切り手数","min":60,"max":280,"def":140,"step":10,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1869,8 +1869,8 @@
                                 st.shrines[player]++;
                                 ring.forEach(i => fxGlow(i, '#f87171', 900));
                                 fxText(cy * BOARD_SIZE + cx, '注連縄!', '#f87171', 1200);
-                                if (st.shrines[player] >= 3) {
-                                    winByRule(player, '鎮座勝ち', '神域を3ヶ所聖域化しました'); return;
+                                if (st.shrines[player] >= (P('shrine_need') || 3)) {
+                                    winByRule(player, '鎮座勝ち', '神域を' + (P('shrine_need') || 3) + 'ヶ所聖域化しました'); return;
                                 }
                             }
                             done = true;
@@ -1880,7 +1880,7 @@
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('move_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

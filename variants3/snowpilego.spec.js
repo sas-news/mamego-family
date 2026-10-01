@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,13 +47,17 @@ module.exports = {
     icon: 'snowpilego',
     spec: [
         ...K.rb('SNOWPILEGO', '積雪碁', 'snowpilego'),
+        K.params([
+            { key: 'snow_cycle', label: '雪の周期', min: 10, max: 80, def: 30, step: 2, unit: '手', hint: '半分で雪解け' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 雪による埋没と春の復活
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 大雪: 30手ごとに全石が雪に埋まる (1個だけ残る)
-            if (history.length > 0 && history.length % 30 === 0) {
+            if (history.length > 0 && history.length % (P('snow_cycle') || 30) === 0) {
                 const stones = [];
                 board.forEach((v, i) => { if (v === 1 || v === 2) stones.push(i); });
                 stones.forEach((i, k) => {
@@ -67,7 +71,7 @@ module.exports = {
                 }
             }
             // 春: 埋まった石が解けて復活
-            if (history.length > 0 && history.length % 30 === 15) {
+            if (history.length > 0 && history.length % (P('snow_cycle') || 30) === Math.floor((P('snow_cycle') || 30) / 2)) {
                 let revived = 0;
                 Object.keys(st.snow).forEach(k => {
                     const i = +k;
@@ -81,7 +85,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`history.length % 30 < 15 ? '雪期' : '雪予報' + (30 - (history.length % 30))`),
+        ...K.EVENT_CHIP_SPEC(`history.length % (P('snow_cycle') || 30) < Math.floor((P('snow_cycle') || 30) / 2) ? '雪期' : '雪予報' + ((P('snow_cycle') || 30) - (history.length % (P('snow_cycle') || 30)))`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            積雪碁: 30手毎に大雪で全石が埋まり (打てなくなる)、15手後に解けて復活<br>
             PC: クリックで配置<br>

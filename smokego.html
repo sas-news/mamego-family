@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"smoke_interval","label":"煙幕の間隔","min":2,"max":15,"def":6,"unit":"手"},{"key":"smoke_turns","label":"煙幕の持続","min":1,"max":8,"def":3,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -965,7 +965,7 @@
         let obstaclePainter = null;
         // 煙幕碁: 発生中の煙幕内を煙の塊が渦巻く常時オーバーレイ
         fxAmbient((ctx2, now, pad, cs) => {
-            if (!st.smoke || history.length - st.smoke.at >= 3) return;
+            if (!st.smoke || history.length - st.smoke.at >= (P('smoke_turns') || 3)) return;
             ctx2.save();
             for (let k = 0; k < 8; k++) {
                 const ph = now / 1600 + k * 1.31;
@@ -1198,7 +1198,7 @@
             ctx.globalAlpha = 1;
 
             // 煙幕: 3x3に灰色の煙を描く
-            if (st.smoke && history.length - st.smoke.at < 3) {
+            if (st.smoke && history.length - st.smoke.at < (P('smoke_turns') || 3)) {
                 const sx = padding + (st.smoke.x - 1.5) * cellSize;
                 const sy = padding + (st.smoke.y - 1.5) * cellSize;
                 ctx.save();
@@ -1315,7 +1315,7 @@
 
         // 煙幕碁: 煙幕は発生から3手の間有効。その3x3内は不可視
         function inSmoke(x, y) {
-            return !!(st.smoke && history.length - st.smoke.at < 3
+            return !!(st.smoke && history.length - st.smoke.at < (P('smoke_turns') || 3)
                 && Math.abs(x - st.smoke.x) <= 1 && Math.abs(y - st.smoke.y) <= 1);
         }
 
@@ -1882,7 +1882,7 @@
 
 
             // 煙幕碁: 6の倍数手の着地点を中心に煙幕を張る
-            if (history.length % 6 === 0) {
+            if (history.length % (P('smoke_interval') || 6) === 0) {
                 const sc = move.cells[0];
                 st.smoke = { x: sc.x, y: sc.y, at: history.length };
                 // 煙幕の発生: 3x3全区で煙の噴霧 + 盤面の振動 + 「煙幕」表示
@@ -2775,7 +2775,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (st.smoke && history.length - st.smoke.at < 3 ? '煙幕 残り' + (3 - (history.length - st.smoke.at)) + '手' : '煙幕まで ' + (history.length % 6 === 0 ? 6 : 6 - history.length % 6) + '手');
+                const et = gameOver ? '' : (st.smoke && history.length - st.smoke.at < (P('smoke_turns') || 3) ? '煙幕 残り' + ((P('smoke_turns') || 3) - (history.length - st.smoke.at)) + '手' : '煙幕まで ' + (history.length % (P('smoke_interval') || 6) === 0 ? (P('smoke_interval') || 6) : (P('smoke_interval') || 6) - history.length % (P('smoke_interval') || 6)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

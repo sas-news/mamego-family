@@ -47,6 +47,10 @@ module.exports = {
     icon: 'shojigo',
     spec: [
         ...K.rb('SHOJIGO', '建具碁', 'shojigo'),
+        K.params([
+            { key: 'shoji_pts', label: '建具完成の得点', min: 0, max: 12, def: 4, unit: '点' },
+            { key: 'frame_liberty', label: '枠内の呼吸ボーナス', min: 0, max: 3, def: 1, unit: '点' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 枠: 四隅寄りの2x2木枠4箇所
@@ -68,7 +72,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                        });
-                        if (inShoji(curr)) liberties++; // 枠内の石は建具に守られる
+                        if (inShoji(curr)) liberties += (P('frame_liberty') ?? 1); // 枠内の石は建具に守られる
                     }
 
                     if (liberties <= 0) {`],
@@ -76,7 +80,7 @@ module.exports = {
             }
             return liberties;`,
 `                });
-                if (inShoji(curr)) liberties++; // 枠内の石は建具に守られる
+                if (inShoji(curr)) liberties += (P('frame_liberty') ?? 1); // 枠内の石は建具に守られる
             }
             return liberties;`],
         // 建具完成: 着手後に枠が全て着手者の石で埋まっていたら+4点
@@ -88,9 +92,9 @@ module.exports = {
                 if (st.done[fi]) return;
                 if (f.every(i => board[i] === player)) {
                     st.done[fi] = player;
-                    st.score[player] += 4;
+                    st.score[player] += (P('shoji_pts') ?? 4);
                     f.forEach(i => fxGlow(i, '#fbbf24', 1200));
-                    fxText(f[0], '建具完成 +4', '#fbbf24', 1500);
+                    fxText(f[0], '建具完成 +' + (P('shoji_pts') ?? 4), '#fbbf24', 1500);
                 }
             });
 

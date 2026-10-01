@@ -9,11 +9,17 @@ module.exports = {
     kind: 'slot',
     spec: [
         ...K.rb('SLOTGO', '遊技碁', 'slotgo'),
+        K.params([
+            { key: 'bar_cycle', label: 'BARの周期', min: 3, max: 14, def: 7, unit: '手' },
+            { key: 'cherry_cycle', label: 'CHERRYの周期', min: 2, max: 9, def: 3, unit: '手' },
+            { key: 'bar_mult', label: 'BARの倍率', min: 1, max: 6, def: 3, unit: '倍' },
+            { key: 'cherry_mult', label: 'CHERRYの倍率', min: 1, max: 5, def: 2, unit: '倍' },
+        ]),
         [K.ONE, '        function executeMove(move, player) {',
 `        // 遊技碁: 手数でスロットの役が決まる (7の倍数=BAR x3, 3の倍数=CHERRY x2, 他=ハズレ x1)
         function slotOf(n) {
             const m = n === undefined ? history.length : n;
-            return m % 7 === 0 ? { name: 'BAR', mult: 3 } : m % 3 === 0 ? { name: 'CHERRY', mult: 2 } : { name: 'ハズレ', mult: 1 };
+            return m % (P('bar_cycle') || 7) === 0 ? { name: 'BAR', mult: (P('bar_mult') || 3) } : m % (P('cherry_cycle') || 3) === 0 ? { name: 'CHERRY', mult: (P('cherry_mult') || 2) } : { name: 'ハズレ', mult: 1 };
         }
 
         function executeMove(move, player) {`],

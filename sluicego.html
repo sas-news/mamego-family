@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"flush_interval","label":"放水の間隔","min":2,"max":20,"def":8,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1872,7 +1872,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 水門碁: 8手ごとに放水 — 水路の石が下流へ流れる
-            if (history.length > 0 && history.length % 8 === 0) {
+            if (history.length > 0 && history.length % (P('flush_interval') || 8) === 0) {
                 let drifted = false;
                 for (let x = BOARD_SIZE - 1; x >= 0; x--) {
                     const i = SLUICE_Y * BOARD_SIZE + x;
@@ -2768,7 +2768,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('放水まで ' + (8 - history.length % 8) + '手');
+                const et = gameOver ? '' : ('放水まで ' + ((P('flush_interval') || 8) - history.length % (P('flush_interval') || 8)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

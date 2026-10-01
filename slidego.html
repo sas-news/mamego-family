@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"slide_interval","label":"滑走の間隔","min":1,"max":5,"def":1,"unit":"手ごと"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1855,7 +1855,7 @@
 
 
             // 滑走ルール: 全石が右下へ1マス滑る。下流から処理するので連鎖的に滑り落ちる
-            {
+            if (history.length % (P('slide_interval') || 1) === 0) {
                 const N = BOARD_SIZE;
                 for (let y = N - 1; y >= 0; y--) for (let x = N - 1; x >= 0; x--) {
                     const i = y * N + x;

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'spitgo',
     spec: [
         ...K.rb('SPITGO', '砂州碁', 'spitgo'),
+        K.params([
+            { key: 'sea_half', label: '海の幅 (片側)', min: 0, max: 3, def: 1, unit: '行' },
+            { key: 'spit_liberty', label: '砂州の石の呼吸ボーナス', min: 0, max: 3, def: 1, unit: '点' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 海と砂州: 中央3行は海、中央列だけが砂州として南北を繋ぐ
         let SPIT_SEA = new Set();
@@ -34,11 +39,13 @@ module.exports = {
         function rebuildSpit() {
             SPIT_SEA = new Set(); SPIT_LAND = new Set();
             const m = Math.floor(BOARD_SIZE / 2), c = Math.floor(BOARD_SIZE / 2);
-            for (let y = m - 1; y <= m + 1; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+            const r = P('sea_half') ?? 1;
+            for (let y = m - r; y <= m + r; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 if (x === c) SPIT_LAND.add(y * BOARD_SIZE + x);
                 else SPIT_SEA.add(y * BOARD_SIZE + x);
             }
-        }`],
+        }
+        function onVariantParam(p) { rebuildSpit(); }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             rebuildSpit();
             SPIT_SEA.forEach(i => { board[i] = 3; });`],
@@ -50,7 +57,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                        });
-                        if (SPIT_LAND.has(curr)) liberties++; // 砂州の石は根が張れる
+                        if (SPIT_LAND.has(curr)) liberties += (P('spit_liberty') ?? 1); // 砂州の石は根が張れる
                     }
 
                     if (liberties <= 0) {`],
@@ -58,7 +65,7 @@ module.exports = {
             }
             return liberties;`,
 `                });
-                if (SPIT_LAND.has(curr)) liberties++; // 砂州の石は根が張れる
+                if (SPIT_LAND.has(curr)) liberties += (P('spit_liberty') ?? 1); // 砂州の石は根が張れる
             }
             return liberties;`],
         // 海の描画 + 砂州の砂筋

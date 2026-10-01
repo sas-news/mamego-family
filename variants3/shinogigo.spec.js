@@ -47,6 +47,9 @@ module.exports = {
     icon: 'shinogigo',
     spec: [
         ...K.rb('SHINOGIGO', 'シノギ碁', 'shinogigo'),
+        K.params([
+            { key: 'shinogi_pts', label: 'シノギ得点', min: 0, max: 5, def: 1, unit: '目' },
+        ]),
         ...ST(ST_INIT),
         // シノギ: (a) 着手側が呼吸1のまま連を残して手番を回したら +1目 (b) 新たに呼吸1の相手連を脅威登録
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -60,8 +63,8 @@ module.exports = {
                 delete st.threat[__k];
                 if (getLiberties(board, __r) <= 1) {
                     st.shinogiDone[__r] = 1;
-                    st.bonus[player] = (st.bonus[player] || 0) + 1;
-                    fxText(__r, 'シノギ +1', '#2dd4bf', 1000);
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('shinogi_pts') ?? 1);
+                    fxText(__r, 'シノギ +' + (P('shinogi_pts') ?? 1), '#2dd4bf', 1000);
                     fxGlow(__r, '#2dd4bf', 700);
                 }
             }

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"uchikomi_cost","label":"打ち込みの持ち駒コスト","min":1,"max":4,"def":1,"unit":"個"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1768,7 +1768,7 @@
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 const pv = board[p.y * BOARD_SIZE + p.x];
                 // 将棋碁: 持ち駒 (アゲハマ) があれば敵石の上に打ち込める
-                if (pv !== 0 && !(pv === (player === 1 ? 2 : 1) && captures[player] > 0)) return false;
+                if (pv !== 0 && !(pv === (player === 1 ? 2 : 1) && captures[player] >= (P('uchikomi_cost') || 1))) return false;
             }
 
             // 仮配置
@@ -1814,7 +1814,7 @@
             move.cells.forEach(p => {
                 const bi = p.y * BOARD_SIZE + p.x;
                 if (board[bi] !== 0) {
-                    captures[player]--; // 打ち込みは持ち駒を消費
+                    captures[player] -= (P('uchikomi_cost') || 1); // 打ち込みは持ち駒を消費
                     // 打ち込み: 駒台から駒が叩き込まれる閃き
                     fxGlow(bi, '#fbbf24', 900);
                     fxBurst(bi, '#fbbf24', 8, 1.3);

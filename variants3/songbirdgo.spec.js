@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'songbirdgo',
     spec: [
         ...K.rb('SONGBIRDGO', '鳴禽碁', 'songbirdgo'),
+        K.params([
+            { key: 'open_need', label: '鳴き石に必要な空点数', min: 1, max: 4, def: 2, unit: '点' },
+            { key: 'song_pts', label: '囀りの得点', min: 0, max: 4, def: 1, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.6, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 鳴き石ルール: 隣接に敵石がなく空点が2つ以上あれば囀って縄張り主張 (+1目)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -59,11 +64,11 @@ module.exports = {
                 const nb = getNeighbors(mi);
                 const empties = nb.filter(i => board[i] === 0).length;
                 const foes = nb.filter(i => board[i] === opponent).length;
-                if (foes === 0 && empties >= 2) {
+                if (foes === 0 && empties >= (P('open_need') || 2)) {
                     st.song.push(mi);
-                    captures[player]++;
+                    captures[player] += (P('song_pts') ?? 1);
                     fxGlow(mi, '#4ade80', 700);
-                    fxText(mi, 'さえずり +1', '#4ade80', 1200);
+                    fxText(mi, 'さえずり +' + (P('song_pts') ?? 1), '#4ade80', 1200);
                 }
             }
 

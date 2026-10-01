@@ -10,6 +10,10 @@ module.exports = {
     icon: 'shintogo',
     spec: [
         ...K.rb('SHINTOGO', '神道碁', 'shintogo'),
+        K.params([
+            { key: 'shrine_need', label: '鎮座に必要な聖域数', min: 1, max: 6, def: 3, unit: 'ヶ所' },
+            { key: 'move_cap', label: '打ち切り手数', min: 60, max: 280, def: 140, step: 10, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { shrines: { 1: 0, 2: 0 }, rings: [] }; // 聖域数と張られた注連縄`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -69,8 +73,8 @@ module.exports = {
                                 st.shrines[player]++;
                                 ring.forEach(i => fxGlow(i, '#f87171', 900));
                                 fxText(cy * BOARD_SIZE + cx, '注連縄!', '#f87171', 1200);
-                                if (st.shrines[player] >= 3) {
-                                    winByRule(player, '鎮座勝ち', '神域を3ヶ所聖域化しました'); return;
+                                if (st.shrines[player] >= (P('shrine_need') || 3)) {
+                                    winByRule(player, '鎮座勝ち', '神域を' + (P('shrine_need') || 3) + 'ヶ所聖域化しました'); return;
                                 }
                             }
                             done = true;
@@ -80,7 +84,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('move_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

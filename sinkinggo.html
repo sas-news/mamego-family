@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"rise_interval","label":"水位上昇の間隔","min":4,"max":30,"def":12,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1929,7 +1929,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 水没: 12手ごとに水位が1行上がる
-            while (st.level < Math.floor(history.length / 12) && st.level < BOARD_SIZE - 2) {
+            while (st.level < Math.floor(history.length / (P('rise_interval') || 12)) && st.level < BOARD_SIZE - 2) {
                 st.level++;
                 const wy = BOARD_SIZE - st.level; // 沈む行
                 let drowned = 0;
@@ -2822,7 +2822,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('水位 ' + st.level + ' 行 / 次の上昇まで ' + (12 - (history.length % 12)) + ' 手');
+                const et = gameOver ? '' : ('水位 ' + st.level + ' 行 / 次の上昇まで ' + ((P('rise_interval') || 12) - (history.length % (P('rise_interval') || 12))) + ' 手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }
