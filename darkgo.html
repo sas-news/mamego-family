@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"fog_range","label":"視界距離","min":1,"max":8,"def":3,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1316,7 +1316,7 @@
             const x = idx % BOARD_SIZE, y = (idx / BOARD_SIZE) | 0;
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== v) continue;
-                if (Math.abs((i % BOARD_SIZE) - x) + Math.abs(((i / BOARD_SIZE) | 0) - y) <= FOG_RANGE) return true;
+                if (Math.abs((i % BOARD_SIZE) - x) + Math.abs(((i / BOARD_SIZE) | 0) - y) <= (P('fog_range') || FOG_RANGE)) return true;
             }
             return false;
         }

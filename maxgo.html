@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"win_captures","label":"先取のアゲハマ数","min":2,"max":40,"def":10,"unit":"石"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1823,10 +1823,11 @@
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
-                fxText(captured[0], '先取 ' + Math.min(captures[player], WIN_CAPTURES) + '/' + WIN_CAPTURES, '#f59e0b', 900);
-                if (captures[player] >= WIN_CAPTURES) {
+                const winCaptures = P('win_captures') || WIN_CAPTURES;
+                fxText(captured[0], '先取 ' + Math.min(captures[player], winCaptures) + '/' + winCaptures, '#f59e0b', 900);
+                if (captures[player] >= winCaptures) {
                     fxShake(6, 350);
-                    winByRule(player, '先取', `${player === 1 ? '黒' : '白'}が先に ${WIN_CAPTURES} 石を取りました`);
+                    winByRule(player, '先取', `${player === 1 ? '黒' : '白'}が先に ${winCaptures} 石を取りました`);
                     return;
                 }
                 soundManager.playCapture();
@@ -2725,7 +2726,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('先取 ' + Math.min(captures[turn], WIN_CAPTURES) + '/' + WIN_CAPTURES);
+                const et = gameOver ? '' : ('先取 ' + Math.min(captures[turn], (P('win_captures') || WIN_CAPTURES)) + '/' + (P('win_captures') || WIN_CAPTURES));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"life_every","label":"世代交代の間隔","min":1,"max":12,"def":4,"unit":"手"},{"key":"life_cap","label":"打ち切り手数","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1831,7 +1831,7 @@
             // ライフゲーム世代交代: LIFE_EVERY 手ごとに盤面全体を1世代進める。
             // 前回世代以降に置かれた石はその世代だけ死滅を免除 (孤立しても次の世代までは残る)。
             move.cells.forEach(p => lifeNewborns.add(p.y * BOARD_SIZE + p.x));
-            if (history.length % LIFE_EVERY === 0) {
+            if (history.length % Math.max(1, P('life_every') || LIFE_EVERY) === 0) {
                 applyLifeStep(lifeNewborns);
                 lifeNewborns.clear();
                 // 世代交代の合図: 盤中央に世代マーカーを表示
@@ -1846,8 +1846,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
-            // 打ち切り終局: 累計200手で強制終局 (ライフの循環で無限対局になり得るため)
-            if (history.length >= 200) endGameByScore();
+            // 打ち切り終局: 累計手数で強制終局 (ライフの循環で無限対局になり得るため)
+            if (history.length >= (P('life_cap') || 200)) endGameByScore();
             updateUI();
 
             // オンライン同期

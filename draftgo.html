@@ -342,7 +342,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"draft_picks","label":"ドラフト獲得数","min":1,"max":3,"def":3,"unit":"種"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1512,7 +1512,8 @@
                     setTimeout(() => { btn.style.outline = 'none'; btn.style.outlineOffset = '0'; }, 450);
                 }
             }
-            if (draftState.picks[1].length >= DRAFT_PICKS && draftState.picks[2].length >= DRAFT_PICKS) {
+            const draftPicks = P('draft_picks') || DRAFT_PICKS;
+            if (draftState.picks[1].length >= draftPicks && draftState.picks[2].length >= draftPicks) {
                 finishDraft();
             } else {
                 draftState.turn = draftState.turn === 1 ? 2 : 1;
@@ -1574,7 +1575,7 @@
             draftPanel.classList.toggle('flex', !!draftState);
             if (!draftState) return;
             const p = draftState.turn;
-            draftLabel.textContent = `ドラフト: ${p === 1 ? '黒' : '白'}の選択 (${draftState.picks[p].length}/${DRAFT_PICKS})`;
+            draftLabel.textContent = `ドラフト: ${p === 1 ? '黒' : '白'}の選択 (${draftState.picks[p].length}/${(P('draft_picks') || DRAFT_PICKS)})`;
             draftPool.querySelectorAll('button').forEach(b => {
                 const left = draftState.pool.includes(b.dataset.type);
                 b.style.opacity = left ? 1 : 0.25;

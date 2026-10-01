@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"hole_radius","label":"中央の壁の半径","min":0,"max":4,"def":1}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2744,9 +2744,10 @@
         function resetGame() {
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            // 環状盤: 中央3x3を壁にする
+            // 環状盤: 中央を壁にする (半径は設定の hole_radius、既定1=3x3)
             const c0 = Math.floor(BOARD_SIZE / 2);
-            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++)
+            const holeR = Math.max(0, Math.min(4, P('hole_radius') || 1));
+            for (let dy = -holeR; dy <= holeR; dy++) for (let dx = -holeR; dx <= holeR; dx++)
                 board[(c0 + dy) * BOARD_SIZE + (c0 + dx)] = 3;
             pieces = [];
             turn = 1;

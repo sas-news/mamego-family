@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"treasure_bonus","label":"宝ボーナス","min":1,"max":20,"def":5,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2223,8 +2223,8 @@
             gameOver = true;
             const territory = calculateTerritory();
 
-            // 宝ボーナス: 宝マスの全近傍を囲んだ側に1箇所5点
-            const TREASURE_BONUS = 5;
+            // 宝ボーナス: 宝マスの全近傍を囲んだ側に1箇所につき得点 (設定の treasure_bonus、既定5)
+            const TREASURE_BONUS = P('treasure_bonus') || 5;
             let blackTreasure = 0, whiteTreasure = 0;
             getStarPoints(BOARD_SIZE).forEach(tp => {
                 const nb = getNeighbors(tp.y * BOARD_SIZE + tp.x).map(i => board[i]);

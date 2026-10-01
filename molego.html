@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"mol_rate","label":"もぐら移動確率","min":0.02,"max":0.8,"def":0.18,"step":0.02}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -672,7 +672,7 @@
                 [order[i], order[j]] = [order[j], order[i]];
             }
             order.forEach(i => {
-                if (board[i] === 0 || Math.random() > MOL_RATE) return;
+                if (board[i] === 0 || Math.random() > (P('mol_rate') || MOL_RATE)) return;
                 const empty = getNeighbors(i).filter(n => board[n] === 0);
                 if (!empty.length) return;
                 const dst = empty[(Math.random() * empty.length) | 0];

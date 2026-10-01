@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"mirror_axis","label":"対称軸","options":[{"v":"v","l":"縦軸"},{"v":"h","l":"横軸"},{"v":"both","l":"両軸"}],"def":"v"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1181,9 +1181,10 @@
                 ctx.lineWidth = Math.max(1, cellSize * 0.03);
                 ctx.setLineDash([cellSize * 0.14, cellSize * 0.10]);
                 const mx = padding + (BOARD_SIZE - 1) / 2 * cellSize;
+                const mAxis = P('mirror_axis') || 'v';
                 ctx.beginPath();
-                ctx.moveTo(mx, padding);
-                ctx.lineTo(mx, width - padding);
+                if (mAxis !== 'h') { ctx.moveTo(mx, padding); ctx.lineTo(mx, width - padding); }
+                if (mAxis !== 'v') { ctx.moveTo(padding, mx); ctx.lineTo(width - padding, mx); }
                 ctx.stroke();
                 ctx.restore();
             }
@@ -1829,9 +1830,14 @@
                 cells: move.cells
             });
 
-            // 対称ルール: 縦中央線に対して鏡映した位置にも同じ形を置く
-            const mirrored = move.cells
-                .map(p => ({ x: BOARD_SIZE - 1 - p.x, y: p.y }))
+            // 対称ルール: 対称軸 (設定の mirror_axis、既定は縦中央線) に鏡映した位置にも同じ形を置く
+            const mirrorAxis = P('mirror_axis') || 'v';
+            const mirCandidates = [];
+            move.cells.forEach(p => {
+                if (mirrorAxis !== 'h') mirCandidates.push({ sx: p.x, sy: p.y, x: BOARD_SIZE - 1 - p.x, y: p.y });
+                if (mirrorAxis !== 'v') mirCandidates.push({ sx: p.x, sy: p.y, x: p.x, y: BOARD_SIZE - 1 - p.y });
+            });
+            const mirrored = mirCandidates
                 .filter(p => board[p.y * BOARD_SIZE + p.x] === 0);
             if (mirrored.length > 0) {
                 // 鏡映による相手石の捕獲を先に解決してから、自連の窒息を判定
@@ -1843,10 +1849,11 @@
                     mirrored.forEach(p => {
                         board[p.y * BOARD_SIZE + p.x] = player;
                         // 鏡映転移: 本体から対称軸を跨いで石が飛ぶ
-                        fxSlide(p.y * BOARD_SIZE + (BOARD_SIZE - 1 - p.x), p.y * BOARD_SIZE + p.x, 420);
+                        fxSlide(p.sy * BOARD_SIZE + p.sx, p.y * BOARD_SIZE + p.x, 420);
                     });
-                    pieces.push({ id: Date.now() + Math.random(), player, type: move.type, rot: move.rot, cells: mirrored });
-                    lastMove.cells.push(...mirrored.map(p => ({ ...p })));
+                    const mirrorCells = mirrored.map(p => ({ x: p.x, y: p.y }));
+                    pieces.push({ id: Date.now() + Math.random(), player, type: move.type, rot: move.rot, cells: mirrorCells });
+                    lastMove.cells.push(...mirrorCells.map(p => ({ ...p })));
                 }
             }
 

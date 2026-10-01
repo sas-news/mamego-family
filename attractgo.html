@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"attract_dist","label":"吸引する距離","min":2,"max":6,"def":2,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1820,7 +1820,7 @@
                 move.cells.forEach(p => {
                     [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
                         const ax = p.x + dx, ay = p.y + dy;
-                        const bx = p.x + dx * 2, by = p.y + dy * 2;
+                        const bx = p.x + dx * (P('attract_dist') || 2), by = p.y + dy * (P('attract_dist') || 2);
                         if (bx < 0 || bx >= BOARD_SIZE || by < 0 || by >= BOARD_SIZE) return;
                         if (ax < 0 || ax >= BOARD_SIZE || ay < 0 || ay >= BOARD_SIZE) return;
                         const ai = ay * BOARD_SIZE + ax, bi = by * BOARD_SIZE + bx;

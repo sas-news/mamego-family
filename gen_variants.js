@@ -164,6 +164,9 @@ out('diago.html', apply(ALGO, [
 // ============================================================
 out('wallgo.html', apply(ALGO, [
     ...rb('WALLGO', '迷路碁', 'wallgo'),
+    K.params([
+        { key: 'wall_rate', label: '壁の密度', min: 0.03, max: 0.5, def: 0.12, step: 0.01 },
+    ]),
     [ONE, RV_ALGO, rv([
         '対局開始時に盤上へランダムで壁マス (約12%) が配置される。',
         '壁は石を置けず、呼吸点にも地にもならない中立のブロック。取ることもできない。',
@@ -179,7 +182,7 @@ out('wallgo.html', apply(ALGO, [
 `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             // 迷路ルール: 壁マスをランダム配置
             for (let i = 0; i < board.length; i++) {
-                if (Math.random() < WALL_RATE) board[i] = 3;
+                if (Math.random() < (P('wall_rate') || WALL_RATE)) board[i] = 3;
             }`],
     // 壁の描画: 瓦礫の岩ブロック + フォールバックで壁を石として描かないよう除外
     [ONE, COVERED_ANCHOR, texDraw(PAINT_ROCK('#6b6560', '#3f3a35'))],
@@ -304,6 +307,9 @@ out('spawngo.html', apply(ALGO, [
 // ============================================================
 out('mirrgo.html', apply(ALGO, [
     ...rb('MIRRGO', '対称碁', 'mirrgo'),
+    K.params([
+        { key: 'mirror_axis', label: '対称軸', options: [{ v: 'v', l: '縦軸' }, { v: 'h', l: '横軸' }, { v: 'both', l: '両軸' }], def: 'v' },
+    ]),
     [ONE, RV_ALGO, rv([
         '対称ルール: 着手すると盤の縦中央線に対して鏡映した位置にも同じ石が置かれる (最大で着手の2倍)。',
         '鏡映先が塞がっているセルは置かれない。鏡映側で自分の連が窒息する場合はその鏡映をスキップする。',
@@ -315,9 +321,14 @@ out('mirrgo.html', apply(ALGO, [
     [ONE, PIECES_PUSH,
 `${PIECES_PUSH}
 
-            // 対称ルール: 縦中央線に対して鏡映した位置にも同じ形を置く
-            const mirrored = move.cells
-                .map(p => ({ x: BOARD_SIZE - 1 - p.x, y: p.y }))
+            // 対称ルール: 対称軸 (設定の mirror_axis、既定は縦中央線) に鏡映した位置にも同じ形を置く
+            const mirrorAxis = P('mirror_axis') || 'v';
+            const mirCandidates = [];
+            move.cells.forEach(p => {
+                if (mirrorAxis !== 'h') mirCandidates.push({ sx: p.x, sy: p.y, x: BOARD_SIZE - 1 - p.x, y: p.y });
+                if (mirrorAxis !== 'v') mirCandidates.push({ sx: p.x, sy: p.y, x: p.x, y: BOARD_SIZE - 1 - p.y });
+            });
+            const mirrored = mirCandidates
                 .filter(p => board[p.y * BOARD_SIZE + p.x] === 0);
             if (mirrored.length > 0) {
                 // 鏡映による相手石の捕獲を先に解決してから、自連の窒息を判定
@@ -329,10 +340,11 @@ out('mirrgo.html', apply(ALGO, [
                     mirrored.forEach(p => {
                         board[p.y * BOARD_SIZE + p.x] = player;
                         // 鏡映転移: 本体から対称軸を跨いで石が飛ぶ
-                        fxSlide(p.y * BOARD_SIZE + (BOARD_SIZE - 1 - p.x), p.y * BOARD_SIZE + p.x, 420);
+                        fxSlide(p.sy * BOARD_SIZE + p.sx, p.y * BOARD_SIZE + p.x, 420);
                     });
-                    pieces.push({ id: Date.now() + Math.random(), player, type: move.type, rot: move.rot, cells: mirrored });
-                    lastMove.cells.push(...mirrored.map(p => ({ ...p })));
+                    const mirrorCells = mirrored.map(p => ({ x: p.x, y: p.y }));
+                    pieces.push({ id: Date.now() + Math.random(), player, type: move.type, rot: move.rot, cells: mirrorCells });
+                    lastMove.cells.push(...mirrorCells.map(p => ({ ...p })));
                 }
             }`],
     // 縦中央線 (対称軸) の破線
@@ -343,9 +355,10 @@ out('mirrgo.html', apply(ALGO, [
                 ctx.lineWidth = Math.max(1, cellSize * 0.03);
                 ctx.setLineDash([cellSize * 0.14, cellSize * 0.10]);
                 const mx = padding + (BOARD_SIZE - 1) / 2 * cellSize;
+                const mAxis = P('mirror_axis') || 'v';
                 ctx.beginPath();
-                ctx.moveTo(mx, padding);
-                ctx.lineTo(mx, width - padding);
+                if (mAxis !== 'h') { ctx.moveTo(mx, padding); ctx.lineTo(mx, width - padding); }
+                if (mAxis !== 'v') { ctx.moveTo(padding, mx); ctx.lineTo(width - padding, mx); }
                 ctx.stroke();
                 ctx.restore();
             }`),
@@ -357,6 +370,9 @@ out('mirrgo.html', apply(ALGO, [
 // ============================================================
 out('twicego.html', apply(ALGO, [
     ...rb('TWICEGO', '二手碁', 'twicego'),
+    K.params([
+        { key: 'stones_per_turn', label: '手番ごとの石数', min: 1, max: 4, def: 2, unit: '石' },
+    ]),
     [ONE, RV_ALGO, rv([
         '二手碁: 各手番で2石ずつ置く (同じ色が2連続で着手する)。',
         '途中でパスすれば残りの着手を放棄して手番が渡る。手番表示の「n手目/2」で残りを確認できる。',
@@ -373,7 +389,7 @@ out('twicego.html', apply(ALGO, [
             holdUsed = false; // 着手でホールド権利が戻る
             turnPlaced.push(move.cells[0].y * BOARD_SIZE + move.cells[0].x);
             turnPlacements++;
-            if (turnPlacements >= 2) {
+            if (turnPlacements >= (P('stones_per_turn') || 2)) {
                 turnPlacements = 0;
                 turnPlaced = [];
                 turn = opponent; // 2石置き切りで手番交代
@@ -386,7 +402,7 @@ out('twicego.html', apply(ALGO, [
             turnPlaced = [];`],
     // 手番表示に「n手目/2」を追加
     [ONE, TURN_LINE,
-`            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + \` · \${turnPlacements + 1}手目/2\`;`],
+`            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + \` · \${turnPlacements + 1}手目/\${(P('stones_per_turn') || 2)}\`;`],
     // 状態保存・復元・同期に turnPlacements を追加
     [ONE, SAVE_TAIL,
 `                    heldPieces,
@@ -561,6 +577,9 @@ ${PIECES_PUSH}`],
 // ============================================================
 out('maxgo.html', apply(ALGO, [
     ...rb('MAXGO', '先取碁', 'maxgo'),
+    K.params([
+        { key: 'win_captures', label: '先取のアゲハマ数', min: 2, max: 40, def: 10, unit: '石' },
+    ]),
     [ONE, RV_ALGO, rv([
         '先取ルール: 先に10石取った側がその場で勝利する。',
         '通常の終局 (パス2連続→地集計+コミ) も同時に有効。',
@@ -576,10 +595,11 @@ out('maxgo.html', apply(ALGO, [
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
-                fxText(captured[0], '先取 ' + Math.min(captures[player], WIN_CAPTURES) + '/' + WIN_CAPTURES, '#f59e0b', 900);
-                if (captures[player] >= WIN_CAPTURES) {
+                const winCaptures = P('win_captures') || WIN_CAPTURES;
+                fxText(captured[0], '先取 ' + Math.min(captures[player], winCaptures) + '/' + winCaptures, '#f59e0b', 900);
+                if (captures[player] >= winCaptures) {
                     fxShake(6, 350);
-                    winByRule(player, '先取', \`\${player === 1 ? '黒' : '白'}が先に \${WIN_CAPTURES} 石を取りました\`);
+                    winByRule(player, '先取', \`\${player === 1 ? '黒' : '白'}が先に \${winCaptures} 石を取りました\`);
                     return;
                 }
                 soundManager.playCapture();
@@ -590,7 +610,7 @@ out('maxgo.html', apply(ALGO, [
     [ONE, `        function endGameByScore() {`, WIN_BY_RULE_FN + `
         function endGameByScore() {`],
     // 先取カウント: 手番側のアゲハマ進捗を常時表示
-    ...EVENT_CHIP_SPEC(`'先取 ' + Math.min(captures[turn], WIN_CAPTURES) + '/' + WIN_CAPTURES`),
+    ...EVENT_CHIP_SPEC(`'先取 ' + Math.min(captures[turn], (P('win_captures') || WIN_CAPTURES)) + '/' + (P('win_captures') || WIN_CAPTURES)`),
     ...STONE_SPEC,
 ], 'maxgo'));
 
@@ -640,6 +660,9 @@ out('sandgo.html', apply(ALGO, [
 // ============================================================
 out('decaygo.html', apply(ALGO, [
     ...rb('DECAYGO', '崩壊碁', 'decaygo'),
+    K.params([
+        { key: 'decay_limit', label: '石の寿命', min: 2, max: 32, def: 8, unit: '手' },
+    ]),
     [ONE, RV_ALGO, rv([
         '碁石に寿命がある: 配置から8手 (自分+相手の着手計) 経過した石は崩壊して消える。',
         '崩壊した石はアゲハマにならない。石は古くなるほど薄く表示される。',
@@ -663,7 +686,7 @@ out('decaygo.html', apply(ALGO, [
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== 0) {
                     ages[i]++;
-                    if (ages[i] > DECAY_LIMIT) {
+                    if (ages[i] > (P('decay_limit') || DECAY_LIMIT)) {
                         board[i] = 0; ages[i] = 0; decayed++;
                         // 風化して崩れる演出: 灰の粉塵が崩れ落ちる
                         fxBurst(i, '#a8a29e', 6, 0.9);
@@ -689,12 +712,12 @@ out('decaygo.html', apply(ALGO, [
                     (byAge[a] = byAge[a] || []).push(p);
                 });
                 Object.keys(byAge).forEach(a => {
-                    const alpha = isDead ? 0.35 : Math.max(0.25, 1 - a / (DECAY_LIMIT + 1));
+                    const alpha = isDead ? 0.35 : Math.max(0.25, 1 - a / ((P('decay_limit') || DECAY_LIMIT) + 1));
                     drawPieceShape(byAge[a], padding, cellSize, fill, stroke, alpha);
                 });`],
     [ONE, `                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);`,
 `                    const a = ages[idx] || 0;
-                    const alpha = isDead ? 0.35 : Math.max(0.25, 1 - a / (DECAY_LIMIT + 1));
+                    const alpha = isDead ? 0.35 : Math.max(0.25, 1 - a / ((P('decay_limit') || DECAY_LIMIT) + 1));
                     drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, alpha);`],
     // 永続化・履歴・オンライン同期に ages を追加
     [ONE, `                    board,
@@ -785,6 +808,10 @@ const LIFE_FN = `
 
 out('lifego.html', apply(ALGO, [
     ...rb('LIFEGO', '生命碁', 'lifego'),
+    K.params([
+        { key: 'life_every', label: '世代交代の間隔', min: 1, max: 12, def: 4, unit: '手' },
+        { key: 'life_cap', label: '打ち切り手数', min: 60, max: 600, def: 200, unit: '手' },
+    ]),
     [ONE, RV_ALGO, rv([
         '4手ごとに盤面全体が Conway のライフゲームを1世代進む (B3/S23・斜め含む8近傍)。',
         '石は孤独(近傍<2)でも過密(>3)でも死滅する (前回の世代以降に置いた石はその世代は死なない)。空点はちょうど3個の同色近傍で誕生。',
@@ -798,8 +825,8 @@ out('lifego.html', apply(ALGO, [
 `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
-            // 打ち切り終局: 累計200手で強制終局 (ライフの循環で無限対局になり得るため)
-            if (history.length >= 200) endGameByScore();`],
+            // 打ち切り終局: 累計手数で強制終局 (ライフの循環で無限対局になり得るため)
+            if (history.length >= (P('life_cap') || 200)) endGameByScore();`],
     [ONE, `        function cleanUpPieces() {
             pieces = pieces.filter(pc =>
                 pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] !== 0)
@@ -818,7 +845,7 @@ ${LIFE_FN}`],
 `            // ライフゲーム世代交代: LIFE_EVERY 手ごとに盤面全体を1世代進める。
             // 前回世代以降に置かれた石はその世代だけ死滅を免除 (孤立しても次の世代までは残る)。
             move.cells.forEach(p => lifeNewborns.add(p.y * BOARD_SIZE + p.x));
-            if (history.length % LIFE_EVERY === 0) {
+            if (history.length % Math.max(1, P('life_every') || LIFE_EVERY) === 0) {
                 applyLifeStep(lifeNewborns);
                 lifeNewborns.clear();
                 // 世代交代の合図: 盤中央に世代マーカーを表示
@@ -1193,6 +1220,9 @@ out('3dgo.html', d3);
 // ============================================================
 let graph = apply(ALGO, [
     ...rb('GRAPHGO', 'グラフ碁', 'graphgo'),
+    K.params([
+        { key: 'edge_remove', label: '辺の除去率', min: 0.05, max: 0.6, def: 0.28, step: 0.01 },
+    ]),
     [ONE, RV_ALGO, rv([
         '盤面はランダムな分子グラフ: 全格子辺から約28%を連結を保ちながら除去して生成。',
         '連・呼吸点・取り・地の判定はすべてグラフの辺 (結合線) だけを辿る。辺のない隣接はつながらない。',
@@ -1233,7 +1263,7 @@ let graph = apply(ALGO, [
             const n = BOARD_SIZE * BOARD_SIZE;
             const all = gridEdges();
             const removed = new Set();
-            const target = Math.floor(all.length * 0.28);
+            const target = Math.floor(all.length * (P('edge_remove') || 0.28));
             const order = [...all.keys()];
             for (let i = order.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -1661,6 +1691,9 @@ out('alkenego.html', alk);
 // ============================================================
 let poly = apply(ALGO, [
     ...rb('POLYGO', 'ポリ碁', 'polygo'),
+    K.params([
+        { key: 'monomers', label: '鎖の長さ', min: 2, max: 8, def: 4, unit: 'マス' },
+    ]),
     [ONE, RV_ALGO, rv([
         '毎手、盤上に4連のポリマー鎖を自由に描いて置く (形は固定ではない)。',
         '鎖は隣接する空点にのみ伸ばせる。完成した鎖上をタップするか「配置する」で確定。',
@@ -1697,9 +1730,24 @@ let poly = apply(ALGO, [
 `        const PIECE_TYPES = Object.keys(MOLECULES);
         const PIECE_DEFS = {};
         PIECE_TYPES.forEach(t => { PIECE_DEFS[t] = MOLECULES[t].atoms; });
-        // 窒息領域のしきい値はモノマー数と同じ4
-        const PIECE_SIZE = 4;
-        const MONOMERS = 4;`],
+        // 窒息領域のしきい値はモノマー数と同じ (設定の monomers、既定4)
+        let PIECE_SIZE = 4;
+        let MONOMERS = 4;
+        function syncPolyParams() {
+            MONOMERS = Math.max(2, Math.min(8, P('monomers') || 4));
+            PIECE_SIZE = MONOMERS;
+        }
+        syncPolyParams();
+        // 設定変更で鎖の長さを即時反映 (構築中の鎖は破棄)
+        function onVariantParam(p) {
+            if (p.key === 'monomers') {
+                syncPolyParams();
+                chainCells = [];
+                refreshChainPreview();
+                updatePieceTrayUI();
+                render();
+            }
+        }`],
     [ONE, `        // 各分子の回転バリエーションを事前生成 (重複排除)
         ${OCNT_ALGO}
         const ORIENTATIONS = {};
@@ -1982,6 +2030,9 @@ out('asymgo.html', asym);
 // ============================================================
 let draft = apply(ALGO, [
     ...rb('DRAFTGO', 'ドラフト碁', 'draftgo'),
+    K.params([
+        { key: 'draft_picks', label: 'ドラフト獲得数', min: 1, max: 3, def: 3, unit: '種' },
+    ]),
     [ONE, RV_ALGO, rv([
         '対局前にドラフト: 7種の碁カンから黒→白の順に交互に3種ずつピック。',
         '対局中は各プレイヤーが獲得した3種のみが供給される (自軍バッグ1巡)。',
@@ -2041,7 +2092,8 @@ let draft = apply(ALGO, [
                     setTimeout(() => { btn.style.outline = 'none'; btn.style.outlineOffset = '0'; }, 450);
                 }
             }
-            if (draftState.picks[1].length >= DRAFT_PICKS && draftState.picks[2].length >= DRAFT_PICKS) {
+            const draftPicks = P('draft_picks') || DRAFT_PICKS;
+            if (draftState.picks[1].length >= draftPicks && draftState.picks[2].length >= draftPicks) {
                 finishDraft();
             } else {
                 draftState.turn = draftState.turn === 1 ? 2 : 1;
@@ -2103,7 +2155,7 @@ let draft = apply(ALGO, [
             draftPanel.classList.toggle('flex', !!draftState);
             if (!draftState) return;
             const p = draftState.turn;
-            draftLabel.textContent = \`ドラフト: \${p === 1 ? '黒' : '白'}の選択 (\${draftState.picks[p].length}/\${DRAFT_PICKS})\`;
+            draftLabel.textContent = \`ドラフト: \${p === 1 ? '黒' : '白'}の選択 (\${draftState.picks[p].length}/\${(P('draft_picks') || DRAFT_PICKS)})\`;
             draftPool.querySelectorAll('button').forEach(b => {
                 const left = draftState.pool.includes(b.dataset.type);
                 b.style.opacity = left ? 1 : 0.25;
@@ -2252,6 +2304,9 @@ out('reversego.html', apply(ALGO, [
 // 24. PUSHGO (押し碁) — 着手で隣接する敵石を1マス押す
 out('pushgo.html', apply(ALGO, [
     ...rb('PUSHGO', '押し碁', 'pushgo'),
+    K.params([
+        { key: 'push_dist', label: '押す距離', min: 1, max: 4, def: 1, unit: 'マス' },
+    ]),
     [ONE, RV_ALGO, rv([
         '押しルール: 置いた石に隣接する敵石は、その方向へ1マス押される。',
         '押し先が盤外または占有されている場合は押せない。押された後の取り判定は通常通り行われる。',
@@ -2270,7 +2325,7 @@ out('pushgo.html', apply(ALGO, [
                     getNeighbors(pi).forEach(ni => {
                         if (board[ni] !== opp2) return;
                         const nx = ni % BOARD_SIZE, ny = Math.floor(ni / BOARD_SIZE);
-                        const tx = nx + (nx - p.x), ty = ny + (ny - p.y);
+                        const tx = nx + (nx - p.x) * (P('push_dist') || 1), ty = ny + (ny - p.y) * (P('push_dist') || 1);
                         if (tx < 0 || tx >= BOARD_SIZE || ty < 0 || ty >= BOARD_SIZE) return;
                         const ti = ty * BOARD_SIZE + tx;
                         if (board[ti] !== 0) return;
@@ -2286,6 +2341,9 @@ out('pushgo.html', apply(ALGO, [
 // 25. ATTRACTGO (吸引碁) — 直線2マス先の敵石を引き寄せる
 out('attractgo.html', apply(ALGO, [
     ...rb('ATTRACTGO', '吸引碁', 'attractgo'),
+    K.params([
+        { key: 'attract_dist', label: '吸引する距離', min: 2, max: 6, def: 2, unit: 'マス' },
+    ]),
     [ONE, RV_ALGO, rv([
         '吸引ルール: 置いた石の直線2マス先にいる敵石は、間のマスが空いていれば1マス引き寄せられる。',
         '引き寄せられた後の取り判定は通常通り行われる。',
@@ -2302,7 +2360,7 @@ out('attractgo.html', apply(ALGO, [
                 move.cells.forEach(p => {
                     [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
                         const ax = p.x + dx, ay = p.y + dy;
-                        const bx = p.x + dx * 2, by = p.y + dy * 2;
+                        const bx = p.x + dx * (P('attract_dist') || 2), by = p.y + dy * (P('attract_dist') || 2);
                         if (bx < 0 || bx >= BOARD_SIZE || by < 0 || by >= BOARD_SIZE) return;
                         if (ax < 0 || ax >= BOARD_SIZE || ay < 0 || ay >= BOARD_SIZE) return;
                         const ai = ay * BOARD_SIZE + ax, bi = by * BOARD_SIZE + bx;
@@ -2320,6 +2378,9 @@ out('attractgo.html', apply(ALGO, [
 // 26. TURNGO (回転碁) — 着手ごとに盤面が90°回転
 out('turngo.html', apply(ALGO, [
     ...rb('TURNGO', '回転碁', 'turngo'),
+    K.params([
+        { key: 'rotate_every', label: '回転の間隔', min: 1, max: 8, def: 1, unit: '手' },
+    ]),
     [ONE, RV_ALGO, rv([
         '回転ルール: 着手のたびに盤面全体が90°時計回りに回転する (石もすべて回転)。',
         '取り・呼吸点は回転後の盤面で判定される。コウ判定の盤面も回転に追従する。',
@@ -2328,8 +2389,8 @@ out('turngo.html', apply(ALGO, [
 `            通常の囲碁 + 回転ルール<br>
             ※着手のたびに盤面全体が90°時計回りに回転する`],
     [ONE, `            // ネクストモードでは次のピースを供給`,
-`            // 回転ルール: 着手ごとに盤面全体を90°時計回りに回転
-            {
+`            // 回転ルール: 設定の間隔ごとに盤面全体を90°時計回りに回転
+            if (history.length % Math.max(1, P('rotate_every') || 1) === 0) {
                 const nb = new Array(board.length).fill(0);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     nb[x * BOARD_SIZE + (BOARD_SIZE - 1 - y)] = board[y * BOARD_SIZE + x];
@@ -2521,6 +2582,9 @@ ${STALEMATE_CHECK}`],
 // 29. GROWGO (増殖碁) — 着手ごとに石が空点へ増殖する
 out('growgo.html', apply(ALGO, [
     ...rb('GROWGO', '増殖碁', 'growgo'),
+    K.params([
+        { key: 'grow_rate', label: '増殖確率', min: 0.05, max: 1, def: 0.3, step: 0.05 },
+    ]),
     [ONE, RV_ALGO, rv([
         '増殖ルール: 着手ごとに、石に隣接する空点のうち約30%へ同じ色の石が増殖する。',
         '増殖はどの連の最後の呼吸点も埋めない (増殖だけでは石は取られないが、アタリまで追い込める)。',
@@ -2544,7 +2608,7 @@ out('growgo.html', apply(ALGO, [
             }
             const used = new Set();
             cand.forEach(([i, adj]) => {
-                if (used.has(i) || Math.random() > GROW_RATE) return;
+                if (used.has(i) || Math.random() > (P('grow_rate') || GROW_RATE)) return;
                 // 増殖先がどの連の最後の呼吸点でもある場合は増殖しない (増殖による連鎖全滅を防ぐ)
                 const chokes = getNeighbors(i).some(n => {
                     const c = board[n];
@@ -2572,6 +2636,9 @@ out('growgo.html', apply(ALGO, [
 // 30. MOLEGO (もぐら碁) — 石がランダムに隣へ移動する
 out('molego.html', apply(ALGO, [
     ...rb('MOLEGO', 'もぐら碁', 'molego'),
+    K.params([
+        { key: 'mol_rate', label: 'もぐら移動確率', min: 0.02, max: 0.8, def: 0.18, step: 0.02 },
+    ]),
     [ONE, RV_ALGO, rv([
         'もぐらルール: 着手ごとに盤上の各碁石が約18%の確率で隣の空点へ移動する。',
         '移動はランダム。移動で空いた点・新しい接続は通常ルールどおり機能する。',
@@ -2591,7 +2658,7 @@ out('molego.html', apply(ALGO, [
                 [order[i], order[j]] = [order[j], order[i]];
             }
             order.forEach(i => {
-                if (board[i] === 0 || Math.random() > MOL_RATE) return;
+                if (board[i] === 0 || Math.random() > (P('mol_rate') || MOL_RATE)) return;
                 const empty = getNeighbors(i).filter(n => board[n] === 0);
                 if (!empty.length) return;
                 const dst = empty[(Math.random() * empty.length) | 0];
@@ -2866,6 +2933,9 @@ out('kogo.html', apply(ALGO, [
 // 36. RINGO (環状碁) — 中央3×3が壁のドーナツ盤
 out('ringo.html', apply(ALGO, [
     ...rb('RINGO', '環状碁', 'ringo'),
+    K.params([
+        { key: 'hole_radius', label: '中央の壁の半径', min: 0, max: 4, def: 1 },
+    ]),
     [ONE, RV_ALGO, rv([
         '盤の中央3×3が壁 (使用不能領域) のドーナツ状盤面。',
         '壁は石を置けず、呼吸点にも地にもならない。',
@@ -2875,9 +2945,10 @@ out('ringo.html', apply(ALGO, [
             ※中央3×3が壁。壁は置けず呼吸点にも地にもならない`],
     [ONE, RESET_BOARD,
 `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            // 環状盤: 中央3x3を壁にする
+            // 環状盤: 中央を壁にする (半径は設定の hole_radius、既定1=3x3)
             const c0 = Math.floor(BOARD_SIZE / 2);
-            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++)
+            const holeR = Math.max(0, Math.min(4, P('hole_radius') || 1));
+            for (let dy = -holeR; dy <= holeR; dy++) for (let dx = -holeR; dx <= holeR; dx++)
                 board[(c0 + dy) * BOARD_SIZE + (c0 + dx)] = 3;`],
     // 中央は深い井戸
     [ONE, COVERED_ANCHOR, texDraw(PAINT_RIFT('rgba(70,110,170,0.45)'))],
@@ -2888,6 +2959,9 @@ out('ringo.html', apply(ALGO, [
 // 37. CROSSGO (十字碁) — 四隅が壁の十字盤
 out('crossgo.html', apply(ALGO, [
     ...rb('CROSSGO', '十字碁', 'crossgo'),
+    K.params([
+        { key: 'corner_div', label: '隅の広さ', min: 2, max: 6, def: 3, hint: '盤幅の1/N' },
+    ]),
     [ONE, RV_ALGO, rv([
         '四隅が壁で削られた十字形の盤面 (隅は盤面の約1/3)。',
         '壁は石を置けず、呼吸点にも地にもならない。',
@@ -2898,7 +2972,7 @@ out('crossgo.html', apply(ALGO, [
     [ONE, RESET_BOARD,
 `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             // 十字盤: 四隅を壁にする
-            const cs = Math.max(2, Math.floor(BOARD_SIZE / 3));
+            const cs = Math.max(2, Math.floor(BOARD_SIZE / (P('corner_div') || 3)));
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 if ((x < cs || x >= BOARD_SIZE - cs) && (y < cs || y >= BOARD_SIZE - cs))
                     board[y * BOARD_SIZE + x] = 3;
@@ -2987,6 +3061,9 @@ out('fusego.html', apply(ALGO, [
 // 40. WORMGO (転送碁) — ワームホールペアが近傍をつなぐ
 out('wormgo.html', apply(ALGO, [
     ...rb('WORMGO', '転送碁', 'wormgo'),
+    K.params([
+        { key: 'worm_pairs', label: 'ワームホールの組数', min: 1, max: 6, def: 2, unit: '組' },
+    ]),
     [ONE, RV_ALGO, rv([
         '転送ルール: 盤上にランダムなワームホールペア (◎マーク) が2組ある。',
         'ワームホール端点同士は近傍としてつながる (連・呼吸点・取りが遠隔で成立)。',
@@ -3017,12 +3094,14 @@ out('wormgo.html', apply(ALGO, [
             return neighbors;
         }
 
-        // ワームホールペアをランダム生成 (2組=4点)
+        // ワームホールペアをランダム生成 (組数は設定の worm_pairs、既定2組=4点)
         function buildWormholes() {
             const n = BOARD_SIZE * BOARD_SIZE;
             const cells = [...Array(n).keys()];
             const pick = () => cells.splice((Math.random() * cells.length) | 0, 1)[0];
-            WORMHOLES = [[pick(), pick()], [pick(), pick()]];
+            const pairs = Math.max(1, Math.min(6, P('worm_pairs') || 2));
+            WORMHOLES = [];
+            for (let k = 0; k < pairs; k++) WORMHOLES.push([pick(), pick()]);
         }`],
     // ワームホール端点の描画 (◎マーク)
     [ONE, `            // 星 (天元・星の点)
@@ -3222,6 +3301,9 @@ out('quadgo.html', apply(ALGO, [
 // 44. CIRCLEGO (円盤碁) — 円形盤面
 out('circlego.html', apply(ALGO, [
     ...rb('CIRCLEGO', '円盤碁', 'circlego'),
+    K.params([
+        { key: 'rim', label: '円の縮み', min: 0, max: 3, def: 0, step: 0.5, unit: 'マス' },
+    ]),
     [ONE, RV_ALGO, rv([
         '盤面は円形 — 中心から半径 (N-1)/2 より外のマスは壁 (使用不能)。',
         '「隅」が存在しない盤面で戦う囲碁。',
@@ -3231,11 +3313,12 @@ out('circlego.html', apply(ALGO, [
             ※円の外側は壁。壁は置けず呼吸点にも地にもならない`],
     [ONE, RESET_BOARD,
 `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            // 円形盤: 半径より外を壁にする
+            // 円形盤: 半径より外を壁にする (縮みは設定の rim、既定0)
             const crad = (BOARD_SIZE - 1) / 2;
+            const crim = crad - (P('rim') || 0);
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 const ddx = x - crad, ddy = y - crad;
-                if (ddx * ddx + ddy * ddy > crad * crad + 0.5) board[y * BOARD_SIZE + x] = 3;
+                if (ddx * ddx + ddy * ddy > crim * crim + 0.5) board[y * BOARD_SIZE + x] = 3;
             }`],
     // 正方形の外枠は描かない (円縁が外枠になる)
     [ONE, GRID_RENDER,
@@ -3273,7 +3356,7 @@ out('circlego.html', apply(ALGO, [
 `${FX_BOOT}
         fxAmbient((ctx2, now, pad, cs) => {
             const cr = (BOARD_SIZE - 1) / 2;
-            const bx = pad + cr * cs, by = pad + cr * cs, rr = (cr + 0.55) * cs;
+            const bx = pad + cr * cs, by = pad + cr * cs, rr = (cr - (P('rim') || 0) + 0.55) * cs;
             const a0 = now / 2400;
             ctx2.save();
             ctx2.strokeStyle = 'rgba(255,255,255,0.16)';
@@ -3289,6 +3372,9 @@ out('circlego.html', apply(ALGO, [
 // 45. LAVAGO (溶岩碁) — 8手ごとに外周の空点が溶岩に沈む
 out('lavago.html', apply(ALGO, [
     ...rb('LAVAGO', '溶岩碁', 'lavago'),
+    K.params([
+        { key: 'lava_every', label: '溶岩化の間隔', min: 2, max: 20, def: 8, unit: '手' },
+    ]),
     [ONE, RV_ALGO, rv([
         '溶岩ルール: 合計8手ごとに盤の最外周リングが溶岩に沈む (空マスが壁になる)。',
         '石は残るが呼吸点を失い、呼吸点0になった連は溶岩に飲まれて相手のアゲハマになる。',
@@ -3401,7 +3487,7 @@ out('lavago.html', apply(ALGO, [
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
             // 溶岩: LAVA_EVERY手ごとに外周が沈む
-            if (history.length % LAVA_EVERY === 0) {
+            if (history.length % Math.max(1, P('lava_every') || LAVA_EVERY) === 0) {
                 // 沈むリングを先に赤く点滅させてから溶岩化
                 {
                     const n = BOARD_SIZE, d = lavaDepth;
@@ -3459,7 +3545,7 @@ out('lavago.html', apply(ALGO, [
                 }
             }`],
     ...WALL_GUARD_SPEC,
-    ...EVENT_CHIP_SPEC(`'沈下' + (LAVA_EVERY - history.length % LAVA_EVERY) + '手'`),
+    ...EVENT_CHIP_SPEC(`'沈下' + ((P('lava_every') || LAVA_EVERY) - history.length % (P('lava_every') || LAVA_EVERY)) + '手'`),
     ...STONE_SPEC,
 ], 'lavago'));
 
@@ -3564,6 +3650,9 @@ out('sparsego.html', apply(ALGO, [
 // 48. FIRSTGO (一撃碁) — 最初の取りで即勝利
 out('firstgo.html', apply(ALGO, [
     ...rb('FIRSTGO', '一撃碁', 'firstgo'),
+    K.params([
+        { key: 'win_captures', label: '勝利に必要なアゲハマ数', min: 1, max: 10, def: 1, unit: '石' },
+    ]),
     [ONE, RV_ALGO, rv([
         '一撃ルール: 最初に敵石を1個でも取った側がその場で勝利する。',
         '通常の終局 (パス2連続→地集計+コミ) も有効だが、実際は最初の取り合いで決まることが多い。',
@@ -3579,7 +3668,7 @@ out('firstgo.html', apply(ALGO, [
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
-                if (captures[player] >= WIN_CAPTURES) {
+                if (captures[player] >= (P('win_captures') || WIN_CAPTURES)) {
                     fxText(captured[0], '一撃!', '#ef4444', 1100);
                     fxShake(7, 400);
                     fxGlow(captured[0], '#f87171', 800);
@@ -3601,6 +3690,9 @@ out('firstgo.html', apply(ALGO, [
 // 49. TREASUREGO (宝碁) — 星のマスを囲むと+5点
 out('treasurego.html', apply(ALGO, [
     ...rb('TREASUREGO', '宝碁', 'treasurego'),
+    K.params([
+        { key: 'treasure_bonus', label: '宝ボーナス', min: 1, max: 20, def: 5, unit: '点' },
+    ]),
     [ONE, RV_ALGO, rv([
         '宝ルール: 星のマス (◆印) は宝物。終局時、宝マスの全近傍が自分の石で囲まれていれば1箇所につき+5点。',
         '宝マスそのものは普通の空点として使える (置くとその宝は消える)。',
@@ -3628,8 +3720,8 @@ out('treasurego.html', apply(ALGO, [
             });`],
     [ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
-`            // 宝ボーナス: 宝マスの全近傍を囲んだ側に1箇所5点
-            const TREASURE_BONUS = 5;
+`            // 宝ボーナス: 宝マスの全近傍を囲んだ側に1箇所につき得点 (設定の treasure_bonus、既定5)
+            const TREASURE_BONUS = P('treasure_bonus') || 5;
             let blackTreasure = 0, whiteTreasure = 0;
             getStarPoints(BOARD_SIZE).forEach(tp => {
                 const nb = getNeighbors(tp.y * BOARD_SIZE + tp.x).map(i => board[i]);
@@ -3681,6 +3773,9 @@ out('treasurego.html', apply(ALGO, [
 // 50. DARKGO (暗闇碁) — 自石の近く以外は敵石が見えない
 out('darkgo.html', apply(ALGO, [
     ...rb('DARKGO', '暗闇碁', 'darkgo'),
+    K.params([
+        { key: 'fog_range', label: '視界距離', min: 1, max: 8, def: 3, unit: 'マス' },
+    ]),
     [ONE, RV_ALGO, rv([
         '暗闇ルール: 自分の石からマンハッタン距離3以内の範囲しか見えない。',
         '視野外の敵石は表示されない (配置判定や取り自体は通常通り働く)。',
@@ -3704,7 +3799,7 @@ out('darkgo.html', apply(ALGO, [
             const x = idx % BOARD_SIZE, y = (idx / BOARD_SIZE) | 0;
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== v) continue;
-                if (Math.abs((i % BOARD_SIZE) - x) + Math.abs(((i / BOARD_SIZE) | 0) - y) <= FOG_RANGE) return true;
+                if (Math.abs((i % BOARD_SIZE) - x) + Math.abs(((i / BOARD_SIZE) | 0) - y) <= (P('fog_range') || FOG_RANGE)) return true;
             }
             return false;
         }
@@ -3770,6 +3865,9 @@ out('darkgo.html', apply(ALGO, [
 // 51. ORBITGO (周回碁) — 着手ごとに外周リングが1マス回転
 out('orbitgo.html', apply(ALGO, [
     ...rb('ORBITGO', '周回碁', 'orbitgo'),
+    K.params([
+        { key: 'orbit_step', label: '周回するマス数', min: 1, max: 8, def: 1, unit: 'マス' },
+    ]),
     [ONE, RV_ALGO, rv([
         '周回ルール: 着手ごとに盤の最外周リング上の石が1マスずつ時計回りに移動する。',
         '外周に置いた石はぐるぐる回り続ける。連が裂かれることもある。',
@@ -3789,17 +3887,18 @@ out('orbitgo.html', apply(ALGO, [
             for (let y = n - 2; y >= 1; y--) pos.push([0, y]);
             return pos;
         }
-        // 着手ごとに外周リングを1マス時計回りに移動
+        // 着手ごとに外周リングを時計回りに移動 (移動量は設定の orbit_step、既定1マス)
         function applyOrbit() {
             const idxs = ringPositions().map(([x, y]) => y * BOARD_SIZE + x);
             const vals = idxs.map(i => board[i]);
-            vals.unshift(vals.pop());
+            const step = Math.min(idxs.length - 1, Math.max(1, P('orbit_step') || 1));
+            for (let s = 0; s < step; s++) vals.unshift(vals.pop());
             idxs.forEach((i, k) => {
                 board[i] = vals[k];
-                if (vals[k] !== 0) fxSlide(idxs[(k - 1 + idxs.length) % idxs.length], i, 380);
+                if (vals[k] !== 0) fxSlide(idxs[(k - step + idxs.length) % idxs.length], i, 380);
             });
             const mapIdx = {};
-            idxs.forEach((i, k) => { mapIdx[i] = idxs[(k + 1) % idxs.length]; });
+            idxs.forEach((i, k) => { mapIdx[i] = idxs[(k + step) % idxs.length]; });
             const shift = p => {
                 const i = p.y * BOARD_SIZE + p.x;
                 if (!(i in mapIdx)) return p;

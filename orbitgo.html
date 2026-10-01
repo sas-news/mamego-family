@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"orbit_step","label":"周回するマス数","min":1,"max":8,"def":1,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2217,17 +2217,18 @@
             for (let y = n - 2; y >= 1; y--) pos.push([0, y]);
             return pos;
         }
-        // 着手ごとに外周リングを1マス時計回りに移動
+        // 着手ごとに外周リングを時計回りに移動 (移動量は設定の orbit_step、既定1マス)
         function applyOrbit() {
             const idxs = ringPositions().map(([x, y]) => y * BOARD_SIZE + x);
             const vals = idxs.map(i => board[i]);
-            vals.unshift(vals.pop());
+            const step = Math.min(idxs.length - 1, Math.max(1, P('orbit_step') || 1));
+            for (let s = 0; s < step; s++) vals.unshift(vals.pop());
             idxs.forEach((i, k) => {
                 board[i] = vals[k];
-                if (vals[k] !== 0) fxSlide(idxs[(k - 1 + idxs.length) % idxs.length], i, 380);
+                if (vals[k] !== 0) fxSlide(idxs[(k - step + idxs.length) % idxs.length], i, 380);
             });
             const mapIdx = {};
-            idxs.forEach((i, k) => { mapIdx[i] = idxs[(k + 1) % idxs.length]; });
+            idxs.forEach((i, k) => { mapIdx[i] = idxs[(k + step) % idxs.length]; });
             const shift = p => {
                 const i = p.y * BOARD_SIZE + p.x;
                 if (!(i in mapIdx)) return p;

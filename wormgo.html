@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"worm_pairs","label":"ワームホールの組数","min":1,"max":6,"def":2,"unit":"組"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2009,12 +2009,14 @@
             return neighbors;
         }
 
-        // ワームホールペアをランダム生成 (2組=4点)
+        // ワームホールペアをランダム生成 (組数は設定の worm_pairs、既定2組=4点)
         function buildWormholes() {
             const n = BOARD_SIZE * BOARD_SIZE;
             const cells = [...Array(n).keys()];
             const pick = () => cells.splice((Math.random() * cells.length) | 0, 1)[0];
-            WORMHOLES = [[pick(), pick()], [pick(), pick()]];
+            const pairs = Math.max(1, Math.min(6, P('worm_pairs') || 2));
+            WORMHOLES = [];
+            for (let k = 0; k < pairs; k++) WORMHOLES.push([pick(), pick()]);
         }
 
         // ==========================================

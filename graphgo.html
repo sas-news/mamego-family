@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"edge_remove","label":"辺の除去率","min":0.05,"max":0.6,"def":0.28,"step":0.01}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1979,7 +1979,7 @@
             const n = BOARD_SIZE * BOARD_SIZE;
             const all = gridEdges();
             const removed = new Set();
-            const target = Math.floor(all.length * 0.28);
+            const target = Math.floor(all.length * (P('edge_remove') || 0.28));
             const order = [...all.keys()];
             for (let i = order.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));

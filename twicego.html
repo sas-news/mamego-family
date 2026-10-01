@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"stones_per_turn","label":"手番ごとの石数","min":1,"max":4,"def":2,"unit":"石"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1862,7 +1862,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
             turnPlaced.push(move.cells[0].y * BOARD_SIZE + move.cells[0].x);
             turnPlacements++;
-            if (turnPlacements >= 2) {
+            if (turnPlacements >= (P('stones_per_turn') || 2)) {
                 turnPlacements = 0;
                 turnPlaced = [];
                 turn = opponent; // 2石置き切りで手番交代
@@ -2732,7 +2732,7 @@
         // 13. 状態更新 & ゲーム初期化
         // ==========================================
         function updateUI() {
-            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + ` · ${turnPlacements + 1}手目/2`;
+            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + ` · ${turnPlacements + 1}手目/${(P('stones_per_turn') || 2)}`;
             blackCapturesEl.textContent = captures[1];
             whiteCapturesEl.textContent = captures[2];
 

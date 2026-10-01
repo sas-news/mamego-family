@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"rim","label":"円の縮み","min":0,"max":3,"def":0,"step":0.5,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -958,7 +958,7 @@
         let obstaclePainter = null;
         fxAmbient((ctx2, now, pad, cs) => {
             const cr = (BOARD_SIZE - 1) / 2;
-            const bx = pad + cr * cs, by = pad + cr * cs, rr = (cr + 0.55) * cs;
+            const bx = pad + cr * cs, by = pad + cr * cs, rr = (cr - (P('rim') || 0) + 0.55) * cs;
             const a0 = now / 2400;
             ctx2.save();
             ctx2.strokeStyle = 'rgba(255,255,255,0.16)';
@@ -2739,11 +2739,12 @@
         function resetGame() {
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            // 円形盤: 半径より外を壁にする
+            // 円形盤: 半径より外を壁にする (縮みは設定の rim、既定0)
             const crad = (BOARD_SIZE - 1) / 2;
+            const crim = crad - (P('rim') || 0);
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 const ddx = x - crad, ddy = y - crad;
-                if (ddx * ddx + ddy * ddy > crad * crad + 0.5) board[y * BOARD_SIZE + x] = 3;
+                if (ddx * ddx + ddy * ddy > crim * crim + 0.5) board[y * BOARD_SIZE + x] = 3;
             }
             pieces = [];
             turn = 1;

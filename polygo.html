@@ -322,7 +322,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"monomers","label":"鎖の長さ","min":2,"max":8,"def":4,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -567,9 +567,24 @@
         const PIECE_TYPES = Object.keys(MOLECULES);
         const PIECE_DEFS = {};
         PIECE_TYPES.forEach(t => { PIECE_DEFS[t] = MOLECULES[t].atoms; });
-        // 窒息領域のしきい値はモノマー数と同じ4
-        const PIECE_SIZE = 4;
-        const MONOMERS = 4;
+        // 窒息領域のしきい値はモノマー数と同じ (設定の monomers、既定4)
+        let PIECE_SIZE = 4;
+        let MONOMERS = 4;
+        function syncPolyParams() {
+            MONOMERS = Math.max(2, Math.min(8, P('monomers') || 4));
+            PIECE_SIZE = MONOMERS;
+        }
+        syncPolyParams();
+        // 設定変更で鎖の長さを即時反映 (構築中の鎖は破棄)
+        function onVariantParam(p) {
+            if (p.key === 'monomers') {
+                syncPolyParams();
+                chainCells = [];
+                refreshChainPreview();
+                updatePieceTrayUI();
+                render();
+            }
+        }
 
         // ---- ルール説明文 (バリアントごとの差分はここだけ差し替える) ----
         const RULES_COMMON = [

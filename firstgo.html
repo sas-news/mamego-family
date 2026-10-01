@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"win_captures","label":"勝利に必要なアゲハマ数","min":1,"max":10,"def":1,"unit":"石"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1823,7 +1823,7 @@
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
-                if (captures[player] >= WIN_CAPTURES) {
+                if (captures[player] >= (P('win_captures') || WIN_CAPTURES)) {
                     fxText(captured[0], '一撃!', '#ef4444', 1100);
                     fxShake(7, 400);
                     fxGlow(captured[0], '#f87171', 800);

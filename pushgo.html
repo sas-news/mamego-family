@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"push_dist","label":"押す距離","min":1,"max":4,"def":1,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1822,7 +1822,7 @@
                     getNeighbors(pi).forEach(ni => {
                         if (board[ni] !== opp2) return;
                         const nx = ni % BOARD_SIZE, ny = Math.floor(ni / BOARD_SIZE);
-                        const tx = nx + (nx - p.x), ty = ny + (ny - p.y);
+                        const tx = nx + (nx - p.x) * (P('push_dist') || 1), ty = ny + (ny - p.y) * (P('push_dist') || 1);
                         if (tx < 0 || tx >= BOARD_SIZE || ty < 0 || ty >= BOARD_SIZE) return;
                         const ti = ty * BOARD_SIZE + tx;
                         if (board[ti] !== 0) return;

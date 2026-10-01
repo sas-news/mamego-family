@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"rotate_every","label":"回転の間隔","min":1,"max":8,"def":1,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1849,8 +1849,8 @@
                 soundManager.playPlace();
             }
 
-            // 回転ルール: 着手ごとに盤面全体を90°時計回りに回転
-            {
+            // 回転ルール: 設定の間隔ごとに盤面全体を90°時計回りに回転
+            if (history.length % Math.max(1, P('rotate_every') || 1) === 0) {
                 const nb = new Array(board.length).fill(0);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     nb[x * BOARD_SIZE + (BOARD_SIZE - 1 - y)] = board[y * BOARD_SIZE + x];

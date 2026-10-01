@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"grow_rate","label":"増殖確率","min":0.05,"max":1,"def":0.3,"step":0.05}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -676,7 +676,7 @@
             }
             const used = new Set();
             cand.forEach(([i, adj]) => {
-                if (used.has(i) || Math.random() > GROW_RATE) return;
+                if (used.has(i) || Math.random() > (P('grow_rate') || GROW_RATE)) return;
                 // 増殖先がどの連の最後の呼吸点でもある場合は増殖しない (増殖による連鎖全滅を防ぐ)
                 const chokes = getNeighbors(i).some(n => {
                     const c = board[n];
