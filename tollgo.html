@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"cap_moves","label":"打ち切り手数","min":50,"max":500,"def":150,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1791,7 +1791,7 @@
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap_moves') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;

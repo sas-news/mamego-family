@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'totalitygo',
     spec: [
         ...K.rb('TOTALITYGO', '日食碁', 'totalitygo'),
+        K.params([
+            { key: 'eclipse_interval', label: '皆既日食の間隔', min: 3, max: 30, def: 9, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.75, hint: '交点数比' },
+        ]),
         ...ST(ST_INIT),
         // 影石は取り判定・窒息判定の対象外 (次の1手の間、呼吸点を失わない)
         [K.ONE, `            for (let i = 0; i < boardState.length; i++) {
@@ -55,7 +59,7 @@ module.exports = {
                 if (boardState[i] === player && !visited[i] && i !== st.shadow) {`],
         // 皆既日食: 9手ごとの着手は全石が影になり取りが起きない。日食で置いた石は次の1手も取れない
         [K.ONE, K.CAPTURE_BLOCK, `            st.ply++;
-            const eclipse = st.ply % 9 === 0;
+            const eclipse = st.ply % (P('eclipse_interval') || 9) === 0;
             const shadowWas = st.shadow;
             st.shadow = -1;
             let captured = eclipse ? [] : getCapturedStones(board, opponent);
@@ -89,7 +93,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'日食まで ' + (9 - st.ply % 9) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'日食まで ' + ((P('eclipse_interval') || 9) - st.ply % (P('eclipse_interval') || 9)) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            日食碁: 9手ごとの着手は皆既日食 — 全石が影になり敵に取れない。日食の石は次の1手も影に残る<br>
             PC: クリックで配置<br>

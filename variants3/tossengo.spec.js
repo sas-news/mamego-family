@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'tossengo',
     spec: [
         ...K.rb('TOSSENGO', '投扇碁', 'tossengo'),
+        K.params([
+            { key: 'judge_interval', label: '審判の間隔', min: 2, max: 20, def: 8, unit: '手' },
+            { key: 'point', label: '審判ごとの得点', min: 1, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.9, hint: '交点数比' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 的: 中央の縦筋の上下2箇所
@@ -60,7 +65,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 投扇興: 8手ごとに的への最近石を審判
-            if (history.length > 0 && history.length % 8 === 0) {
+            if (history.length > 0 && history.length % (P('judge_interval') || 8) === 0) {
                 MATO_PTS.forEach(mp => {
                     const mx = mp % BOARD_SIZE, my = (mp / BOARD_SIZE) | 0;
                     let best = -1, bestD = 1e9;
@@ -71,7 +76,7 @@ module.exports = {
                         if (dx + dy < bestD) { bestD = dx + dy; best = i; }
                     }
                     if (best >= 0) {
-                        st.fan[board[best]]++;
+                        st.fan[board[best]] += (P('point') || 1);
                         fxGlow(best, '#f59e0b', 800);
                         fxText(best, '的中!', '#f59e0b', 1100);
                     }
@@ -104,7 +109,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'審判まで ' + (8 - (history.length % 8)) + ' 手 / 的 黒' + (st.fan ? st.fan[1] : 0) + ' 白' + (st.fan ? st.fan[2] : 0)`),
+        ...K.EVENT_CHIP_SPEC(`'審判まで ' + ((P('judge_interval') || 8) - (history.length % (P('judge_interval') || 8))) + ' 手 / 的 黒' + (st.fan ? st.fan[1] : 0) + ' 白' + (st.fan ? st.fan[2] : 0)`),
         [K.ONE, K.INFO_ALGO, `            投扇碁: 8手ごとの審判で的に最も近い石の持ち主が+1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

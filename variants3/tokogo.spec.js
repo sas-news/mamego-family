@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'tokogo',
     spec: [
         ...K.rb('TOKOGO', '床飾碁', 'tokogo'),
+        K.params([
+            { key: 'need', label: '床の間完成に必要な石数', min: 1, max: 3, def: 2, unit: '個' },
+            { key: 'bonus', label: '床の間ごとの得点', min: 1, max: 15, def: 6, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.8, hint: '交点数比' },
+        ]),
         // 床の間ボーナス: 上下辺中央の1x3に自石2つ以上で+6
         [K.ONE, `        function endGameByScore() {`,
 `        function tokoZones() {
@@ -39,7 +44,7 @@ module.exports = {
                 let n = 0;
                 for (let dx = 0; dx < 3; dx++)
                     if (board[zy * BOARD_SIZE + zx + dx] === player) n++;
-                if (n >= 2) bonus += 6;
+                if (n >= (P('need') || 2)) bonus += (P('bonus') || 6);
             });
             return bonus;
         }
@@ -79,7 +84,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'床飾 黒' + (tokoBonus(1) / 6) + '/白' + (tokoBonus(2) / 6)`),
+        ...K.EVENT_CHIP_SPEC(`'床飾 黒' + (tokoBonus(1) / (P('bonus') || 6)) + '/白' + (tokoBonus(2) / (P('bonus') || 6))`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            床飾碁: 上下辺の床の間(1x3)に石を飾る。2石以上飾った床の間ごとに+6目<br>
             PC: クリックで配置<br>

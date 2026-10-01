@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"tide_period","label":"潮汐の周期","min":4,"max":30,"def":10,"unit":"手"},{"key":"cap_ratio","label":"打ち切り手数","min":0.5,"max":2,"step":0.1,"def":1.1,"hint":"交点数比"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1327,7 +1327,7 @@
 
         function drawStoneMarks(padding, cellSize) {
             // 満潮時: 外周1段を水面で覆う
-            if (Math.floor(history.length / 10) % 2 === 1) {
+            if (Math.floor(history.length / (P('tide_period') || 10)) % 2 === 1) {
                 ctx.save();
                 ctx.fillStyle = 'rgba(56,189,248,0.35)';
                 for (let x = 0; x < BOARD_SIZE; x++) for (let y = 0; y < BOARD_SIZE; y++) {
@@ -1778,7 +1778,7 @@
         }
 
         function isValidPlacement(cells, player) {
-            const isHigh = Math.floor(history.length / 10) % 2 === 1;
+            const isHigh = Math.floor(history.length / (P('tide_period') || 10)) % 2 === 1;
             for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -1856,8 +1856,8 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 潮汐: 10手ごとに満潮/干潮が入れ替わる (両者共通)
-            if (history.length % 10 === 0) {
-                const nowHigh = Math.floor(history.length / 10) % 2 === 1;
+            if (history.length % (P('tide_period') || 10) === 0) {
+                const nowHigh = Math.floor(history.length / (P('tide_period') || 10)) % 2 === 1;
                 if (nowHigh) {
                     // 満潮: 外周1段の石は全て流出 (アゲハマにはならない)。全滅はさせない
                     const washed = [];
@@ -1876,7 +1876,7 @@
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -2753,7 +2753,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (Math.floor(history.length / 10) % 2 === 1 ? '満潮' : '干潮');
+                const et = gameOver ? '' : (Math.floor(history.length / (P('tide_period') || 10)) % 2 === 1 ? '満潮' : '干潮');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

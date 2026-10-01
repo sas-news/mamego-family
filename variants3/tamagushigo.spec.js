@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'tamagushigo',
     spec: [
         ...K.rb('TAMAGUSHIGO', '玉串碁', 'tamagushigo'),
+        K.params([
+            { key: 'sacred_liberty', label: '神宿りの追加呼吸', min: 1, max: 4, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.9, hint: '交点数比' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 奉納石 (st.sacred に idx が残る) を含む連は神宿りで+1呼吸
@@ -60,7 +64,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                    }
-                    if (groupHasSacred(group)) liberties += 1; // 奉納石の神宿り
+                    if (groupHasSacred(group)) liberties += (P('sacred_liberty') || 1); // 奉納石の神宿り
 
                     if (liberties <= 0) {`],
         // 「玉串を奉奠」ボタン: 押すと奉納モード → 空点クリックで奉納 (1手使う)

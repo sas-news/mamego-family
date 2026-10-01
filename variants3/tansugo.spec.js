@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'tansugo',
     spec: [
         ...K.rb('TANSUGO', '箪笥碁', 'tansugo'),
+        K.params([
+            { key: 'need', label: '引出し完成に必要な石数', min: 2, max: 9, def: 4, unit: '個' },
+            { key: 'bonus', label: '引出しごとの得点', min: 1, max: 15, def: 7, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.8, hint: '交点数比' },
+        ]),
         // 箪笥ボーナス: 各隅の3x3に自石4つ以上で+7
         [K.ONE, `        function endGameByScore() {`,
 `        function tansuZones() {
@@ -39,7 +44,7 @@ module.exports = {
                 let n = 0;
                 for (let dy = 0; dy < 3; dy++) for (let dx = 0; dx < 3; dx++)
                     if (board[(zy + dy) * BOARD_SIZE + zx + dx] === player) n++;
-                if (n >= 4) bonus += 7;
+                if (n >= (P('need') || 4)) bonus += (P('bonus') || 7);
             });
             return bonus;
         }
@@ -72,7 +77,7 @@ module.exports = {
                     ctx.restore();
                 });
             }`),
-        ...K.EVENT_CHIP_SPEC(`'箪笥 黒' + (tansuBonus(1) / 7) + '/白' + (tansuBonus(2) / 7) + '杯'`),
+        ...K.EVENT_CHIP_SPEC(`'箪笥 黒' + (tansuBonus(1) / (P('bonus') || 7)) + '/白' + (tansuBonus(2) / (P('bonus') || 7)) + '杯'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            箪笥碁: 四隅の3x3は箪笥。自分の石を4つ以上収めた引出しごとに+7目<br>
             PC: クリックで配置<br>

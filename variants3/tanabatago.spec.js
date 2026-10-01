@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'tanabatago',
     spec: [
         ...K.rb('TANABATAGO', '七夕碁', 'tanabatago'),
+        K.params([
+            { key: 'star_bonus', label: '短冊1つあたりの得点', min: 0, max: 6, def: 2, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.75, hint: '交点数比' },
+        ]),
         // 笹判定ヘルパー: 星の上にある自石を数える
         [K.ONE, `        function endGameByScore() {`, `        // 笹の判定: 星の点に置かれた石を数える
         function tanaStars(pl) {
@@ -35,7 +39,7 @@ module.exports = {
             pts.forEach(pt => { if (board[pt.y * BOARD_SIZE + pt.x] === pl) n++; });
             return n;
         }
-        function tanaBonus(pl) { return tanaStars(pl) * 2; }
+        function tanaBonus(pl) { return tanaStars(pl) * (P('star_bonus') ?? 2); }
 
         function endGameByScore() {`],
         // 採点に願い点を加算

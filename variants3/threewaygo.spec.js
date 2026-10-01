@@ -11,6 +11,11 @@ module.exports = {
     icon: 'threewaygo',
     spec: [
         ...K.rb('THREEWAYGO', '三方碁', 'threewaygo'),
+        K.params([
+            { key: 'komi2', label: '白 (2番手) の順位コミ', min: 0, max: 13, step: 0.25, def: 3.25, unit: '目' },
+            { key: 'komi3', label: '赤 (3番手) の順位コミ', min: 0, max: 13, step: 0.25, def: 6.5, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.75, hint: '交点数比' },
+        ]),
         // アゲハマは3人分 (宣言時とリセット時の両方)
         [K.ALL, 'captures = { 1: 0, 2: 0 };', 'captures = { 1: 0, 2: 0, 3: 0 };'],
         // 有効判定: 他の2勢力の死に連を両方捕獲判定
@@ -57,7 +62,7 @@ module.exports = {
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -91,7 +96,7 @@ module.exports = {
             gameOver = true;
             const terr = calculateTerritory3();
             // 順位コミ: 2番手+3.25・3番手+6.5 (先手のみ有利にならない対称補正)
-            const komi3 = { 1: 0, 2: 3.25, 3: 6.5 };
+            const komi3 = { 1: 0, 2: (P('komi2') ?? 3.25), 3: (P('komi3') ?? 6.5) };
             const names = { 1: '黒', 2: '白', 3: '赤' };
             const totals = { 1: terr[1] + captures[1], 2: terr[2] + captures[2] + komi3[2], 3: terr[3] + captures[3] + komi3[3] };
             let winner = 1;

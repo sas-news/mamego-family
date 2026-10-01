@@ -10,6 +10,9 @@ module.exports = {
     icon: 'trenchgo',
     spec: [
         ...K.rb('TRENCHGO', '海溝碁', 'trenchgo'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.8, hint: '交点数比' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 海溝: 中央1列の深い裂け目 (着手不可・呼吸なし)
         const TRENCH_X = Math.floor(BOARD_SIZE / 2);`],
@@ -31,7 +34,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

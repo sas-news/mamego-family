@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,16 +47,22 @@ module.exports = {
     icon: 'thundercloudgo',
     spec: [
         ...K.rb('THUNDERCLOUDGO', '雷雲碁', 'thundercloudgo'),
+        K.params([
+            { key: 'strike_interval', label: '落雷の間隔', min: 4, max: 40, def: 16, unit: '手' },
+            { key: 'blast_r', label: '落雷範囲の半径', min: 0, max: 3, def: 1, hint: '1=3x3' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.75, hint: '交点数比' },
+        ]),
         ...ST(ST_INIT),
         // 落雷: 16手ごとに雲の下 3x3 の石が吹き飛び、雲は次の位置へ
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 落雷: 16手ごとに雷雲の下 (3x3) の石が吹き飛ぶ
-            if (history.length > 0 && history.length % 16 === 0) {
+            if (history.length > 0 && history.length % (P('strike_interval') || 16) === 0) {
                 const victims = [];
-                for (let dy = -1; dy <= 1; dy++) {
-                    for (let dx = -1; dx <= 1; dx++) {
+                const br = P('blast_r') || 1;
+                for (let dy = -br; dy <= br; dy++) {
+                    for (let dx = -br; dx <= br; dx++) {
                         const x = st.cloud.x + dx, y = st.cloud.y + dy;
                         if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) continue;
                         const i = y * BOARD_SIZE + x;
@@ -95,11 +101,12 @@ module.exports = {
                 ctx2.arc(cx + dx * cs, cy + dy * cs, cs * 0.55, 0, Math.PI * 2);
                 ctx2.fill();
             });
-            const warn = 16 - (history.length % 16);
+            const warn = (P('strike_interval') || 16) - (history.length % (P('strike_interval') || 16));
             if (warn <= 3) {
                 ctx2.strokeStyle = 'rgba(250,204,21,' + (0.4 + 0.4 * Math.sin(now / 120)) + ')';
                 ctx2.lineWidth = cs * 0.06;
-                for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+                const br = P('blast_r') || 1;
+                for (let dy = -br; dy <= br; dy++) for (let dx = -br; dx <= br; dx++) {
                     const x = st.cloud.x + dx, y = st.cloud.y + dy;
                     if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) continue;
                     ctx2.strokeRect(pad + x * cs - cs * 0.45, pad + y * cs - cs * 0.45, cs * 0.9, cs * 0.9);
@@ -107,7 +114,7 @@ module.exports = {
             }
             ctx2.restore();
         });`],
-        ...K.EVENT_CHIP_SPEC(`'落雷まで ' + (16 - history.length % 16) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'落雷まで ' + ((P('strike_interval') || 16) - history.length % (P('strike_interval') || 16)) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            雷雲碁: 雷雲が盤を漂い、16手毎に雲の下 3x3 の石が吹き飛ぶ<br>
             PC: クリックで配置<br>

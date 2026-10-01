@@ -10,6 +10,9 @@ module.exports = {
     icon: 'tilengo',
     spec: [
         ...K.rb('TILENGO', '敷詰碁', 'tilengo'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.8, hint: '交点数比' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 敷詰: 7つのシードへの最近接 (マンハッタン) でタイルを割る
         const TILE_SEEDS = [
@@ -87,7 +90,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

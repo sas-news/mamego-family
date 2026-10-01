@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"wrap","label":"上下端の折り返し","options":[{"v":1,"l":"あり (輪環)"},{"v":0,"l":"なし"}],"def":1},{"key":"cap_ratio","label":"打ち切り手数","min":0.5,"max":1.5,"step":0.1,"def":0.8,"hint":"交点数比"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1904,7 +1904,7 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -1999,9 +1999,14 @@
             // 横は帯の反対側のみ
             if (x === TAN_COL0) neighbors.push(y * BOARD_SIZE + TAN_COL1);
             else if (x === TAN_COL1) neighbors.push(y * BOARD_SIZE + TAN_COL0);
-            // 縦は折り返し (輪環)
-            neighbors.push(((y - 1 + BOARD_SIZE) % BOARD_SIZE) * BOARD_SIZE + x);
-            neighbors.push(((y + 1) % BOARD_SIZE) * BOARD_SIZE + x);
+            // 縦は折り返し (輪環) — 設定で折り返しなしにもできる
+            if (P('wrap') ?? 1) {
+                neighbors.push(((y - 1 + BOARD_SIZE) % BOARD_SIZE) * BOARD_SIZE + x);
+                neighbors.push(((y + 1) % BOARD_SIZE) * BOARD_SIZE + x);
+            } else {
+                if (y > 0) neighbors.push((y - 1) * BOARD_SIZE + x);
+                if (y < BOARD_SIZE - 1) neighbors.push((y + 1) * BOARD_SIZE + x);
+            }
 
             return neighbors;
         }

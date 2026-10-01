@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"need","label":"引出し完成に必要な石数","min":2,"max":9,"def":4,"unit":"個"},{"key":"bonus","label":"引出しごとの得点","min":1,"max":15,"def":7,"unit":"目"},{"key":"cap_ratio","label":"打ち切り手数","min":0.5,"max":1.5,"step":0.1,"def":0.8,"hint":"交点数比"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1812,7 +1812,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -2220,7 +2220,7 @@
                 let n = 0;
                 for (let dy = 0; dy < 3; dy++) for (let dx = 0; dx < 3; dx++)
                     if (board[(zy + dy) * BOARD_SIZE + zx + dx] === player) n++;
-                if (n >= 4) bonus += 7;
+                if (n >= (P('need') || 4)) bonus += (P('bonus') || 7);
             });
             return bonus;
         }
@@ -2751,7 +2751,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('箪笥 黒' + (tansuBonus(1) / 7) + '/白' + (tansuBonus(2) / 7) + '杯');
+                const et = gameOver ? '' : ('箪笥 黒' + (tansuBonus(1) / (P('bonus') || 7)) + '/白' + (tansuBonus(2) / (P('bonus') || 7)) + '杯');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

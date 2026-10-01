@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,11 +27,16 @@ module.exports = {
     icon: 'tithego',
     spec: [
         ...K.rb('TITHEGO', '什一碁', 'tithego'),
+        K.params([
+            { key: 'tax_min', label: '課税される最小捕獲数', min: 2, max: 10, def: 3, unit: '石' },
+            { key: 'tax_div', label: '税率', min: 2, max: 20, def: 10, hint: '取った石の1/N' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.75, hint: '交点数比' },
+        ]),
         // 什一の税: 3石以上の捕獲で約1割を相手に納める
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
-                const tax = captured.length >= 3 ? Math.max(1, Math.floor(captured.length / 10)) : 0;
+                const tax = captured.length >= (P('tax_min') || 3) ? Math.max(1, Math.floor(captured.length / (P('tax_div') || 10))) : 0;
                 captures[player] += captured.length - tax;
                 captures[opponent] += tax; // 什一の税: 取った石の一部が相手に納められる
                 if (tax > 0) {

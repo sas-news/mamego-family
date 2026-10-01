@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"spin_moves","label":"独楽が取れない期間","min":1,"max":5,"def":2,"unit":"手"},{"key":"cap_ratio","label":"打ち切り手数","min":0.5,"max":1.5,"step":0.1,"def":0.8,"hint":"交点数比"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1816,7 +1816,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1882,7 +1882,7 @@
             {
                 const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (board[ci] === player) {
-                    st.spin[ci] = 2;
+                    st.spin[ci] = P('spin_moves') || 2;
                     fxText(ci, 'ヒュルヒュル', '#38bdf8', 800);
                 }
             }

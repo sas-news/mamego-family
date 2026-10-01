@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'tofugo',
     spec: [
         ...K.rb('TOFUGO', '豆腐碁', 'tofugo'),
+        K.params([
+            { key: 'tofu_bonus', label: '凝固した連1つあたりの得点', min: 0, max: 10, def: 3, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.9, hint: '交点数比' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // にがりの点: 中央の左右2箇所
         const NIGARI_PTS = (() => {
@@ -55,7 +59,7 @@ module.exports = {
                 }
                 // 連がにがりに隣接 (あるいは直上) していれば凝固
                 const coagulated = group.some(g => NIGARI_PTS.includes(g) || getNeighbors(g).some(n => NIGARI_PTS.includes(n)));
-                if (coagulated) b[pl] += 3;
+                if (coagulated) b[pl] += (P('tofu_bonus') ?? 3);
             }
             return b;
         }

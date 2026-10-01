@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'tanukigo',
     spec: [
         ...K.rb('TANUKIGO', '狸囃碁', 'tanukigo'),
+        K.params([
+            { key: 'need_own', label: '腹鼓に必要な隣接味方石', min: 1, max: 4, def: 2, unit: '個' },
+            { key: 'lure_count', label: '化かして連れ去る数', min: 1, max: 3, def: 1, unit: '個' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.8, hint: '交点数比' },
+        ]),
         ...ST(ST_INIT),
         // 狸ルール: 味方2石以上に接する着手は腹鼓 — 隣の孤立敵石を幻惑して連れ去る
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -56,17 +61,18 @@ module.exports = {
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const own = getNeighbors(mi).filter(i => board[i] === player).length;
-                if (own >= 2) {
+                if (own >= (P('need_own') || 2)) {
                     const strays = getNeighbors(mi).filter(i =>
                         board[i] === opponent && getNeighbors(i).every(n => board[n] !== opponent));
                     if (strays.length) {
-                        const p = strays[0];
-                        board[p] = 0;
-                        captures[player]++;
-                        st.lured[player]++;
+                        strays.slice(0, P('lure_count') || 1).forEach(p => {
+                            board[p] = 0;
+                            captures[player]++;
+                            st.lured[player]++;
+                            fxBurst(p, '#f59e0b', 10, 1.5);
+                            fxText(p, '化かし!', '#fbbf24', 1200);
+                        });
                         fxGlow(mi, '#f59e0b', 700);
-                        fxBurst(p, '#f59e0b', 10, 1.5);
-                        fxText(p, '化かし!', '#fbbf24', 1200);
                         fxShake(4, 300);
                         cleanUpPieces();
                     } else {

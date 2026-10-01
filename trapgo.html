@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"trap_interval","label":"罠の間隔","min":2,"max":15,"def":6,"unit":"手","hint":"この手数ごとに罠石"},{"key":"cap_rows","label":"打ち切り手数","min":0,"max":8,"def":2,"unit":"行","hint":"盤面+この行数"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1853,7 +1853,7 @@
                 rot: move.rot,
                 cells: move.cells,
                 at: history.length,
-                trap: st.pcnt[player] % 6 === 0
+                trap: st.pcnt[player] % (P('trap_interval') || 6) === 0
             });
 
             // 捕獲処理
@@ -1901,7 +1901,7 @@
 
 
             // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_rows') ?? 2))) {
                 endGameByScore();
                 return;
             }
@@ -2779,7 +2779,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('次の罠 ' + (6 - st.pcnt[turn] % 6) + '手後');
+                const et = gameOver ? '' : ('次の罠 ' + ((P('trap_interval') || 6) - st.pcnt[turn] % (P('trap_interval') || 6)) + '手後');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

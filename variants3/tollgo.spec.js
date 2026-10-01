@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap_moves') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,9 @@ module.exports = {
     icon: 'tollgo',
     spec: [
         ...K.rb('TOLLGO', '弔鐘碁', 'tollgo'),
+        K.params([
+            { key: 'cap_moves', label: '打ち切り手数', min: 50, max: 500, def: 150, unit: '手' },
+        ]),
         // 弔鐘: 取られた地点からの衝撃波で全石が外へ1歩押される
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"evap_prob","label":"敵石蒸発の確率","min":0,"max":100,"def":50,"unit":"%"},{"key":"score","label":"曜変の得点","min":0,"max":10,"def":3,"unit":"目"},{"key":"cap_ratio","label":"打ち切り手数","min":0.5,"max":1.5,"step":0.1,"def":0.9,"hint":"交点数比"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -649,7 +649,7 @@
             const opponent = player === 1 ? 2 : 1;
             const targets = [];
             for (let i = 0; i < board.length; i++) if (board[i] === opponent) targets.push(i);
-            if (targets.length > 0 && Math.random() < 0.5) {
+            if (targets.length > 0 && Math.random() * 100 < (P('evap_prob') ?? 50)) {
                 const t = targets[(Math.random() * targets.length) | 0];
                 board[t] = 0;
                 captures[player]++;
@@ -657,7 +657,7 @@
                 fxBurst(t, '#7c3aed', 12, 1.6);
                 return '曜変: 敵石を蒸発';
             }
-            captures[player] += 3;
+            captures[player] += (P('score') ?? 3);
             return '曜変: +3目';
         }
         let st = { yohen: { 1: 0, 2: 0 } };
@@ -1834,7 +1834,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

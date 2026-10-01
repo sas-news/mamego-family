@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,9 +64,13 @@ module.exports = {
     icon: 'takuhongo',
     spec: [
         ...K.rb('TAKUHONGO', '拓本碁', 'takuhongo'),
+        K.params([
+            { key: 'min_size', label: '拓本になる連の最小石数', min: 2, max: 12, def: 5, unit: '石' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.9, hint: '交点数比' },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `                captured.forEach(idx => board[idx] = 0);`, `                // 拓本: 取った連が5石以上なら碑文点 = 取った石数
-                if (captured.length >= 5) {
+                if (captured.length >= (P('min_size') || 5)) {
                     st.score[player] += captured.length;
                 }
                 captured.forEach(idx => board[idx] = 0);`],
@@ -77,7 +81,7 @@ module.exports = {
                     if (!pc.cells || !pc.cells.length) return;
                     const idx = pc.cells[0].y * BOARD_SIZE + pc.cells[0].x;
                     if (board[idx] === 0) return;
-                    if (getConnectedGroup(idx, board[idx]).length >= 5) {
+                    if (getConnectedGroup(idx, board[idx]).length >= (P('min_size') || 5)) {
                         const x = idx % BOARD_SIZE, y = (idx / BOARD_SIZE) | 0;
                         ctx.strokeStyle = 'rgba(120,113,108,0.5)';
                         ctx.lineWidth = Math.max(1, cellSize * 0.05);

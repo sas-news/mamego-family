@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"tornado_step","label":"竜巻の進行マス数","min":1,"max":6,"def":2,"unit":"マス"},{"key":"rotate","label":"旋回マス数","min":1,"max":4,"def":2,"unit":"マス"},{"key":"cap_rows","label":"打ち切り手数","min":0,"max":8,"def":2,"unit":"行","hint":"盤面+この行数"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -970,7 +970,7 @@
                 return cs2;
             };
             const orbit = ring(Math.max(1, Math.floor(N / 2) - 2));
-            const pos = orbit[(history.length * 2) % orbit.length];
+            const pos = orbit[(history.length * (P('tornado_step') || 2)) % orbit.length];
             const cx = pad + pos[0] * cs, cy = pad + pos[1] * cs;
             const rot = now / 230;
             ctx2.save();
@@ -1901,16 +1901,17 @@
                     return cs;
                 };
                 const orbit = ring(Math.max(1, Math.floor(N / 2) - 2));
-                const pos = orbit[(history.length * 2) % orbit.length];
+                const pos = orbit[(history.length * (P('tornado_step') || 2)) % orbit.length];
                 const tx = pos[0], ty = pos[1];
                 const sur = [[-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0]];
                 const cells = sur.map(([dx, dy]) => [tx + dx, ty + dy])
                     .filter(([x, y]) => x >= 0 && x < N && y >= 0 && y < N);
                 const vals = cells.map(([x, y]) => board[y * N + x]);
+                const rot = P('rotate') || 2;
                 cells.forEach(([x, y], k) => {
-                    board[y * N + x] = vals[(k - 2 + vals.length) % vals.length];
+                    board[y * N + x] = vals[(k - rot + vals.length) % vals.length];
                     if (board[y * N + x] !== 0) {
-                        const [sx, sy] = cells[(k - 2 + vals.length) % vals.length];
+                        const [sx, sy] = cells[(k - rot + vals.length) % vals.length];
                         fxSlide(sy * N + sx, y * N + x, 380);
                     }
                 });
@@ -1927,7 +1928,7 @@
 
 
             // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_rows') ?? 2))) {
                 endGameByScore();
                 return;
             }

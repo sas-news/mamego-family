@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,9 +27,13 @@ module.exports = {
     icon: 'terracego',
     spec: [
         ...K.rb('TERRACEGO', '段丘碁', 'terracego'),
+        K.params([
+            { key: 'bands', label: '棚田の段数', min: 2, max: 6, def: 3, unit: '段' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.9, hint: '交点数比' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 段丘: 3つの水平バンド。段差を挟むセル同士は連にならない
-        function terraBand(y) { return Math.min(2, Math.floor(y * 3 / BOARD_SIZE)); }`],
+        // 段丘: 水平バンド。段差を挟むセル同士は連にならない (段数は設定で調整)
+        function terraBand(y) { const nb = P('bands') || 3; return Math.min(nb - 1, Math.floor(y * nb / BOARD_SIZE)); }`],
         // 段差越しは連を張れない (取り判定の連拡張を同一段に限定)
         [K.ONE, `                        const neighbors = getNeighbors(curr);
                         neighbors.forEach(n => {
@@ -81,11 +85,11 @@ module.exports = {
                 ctx.save();
                 const bandCols = ['rgba(96, 150, 110, 0.16)', 'rgba(140, 170, 100, 0.16)', 'rgba(190, 175, 110, 0.18)'];
                 for (let y = 0; y < BOARD_SIZE; y++) {
-                    ctx.fillStyle = bandCols[terraBand(y)];
+                    ctx.fillStyle = bandCols[terraBand(y) % bandCols.length];
                     ctx.fillRect(padding - cellSize / 2, padding + (y - 0.5) * cellSize, cellSize * BOARD_SIZE, cellSize);
                 }
-                for (let b = 1; b <= 2; b++) {
-                    const yEdge = Math.ceil(b * BOARD_SIZE / 3);
+                for (let b = 1; b <= (P('bands') || 3) - 1; b++) {
+                    const yEdge = Math.ceil(b * BOARD_SIZE / (P('bands') || 3));
                     if (yEdge >= BOARD_SIZE) continue;
                     const yy = padding + (yEdge - 0.5) * cellSize;
                     ctx.strokeStyle = 'rgba(84, 60, 30, 0.75)';

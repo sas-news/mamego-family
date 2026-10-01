@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -59,6 +59,11 @@ module.exports = {
     icon: 'tradego',
     spec: [
         ...K.rb('TRADEGO', '交易碁', 'tradego'),
+        K.params([
+            { key: 'port_gold', label: '港ごとの資金', min: 1, max: 4, def: 1, unit: '金' },
+            { key: 'ship_cost', label: '大船石の価格', min: 1, max: 6, def: 2, unit: '金' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.75, hint: '交点数比' },
+        ]),
         ...ST(ST_INIT),
         // 港座標の計算関数を挿入
         [K.ONE, '        function updateUI() {', PORTS_FN + `
@@ -70,7 +75,7 @@ module.exports = {
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (tradePorts().includes(mi)) {
-                    st.gold[player]++;
+                    st.gold[player] += (P('port_gold') || 1);
                     fxText(mi, '+1金', '#fbbf24', 1000);
                 }
                 // 大船石: 購入済みなら隣の空点にもう1石 (生存可能な点のみ)
@@ -106,8 +111,8 @@ module.exports = {
         btnShip.addEventListener('click', () => {
             soundManager.playClick();
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
-            if (st.armed[turn] || st.gold[turn] < 2) return;
-            st.gold[turn] -= 2;
+            if (st.armed[turn] || st.gold[turn] < (P('ship_cost') || 2)) return;
+            st.gold[turn] -= (P('ship_cost') || 2);
             st.armed[turn] = true;
             render();
             updateUI();

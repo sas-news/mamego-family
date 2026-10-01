@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"need_own","label":"腹鼓に必要な隣接味方石","min":1,"max":4,"def":2,"unit":"個"},{"key":"lure_count","label":"化かして連れ去る数","min":1,"max":3,"def":1,"unit":"個"},{"key":"cap_ratio","label":"打ち切り手数","min":0.5,"max":1.5,"step":0.1,"def":0.8,"hint":"交点数比"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1795,7 +1795,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1853,17 +1853,18 @@
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const own = getNeighbors(mi).filter(i => board[i] === player).length;
-                if (own >= 2) {
+                if (own >= (P('need_own') || 2)) {
                     const strays = getNeighbors(mi).filter(i =>
                         board[i] === opponent && getNeighbors(i).every(n => board[n] !== opponent));
                     if (strays.length) {
-                        const p = strays[0];
-                        board[p] = 0;
-                        captures[player]++;
-                        st.lured[player]++;
+                        strays.slice(0, P('lure_count') || 1).forEach(p => {
+                            board[p] = 0;
+                            captures[player]++;
+                            st.lured[player]++;
+                            fxBurst(p, '#f59e0b', 10, 1.5);
+                            fxText(p, '化かし!', '#fbbf24', 1200);
+                        });
                         fxGlow(mi, '#f59e0b', 700);
-                        fxBurst(p, '#f59e0b', 10, 1.5);
-                        fxText(p, '化かし!', '#fbbf24', 1200);
                         fxShake(4, 300);
                         cleanUpPieces();
                     } else {

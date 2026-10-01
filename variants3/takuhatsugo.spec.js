@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,13 +27,17 @@ module.exports = {
     icon: 'takuhatsugo',
     spec: [
         ...K.rb('TAKUHATSUGO', '托鉢碁', 'takuhatsugo'),
+        K.params([
+            { key: 'bonus', label: '托鉢の徳', min: 0, max: 5, def: 1, unit: '目', hint: '孤高の石1個あたり' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.8, hint: '交点数比' },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 托鉢: 味方に隣接しない石は独りで施しを受ける — 1個+1目
         function takuhatsuBonus(player) {
             let b = 0;
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== player) continue;
-                if (!getNeighbors(i).some(n => board[n] === player)) b += 1;
+                if (!getNeighbors(i).some(n => board[n] === player)) b += (P('bonus') ?? 1);
             }
             return b;
         }

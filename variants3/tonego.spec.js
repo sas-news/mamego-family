@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'tonego',
     spec: [
         ...K.rb('TONEGO', '音石碁', 'tonego'),
+        K.params([
+            { key: 'harmony', label: '和音の得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'dissonance', label: '不協和の減点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.9, hint: '交点数比' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 音: 列 (x) を7音階に割り当てる。和音=完全4・5度、不協和=短・長2度
         const TONE_NAMES = ['ド', 'レ', 'ミ', 'ファ', 'ソ', 'ラ', 'シ'];
@@ -34,8 +39,8 @@ module.exports = {
         function toneHarmony(a, b) {
             const d = ((a - b) % 7 + 7) % 7;
             if (d === 0) return 0;
-            if (d === 3 || d === 4) return 1;   // 完全4度・5度: 和音 +1
-            if (d === 1 || d === 6) return -1;  // 2度・7度: 不協和 -1
+            if (d === 3 || d === 4) return (P('harmony') ?? 1);   // 完全4度・5度: 和音 +1
+            if (d === 1 || d === 6) return -(P('dissonance') ?? 1);  // 2度・7度: 不協和 -1
             return 0;                          // 3度・6度: 中立
         }
         function toneBonus(p) {
