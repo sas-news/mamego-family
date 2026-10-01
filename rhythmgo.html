@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"beat","label":"拍子の周期","min":2,"max":8,"def":4,"unit":"手","hint":"周期の最終拍が強拍"},{"key":"cap_ratio","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":1.1,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1841,8 +1841,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 拍子: 4の倍数手は強拍。強拍の着手者は手番を維持してもう1石置ける
-            if (history.length % 4 === 0 && !st.extra) {
+            // 拍子: 周期の倍数手は強拍。強拍の着手者は手番を維持してもう1石置ける
+            if (history.length % Math.max(2, P('beat') || 4) === 0 && !st.extra) {
                 st.extra = true;
                 fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '強拍!', '#fb923c', 1000);
                 fxShake(3, 200);
@@ -1851,7 +1851,7 @@
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -2731,7 +2731,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('拍 ' + ((history.length % 4) + 1) + '/4' + (history.length % 4 === 3 ? ' (次=強拍)' : ''));
+                const et = gameOver ? '' : ((() => { const b = Math.max(2, P('beat') || 4); return '拍 ' + ((history.length % b) + 1) + '/' + b + (history.length % b === b - 1 ? ' (次=強拍)' : ''); })());
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

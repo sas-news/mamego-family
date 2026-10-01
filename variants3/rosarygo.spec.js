@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'rosarygo',
     spec: [
         ...K.rb('ROSARYGO', '数珠碁', 'rosarygo'),
+        K.params([
+            { key: 'ring_bonus', label: '環1つの得点', min: 0, max: 16, def: 4, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 環: 四方を同色で囲まれた空点 = 念珠の環 (双方同じ判定)
         function rosaryRings(bs, p) {
@@ -41,8 +45,8 @@ module.exports = {
         // 環ごとに+4目
         [K.ONE, `            const territory = calculateTerritory();`,
 `            const territory = calculateTerritory();
-            territory.black += rosaryRings(board, 1).length * 4;
-            territory.white += rosaryRings(board, 2).length * 4;`],
+            territory.black += rosaryRings(board, 1).length * (P('ring_bonus') ?? 4);
+            territory.white += rosaryRings(board, 2).length * (P('ring_bonus') ?? 4);`],
         // 環を金色の輪で描く
         K.CUE_STARS(`            // 念珠の環: 囲まれた空点に金の輪
             {

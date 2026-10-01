@@ -9,6 +9,11 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('RUSTGO', '錆碁', 'rustgo'),
+        K.params([
+            { key: 'rust_count', label: '1回に錆びる石数', min: 1, max: 3, def: 1, unit: '個' },
+            { key: 'rust_min', label: '錆びる連の最小サイズ', min: 1, max: 5, def: 2, unit: '石' },
+            { key: 'cap_extra', label: '打ち切り余分', min: 0, max: 8, def: 2, unit: '行分', hint: '交点数+この行数×盤サイズの手数で強制終局' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
@@ -29,17 +34,23 @@ module.exports = {
                     groups.push(grp);
                 }
                 let rusted = 0;
+                const rustN = Math.max(1, P('rust_count') || 1);
+                const rustMin = Math.max(1, P('rust_min') || 2);
                 groups.forEach(grp => {
-                    if (grp.length < 2) return;
-                    let tip = grp[0], tipN = 99;
+                    if (grp.length < rustMin) return;
+                    const cand = [];
                     grp.forEach(g => {
                         const fn = getNeighbors(g).filter(n => snapB[n] === opponent).length;
-                        if (fn < tipN) { tipN = fn; tip = g; }
+                        cand.push([g, fn]);
                     });
-                    if (board[tip] === opponent) {
-                        board[tip] = 0; rusted++;
-                        fxSplash(tip, '#a16207'); // 錆が散る
-                        fxGlow(tip, '#b45309', 450);
+                    cand.sort((a, b) => a[1] - b[1]); // 最も露出した端から順に
+                    for (let k = 0; k < Math.min(rustN, cand.length); k++) {
+                        const tip = cand[k][0];
+                        if (board[tip] === opponent) {
+                            board[tip] = 0; rusted++;
+                            fxSplash(tip, '#a16207'); // 錆が散る
+                            fxGlow(tip, '#b45309', 450);
+                        }
                     }
                 });
                 if (rusted > 0) { captures[player] += rusted; cleanUpPieces(); }
@@ -47,7 +58,7 @@ module.exports = {
 
 
             // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_extra') ?? 2))) {
                 endGameByScore();
                 return;
             }

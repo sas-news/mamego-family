@@ -10,6 +10,9 @@ module.exports = {
     icon: 'retreatgo',
     spec: [
         ...K.rb('RETREATGO', '退避碁', 'retreatgo'),
+        K.params([
+            { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 400, def: 140, step: 10, unit: '手' },
+        ]),
         // 退避: 着手後、両軍の「孤立石かつ呼吸点1個」の石がその呼吸点へ滑り込む
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -33,7 +36,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(10, P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

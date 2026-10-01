@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,10 @@ module.exports = {
     icon: 'rubberjumpgo',
     spec: [
         ...K.rb('RUBBERJUMPGO', 'ゴム跳碁', 'rubberjumpgo'),
+        K.params([
+            { key: 'jump_score', label: '跳び越え1人の得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
 
         // ゴム跳び: 置いた石から各方向に 敵(1個以上)-自石 と並べば跳び越し得点
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -65,7 +69,7 @@ module.exports = {
                     }
                 });
                 if (jumps > 0) {
-                    captures[player] += jumps;
+                    captures[player] += jumps * (P('jump_score') ?? 1);
                     fxText(by * BOARD_SIZE + bx, jumps + '人跳び!', '#4ade80', 1200);
                     fxGlow(by * BOARD_SIZE + bx, '#4ade80', 800);
                 }

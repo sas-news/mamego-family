@@ -9,22 +9,25 @@ module.exports = {
     kind: 'row',
     spec: [
         ...K.rb('ROWGO', '行進碁', 'rowgo'),
+        K.params([
+            { key: 'row_step', label: '行進の速さ', min: 1, max: 3, def: 1, unit: '行/手', hint: '対象行が1手に進む行数' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
             }
 
-            // 行進碁ルール: 対象行 = 手数-1 mod 盤サイズ (0行目から順に南下、最下行の次は0行目)
+            // 行進碁ルール: 対象行 = (手数×速さ) mod 盤サイズ (0行目から順に南下、最下行の次は0行目)
             {
-                const targetRow = history.length % BOARD_SIZE;
+                const targetRow = (history.length * Math.max(1, P('row_step') || 1)) % BOARD_SIZE;
                 for (const p of cells) {
                     if (p.y !== targetRow) return false;
                 }
             }`],
-        ...K.EVENT_CHIP_SPEC(`'対象行: ' + (history.length % BOARD_SIZE + 1) + '行目'`),
+        ...K.EVENT_CHIP_SPEC(`'対象行: ' + ((history.length * Math.max(1, P('row_step') || 1)) % BOARD_SIZE + 1) + '行目'`),
         K.CUE_GRID(`            // 行進: 現在の対象行を帯色で照らす
             {
-                const tRow = history.length % BOARD_SIZE;
+                const tRow = (history.length * Math.max(1, P('row_step') || 1)) % BOARD_SIZE;
                 ctx.save();
                 ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.14);
                 ctx.fillRect(-cellSize, padding + (tRow - 0.5) * cellSize,
@@ -35,7 +38,7 @@ module.exports = {
         [K.ONE, `        let obstaclePainter = null;`,
 `        let obstaclePainter = null;
         fxAmbient((ctx2, now, pad, cs) => {
-            const tRow = history.length % BOARD_SIZE;
+            const tRow = (history.length * Math.max(1, P('row_step') || 1)) % BOARD_SIZE;
             ctx2.save();
             ctx2.globalAlpha = 0.55 + Math.sin(now / 320) * 0.3;
             ctx2.fillStyle = 'rgba(90,110,170,0.9)';

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"wall_rows","label":"石垣の行数","min":1,"max":4,"def":2,"unit":"行"},{"key":"ladder_count","label":"梯子石の数 (各側)","min":0,"max":6,"def":2,"unit":"個"},{"key":"cap_ratio","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":0.9,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -640,8 +640,8 @@
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         // 石垣: 中央2行が盤を南北に分断する城壁
         const RAMP_Y0 = Math.floor(BOARD_SIZE / 2) - 1;
-        function isRampart(x, y) { return y === RAMP_Y0 || y === RAMP_Y0 + 1; }
-        let st = { ladder: { 1: 2, 2: 2 } };
+        function isRampart(x, y) { const wr = Math.max(1, P('wall_rows') || 2); return y >= RAMP_Y0 && y < RAMP_Y0 + wr; }
+        let st = { ladder: { 1: (P('ladder_count') ?? 2), 2: (P('ladder_count') ?? 2) } };
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -753,7 +753,7 @@
                     2: PIECE_TYPES.includes(s.heldPieces[2]) ? s.heldPieces[2] : null }
                 : { 1: null, 2: null };
             holdUsed = !!s.holdUsed;
-            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { ladder: { 1: 2, 2: 2 } };
+            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { ladder: { 1: (P('ladder_count') ?? 2), 2: (P('ladder_count') ?? 2) } };
             gameMode = ['local', 'ai', 'online'].includes(s.gameMode) ? s.gameMode : 'local';
             aiPlayer = s.aiPlayer === 1 ? 1 : 2;
             myOnlineRole = s.myOnlineRole || null;
@@ -1163,7 +1163,8 @@
                 ctx.save();
                 ctx.strokeStyle = 'rgba(30, 26, 22, 0.7)';
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
-                [RAMP_Y0, RAMP_Y0 + 1].forEach(ry => {
+                const wr = Math.max(1, P('wall_rows') || 2);
+                Array.from({ length: wr }, (_, w) => RAMP_Y0 + w).filter(ry => ry < BOARD_SIZE).forEach(ry => {
                     const cy = padding + ry * cellSize;
                     ctx.beginPath();
                     for (let x = 0; x < BOARD_SIZE; x++) {
@@ -1859,7 +1860,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -2153,7 +2154,7 @@
             if (snap.pieceQueue) pieceQueue = snap.pieceQueue;
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
             holdUsed = !!snap.holdUsed;
-            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { ladder: { 1: 2, 2: 2 } };
+            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { ladder: { 1: (P('ladder_count') ?? 2), 2: (P('ladder_count') ?? 2) } };
             previewPos = null;
             updateUI();
 
@@ -2535,7 +2536,7 @@
             if (data.pieceQueue) pieceQueue = data.pieceQueue;
             if (data.heldPieces) heldPieces = { ...data.heldPieces };
             holdUsed = !!data.holdUsed;
-            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { ladder: { 1: 2, 2: 2 } };
+            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { ladder: { 1: (P('ladder_count') ?? 2), 2: (P('ladder_count') ?? 2) } };
             previewPos = null;
 
             if (gamePhase === 'dead_stone_selection') {
@@ -2806,10 +2807,14 @@
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             for (let x = 0; x < BOARD_SIZE; x++) {
-                board[RAMP_Y0 * BOARD_SIZE + x] = 3;
-                board[(RAMP_Y0 + 1) * BOARD_SIZE + x] = 3;
+                const wr = Math.max(1, P('wall_rows') || 2);
+                for (let w = 0; w < wr; w++) {
+                    const ry = RAMP_Y0 + w;
+                    if (ry >= BOARD_SIZE) break;
+                    board[ry * BOARD_SIZE + x] = 3;
+                }
             }
-            st = { ladder: { 1: 2, 2: 2 } };
+            st = { ladder: { 1: (P('ladder_count') ?? 2), 2: (P('ladder_count') ?? 2) } };
             pieces = [];
             turn = 1;
             captures = { 1: 0, 2: 0 };

@@ -10,6 +10,9 @@ module.exports = {
     icon: 'roulette2go',
     spec: [
         ...K.rb('ROULETTE2GO', '回転盤碁', 'roulette2go'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 象限: 盤中央の十字で4分割 (中央線は下/右側に属する)
         [K.ONE, '        function executeMove(move, player) {',
 `        // 回転盤: 指定プレイヤーが現在打てる象限を求める (盤面依存・純粋関数)
@@ -53,7 +56,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 endGameByScore();
                 return;
             }

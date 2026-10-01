@@ -322,7 +322,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"recall_count","label":"回想の回数 (各側)","min":1,"max":3,"def":1,"unit":"回"},{"key":"cap_ratio","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":0.75,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -641,7 +641,7 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        let st = { used: { 1: false, 2: false } };
+        let st = { n: { 1: 0, 2: 0 } };
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -753,7 +753,7 @@
                     2: PIECE_TYPES.includes(s.heldPieces[2]) ? s.heldPieces[2] : null }
                 : { 1: null, 2: null };
             holdUsed = !!s.holdUsed;
-            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { used: { 1: false, 2: false } };
+            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { n: { 1: 0, 2: 0 } };
             gameMode = ['local', 'ai', 'online'].includes(s.gameMode) ? s.gameMode : 'local';
             aiPlayer = s.aiPlayer === 1 ? 1 : 2;
             myOnlineRole = s.myOnlineRole || null;
@@ -1800,7 +1800,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -2091,7 +2091,7 @@
             if (snap.pieceQueue) pieceQueue = snap.pieceQueue;
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
             holdUsed = !!snap.holdUsed;
-            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { used: { 1: false, 2: false } };
+            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { n: { 1: 0, 2: 0 } };
             previewPos = null;
             updateUI();
 
@@ -2473,7 +2473,7 @@
             if (data.pieceQueue) pieceQueue = data.pieceQueue;
             if (data.heldPieces) heldPieces = { ...data.heldPieces };
             holdUsed = !!data.holdUsed;
-            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { used: { 1: false, 2: false } };
+            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { n: { 1: 0, 2: 0 } };
             previewPos = null;
 
             if (gamePhase === 'dead_stone_selection') {
@@ -2723,7 +2723,7 @@
         // ==========================================
         // 回想: 自分の直近の着手まで時を戻す (その手以降の着手は全て消える)
         function recallLast() {
-            if (gameOver || gamePhase !== 'playing' || st.used[turn]) return;
+            if (gameOver || gamePhase !== 'playing' || (st.n[turn] || 0) >= Math.max(1, P('recall_count') || 1)) return;
             let i = history.length - 1;
             while (i >= 0 && (!history[i] || history[i].turn !== turn)) i--;
             if (i < 0) return;
@@ -2740,8 +2740,10 @@
             if (snap.pieceQueue) pieceQueue = [...snap.pieceQueue];
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
             holdUsed = !!snap.holdUsed;
+            const prevN = (st.n && st.n[turn]) || 0; // 巻き戻しても回想消費は戻らない
             st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : st;
-            st.used[turn] = true;
+            st.n = st.n || { 1: 0, 2: 0 };
+            st.n[turn] = prevN + 1;
             previewPos = null;
             const cc = Math.floor(BOARD_SIZE / 2) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2);
             fxText(cc, '回想!', '#a78bfa', 1300);
@@ -2762,7 +2764,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (st.used[turn] ? '回想済' : '回想可');
+                const et = gameOver ? '' : ('回想 残' + Math.max(0, (P('recall_count') || 1) - (st.n[turn] || 0)) + '回');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }
@@ -2774,7 +2776,7 @@
         function resetGame() {
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            st = { used: { 1: false, 2: false } };
+            st = { n: { 1: 0, 2: 0 } };
             pieces = [];
             turn = 1;
             captures = { 1: 0, 2: 0 };

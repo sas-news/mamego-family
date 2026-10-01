@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -36,7 +36,7 @@ const ST = (init) => [
                 deadStones: [...deadStones],`],
     [K.ONE, K.ONLINE_RECV, K.ONLINE_RECV + `\n            st = data.st ? JSON.parse(JSON.stringify(data.st)) : ${init};`],
 ];
-const ST_INIT = `{ used: { 1: false, 2: false } }`;
+const ST_INIT = `{ n: { 1: 0, 2: 0 } }`;
 module.exports = {
     file: 'recallgo.html',
     en: 'RECALLGO',
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'recallgo',
     spec: [
         ...K.rb('RECALLGO', '回想碁', 'recallgo'),
+        K.params([
+            { key: 'recall_count', label: '回想の回数 (各側)', min: 1, max: 3, def: 1, unit: '回' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 「回想」ボタン
         [K.ONE, `            <button id="btnPass" class="flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold border rounded-xl hover:opacity-80 active:scale-95 transition-all shadow-sm">
@@ -65,7 +69,7 @@ module.exports = {
         [K.ONE, '        function updateUI() {',
 `        // 回想: 自分の直近の着手まで時を戻す (その手以降の着手は全て消える)
         function recallLast() {
-            if (gameOver || gamePhase !== 'playing' || st.used[turn]) return;
+            if (gameOver || gamePhase !== 'playing' || (st.n[turn] || 0) >= Math.max(1, P('recall_count') || 1)) return;
             let i = history.length - 1;
             while (i >= 0 && (!history[i] || history[i].turn !== turn)) i--;
             if (i < 0) return;
@@ -82,8 +86,10 @@ module.exports = {
             if (snap.pieceQueue) pieceQueue = [...snap.pieceQueue];
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
             holdUsed = !!snap.holdUsed;
+            const prevN = (st.n && st.n[turn]) || 0; // 巻き戻しても回想消費は戻らない
             st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : st;
-            st.used[turn] = true;
+            st.n = st.n || { 1: 0, 2: 0 };
+            st.n[turn] = prevN + 1;
             previewPos = null;
             const cc = Math.floor(BOARD_SIZE / 2) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2);
             fxText(cc, '回想!', '#a78bfa', 1300);
@@ -101,7 +107,7 @@ module.exports = {
             soundManager.playClick();
             recallLast();
         });`],
-        ...K.EVENT_CHIP_SPEC(`st.used[turn] ? '回想済' : '回想可'`),
+        ...K.EVENT_CHIP_SPEC(`'回想 残' + Math.max(0, (P('recall_count') || 1) - (st.n[turn] || 0)) + '回'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            回想碁: 各1回「回想」で自分の直近の着手まで盤面を巻き戻せる<br>
             PC: クリックで配置<br>
@@ -115,7 +121,7 @@ module.exports = {
     ],
     test: `
         board.fill(0); pieces = []; history.length = 0; turn = 1;
-        captures = { 1: 0, 2: 0 }; st.used = { 1: false, 2: false };
+        captures = { 1: 0, 2: 0 }; st.n = { 1: 0, 2: 0 };
         executeMove({ cells: [{ x: 2, y: 2 }] }, 1);
         executeMove({ cells: [{ x: 5, y: 5 }] }, 2);
         assert('2手置かれている', (board[2 * BOARD_SIZE + 2] === 1) && (board[5 * BOARD_SIZE + 5] === 2));
@@ -125,7 +131,7 @@ module.exports = {
         assert('白石が消える', board[5 * BOARD_SIZE + 5] === 0);
         assert('黒石は残る', board[2 * BOARD_SIZE + 2] === 1);
         assert('白の手番に戻る', turn === 2);
-        assert('回想済みになる', st.used[2] === true);
+        assert('回想済みになる', st.n[2] === 1);
         const before = history.length;
         recallLast(); // 2回目は効かない
         assert('回想は1回のみ', history.length === before);

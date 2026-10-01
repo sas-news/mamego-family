@@ -9,11 +9,25 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('PYRAGO', '金字塔碁', 'pyrago'),
+        K.params([
+            { key: 'groove1_shift', label: '外の溝の位置補正', min: -2, max: 2, def: 0, hint: '標準は盤÷6、そこからのずれ' },
+            { key: 'groove2_shift', label: '内の溝の位置補正', min: -2, max: 2, def: 0, hint: '標準は盤÷3、そこからのずれ' },
+            { key: 'cap_extra', label: '打ち切り余分', min: 0, max: 8, def: 2, unit: '行分', hint: '交点数+この行数×盤サイズの手数で強制終局' },
+        ]),
+        // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_extra') ?? 2))) {
+                endGameByScore();
+                return;
+            }
+
+            turn = opponent;`],
         // 外周からの距離で段を刻む: 2本の溝リング (頂が1点だけになる場合は内溝を省略)
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
-                const d1 = Math.max(1, Math.floor(BOARD_SIZE / 6));
-                const d2 = Math.max(d1 + 1, Math.floor(BOARD_SIZE / 3));
+                const d1 = Math.max(1, Math.floor(BOARD_SIZE / 6) + (P('groove1_shift') ?? 0));
+                const d2 = Math.max(d1 + 1, Math.floor(BOARD_SIZE / 3) + (P('groove2_shift') ?? 0));
                 const singleKeep = d2 + 1 === Math.floor(BOARD_SIZE / 2); // 溝が中心1点だけを囲むなら省略
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     const d = Math.min(x, y, BOARD_SIZE - 1 - x, BOARD_SIZE - 1 - y);
@@ -22,8 +36,8 @@ module.exports = {
             }`],
         // 層ごとに薄く段差の陰影 (高いほど暗く)
         K.CUE_GRID(`            {
-                const d1 = Math.max(1, Math.floor(BOARD_SIZE / 6));
-                const d2 = Math.max(d1 + 1, Math.floor(BOARD_SIZE / 3));
+                const d1 = Math.max(1, Math.floor(BOARD_SIZE / 6) + (P('groove1_shift') ?? 0));
+                const d2 = Math.max(d1 + 1, Math.floor(BOARD_SIZE / 3) + (P('groove2_shift') ?? 0));
                 ctx.save();
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     const d = Math.min(x, y, BOARD_SIZE - 1 - x, BOARD_SIZE - 1 - y);

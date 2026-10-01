@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"erupt_interval","label":"噴火の間隔","min":5,"max":60,"def":20,"unit":"手"},{"key":"cap_ratio","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":0.9,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1848,7 +1848,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1904,7 +1904,7 @@
 
             // 噴火: 20手ごとに火砕流が斜面を駆け下りる
             st.ply++;
-            if (st.ply % 20 === 0) {
+            if (st.ply % Math.max(1, P('erupt_interval') || 20) === 0) {
                 let burnt = 0;
                 PYRO.forEach(i => {
                     const v = board[i];
@@ -2795,7 +2795,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('噴火まで ' + (20 - (st.ply % 20)) + '手');
+                const et = gameOver ? '' : ('噴火まで ' + (Math.max(1, P('erupt_interval') || 20) - (st.ply % Math.max(1, P('erupt_interval') || 20))) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

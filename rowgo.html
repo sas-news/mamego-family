@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"row_step","label":"行進の速さ","min":1,"max":3,"def":1,"unit":"行/手","hint":"対象行が1手に進む行数"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -960,7 +960,7 @@
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
         fxAmbient((ctx2, now, pad, cs) => {
-            const tRow = history.length % BOARD_SIZE;
+            const tRow = (history.length * Math.max(1, P('row_step') || 1)) % BOARD_SIZE;
             ctx2.save();
             ctx2.globalAlpha = 0.55 + Math.sin(now / 320) * 0.3;
             ctx2.fillStyle = 'rgba(90,110,170,0.9)';
@@ -1164,7 +1164,7 @@
 
             // 行進: 現在の対象行を帯色で照らす
             {
-                const tRow = history.length % BOARD_SIZE;
+                const tRow = (history.length * Math.max(1, P('row_step') || 1)) % BOARD_SIZE;
                 ctx.save();
                 ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.14);
                 ctx.fillRect(-cellSize, padding + (tRow - 0.5) * cellSize,
@@ -1810,9 +1810,9 @@
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
             }
 
-            // 行進碁ルール: 対象行 = 手数-1 mod 盤サイズ (0行目から順に南下、最下行の次は0行目)
+            // 行進碁ルール: 対象行 = (手数×速さ) mod 盤サイズ (0行目から順に南下、最下行の次は0行目)
             {
-                const targetRow = history.length % BOARD_SIZE;
+                const targetRow = (history.length * Math.max(1, P('row_step') || 1)) % BOARD_SIZE;
                 for (const p of cells) {
                     if (p.y !== targetRow) return false;
                 }
@@ -2757,7 +2757,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('対象行: ' + (history.length % BOARD_SIZE + 1) + '行目');
+                const et = gameOver ? '' : ('対象行: ' + ((history.length * Math.max(1, P('row_step') || 1)) % BOARD_SIZE + 1) + '行目');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

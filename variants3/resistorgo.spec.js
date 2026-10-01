@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -28,10 +28,14 @@ module.exports = {
     icon: "resistorgo",
     spec: [
         ...K.rb("Resistor-Go", "抵抗碁", "resistorgo"),
+        K.params([
+            { key: 'resist_len', label: '抵抗が効く連の長さ', min: 2, max: 12, def: 6, unit: '石', hint: 'この長さ以上の連の取りは1個分' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.NBRS_GRID, K.NBRS_GRID + "\n\n        // 指定色の全連を返す\n        function vChains(b, p) {\n            const seen = new Uint8Array(b.length), out = [];\n            for (let i = 0; i < b.length; i++) {\n                if (b[i] !== p || seen[i]) continue;\n                const g = [], q = [i]; seen[i] = 1;\n                while (q.length) {\n                    const cur = q.pop(); g.push(cur);\n                    getNeighbors(cur).forEach(n => { if (b[n] === p && !seen[n]) { seen[n] = 1; q.push(n); } });\n                }\n                out.push(g);\n            }\n            return out;\n        }\n        // 取りリストを連結成分に分割する\n        function vGroups(cells) {\n            const set = new Set(cells), out = [];\n            for (const s of cells) {\n                if (!set.has(s)) continue;\n                const g = [], q = [s]; set.delete(s);\n                while (q.length) {\n                    const cur = q.pop(); g.push(cur);\n                    getNeighbors(cur).forEach(n => { if (set.has(n)) { set.delete(n); q.push(n); } });\n                }\n                out.push(g);\n            }\n            return out;\n        }"],
-        [K.ONE, K.CAPTURE_BLOCK, "            // 抵抗碁: 長い連はエネルギーを散らす。6石以上の連の取りは1個分\n            const groups = vGroups(getCapturedStones(board, opponent));\n            const captured = groups.reduce((a, g) => a.concat(g), []);\n            if (captured.length > 0) {\n                captured.forEach(idx => board[idx] = 0);\n                captures[player] += groups.reduce((s, g) => s + (g.length >= 6 ? 1 : g.length), 0);\n                if (groups.some(g => g.length >= 6)) {\n                    fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '抵抗Ω', '#facc15', 1000);\n                }\n                soundManager.playCapture();\n                cleanUpPieces();\n            } else {\n                soundManager.playPlace();\n            }"],
-        ...K.STONE_MARKS_SPEC("            // 抵抗: 長い連 (6石以上) の石にΩマーク\n            {\n                ctx.save();\n                ctx.fillStyle = 'rgba(250,204,21,0.85)';\n                vChains(board, 1).concat(vChains(board, 2)).forEach(g => {\n                    if (g.length < 6) return;\n                    g.forEach(i => {\n                        const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;\n                        ctx.beginPath(); ctx.arc(cx, cy, cellSize * 0.10, 0, Math.PI * 2); ctx.fill();\n                    });\n                });\n                ctx.restore();\n            }"),
-        ...K.EVENT_CHIP_SPEC("'抵抗: 6連以上の取りは1個分'"),
+        [K.ONE, K.CAPTURE_BLOCK, "            // 抵抗碁: 長い連はエネルギーを散らす。6石以上の連の取りは1個分\n            const groups = vGroups(getCapturedStones(board, opponent));\n            const captured = groups.reduce((a, g) => a.concat(g), []);\n            if (captured.length > 0) {\n                captured.forEach(idx => board[idx] = 0);\n                captures[player] += groups.reduce((s, g) => s + (g.length >= Math.max(2, P('resist_len') || 6) ? 1 : g.length), 0);\n                if (groups.some(g => g.length >= Math.max(2, P('resist_len') || 6))) {\n                    fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '抵抗Ω', '#facc15', 1000);\n                }\n                soundManager.playCapture();\n                cleanUpPieces();\n            } else {\n                soundManager.playPlace();\n            }"],
+        ...K.STONE_MARKS_SPEC("            // 抵抗: 長い連 (6石以上) の石にΩマーク\n            {\n                ctx.save();\n                ctx.fillStyle = 'rgba(250,204,21,0.85)';\n                vChains(board, 1).concat(vChains(board, 2)).forEach(g => {\n                    if (g.length < Math.max(2, P('resist_len') || 6)) return;\n                    g.forEach(i => {\n                        const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;\n                        ctx.beginPath(); ctx.arc(cx, cy, cellSize * 0.10, 0, Math.PI * 2); ctx.fill();\n                    });\n                });\n                ctx.restore();\n            }"),
+        ...K.EVENT_CHIP_SPEC("'抵抗: ' + Math.max(2, P('resist_len') || 6) + '連以上の取りは1個分'"),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, "連が長いほど抵抗値が上がり電流が散る。6石以上の連を取り上げてもアゲハマは1個分しか増えない。大蛇を取るより小連を刈る方が得。"],
         [K.ONE, K.RV_ALGO, K.rv(["6石以上の連を取ってもアゲハマは1個分",

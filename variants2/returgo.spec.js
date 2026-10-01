@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('RETURGO', '帰還碁', 'returgo'),
+        K.params([
+            { key: 'return_count', label: '1手あたりの帰還石数', min: 1, max: 4, def: 1, unit: '個' },
+            { key: 'cap_extra', label: '打ち切り余分', min: 0, max: 8, def: 2, unit: '行分', hint: '交点数+この行数×盤サイズの手数で強制終局' },
+        ]),
         // 戻り石ストック retStock[player] の状態登録
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let retStock = { 1: 0, 2: 0 }; // 手元に戻って再打待ちの石数`],
@@ -47,8 +51,8 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 帰還: 手元に戻った石を着手点の隣に1個再打する
-            if (retStock[player] > 0) {
+            // 帰還: 手元に戻った石を着手点の隣に設定個数だけ再打する
+            for (let rk = 0; rk < Math.max(1, P('return_count') || 1) && retStock[player] > 0; rk++) {
                 const retIdx = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const spot = getNeighbors(retIdx).find(n => board[n] === 0);
                 if (spot !== undefined) {
@@ -58,6 +62,12 @@ module.exports = {
                     fxGlow(spot, 'rgba(96,165,250,0.9)', 650);
                     fxText(spot, '帰還', '#60a5fa', 900);
                 }
+            }
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_extra') ?? 2))) {
+                endGameByScore();
+                return;
             }
 
             turn = opponent;`],

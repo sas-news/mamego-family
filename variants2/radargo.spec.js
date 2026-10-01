@@ -9,11 +9,16 @@ module.exports = {
     kind: 'radar',
     spec: [
         ...K.rb('RADARGO', '探知碁', 'radargo'),
+        K.params([
+            { key: 'radar_interval', label: 'レーダーの間隔', min: 1, max: 10, def: 3, unit: '手' },
+            { key: 'fog_alpha', label: '霧の中の敵石の濃さ', min: 0, max: 0.5, def: 0.1, step: 0.05 },
+            { key: 'cap_extra', label: '打ち切り余分', min: 0, max: 8, def: 2, unit: '行分', hint: '交点数+この行数×盤サイズの手数で強制終局' },
+        ]),
         [K.ONE, '        function drawBoardElements(padding, cellSize) {',
 `        // 探知碁: 着手数が3の倍数の局面でレーダー照射 → 敵石が可視化される
-        function isRadarOn() { return history.length > 0 && history.length % 3 === 0; }
+        function isRadarOn() { return history.length > 0 && history.length % Math.max(1, P('radar_interval') || 3) === 0; }
         // 手番側から見た敵石の濃さ (レーダー中は実色、普段は幽霊)
-        function fogAlphaFor(pl) { return (pl !== turn && !isRadarOn()) ? 0.10 : 1; }
+        function fogAlphaFor(pl) { return (pl !== turn && !isRadarOn()) ? (P('fog_alpha') ?? 0.10) : 1; }
 
         function drawBoardElements(padding, cellSize) {`],
         [K.ONE, '                drawPieceShape(alive, padding, cellSize, fill, stroke, isDead ? 0.35 : 1);',
@@ -37,7 +42,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`isRadarOn() ? 'レーダー照射中' : 'レーダーまで ' + (3 - history.length % 3) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`isRadarOn() ? 'レーダー照射中' : 'レーダーまで ' + (Math.max(1, P('radar_interval') || 3) - history.length % Math.max(1, P('radar_interval') || 3)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            探知碁: 手番でない側の石は霧の中に隠れる。3手ごとにレーダーが敵石を照らす<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
@@ -51,10 +56,16 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 探知碁: 3の倍数手でレーダー照射 → 敵石が光って見える合図
-            if (history.length % 3 === 0) {
+            if (history.length % Math.max(1, P('radar_interval') || 3) === 0) {
                 board.forEach((v, i) => { if (v === opponent) fxGlow(i, '#38bdf8', 700); });
                 const mc = move.cells[0];
                 if (mc) fxText(mc.y * BOARD_SIZE + mc.x, 'レーダー', '#7dd3fc', 1100);
+            }
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_extra') ?? 2))) {
+                endGameByScore();
+                return;
             }
 
             turn = opponent;`],

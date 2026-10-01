@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -58,6 +58,10 @@ module.exports = {
     icon: 'quarrygo',
     spec: [
         ...K.rb('QUARRYGO', '採石碁', 'quarrygo'),
+        K.params([
+            { key: 'quarry_max', label: '採石場の回数', min: 1, max: 9, def: 3, unit: '回' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, '        function updateUI() {', QUARRY_FN + `
         function updateUI() {`],
@@ -69,7 +73,7 @@ module.exports = {
                 const qi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (quarryCells().includes(qi)) {
                     st.q[qi] = (st.q[qi] || 0) + 1;
-                    fxText(qi, '残' + Math.max(0, 3 - st.q[qi]), '#a8a29e', 900);
+                    fxText(qi, '残' + Math.max(0, (P('quarry_max') || 3) - st.q[qi]), '#a8a29e', 900);
                 }
             }`],
         // 枯れた採石場を障害物化 (着手後に判定)
@@ -78,7 +82,7 @@ module.exports = {
 
             // 採石場の枯渇: 3回掘られた場所が空いたら障害物になる
             quarryCells().forEach(qi => {
-                if ((st.q[qi] || 0) >= 3 && board[qi] === 0) {
+                if ((st.q[qi] || 0) >= Math.max(1, P('quarry_max') || 3) && board[qi] === 0) {
                     board[qi] = 3;
                     fxGlow(qi, '#44403c', 800);
                     fxText(qi, '枯渇', '#78716c', 1100);
@@ -93,18 +97,19 @@ module.exports = {
                     const cx = padding + (i % BOARD_SIZE) * cellSize;
                     const cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
                     const used = st.q[i] || 0;
+                    const qmax = Math.max(1, P('quarry_max') || 3);
                     if (board[i] === 3) return;
-                    ctx.strokeStyle = used >= 3 ? 'rgba(120,113,108,0.5)' : 'rgba(87,83,78,0.9)';
+                    ctx.strokeStyle = used >= qmax ? 'rgba(120,113,108,0.5)' : 'rgba(87,83,78,0.9)';
                     ctx.lineWidth = Math.max(1.3, cellSize * 0.06);
                     ctx.beginPath();
                     ctx.moveTo(cx - cellSize * 0.22, cy - cellSize * 0.18);
                     ctx.lineTo(cx + cellSize * 0.22, cy - cellSize * 0.18);
                     ctx.lineTo(cx + cellSize * 0.10, cy + cellSize * 0.20);
                     ctx.stroke();
-                    ctx.fillStyle = used >= 3 ? 'rgba(120,113,108,0.6)' : 'rgba(87,83,78,0.95)';
+                    ctx.fillStyle = used >= qmax ? 'rgba(120,113,108,0.6)' : 'rgba(87,83,78,0.95)';
                     ctx.font = \`bold \${Math.max(8, cellSize * 0.22)}px sans-serif\`;
                     ctx.textAlign = 'center';
-                    ctx.fillText(String(3 - used), cx, cy + cellSize * 0.30);
+                    ctx.fillText(String(qmax - used), cx, cy + cellSize * 0.30);
                 });
                 ctx.restore();
             }`),

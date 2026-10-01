@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"spin_speed","label":"環流の速さ","min":1,"max":4,"def":1,"unit":"マス/手"},{"key":"cap_extra","label":"打ち切り余分","min":0,"max":8,"def":2,"unit":"行分","hint":"交点数+この行数×盤サイズの手数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1871,8 +1871,9 @@
                         if (board[y * N + x] !== 0) fxSlide(sy * N + sx, y * N + x, 420);
                     });
                 };
-                spin(ring(0), 1);
-                if (N >= 5) spin(ring(1), -1);
+                const spd = Math.max(1, P('spin_speed') || 1);
+                spin(ring(0), spd);
+                if (N >= 5) spin(ring(1), -spd);
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
                     const dead = getCapturedStones(board, pl);
@@ -1886,7 +1887,7 @@
 
 
             // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_extra') ?? 2))) {
                 endGameByScore();
                 return;
             }

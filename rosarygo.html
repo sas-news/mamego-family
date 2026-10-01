@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"ring_bonus","label":"環1つの得点","min":0,"max":16,"def":4,"unit":"目"},{"key":"cap_ratio","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":0.9,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1818,7 +1818,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -2219,8 +2219,8 @@
         function endGameByScore() {
             gameOver = true;
             const territory = calculateTerritory();
-            territory.black += rosaryRings(board, 1).length * 4;
-            territory.white += rosaryRings(board, 2).length * 4;
+            territory.black += rosaryRings(board, 1).length * (P('ring_bonus') ?? 4);
+            territory.white += rosaryRings(board, 2).length * (P('ring_bonus') ?? 4);
 
             const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;
