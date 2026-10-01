@@ -27,6 +27,9 @@ module.exports = {
     icon: 'shimenawago',
     spec: [
         ...K.rb('SHIMENAWAGO', '注連碁', 'shimenawago'),
+        K.params([
+            { key: 'rope_min', label: '注連縄になる連の長さ', min: 2, max: 8, def: 3, unit: '石' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 注連縄: pl色の石3個以上の連が結界 — その連にだけ隣接する空点 (結界点) には相手が打てない
         function shimenawaPoints(pl) {
@@ -36,7 +39,7 @@ module.exports = {
                 if (board[i] !== pl || visited.has(i)) continue;
                 const grp = getConnectedGroup(i, pl);
                 grp.forEach(g => visited.add(g));
-                if (grp.length < 3) continue;
+                if (grp.length < Math.max(1, P('rope_min') || 3)) continue;
                 // 結界点: この連に隣接する空点
                 grp.forEach(g => getNeighbors(g).forEach(n => { if (board[n] === 0) walls.add(n); }));
             }
@@ -61,7 +64,7 @@ module.exports = {
                     if (board[i] !== pl || seen.has(i)) continue;
                     const grp = getConnectedGroup(i, pl);
                     grp.forEach(g => seen.add(g));
-                    if (grp.length < 3) continue;
+                    if (grp.length < Math.max(1, P('rope_min') || 3)) continue;
                     grp.forEach(g => {
                         const x = g % BOARD_SIZE, y = (g / BOARD_SIZE) | 0;
                         const cx = padding + x * cellSize, cy = padding + y * cellSize;

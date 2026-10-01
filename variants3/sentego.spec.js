@@ -47,6 +47,9 @@ module.exports = {
     icon: 'sentego',
     spec: [
         ...K.rb('SENTEGO', '先手碁', 'sentego'),
+        K.params([
+            { key: 'sente_bonus', label: '先手権のボーナス', min: 0, max: 8, def: 2, unit: '目' },
+        ]),
         ...ST(ST_INIT),
         // 先手権: アタリ作成で獲得、先手権を持つ着手は +2目
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -56,9 +59,9 @@ module.exports = {
             {
                 const __pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (st.sente === player) {
-                    st.bonus[player] = (st.bonus[player] || 0) + 2;
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('sente_bonus') ?? 2);
                     st.sente = 0; // 先手権を消費
-                    fxText(__pi, '先手の効き +2', '#fb923c', 1100);
+                    fxText(__pi, '先手の効き +' + (P('sente_bonus') ?? 2), '#fb923c', 1100);
                     fxGlow(__pi, '#fb923c', 800);
                 }
                 // アタリ (呼吸1の敵連) を作った側が先手権を握る

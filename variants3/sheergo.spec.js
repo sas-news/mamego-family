@@ -27,17 +27,21 @@ module.exports = {
     icon: 'sheergo',
     spec: [
         ...K.rb('SHEERGO', '透け碁', 'sheergo'),
+        K.params([
+            { key: 'cap_round', label: 'アゲハマ表示の丸め単位', min: 1, max: 10, def: 4, hint: '大きいほど曖昧' },
+            { key: 'foe_alpha', label: '相手石の透明度', min: 0.1, max: 1, def: 0.5, step: 0.1 },
+        ]),
         // 手番でない側の石を半透明に (ピース描画)
         [K.ONE, `                drawPieceShape(alive, padding, cellSize, fill, stroke, isDead ? 0.35 : 1);`,
-`                drawPieceShape(alive, padding, cellSize, fill, stroke, (isDead ? 0.35 : 1) * (pc.player !== turn ? 0.5 : 1));`],
+`                drawPieceShape(alive, padding, cellSize, fill, stroke, (isDead ? 0.35 : 1) * (pc.player !== turn ? Math.max(0, Math.min(1, P('foe_alpha') || 0.5)) : 1));`],
         // フォールバック描画も半透明に
         [K.ONE, `                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, isDead ? 0.35 : 1);`,
-`                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, (isDead ? 0.35 : 1) * (val !== turn ? 0.5 : 1));`],
+`                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, (isDead ? 0.35 : 1) * (val !== turn ? Math.max(0, Math.min(1, P('foe_alpha') || 0.5)) : 1));`],
         // アゲハマ表示は「約」で曖昧に
         [K.ONE, `            blackCapturesEl.textContent = captures[1];
             whiteCapturesEl.textContent = captures[2];`,
-`            blackCapturesEl.textContent = '~' + Math.round(captures[1] / 4) * 4;
-            whiteCapturesEl.textContent = '~' + Math.round(captures[2] / 4) * 4;`],
+`            blackCapturesEl.textContent = '~' + Math.round(captures[1] / Math.max(1, P('cap_round') || 4)) * Math.max(1, P('cap_round') || 4);
+            whiteCapturesEl.textContent = '~' + Math.round(captures[2] / Math.max(1, P('cap_round') || 4)) * Math.max(1, P('cap_round') || 4);`],
         ...K.EVENT_CHIP_SPEC(`'手番側だけ実色'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            透け碁: 手番でない側の石は半透明に透け、アゲハマも「約」表示で正確な数が読めない<br>

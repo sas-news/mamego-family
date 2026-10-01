@@ -27,25 +27,35 @@ module.exports = {
     icon: 'saltgo',
     spec: [
         ...K.rb('SALTGO', '塩碁', 'saltgo'),
+        K.params([
+            { key: 'melt_interval', label: '潮解の間隔', min: 2, max: 20, def: 8, unit: '手' },
+            { key: 'sea_rows', label: '潮溜まりの行数', min: 1, max: 5, def: 2, unit: '行' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 潮溜まり: 下2行と海岸沿いの散在する湿気区域
-        const WET_SET = new Set();
-        {
-            const seaY = BOARD_SIZE - 2;
+        // 潮溜まり: 下N行と海岸沿いの散在する湿気区域 (行数は設定で調整)
+        let WET_SET = new Set();
+        function rebuildWetSet() {
+            WET_SET = new Set();
+            const seaY = BOARD_SIZE - Math.max(1, P('sea_rows') || 2);
             for (let y = seaY; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 WET_SET.add(y * BOARD_SIZE + x);
             }
             for (let x = 1; x < BOARD_SIZE - 1; x += 4) {
                 const py = seaY - 1 - ((x * 7) % 3);
-                WET_SET.add(py * BOARD_SIZE + x);
+                if (py >= 0) WET_SET.add(py * BOARD_SIZE + x);
             }
+        }
+        rebuildWetSet();
+        // 設定変更で区域を即時再構成
+        function onVariantParam(p) {
+            if (p.key === 'sea_rows') rebuildWetSet();
         }`],
         // 溶解: 8手ごとに湿気区域の塩石が溶ける (双方同じ周期・取りにはならない)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 塩の溶解: 8手ごとに湿気区域の石が溶ける
-            if (history.length % 8 === 0) {
+            if (history.length % Math.max(1, P('melt_interval') || 8) === 0) {
                 let melt = 0;
                 WET_SET.forEach(i => {
                     if (board[i] === 1 || board[i] === 2) {
@@ -74,7 +84,7 @@ module.exports = {
                 ctx.restore();
             }`),
         [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_MIST('rgba(150, 195, 255, 0.06)')],
-        ...K.EVENT_CHIP_SPEC(`'潮解まで ' + (8 - (history.length % 8)) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`'潮解まで ' + ((P('melt_interval') || 8) - (history.length % (P('melt_interval') || 8))) + ' 手'`),
         [K.ONE, K.INFO_ALGO, `            塩碁: 潮溜まりの石は8手ごとに溶けて消える (アゲハマにもならない)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

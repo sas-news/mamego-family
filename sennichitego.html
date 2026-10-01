@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"repeat_max","label":"千日手になる繰り返し回数","min":2,"max":6,"def":3,"unit":"回"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1851,7 +1851,7 @@
             {
                 const __key = board.join(',') + ':' + opponent;
                 st.seen[__key] = (st.seen[__key] || 0) + 1;
-                if (st.seen[__key] >= 3) {
+                if (st.seen[__key] >= Math.max(1, P('repeat_max') || 3)) {
                     fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '千日手', '#94a3b8', 1400);
                     gameOver = true;
                     gameResultData = { title: '千日手', details: '同一局面が3回現れました (引き分け)' };

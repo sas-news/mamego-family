@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"shibori_bonus","label":"絞り目の追加呼吸","min":0,"max":3,"def":1,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1921,7 +1921,7 @@
                             }
                         });
                     }
-                    if (resist) liberties += 1; // 絞り目を持つ連は染め残され+1呼吸
+                    if (resist) liberties += Math.max(0, P('shibori_bonus') ?? 1); // 絞り目を持つ連は染め残され追加呼吸
 
                     if (liberties <= 0) {
                         captured.push(...group);

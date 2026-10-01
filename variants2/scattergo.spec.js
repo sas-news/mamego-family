@@ -9,6 +9,9 @@ module.exports = {
     kind: 'scatter',
     spec: [
         ...K.rb('SCATTERGO', '散布碁', 'scattergo'),
+        K.params([
+            { key: 'scatter_dist', label: '散布距離', min: 1, max: 6, def: 3, unit: 'マス' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -22,7 +25,7 @@ module.exports = {
                     hasOwn = true;
                     const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
                     for (const p of cells) {
-                        if (Math.max(Math.abs(p.x - sx), Math.abs(p.y - sy)) === 3) sown = true;
+                        if (Math.max(Math.abs(p.x - sx), Math.abs(p.y - sy)) === Math.max(1, P('scatter_dist') || 3)) sown = true;
                     }
                     if (sown) break;
                 }
@@ -36,7 +39,7 @@ module.exports = {
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] !== player || i === mi) continue;
                     const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
-                    if (Math.max(Math.abs(mc.x - sx), Math.abs(mc.y - sy)) === 3) {
+                    if (Math.max(Math.abs(mc.x - sx), Math.abs(mc.y - sy)) === Math.max(1, P('scatter_dist') || 3)) {
                         fxGlow(i, '#a3e635', 650);
                         break;
                     }
@@ -61,11 +64,22 @@ module.exports = {
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] !== turn) continue;
                     const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
-                    ctx.strokeRect(padding + (sx - 3.5) * cellSize, padding + (sy - 3.5) * cellSize,
-                        cellSize * 7, cellSize * 7);
+                    const sd = Math.max(1, P('scatter_dist') || 3);
+                    ctx.strokeRect(padding + (sx - sd - 0.5) * cellSize, padding + (sy - sd - 0.5) * cellSize,
+                        cellSize * (sd * 2 + 1), cellSize * (sd * 2 + 1));
                 }
                 ctx.restore();
             }`),
+        // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
+            turn = opponent;`],
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, K.RV_ALGO, K.rv([
             '着手は自分の石からちょうど3マス離れた環状帯の点のみ (初手は自由)。',

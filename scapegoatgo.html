@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"doll_move","label":"身代わりになる手番","min":1,"max":10,"def":1,"unit":"手目","hint":"自分のN手目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1876,7 +1876,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 身代わり: 各プレイヤーの初手の石が藁人形になる
-            if (st.doll[player] < 0) {
+            if (st.doll[player] < 0 && pieces.filter(pc => pc.player === player).length >= Math.max(1, P('doll_move') || 1)) {
                 st.doll[player] = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             }
 

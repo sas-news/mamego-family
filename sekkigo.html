@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"season_interval","label":"節気の間隔","min":2,"max":20,"def":8,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1153,7 +1153,7 @@
             // 旬の区画を黄金色に染める
             {
                 const c = Math.floor(BOARD_SIZE / 2);
-                const season = Math.floor(history.length / 8) % 4;
+                const season = Math.floor(history.length / Math.max(1, P('season_interval') || 8)) % 4;
                 const x0 = season % 2 === 0 ? -1 : c - 0.5;
                 const y0 = season < 2 ? -1 : c - 0.5;
                 ctx.save();
@@ -1853,7 +1853,7 @@
             const opponent = player === 1 ? 2 : 1;
             // 節気碁: 盤を4区画に分け、8手ごとに旬の区画が移る。旬の区画の石は取れない
             const c = Math.floor(BOARD_SIZE / 2);
-            const season = Math.floor(history.length / 8) % 4;
+            const season = Math.floor(history.length / Math.max(1, P('season_interval') || 8)) % 4;
             const captured = getCapturedStones(board, opponent).filter(i => {
                 const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
                 return ((x >= c ? 1 : 0) + (y >= c ? 2 : 0)) !== season;
@@ -2745,7 +2745,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('節気 ' + ['立春','立夏','立秋','立冬'][Math.floor(history.length / 8) % 4] + ' 残' + (8 - history.length % 8) + '手');
+                const et = gameOver ? '' : ('節気 ' + ['立春','立夏','立秋','立冬'][Math.floor(history.length / Math.max(1, P('season_interval') || 8)) % 4] + ' 残' + ((P('season_interval') || 8) - history.length % (P('season_interval') || 8)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

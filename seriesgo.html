@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"line_min","label":"直列に必要な石数","min":2,"max":8,"def":4,"unit":"石"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1331,7 +1331,7 @@
                 ctx.strokeStyle = 'rgba(96,165,250,0.7)';
                 ctx.lineWidth = Math.max(1, cellSize * 0.05);
                 vChains(board, 1).concat(vChains(board, 2)).forEach(g => {
-                    if (g.length < 4) return;
+                    if (g.length < (P('line_min') || 4)) return;
                     const xs = new Set(g.map(i => i % BOARD_SIZE));
                     const ys = new Set(g.map(i => Math.floor(i / BOARD_SIZE)));
                     if (xs.size !== 1 && ys.size !== 1) return;
@@ -1861,7 +1861,7 @@
             const opponent = player === 1 ? 2 : 1;
             // 直列碁: 一直線に4石以上並んだ連は直列回路 — 全部位に電流が通り取れない
             const isSeries = (g) => {
-                if (g.length < 4) return false;
+                if (g.length < (P('line_min') || 4)) return false;
                 const xs = new Set(g.map(i => i % BOARD_SIZE));
                 const ys = new Set(g.map(i => Math.floor(i / BOARD_SIZE)));
                 return xs.size === 1 || ys.size === 1;

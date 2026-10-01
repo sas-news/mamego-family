@@ -27,6 +27,10 @@ module.exports = {
     icon: 'seamarkgo',
     spec: [
         ...K.rb('SEAMARKGO', '灯台碁', 'seamarkgo'),
+        K.params([
+            { key: 'beam_range', label: '灯台の光の届く距離', min: 1, max: 8, def: 3 },
+            { key: 'beam_bonus', label: '光の中の追加呼吸', min: 0, max: 3, def: 1, unit: '点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 灯台: 四隅から1つ内側の4点
         function lighthouseIdx() {
@@ -38,7 +42,7 @@ module.exports = {
             const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
             return lighthouseIdx().some(li => {
                 const lx = li % BOARD_SIZE, ly = (li / BOARD_SIZE) | 0;
-                return Math.abs(x - lx) + Math.abs(y - ly) <= 3;
+                return Math.abs(x - lx) + Math.abs(y - ly) <= Math.max(1, P('beam_range') || 3);
             });
         }`],
         // 捕獲判定: 灯台の光の中の連は+1呼吸
@@ -48,7 +52,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                    }
-                    if (group.some(gi => inBeam(gi))) liberties += 1; // 灯台の光に守られた連は+1呼吸
+                    if (group.some(gi => inBeam(gi))) liberties += Math.max(0, P('beam_bonus') ?? 1); // 灯台の光に守られた連は追加呼吸
 
                     if (liberties <= 0) {`],
         // 灯台と光域を描く
@@ -58,11 +62,12 @@ module.exports = {
                 lighthouseIdx().forEach(li => {
                     const lx = li % BOARD_SIZE, ly = (li / BOARD_SIZE) | 0;
                     const cx = padding + lx * cellSize, cy = padding + ly * cellSize;
-                    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, cellSize * 3.6);
+                    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, cellSize * (Math.max(1, P('beam_range') || 3) + 0.6));
                     g.addColorStop(0, 'rgba(250,204,21,0.25)');
                     g.addColorStop(1, 'rgba(250,204,21,0)');
                     ctx.fillStyle = g;
-                    ctx.fillRect(cx - cellSize * 3.6, cy - cellSize * 3.6, cellSize * 7.2, cellSize * 7.2);
+                    const br = cellSize * (Math.max(1, P('beam_range') || 3) + 0.6);
+                    ctx.fillRect(cx - br, cy - br, br * 2, br * 2);
                     ctx.fillStyle = 'rgba(202,138,4,0.9)';
                     ctx.beginPath();
                     ctx.moveTo(cx, cy - cellSize * 0.3); ctx.lineTo(cx + cellSize * 0.2, cy + cellSize * 0.2);

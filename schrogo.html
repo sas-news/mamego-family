@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"quantum_interval","label":"量子石の間隔","min":2,"max":8,"def":3,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1872,7 +1872,7 @@
                 rot: move.rot,
                 cells: move.cells,
                 at: history.length,
-                schro: st.pcnt[player] % 3 === 0
+                schro: st.pcnt[player] % Math.max(1, P('quantum_interval') || 3) === 0
             });
 
             // 捕獲処理
@@ -2805,7 +2805,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ((function(){ const q = pieces.filter(pc => pc.schro).length; return q > 0 ? '量子石 ' + q + '個' : '量子まで ' + (3 - st.pcnt[turn] % 3) + '手'; })());
+                const et = gameOver ? '' : ((function(){ const q = pieces.filter(pc => pc.schro).length; return q > 0 ? '量子石 ' + q + '個' : '量子まで ' + ((P('quantum_interval') || 3) - st.pcnt[turn] % (P('quantum_interval') || 3)) + '手'; })());
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

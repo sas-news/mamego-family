@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"seal_min","label":"封印に必要な接する自石数","min":1,"max":4,"def":2,"unit":"個"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1873,7 +1873,7 @@
             {
                 const i = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const own = getNeighbors(i).filter(n => board[n] === player).length;
-                if (own >= 2) {
+                if (own >= Math.max(1, P('seal_min') || 2)) {
                     st.seal[player][i] = 1;
                     fxGlow(i, '#facc15', 700);
                     fxText(i, '封', '#facc15', 900);

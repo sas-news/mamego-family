@@ -10,6 +10,9 @@ module.exports = {
     icon: 'sealgo',
     spec: [
         ...K.rb('SEALGO', '札符碁', 'sealgo'),
+        K.params([
+            { key: 'seal_min', label: '封印に必要な接する自石数', min: 1, max: 4, def: 2, unit: '個' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { seal: { 1: {}, 2: {} } }; // 封印された石の位置 (player -> idx -> 1)`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -55,7 +58,7 @@ module.exports = {
             {
                 const i = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const own = getNeighbors(i).filter(n => board[n] === player).length;
-                if (own >= 2) {
+                if (own >= Math.max(1, P('seal_min') || 2)) {
                     st.seal[player][i] = 1;
                     fxGlow(i, '#facc15', 700);
                     fxText(i, '封', '#facc15', 900);

@@ -10,12 +10,17 @@ module.exports = {
     icon: 'shadowgo',
     spec: [
         ...K.rb('SHADOWGO', '影碁', 'shadowgo'),
+        K.params([
+            { key: 'shadow_dir', label: '影の落ちる方向', options: [{ v: 'se', l: '南東' }, { v: 's', l: '南' }, { v: 'sw', l: '南西' }, { v: 'e', l: '東' }], def: 'se' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 光源は北西 — 石の南東 (x+1,y+1) に影が落ちる
         function isShadowedBy(i, caster, boardState) {
             const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
-            if (x === 0 || y === 0) return false;
-            return boardState[i - BOARD_SIZE - 1] === caster;
+            const d = ({ se: [1, 1], s: [0, 1], sw: [-1, 1], e: [1, 0] })[P('shadow_dir') || 'se'] || [1, 1];
+            const cx = x - d[0], cy = y - d[1];
+            if (cx < 0 || cy < 0 || cx >= BOARD_SIZE || cy >= BOARD_SIZE) return false;
+            return boardState[cy * BOARD_SIZE + cx] === caster;
         }`],
         // 影のマスは敵の呼吸点にならない
         [K.ONE, `        function getCapturedStones(boardState, player) {
@@ -142,8 +147,10 @@ module.exports = {
                 const v = board[i];
                 if (v !== 1 && v !== 2) continue;
                 const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
-                if (x + 1 < BOARD_SIZE && y + 1 < BOARD_SIZE && board[i + BOARD_SIZE + 1] === 0) {
-                    const cx = padding + (x + 1) * cellSize, cy = padding + (y + 1) * cellSize;
+                const d = ({ se: [1, 1], s: [0, 1], sw: [-1, 1], e: [1, 0] })[P('shadow_dir') || 'se'] || [1, 1];
+                const sx = x + d[0], sy = y + d[1];
+                if (sx >= 0 && sy >= 0 && sx < BOARD_SIZE && sy < BOARD_SIZE && board[sy * BOARD_SIZE + sx] === 0) {
+                    const cx = padding + sx * cellSize, cy = padding + sy * cellSize;
                     ctx.fillStyle = v === 1 ? 'rgba(0,0,0,0.20)' : 'rgba(148,163,184,0.30)';
                     ctx.fillRect(cx - cellSize * 0.3, cy - cellSize * 0.3, cellSize * 0.6, cellSize * 0.6);
                 }

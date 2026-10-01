@@ -27,12 +27,15 @@ module.exports = {
     icon: 'saiseigo',
     spec: [
         ...K.rb('SAISEIGO', '再生碁', 'saiseigo'),
+        K.params([
+            { key: 'regen_min', label: '再生が起きる最小の取り数', min: 1, max: 6, def: 2, unit: '石' },
+        ]),
         // 再生: 2個以上取った連は断片1個が蘇る (取った数はアゲハマのまま)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 再生碁: 2個以上切られた連は断片が再生する
-            if (captured.length >= 2) {
+            if (captured.length >= Math.max(1, P('regen_min') || 2)) {
                 const frag = captured[0];
                 if (board[frag] === 0) {
                     board[frag] = opponent; // 取られた側の色で仮に再生

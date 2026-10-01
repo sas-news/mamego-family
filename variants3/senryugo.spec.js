@@ -27,6 +27,9 @@ module.exports = {
     icon: 'senryugo',
     spec: [
         ...K.rb('SENRYUGO', '川柳碁', 'senryugo'),
+        K.params([
+            { key: 'hill_pts', label: '山なり1つの得点', min: 1, max: 5, def: 1, unit: '点' },
+        ]),
         // おかしみ集計: 山型 (x,y)+(x+1,y-1)+(x+2,y) と谷型 (x,y)+(x+1,y+1)+(x+2,y) の同色3石
         [K.ONE, `        function endGameByScore() {`, `        // 川柳: 山なり三連 (上または下に張り出した同色3石) を数える
         function senryuBonus() {
@@ -38,9 +41,9 @@ module.exports = {
                     const v = at(x, y);
                     if (v !== 1 && v !== 2) continue;
                     // 山型: 中点が上に張り出す
-                    if (at(x + 1, y - 1) === v && at(x + 2, y) === v) b[v]++;
+                    if (at(x + 1, y - 1) === v && at(x + 2, y) === v) b[v] += Math.max(1, P('hill_pts') || 1);
                     // 谷型: 中点が下に張り出す
-                    if (at(x + 1, y + 1) === v && at(x + 2, y) === v) b[v]++;
+                    if (at(x + 1, y + 1) === v && at(x + 2, y) === v) b[v] += Math.max(1, P('hill_pts') || 1);
                 }
             return b;
         }

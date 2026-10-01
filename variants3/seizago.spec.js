@@ -51,6 +51,10 @@ module.exports = {
     icon: 'seizago',
     spec: [
         ...K.rb('SEIZAGO', '星座碁', 'seizago'),
+        K.params([
+            { key: 'star_min', label: '星座に必要な石数', min: 3, max: 8, def: 4, unit: '石' },
+            { key: 'star_bonus', label: '星座ボーナス', min: 0, max: 10, def: 4, unit: '目' },
+        ]),
         ...PERSIST('{ starPts: { 1: 0, 2: 0 }, marked: {} }'),
         // 星座ルール: 4つ以上の連が一直線に並ぶと+4 (1連1回)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -60,7 +64,7 @@ module.exports = {
             {
                 const i0 = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const grp = getConnectedGroup(i0, player);
-                if (grp.length >= 4 && !grp.some(i => st.marked[i])) {
+                if (grp.length >= Math.max(1, P('star_min') || 4) && !grp.some(i => st.marked[i])) {
                     const xs = grp.map(i => i % BOARD_SIZE), ys = grp.map(i => (i / BOARD_SIZE) | 0);
                     const allX = xs.every(v => v === xs[0]);
                     const allY = ys.every(v => v === ys[0]);
@@ -68,8 +72,8 @@ module.exports = {
                     const diag2 = grp.every(i => (i % BOARD_SIZE) + ((i / BOARD_SIZE) | 0) === xs[0] + ys[0]);
                     if (allX || allY || diag1 || diag2) {
                         grp.forEach(i => { st.marked[i] = 1; });
-                        st.starPts[player] += 4;
-                        fxText(i0, '星座認定+4', '#fde047', 1300);
+                        st.starPts[player] += (P('star_bonus') ?? 4);
+                        fxText(i0, '星座認定+' + (P('star_bonus') ?? 4), '#fde047', 1300);
                         fxGlow(i0, '#facc15', 900);
                     }
                 }
@@ -99,7 +103,7 @@ ${CAP}
                         if (board[i] !== p || !st.marked[i] || seen.has(i)) continue;
                         const grp = getConnectedGroup(i, p);
                         grp.forEach(g => seen.add(g));
-                        if (grp.length < 4) continue;
+                        if (grp.length < Math.max(1, P('star_min') || 4)) continue;
                         const sorted = grp.slice().sort((a, b) => a - b);
                         ctx.strokeStyle = 'rgba(253,224,71,0.65)';
                         ctx.lineWidth = Math.max(1.5, cellSize * 0.06);

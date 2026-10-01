@@ -27,6 +27,9 @@ module.exports = {
     icon: 'setgo',
     spec: [
         ...K.rb('SETGO', '集合碁', 'setgo'),
+        K.params([
+            { key: 'black_share', label: '積集合の黒の取り分', min: 0, max: 1, def: 0.5, step: 0.1 },
+        ]),
         // 積集合領域 (双方の石に接する空領域) は折半。奇数端数は白へ (コミ寄り)
         [K.ONE, `                    if (touchesBlack && !touchesWhite) blackTerritory += region.length;
                     else if (touchesWhite && !touchesBlack) whiteTerritory += region.length;`,
@@ -34,8 +37,9 @@ module.exports = {
                     else if (touchesWhite && !touchesBlack) whiteTerritory += region.length;
                     else if (touchesBlack && touchesWhite) {
                         // 積集合 (∩): 双方に接する領域は集合の和として折半
-                        blackTerritory += Math.floor(region.length / 2);
-                        whiteTerritory += Math.ceil(region.length / 2);
+                        const share = Math.max(0, Math.min(1, P('black_share') ?? 0.5));
+                        blackTerritory += Math.floor(region.length * share);
+                        whiteTerritory += region.length - Math.floor(region.length * share);
                     }`],
         [K.ONE, K.INFO_ALGO, `            集合碁: 両勢力に接する空領域は「積集合」として黒白で折半される<br>
             PC: クリックで配置<br>

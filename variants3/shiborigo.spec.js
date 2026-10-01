@@ -27,6 +27,9 @@ module.exports = {
     icon: 'shiborigo',
     spec: [
         ...K.rb('SHIBORIGO', '絞染碁', 'shiborigo'),
+        K.params([
+            { key: 'shibori_bonus', label: '絞り目の追加呼吸', min: 0, max: 3, def: 1, unit: '点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 絞り目: 空点で全ての隣接点が同色の石 (端・隅でも成立)
         function isShibori(b, i, pl) {
@@ -42,7 +45,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                    }
-                    if (resist) liberties += 1; // 絞り目を持つ連は染め残され+1呼吸
+                    if (resist) liberties += Math.max(0, P('shibori_bonus') ?? 1); // 絞り目を持つ連は染め残され追加呼吸
 
                     if (liberties <= 0) {`],
         // 絞り目の描画: 結び目の菱形マーク

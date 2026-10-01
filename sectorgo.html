@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"sectors","label":"扇区の数","min":4,"max":16,"def":8,"unit":"区"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -963,8 +963,8 @@
             const c = (BOARD_SIZE - 1) / 2;
             const cx = pad + c * cs, cy = pad + c * cs;
             const rr = (c + 0.5) * cs;
-            const a = -Math.PI + (history.length % 8) * (Math.PI / 4)
-                + ((now % 2600) / 2600) * (Math.PI / 4);
+            const a = -Math.PI + (history.length % Math.max(1, P('sectors') || 8)) * (Math.PI * 2 / Math.max(1, P('sectors') || 8))
+                + ((now % 2600) / 2600) * (Math.PI * 2 / Math.max(1, P('sectors') || 8));
             ctx2.save();
             const g = ctx2.createLinearGradient(cx, cy, cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
             g.addColorStop(0, 'rgba(90,110,170,0.02)');
@@ -1173,8 +1173,8 @@
             // 回転扇: 現在の許可扇区を扇形で照らす
             {
                 const c = (BOARD_SIZE - 1) / 2;
-                const a0 = -Math.PI + (history.length % 8) * Math.PI / 4;
-                const a1 = a0 + Math.PI / 4;
+                const a0 = -Math.PI + (history.length % Math.max(1, P('sectors') || 8)) * Math.PI * 2 / Math.max(1, P('sectors') || 8);
+                const a1 = a0 + Math.PI * 2 / Math.max(1, P('sectors') || 8);
                 const cx = padding + c * cellSize, cy = padding + c * cellSize;
                 const rr = (c + 0.5) * cellSize;
                 ctx.save();
@@ -1828,11 +1828,11 @@
             // 回転扇碁ルール: 天元を軸に8分割した扇区を、手数と一致する区のみ着手可
             {
                 const c = (BOARD_SIZE - 1) / 2;
-                const allowed = history.length % 8;
+                const allowed = history.length % Math.max(1, P('sectors') || 8);
                 for (const p of cells) {
                     const dx = p.x - c, dy = p.y - c;
                     if (dx === 0 && dy === 0) continue; // 天元は全区に属するとして常に許可
-                    const s = Math.floor((Math.atan2(dy, dx) + Math.PI) / (Math.PI * 2) * 8) % 8;
+                    const s = Math.floor((Math.atan2(dy, dx) + Math.PI) / (Math.PI * 2) * Math.max(1, P('sectors') || 8)) % Math.max(1, P('sectors') || 8);
                     if (s !== allowed) return false;
                 }
             }
@@ -2776,7 +2776,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('扇区: ' + (history.length % 8 + 1) + '/8');
+                const et = gameOver ? '' : ('扇区: ' + (history.length % Math.max(1, P('sectors') || 8) + 1) + '/' + (P('sectors') || 8));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

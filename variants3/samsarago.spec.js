@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= Math.max(1, P('move_cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,9 @@ module.exports = {
     icon: 'samsarago',
     spec: [
         ...K.rb('SAMSARAGO', '輪廻碁', 'samsarago'),
+        K.params([
+            { key: 'move_cap', label: '打ち切り手数', min: 40, max: 400, def: 150, unit: '手' },
+        ]),
         // 輪廻: 取られた石は盤上を前へ旅し、最初に見つけた空き地に再誕する
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {

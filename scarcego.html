@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"row_max","label":"行あたりの石数上限","min":1,"max":12,"def":4,"unit":"個"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1159,15 +1159,15 @@
                 ctx.save();
                 for (let y = 0; y < BOARD_SIZE; y++) {
                     const cy = padding + y * cellSize;
-                    if (rowCount[y] >= 4) {
+                    if (rowCount[y] >= Math.max(1, P('row_max') || 4)) {
                         ctx.fillStyle = 'rgba(200,60,60,0.15)';
                         ctx.fillRect(padding - cellSize * 0.5, cy - cellSize * 0.5, width - padding * 2 + cellSize, cellSize);
                     }
-                    ctx.fillStyle = rowCount[y] >= 4 ? '#c0392b' : alphaColor(currentTheme.lineColor, 0.7);
+                    ctx.fillStyle = rowCount[y] >= Math.max(1, P('row_max') || 4) ? '#c0392b' : alphaColor(currentTheme.lineColor, 0.7);
                     ctx.font = 'bold ' + (cellSize * 0.27).toFixed(1) + 'px sans-serif';
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(rowCount[y] + '/4', width - padding + cellSize * 0.32, cy);
+                    ctx.fillText(rowCount[y] + '/' + (P('row_max') || 4), width - padding + cellSize * 0.32, cy);
                 }
                 ctx.restore();
             }
@@ -1817,7 +1817,7 @@
                     if (board[i] !== 0) rowCount[Math.floor(i / BOARD_SIZE)]++;
                 }
                 for (const p of cells) {
-                    if (rowCount[p.y] >= 4) return false;
+                    if (rowCount[p.y] >= Math.max(1, P('row_max') || 4)) return false;
                 }
             }
 
@@ -2760,7 +2760,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('行の石上限: 4');
+                const et = gameOver ? '' : ('行の石上限: ' + (P('row_max') || 4));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"regen_min","label":"再生が起きる最小の取り数","min":1,"max":6,"def":2,"unit":"石"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1844,7 +1844,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 再生碁: 2個以上切られた連は断片が再生する
-            if (captured.length >= 2) {
+            if (captured.length >= Math.max(1, P('regen_min') || 2)) {
                 const frag = captured[0];
                 if (board[frag] === 0) {
                     board[frag] = opponent; // 取られた側の色で仮に再生

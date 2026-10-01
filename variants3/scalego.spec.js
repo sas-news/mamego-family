@@ -47,6 +47,11 @@ module.exports = {
     icon: 'scalego',
     spec: [
         ...K.rb('SCALEGO', '音階碁', 'scalego'),
+        K.params([
+            { key: 'scale_len', label: '音階の数', min: 4, max: 12, def: 7, unit: '音' },
+            { key: 'melody_len', label: '旋律完成の音数', min: 2, max: 8, def: 5, unit: '音' },
+            { key: 'melody_bonus', label: '旋律ボーナス', min: 0, max: 10, def: 3, unit: '目' },
+        ]),
         ...ST(ST_INIT),
         // 音階ルール: 列を7音階に見立て、1段ずつ上行する連続で旋律が完成 (+3目)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -55,19 +60,19 @@ module.exports = {
             // 音階: 列xを7音階 (x%7) に見立て、直前より1段上なら旋律が続く。5音で完成
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                const pitch = move.cells[0].x % 7;
-                if (st.last[player] >= 0 && pitch === (st.last[player] + 1) % 7) {
+                const pitch = move.cells[0].x % Math.max(1, P('scale_len') || 7);
+                if (st.last[player] >= 0 && pitch === (st.last[player] + 1) % Math.max(1, P('scale_len') || 7)) {
                     st.run[player]++;
                     fxGlow(mi, '#38bdf8', 500);
                 } else {
                     st.run[player] = 1;
                 }
                 st.last[player] = pitch;
-                if (st.run[player] >= 5) {
-                    captures[player] += 3;
+                if (st.run[player] >= Math.max(1, P('melody_len') || 5)) {
+                    captures[player] += (P('melody_bonus') ?? 3);
                     st.run[player] = 0;
                     st.last[player] = -1;
-                    fxText(mi, '旋律完成 +3', '#38bdf8', 1400);
+                    fxText(mi, '旋律完成 +' + (P('melody_bonus') ?? 3), '#38bdf8', 1400);
                     fxShake(3, 260);
                 }
             }
@@ -78,13 +83,13 @@ module.exports = {
             {
                 ctx.save();
                 for (let x = 0; x < BOARD_SIZE; x++) {
-                    if (x % 7 !== 0) continue;
+                    if (x % Math.max(1, P('scale_len') || 7) !== 0) continue;
                     ctx.fillStyle = 'rgba(56,189,248,0.10)';
                     ctx.fillRect(padding + (x - 0.5) * cellSize, padding - cellSize * 0.5, cellSize, BOARD_SIZE * cellSize);
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'旋律 ' + st.run[turn] + '/5音'`),
+        ...K.EVENT_CHIP_SPEC(`'旋律 ' + st.run[turn] + '/' + (P('melody_len') || 5) + '音'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            音階碁: 列はドレミファソラシ (x%7)。直前より1段上の列に打ち続けると旋律。5音で+3目<br>
             PC: クリックで配置<br>

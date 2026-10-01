@@ -47,6 +47,9 @@ module.exports = {
     icon: 'scentgo',
     spec: [
         ...K.rb('SCENTGO', '香り碁', 'scentgo'),
+        K.params([
+            { key: 'blend_bonus', label: '調香ボーナス', min: 0, max: 8, def: 2, unit: '点' },
+        ]),
         ...ST(ST_INIT),
         // 香り: 各側の着手は順に「花・木・茶」の香りを持つ。3種揃うと調香で+2
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -69,7 +72,7 @@ module.exports = {
                 const mine = new Set();
                 board.forEach((v, i) => { if (v === player && st.scent[i] !== undefined) mine.add(st.scent[i]); });
                 if (mine.size === 3) {
-                    captures[player] += 2;
+                    captures[player] += (P('blend_bonus') ?? 2);
                     fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '調香!', '#d946ef', 1400);
                     // 使い切った香りは石から消える (揃い直しが必要)
                     board.forEach((v, i) => { if (v === player) delete st.scent[i]; });

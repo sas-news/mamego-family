@@ -10,6 +10,9 @@ module.exports = {
     icon: 'shikigamigo',
     spec: [
         ...K.rb('SHIKIGAMIGO', '式神碁', 'shikigamigo'),
+        K.params([
+            { key: 'shiki_interval', label: '式神が出る間隔', min: 2, max: 16, def: 8, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let shikiDetail = { 1: 0, 2: 0 }; // 直近終局で使役した敵石の数`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -18,7 +21,7 @@ module.exports = {
             // 式神: 自分の8手ごとの着手は式神石
             {
                 const myCount = pieces.filter(pc => pc.player === player).length;
-                if (myCount % 8 === 0) {
+                if (myCount % Math.max(1, P('shiki_interval') || 8) === 0) {
                     const pc = pieces.find(q => q.cells.some(p => p.x === move.cells[0].x && p.y === move.cells[0].y));
                     if (pc) {
                         pc.shiki = true;
@@ -77,7 +80,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'次の式神まで ' + (8 - (pieces.filter(pc => pc.player === turn).length % 8)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'次の式神まで ' + ((P('shiki_interval') || 8) - (pieces.filter(pc => pc.player === turn).length % (P('shiki_interval') || 8))) + '手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '8手ごとの自分の着手は「式神」になる (紫の札印)。',
             '終局時、生きている式神の斜め4方に接する敵石は使役されて1つ+1目。両者同じ周期で現れる。',

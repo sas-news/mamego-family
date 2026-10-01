@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"shiki_interval","label":"式神が出る間隔","min":2,"max":16,"def":8,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1866,7 +1866,7 @@
             // 式神: 自分の8手ごとの着手は式神石
             {
                 const myCount = pieces.filter(pc => pc.player === player).length;
-                if (myCount % 8 === 0) {
+                if (myCount % Math.max(1, P('shiki_interval') || 8) === 0) {
                     const pc = pieces.find(q => q.cells.some(p => p.x === move.cells[0].x && p.y === move.cells[0].y));
                     if (pc) {
                         pc.shiki = true;
@@ -2771,7 +2771,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('次の式神まで ' + (8 - (pieces.filter(pc => pc.player === turn).length % 8)) + '手');
+                const et = gameOver ? '' : ('次の式神まで ' + ((P('shiki_interval') || 8) - (pieces.filter(pc => pc.player === turn).length % (P('shiki_interval') || 8))) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

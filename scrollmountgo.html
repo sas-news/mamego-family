@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"hang_min","label":"掛軸に必要な床の間の石数","min":1,"max":6,"def":3,"unit":"石"},{"key":"hang_rate","label":"掛軸の石あたり得点","min":1,"max":4,"def":1,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -653,7 +653,7 @@
                     if (onTokonoma(c)) touch++;
                     getNeighbors(c).forEach(n => { if (board[n] === player && !seen.has(n)) { seen.add(n); q.push(n); } });
                 }
-                if (touch >= 3) out.push(g);
+                if (touch >= Math.max(1, P('hang_min') || 3)) out.push(g);
             }
             return out;
         }
@@ -1891,9 +1891,9 @@
                 const key = g.slice().sort((a, b) => a - b).join(',');
                 if (st.hung[key]) return;
                 st.hung[key] = player;
-                st.score[player] += g.length;
+                st.score[player] += g.length * Math.max(1, P('hang_rate') || 1);
                 g.forEach(i => fxGlow(i, '#c084fc', 1100));
-                fxText(g[0], '掛軸 +' + g.length, '#c084fc', 1500);
+                fxText(g[0], '掛軸 +' + (g.length * Math.max(1, P('hang_rate') || 1)), '#c084fc', 1500);
             });
 
             turn = opponent;

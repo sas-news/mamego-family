@@ -47,6 +47,10 @@ module.exports = {
     icon: 'shatekigo',
     spec: [
         ...K.rb('SHATEKIGO', '射的碁', 'shatekigo'),
+        K.params([
+            { key: 'bullet_interval', label: '弾丸の間隔', min: 2, max: 12, def: 6, unit: '手' },
+            { key: 'prize_pts', label: '景品の得点', min: 0, max: 5, def: 1, unit: '目' },
+        ]),
         ...ST(ST_INIT),
         // 各側6手目の着手は弾丸: 8近傍の敵石を1つ撃ち落とす (景品+1目)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -54,7 +58,7 @@ module.exports = {
 
             // 射的碁: 6手ごとの着手は弾丸 — 8近傍の敵石を1つ撃ち落とす
             st.cnt[player] = (st.cnt[player] || 0) + 1;
-            if (st.cnt[player] % 6 === 0) {
+            if (st.cnt[player] % Math.max(1, P('bullet_interval') || 6) === 0) {
                 const bc = move.cells[0];
                 let target = -1;
                 for (let dy = -1; dy <= 1 && target < 0; dy++) {
@@ -68,7 +72,7 @@ module.exports = {
                 if (target >= 0) {
                     board[target] = 0;
                     captures[player]++;
-                    st.prize[player]++;
+                    st.prize[player] += Math.max(1, P('prize_pts') || 1);
                     fxBurst(target, '#f43f5e', 12, 1.8);
                     fxText(target, '命中!', '#fb7185', 1000);
                     fxShake(3, 220);
@@ -87,7 +91,7 @@ module.exports = {
         [K.ONE, `                    <div class="my-1 border-b border-current/10"></div>`,
 `                    <div class="flex justify-between"><span>射的の景品:</span> <strong>黒 \${st.prize[1]} / 白 \${st.prize[2]}</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
-        ...K.EVENT_CHIP_SPEC(`'弾丸まで ' + (6 - ((st.cnt[turn] || 0) % 6)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'弾丸まで ' + ((P('bullet_interval') || 6) - ((st.cnt[turn] || 0) % (P('bullet_interval') || 6))) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            射的碁: 各側6手目の着手は弾丸。着地点の8近傍から敵石を1つ撃ち落とす (景品+1目)<br>
             PC: クリックで配置<br>

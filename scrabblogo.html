@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"word_min","label":"単語になる最小の長さ","min":2,"max":6,"def":3,"unit":"字"},{"key":"word_bonus","label":"ボーナス計算の減算値","min":0,"max":4,"def":2,"hint":"連の長さ-この値の目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1876,10 +1876,10 @@
             {
                 const p = move.cells[0];
                 const len = wordRun(p.x, p.y, player);
-                if (len >= 3) {
-                    captures[player] += len - 2;
+                if (len >= Math.max(1, P('word_min') || 3)) {
+                    captures[player] += len - (P('word_bonus') ?? 2);
                     const ci = p.y * BOARD_SIZE + p.x;
-                    fxText(ci, '単語 +' + (len - 2), '#f59e0b', 1200);
+                    fxText(ci, '単語 +' + (len - (P('word_bonus') ?? 2)), '#f59e0b', 1200);
                     fxGlow(ci, '#fcd34d', 700);
                 }
             }

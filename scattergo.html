@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"scatter_dist","label":"散布距離","min":1,"max":6,"def":3,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1157,8 +1157,9 @@
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] !== turn) continue;
                     const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
-                    ctx.strokeRect(padding + (sx - 3.5) * cellSize, padding + (sy - 3.5) * cellSize,
-                        cellSize * 7, cellSize * 7);
+                    const sd = Math.max(1, P('scatter_dist') || 3);
+                    ctx.strokeRect(padding + (sx - sd - 0.5) * cellSize, padding + (sy - sd - 0.5) * cellSize,
+                        cellSize * (sd * 2 + 1), cellSize * (sd * 2 + 1));
                 }
                 ctx.restore();
             }
@@ -1809,7 +1810,7 @@
                     hasOwn = true;
                     const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
                     for (const p of cells) {
-                        if (Math.max(Math.abs(p.x - sx), Math.abs(p.y - sy)) === 3) sown = true;
+                        if (Math.max(Math.abs(p.x - sx), Math.abs(p.y - sy)) === Math.max(1, P('scatter_dist') || 3)) sown = true;
                     }
                     if (sown) break;
                 }
@@ -1875,7 +1876,7 @@
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] !== player || i === mi) continue;
                     const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
-                    if (Math.max(Math.abs(mc.x - sx), Math.abs(mc.y - sy)) === 3) {
+                    if (Math.max(Math.abs(mc.x - sx), Math.abs(mc.y - sy)) === Math.max(1, P('scatter_dist') || 3)) {
                         fxGlow(i, '#a3e635', 650);
                         break;
                     }
@@ -1900,6 +1901,12 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
+
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+                endGameByScore();
+                return;
+            }
+
             turn = opponent;
             updateUI();
 

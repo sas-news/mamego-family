@@ -47,6 +47,9 @@ module.exports = {
     icon: 'sennichitego',
     spec: [
         ...K.rb('SENNICHITEGO', '千日碁', 'sennichitego'),
+        K.params([
+            { key: 'repeat_max', label: '千日手になる繰り返し回数', min: 2, max: 6, def: 3, unit: '回' },
+        ]),
         ...ST(ST_INIT),
         // 千日手判定: 盤面+手番のハッシュが3回目なら引き分け終局
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -56,7 +59,7 @@ module.exports = {
             {
                 const __key = board.join(',') + ':' + opponent;
                 st.seen[__key] = (st.seen[__key] || 0) + 1;
-                if (st.seen[__key] >= 3) {
+                if (st.seen[__key] >= Math.max(1, P('repeat_max') || 3)) {
                     fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '千日手', '#94a3b8', 1400);
                     gameOver = true;
                     gameResultData = { title: '千日手', details: '同一局面が3回現れました (引き分け)' };

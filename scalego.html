@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"scale_len","label":"音階の数","min":4,"max":12,"def":7,"unit":"音"},{"key":"melody_len","label":"旋律完成の音数","min":2,"max":8,"def":5,"unit":"音"},{"key":"melody_bonus","label":"旋律ボーナス","min":0,"max":10,"def":3,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1852,19 +1852,19 @@
             // 音階: 列xを7音階 (x%7) に見立て、直前より1段上なら旋律が続く。5音で完成
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                const pitch = move.cells[0].x % 7;
-                if (st.last[player] >= 0 && pitch === (st.last[player] + 1) % 7) {
+                const pitch = move.cells[0].x % Math.max(1, P('scale_len') || 7);
+                if (st.last[player] >= 0 && pitch === (st.last[player] + 1) % Math.max(1, P('scale_len') || 7)) {
                     st.run[player]++;
                     fxGlow(mi, '#38bdf8', 500);
                 } else {
                     st.run[player] = 1;
                 }
                 st.last[player] = pitch;
-                if (st.run[player] >= 5) {
-                    captures[player] += 3;
+                if (st.run[player] >= Math.max(1, P('melody_len') || 5)) {
+                    captures[player] += (P('melody_bonus') ?? 3);
                     st.run[player] = 0;
                     st.last[player] = -1;
-                    fxText(mi, '旋律完成 +3', '#38bdf8', 1400);
+                    fxText(mi, '旋律完成 +' + (P('melody_bonus') ?? 3), '#38bdf8', 1400);
                     fxShake(3, 260);
                 }
             }
@@ -2743,7 +2743,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('旋律 ' + st.run[turn] + '/5音');
+                const et = gameOver ? '' : ('旋律 ' + st.run[turn] + '/' + (P('melody_len') || 5) + '音');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

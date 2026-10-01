@@ -27,12 +27,16 @@ module.exports = {
     icon: 'sashikogo',
     spec: [
         ...K.rb('SASHIKOGO', '刺子碁', 'sashikogo'),
+        K.params([
+            { key: 'seam_gap', label: '縫い目の間隔', min: 1, max: 3, def: 1, unit: '点', hint: '同色対の空き数' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 縫い目: pl色の石が1点空けで挟む空点 (縦・横)
         function isSeam(b, idx, pl) {
             const x = idx % BOARD_SIZE, y = (idx / BOARD_SIZE) | 0;
-            if (x > 0 && x < BOARD_SIZE - 1 && b[idx - 1] === pl && b[idx + 1] === pl) return true;
-            if (y > 0 && y < BOARD_SIZE - 1 && b[idx - BOARD_SIZE] === pl && b[idx + BOARD_SIZE] === pl) return true;
+            const d = Math.max(1, P('seam_gap') || 1);
+            if (x >= d && x < BOARD_SIZE - d && b[idx - d] === pl && b[idx + d] === pl) return true;
+            if (y >= d && y < BOARD_SIZE - d && b[idx - d * BOARD_SIZE] === pl && b[idx + d * BOARD_SIZE] === pl) return true;
             return false;
         }`],
         // 着手禁止: 相手の縫い目は補強済み — 切り込めない
@@ -57,10 +61,11 @@ module.exports = {
                 ctx.strokeStyle = pl === 1 ? 'rgba(240,240,240,0.9)' : 'rgba(40,40,40,0.9)';
                 ctx.setLineDash([cellSize * 0.1, cellSize * 0.08]);
                 ctx.beginPath();
-                if (x > 0 && x < BOARD_SIZE - 1 && board[i - 1] === pl && board[i + 1] === pl) {
+                const d = Math.max(1, P('seam_gap') || 1);
+                if (x >= d && x < BOARD_SIZE - d && board[i - d] === pl && board[i + d] === pl) {
                     ctx.moveTo(cx - cellSize * 0.3, cy); ctx.lineTo(cx + cellSize * 0.3, cy);
                 }
-                if (y > 0 && y < BOARD_SIZE - 1 && board[i - BOARD_SIZE] === pl && board[i + BOARD_SIZE] === pl) {
+                if (y >= d && y < BOARD_SIZE - d && board[i - d * BOARD_SIZE] === pl && board[i + d * BOARD_SIZE] === pl) {
                     ctx.moveTo(cx, cy - cellSize * 0.3); ctx.lineTo(cx, cy + cellSize * 0.3);
                 }
                 ctx.stroke();

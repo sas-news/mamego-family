@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"herb_bonus","label":"単石の薬効ボーナス","min":0,"max":10,"def":3,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2217,7 +2217,7 @@
             let bonus = 0;
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== player) continue;
-                if (!getNeighbors(i).some(n => board[n] === player)) bonus += 3;
+                if (!getNeighbors(i).some(n => board[n] === player)) bonus += (P('herb_bonus') ?? 3);
             }
             return bonus;
         }

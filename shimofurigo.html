@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"frost_interval","label":"霜降の間隔","min":4,"max":40,"def":18,"unit":"手"},{"key":"friend_min","label":"凍死を免れる友石数","min":1,"max":4,"def":2,"unit":"個"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1854,7 +1854,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 霜降: 18手ごとに霜が降り、未保護の外周石が凍死する
-            if (history.length % 18 === 0) {
+            if (history.length % Math.max(1, P('frost_interval') || 18) === 0) {
                 const dead = [];
                 for (let i = 0; i < board.length; i++) {
                     const v = board[i];
@@ -1862,7 +1862,7 @@
                     const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
                     if (x !== 0 && y !== 0 && x !== BOARD_SIZE - 1 && y !== BOARD_SIZE - 1) continue; // 外周のみ
                     const friends = getNeighbors(i).filter(n => board[n] === v).length;
-                    if (friends < 2) dead.push(i);
+                    if (friends < (P('friend_min') || 2)) dead.push(i);
                 }
                 if (dead.length) {
                     dead.forEach(i => {
@@ -2747,7 +2747,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('霜降まで' + (18 - history.length % 18) + '手');
+                const et = gameOver ? '' : ('霜降まで' + ((P('frost_interval') || 18) - history.length % (P('frost_interval') || 18)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

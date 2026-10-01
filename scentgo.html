@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"blend_bonus","label":"調香ボーナス","min":0,"max":8,"def":2,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1869,7 +1869,7 @@
                 const mine = new Set();
                 board.forEach((v, i) => { if (v === player && st.scent[i] !== undefined) mine.add(st.scent[i]); });
                 if (mine.size === 3) {
-                    captures[player] += 2;
+                    captures[player] += (P('blend_bonus') ?? 2);
                     fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '調香!', '#d946ef', 1400);
                     // 使い切った香りは石から消える (揃い直しが必要)
                     board.forEach((v, i) => { if (v === player) delete st.scent[i]; });

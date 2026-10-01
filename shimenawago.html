@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"rope_min","label":"注連縄になる連の長さ","min":2,"max":8,"def":3,"unit":"石"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -645,7 +645,7 @@
                 if (board[i] !== pl || visited.has(i)) continue;
                 const grp = getConnectedGroup(i, pl);
                 grp.forEach(g => visited.add(g));
-                if (grp.length < 3) continue;
+                if (grp.length < Math.max(1, P('rope_min') || 3)) continue;
                 // 結界点: この連に隣接する空点
                 grp.forEach(g => getNeighbors(g).forEach(n => { if (board[n] === 0) walls.add(n); }));
             }
@@ -1347,7 +1347,7 @@
                     if (board[i] !== pl || seen.has(i)) continue;
                     const grp = getConnectedGroup(i, pl);
                     grp.forEach(g => seen.add(g));
-                    if (grp.length < 3) continue;
+                    if (grp.length < Math.max(1, P('rope_min') || 3)) continue;
                     grp.forEach(g => {
                         const x = g % BOARD_SIZE, y = (g / BOARD_SIZE) | 0;
                         const cx = padding + x * cellSize, cy = padding + y * cellSize;

@@ -47,6 +47,9 @@ module.exports = {
     icon: 'shinkirogo',
     spec: [
         ...K.rb('SHINKIROGO', '蜃気碁', 'shinkirogo'),
+        K.params([
+            { key: 'mirage_range', label: '蜃気楼の出現範囲', min: 1, max: 3, def: 2, unit: 'マス' },
+        ]),
         ...ST(ST_INIT),
         // 蜃気楼: 双方の着手後に空点へ蜃気楼候補が1つ湧き、次の着手でそれが実体化する
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -69,9 +72,14 @@ module.exports = {
             }
             // 新しい蜃気楼候補を湧かせる (着手点の周辺の空点)
             {
-                const opts = getNeighbors(pi).concat(
-                    getNeighbors(pi).flatMap(n => getNeighbors(n))
-                ).filter(i => i >= 0 && i < BOARD_SIZE * BOARD_SIZE && board[i] === 0);
+                const ring1 = getNeighbors(pi);
+                let ring = ring1;
+                const cand = [...ring1];
+                for (let r = 1; r < Math.max(1, P('mirage_range') || 2); r++) {
+                    ring = ring.flatMap(n => getNeighbors(n));
+                    cand.push(...ring);
+                }
+                const opts = cand.filter(i => i >= 0 && i < BOARD_SIZE * BOARD_SIZE && board[i] === 0);
                 if (opts.length > 0) st.mir.push(opts[(st.ply * 7 + pi) % opts.length]);
             }
             turn = opponent;`],

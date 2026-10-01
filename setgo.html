@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"black_share","label":"積集合の黒の取り分","min":0,"max":1,"def":0.5,"step":0.1}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2263,8 +2263,9 @@
                     else if (touchesWhite && !touchesBlack) whiteTerritory += region.length;
                     else if (touchesBlack && touchesWhite) {
                         // 積集合 (∩): 双方に接する領域は集合の和として折半
-                        blackTerritory += Math.floor(region.length / 2);
-                        whiteTerritory += Math.ceil(region.length / 2);
+                        const share = Math.max(0, Math.min(1, P('black_share') ?? 0.5));
+                        blackTerritory += Math.floor(region.length * share);
+                        whiteTerritory += region.length - Math.floor(region.length * share);
                     }
                 }
             }

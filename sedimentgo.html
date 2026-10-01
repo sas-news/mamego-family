@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"river_rows","label":"川の行数","min":1,"max":4,"def":2,"unit":"行","hint":"上下それぞれ"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -642,8 +642,13 @@
         let RIVER = new Set();
         function rebuildRiver() {
             RIVER = new Set();
-            for (let y = 0; y < 2; y++) for (let x = 0; x < BOARD_SIZE; x++) RIVER.add(y * BOARD_SIZE + x);
-            for (let y = BOARD_SIZE - 2; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) RIVER.add(y * BOARD_SIZE + x);
+            const rr = Math.max(1, P('river_rows') || 2);
+            for (let y = 0; y < rr; y++) for (let x = 0; x < BOARD_SIZE; x++) RIVER.add(y * BOARD_SIZE + x);
+            for (let y = BOARD_SIZE - rr; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) RIVER.add(y * BOARD_SIZE + x);
+        }
+        // 設定変更で区域を即時再構成 (盤面への反映は次の対局開始時)
+        function onVariantParam(p) {
+            if (p.key === 'river_rows') rebuildRiver();
         }
         // 堆積順: 中央列から外へジグザグに埋まる河口セル列
         function deltaOrder() {
@@ -652,8 +657,8 @@
                 const xs = d === 0 ? [c] : [c - Math.ceil(d / 2), c + Math.floor(d / 2)];
                 xs.forEach(x => {
                     if (x < 0 || x >= BOARD_SIZE) return;
-                    // 河口は上下の川端 (y=1 と y=BOARD_SIZE-2)
-                    [1, BOARD_SIZE - 2].forEach(y => out.push(y * BOARD_SIZE + x));
+                    // 河口は上下の川端
+                    [Math.max(1, P('river_rows') || 2) - 1, BOARD_SIZE - Math.max(1, P('river_rows') || 2)].forEach(y => out.push(y * BOARD_SIZE + x));
                 });
             }
             return out;

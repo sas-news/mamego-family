@@ -47,6 +47,10 @@ module.exports = {
     icon: 'saltfieldgo',
     spec: [
         ...K.rb('SALTFIELDGO', '塩田碁', 'saltfieldgo'),
+        K.params([
+            { key: 'sun_interval', label: '天日の間隔', min: 4, max: 30, def: 10, unit: '手' },
+            { key: 'crystal_pts', label: '結晶の得点', min: 1, max: 5, def: 1, unit: '点' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 塩田: 盤の上下に2枚の結晶田 (天日で塩が育つ)
@@ -63,13 +67,13 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 塩田碁: 10手ごとの天日で田の石が塩の結晶になる (+1点)
-            if (history.length > 0 && history.length % 10 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('sun_interval') || 10) === 0) {
                 SALT_SET.forEach(i => {
                     if ((board[i] === 1 || board[i] === 2) && !st.salt.includes(i)) {
                         st.salt.push(i);
-                        st.score[board[i]]++;
+                        st.score[board[i]] += Math.max(1, P('crystal_pts') || 1);
                         fxBurst(i, '#e0f2fe', 10, 1.3);
-                        fxText(i, '結晶+1', '#38bdf8', 1000);
+                        fxText(i, '結晶+' + (P('crystal_pts') || 1), '#38bdf8', 1000);
                     }
                 });
                 for (let i = st.salt.length - 1; i >= 0; i--) {

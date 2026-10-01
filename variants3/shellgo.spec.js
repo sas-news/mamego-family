@@ -10,6 +10,10 @@ module.exports = {
     icon: 'shellgo',
     spec: [
         ...K.rb('SHELLGO', '貝殻碁', 'shellgo'),
+        K.params([
+            { key: 'shell_min', label: '殻ができる連の大きさ', min: 2, max: 6, def: 2, unit: '石' },
+            { key: 'shell_frac', label: '殻で失う割合', min: 0.1, max: 1, def: 0.5, step: 0.1 },
+        ]),
         // 捕獲: 2個以上の連は殻を共有 — 外側(連結度の低い)半分だけが取られる
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
@@ -27,11 +31,11 @@ module.exports = {
                             if (cmap.has(n) && !seen.has(n)) { seen.add(n); q.push(n); }
                         });
                     }
-                    if (grp.length >= 2) {
+                    if (grp.length >= Math.max(1, P('shell_min') || 2)) {
                         // 殻: 連結度(連内近傍数)の低い外側から半数を除去
                         const deg = grp.map(i => [i, getNeighbors(i).filter(n => cmap.has(n)).length]);
                         deg.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
-                        deg.slice(0, Math.ceil(grp.length / 2)).forEach(([i]) => toRemove.push(i));
+                        deg.slice(0, Math.ceil(grp.length * Math.max(0, Math.min(1, P('shell_frac') ?? 0.5)))).forEach(([i]) => toRemove.push(i));
                     } else {
                         toRemove.push(grp[0]); // 単石には殻がない
                     }

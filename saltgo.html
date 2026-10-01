@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"melt_interval","label":"潮解の間隔","min":2,"max":20,"def":8,"unit":"手"},{"key":"sea_rows","label":"潮溜まりの行数","min":1,"max":5,"def":2,"unit":"行"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -638,17 +638,23 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        // 潮溜まり: 下2行と海岸沿いの散在する湿気区域
-        const WET_SET = new Set();
-        {
-            const seaY = BOARD_SIZE - 2;
+        // 潮溜まり: 下N行と海岸沿いの散在する湿気区域 (行数は設定で調整)
+        let WET_SET = new Set();
+        function rebuildWetSet() {
+            WET_SET = new Set();
+            const seaY = BOARD_SIZE - Math.max(1, P('sea_rows') || 2);
             for (let y = seaY; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 WET_SET.add(y * BOARD_SIZE + x);
             }
             for (let x = 1; x < BOARD_SIZE - 1; x += 4) {
                 const py = seaY - 1 - ((x * 7) % 3);
-                WET_SET.add(py * BOARD_SIZE + x);
+                if (py >= 0) WET_SET.add(py * BOARD_SIZE + x);
             }
+        }
+        rebuildWetSet();
+        // 設定変更で区域を即時再構成
+        function onVariantParam(p) {
+            if (p.key === 'sea_rows') rebuildWetSet();
         }
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
@@ -1887,7 +1893,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 塩の溶解: 8手ごとに湿気区域の石が溶ける
-            if (history.length % 8 === 0) {
+            if (history.length % Math.max(1, P('melt_interval') || 8) === 0) {
                 let melt = 0;
                 WET_SET.forEach(i => {
                     if (board[i] === 1 || board[i] === 2) {
@@ -2774,7 +2780,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('潮解まで ' + (8 - (history.length % 8)) + ' 手');
+                const et = gameOver ? '' : ('潮解まで ' + ((P('melt_interval') || 8) - (history.length % (P('melt_interval') || 8))) + ' 手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

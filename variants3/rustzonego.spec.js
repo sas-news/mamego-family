@@ -47,22 +47,27 @@ module.exports = {
     icon: 'rustzonego',
     spec: [
         ...K.rb('RUSTZONEGO', '錆地帯碁', 'rustzonego'),
+        K.params([
+            { key: 'rust_interval', label: '錆周期の間隔', min: 4, max: 30, def: 10, unit: '手' },
+            { key: 'rust_limit', label: '砕けるまでの腐食回数', min: 1, max: 5, def: 2, unit: '回' },
+            { key: 'zone_radius', label: '錆地帯の半径', min: 1, max: 6, def: 2 },
+        ]),
         ...ST(ST_INIT),
         // 錆周期: 10手ごとに地帯内の石が腐食進行。2度腐食すると砕けて消える (アゲハマにもならない)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 錆地帯: 10手ごとに地帯の石が腐食。2度で砕けて消える
-            if (history.length > 0 && history.length % 10 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('rust_interval') || 10) === 0) {
                 const c = Math.floor(BOARD_SIZE / 2);
                 Object.keys(st.rust).forEach(k => { if (board[+k] !== 1 && board[+k] !== 2) delete st.rust[k]; });
                 for (let y = 0; y < BOARD_SIZE; y++) {
                     for (let x = 0; x < BOARD_SIZE; x++) {
-                        if (Math.abs(x - c) + Math.abs(y - c) > 2) continue;
+                        if (Math.abs(x - c) + Math.abs(y - c) > Math.max(1, P('zone_radius') || 2)) continue;
                         const i = y * BOARD_SIZE + x;
                         if (board[i] !== 1 && board[i] !== 2) continue;
                         st.rust[i] = (st.rust[i] || 0) + 1;
-                        if (st.rust[i] >= 2) {
+                        if (st.rust[i] >= Math.max(1, P('rust_limit') || 2)) {
                             board[i] = 0;
                             delete st.rust[i];
                             fxText(i, '腐食!', '#b45309', 1100);
@@ -82,7 +87,7 @@ module.exports = {
             ctx2.save();
             for (let y = 0; y < BOARD_SIZE; y++) {
                 for (let x = 0; x < BOARD_SIZE; x++) {
-                    if (Math.abs(x - c) + Math.abs(y - c) > 2) continue;
+                    if (Math.abs(x - c) + Math.abs(y - c) > Math.max(1, P('zone_radius') || 2)) continue;
                     const cx = pad + x * cs, cy = pad + y * cs;
                     const pulse = 0.10 + 0.05 * Math.sin(now / 700 + x * 3 + y * 5);
                     ctx2.fillStyle = 'rgba(146,64,14,' + pulse + ')';
@@ -110,7 +115,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'錆周期まで ' + (10 - history.length % 10) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'錆周期まで ' + ((P('rust_interval') || 10) - history.length % (P('rust_interval') || 10)) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            錆地帯碁: 盤中央の錆地帯では石が腐食し、2回の錆周期 (20手) で砕け落ちる<br>
             PC: クリックで配置<br>

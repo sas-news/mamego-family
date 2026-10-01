@@ -322,7 +322,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"scrap_cost","label":"再生石の錬成コスト","min":1,"max":8,"def":3,"unit":"個"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2069,8 +2069,8 @@
         btnRecycle.addEventListener('click', () => {
             soundManager.playClick();
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
-            if (st.armed[turn] || st.scrap[turn] < 3) return;
-            st.scrap[turn] -= 3;
+            if (st.armed[turn] || st.scrap[turn] < Math.max(1, P('scrap_cost') || 3)) return;
+            st.scrap[turn] -= Math.max(1, P('scrap_cost') || 3);
             st.armed[turn] = true;
             render();
             updateUI();

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"bullet_interval","label":"弾丸の間隔","min":2,"max":12,"def":6,"unit":"手"},{"key":"prize_pts","label":"景品の得点","min":0,"max":5,"def":1,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1851,7 +1851,7 @@
 
             // 射的碁: 6手ごとの着手は弾丸 — 8近傍の敵石を1つ撃ち落とす
             st.cnt[player] = (st.cnt[player] || 0) + 1;
-            if (st.cnt[player] % 6 === 0) {
+            if (st.cnt[player] % Math.max(1, P('bullet_interval') || 6) === 0) {
                 const bc = move.cells[0];
                 let target = -1;
                 for (let dy = -1; dy <= 1 && target < 0; dy++) {
@@ -1865,7 +1865,7 @@
                 if (target >= 0) {
                     board[target] = 0;
                     captures[player]++;
-                    st.prize[player]++;
+                    st.prize[player] += Math.max(1, P('prize_pts') || 1);
                     fxBurst(target, '#f43f5e', 12, 1.8);
                     fxText(target, '命中!', '#fb7185', 1000);
                     fxShake(3, 220);
@@ -2750,7 +2750,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('弾丸まで ' + (6 - ((st.cnt[turn] || 0) % 6)) + '手');
+                const et = gameOver ? '' : ('弾丸まで ' + ((P('bullet_interval') || 6) - ((st.cnt[turn] || 0) % (P('bullet_interval') || 6))) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

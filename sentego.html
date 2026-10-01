@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"sente_bonus","label":"先手権のボーナス","min":0,"max":8,"def":2,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1853,9 +1853,9 @@
             {
                 const __pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (st.sente === player) {
-                    st.bonus[player] = (st.bonus[player] || 0) + 2;
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('sente_bonus') ?? 2);
                     st.sente = 0; // 先手権を消費
-                    fxText(__pi, '先手の効き +2', '#fb923c', 1100);
+                    fxText(__pi, '先手の効き +' + (P('sente_bonus') ?? 2), '#fb923c', 1100);
                     fxGlow(__pi, '#fb923c', 800);
                 }
                 // アタリ (呼吸1の敵連) を作った側が先手権を握る

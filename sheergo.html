@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"cap_round","label":"アゲハマ表示の丸め単位","min":1,"max":10,"def":4,"hint":"大きいほど曖昧"},{"key":"foe_alpha","label":"相手石の透明度","min":0.1,"max":1,"def":0.5,"step":0.1}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1293,7 +1293,7 @@
                 const stroke = pc.player === 1 ? currentTheme.p1Stroke : currentTheme.p2Stroke;
                 const isDead = alive.some(p => deadStones.has(p.y * BOARD_SIZE + p.x));
 
-                drawPieceShape(alive, padding, cellSize, fill, stroke, (isDead ? 0.35 : 1) * (pc.player !== turn ? 0.5 : 1));
+                drawPieceShape(alive, padding, cellSize, fill, stroke, (isDead ? 0.35 : 1) * (pc.player !== turn ? Math.max(0, Math.min(1, P('foe_alpha') || 0.5)) : 1));
                 if (isDead) {
                     alive.forEach(p => {
                         if (deadStones.has(p.y * BOARD_SIZE + p.x)) {
@@ -1317,7 +1317,7 @@
                     const stroke = val === 1 ? currentTheme.p1Stroke : currentTheme.p2Stroke;
                     const isDead = deadStones.has(idx);
 
-                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, (isDead ? 0.35 : 1) * (val !== turn ? 0.5 : 1));
+                    drawPieceShape([{ x, y }], padding, cellSize, fill, stroke, (isDead ? 0.35 : 1) * (val !== turn ? Math.max(0, Math.min(1, P('foe_alpha') || 0.5)) : 1));
                     if (isDead) drawDeadMarker(cx, cy, r);
                 }
             }
@@ -2708,8 +2708,8 @@
         // ==========================================
         function updateUI() {
             turnIndicator.textContent = turn === 1 ? '黒 (1P)' : '白 (2P)';
-            blackCapturesEl.textContent = '~' + Math.round(captures[1] / 4) * 4;
-            whiteCapturesEl.textContent = '~' + Math.round(captures[2] / 4) * 4;
+            blackCapturesEl.textContent = '~' + Math.round(captures[1] / Math.max(1, P('cap_round') || 4)) * Math.max(1, P('cap_round') || 4);
+            whiteCapturesEl.textContent = '~' + Math.round(captures[2] / Math.max(1, P('cap_round') || 4)) * Math.max(1, P('cap_round') || 4);
 
             if (gameMode === 'local') gameModeBadge.textContent = 'ローカル対戦';
             else if (gameMode === 'ai') gameModeBadge.textContent = `AI対戦 (${aiPlayer === 2 ? 'あなた:黒' : 'あなた:白'})`;

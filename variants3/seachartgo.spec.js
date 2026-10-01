@@ -64,6 +64,10 @@ module.exports = {
     icon: 'seachartgo',
     spec: [
         ...K.rb('SEACHARTGO', '海図碁', 'seachartgo'),
+        K.params([
+            { key: 'reef_pts', label: '礁の水路点', min: 0, max: 4, def: 1, unit: '点' },
+            { key: 'route_bonus', label: '航路完成ボーナス', min: 0, max: 30, def: 12, unit: '点' },
+        ]),
         ...ST(ST_INIT, `
         // 海図: 左右両辺の中央が港、その内側4点が礁
         const PORTS = [];
@@ -79,7 +83,7 @@ module.exports = {
             rebuildChart();`),
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
             // 礁への着手は水路点+1
-            if (REEFS.has(move.cells[0].y * BOARD_SIZE + move.cells[0].x)) st.score[player] += 1;`],
+            if (REEFS.has(move.cells[0].y * BOARD_SIZE + move.cells[0].x)) st.score[player] += Math.max(0, P('reef_pts') ?? 1);`],
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;`, `            consecutivePasses = 0;
@@ -91,7 +95,7 @@ module.exports = {
                 const g = getConnectedGroup(cIdx, player);
                 if (g.includes(PORTS[0]) && g.includes(PORTS[1])) {
                     st.route[player] = true;
-                    st.score[player] += 12;
+                    st.score[player] += (P('route_bonus') ?? 12);
                 }
             }
 

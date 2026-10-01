@@ -10,6 +10,9 @@ module.exports = {
     icon: 'seedgo',
     spec: [
         ...K.rb('SEEDGO', '種子碁', 'seedgo'),
+        K.params([
+            { key: 'sprout_turns', label: '発芽までの手数', min: 1, max: 8, def: 3, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { seed: {} }; // 種マス idx -> [残り手数, 色]
         function sproutDirs() { return null; }`],
@@ -52,7 +55,7 @@ module.exports = {
                 fxGlow(t, '#86efac', 600);
                 fxText(t, '芽!', '#4ade80', 900);
             });
-            move.cells.forEach(p => { st.seed[p.y * BOARD_SIZE + p.x] = [3, player]; });
+            move.cells.forEach(p => { st.seed[p.y * BOARD_SIZE + p.x] = [Math.max(1, P('sprout_turns') || 3), player]; });
             turn = opponent;`],
         // 種の描画: 石の上に小さな芽
         ...K.STONE_MARKS_SPEC(`            {
@@ -61,7 +64,7 @@ module.exports = {
                     const i = +k, x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
                     if (board[i] === 0) continue;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
-                    const grow = (4 - st.seed[i][0]) / 3;
+                    const grow = ((P('sprout_turns') || 3) + 1 - st.seed[i][0]) / (P('sprout_turns') || 3);
                     ctx.strokeStyle = '#4ade80';
                     ctx.fillStyle = '#86efac';
                     ctx.lineWidth = Math.max(1.5, cellSize * 0.05);

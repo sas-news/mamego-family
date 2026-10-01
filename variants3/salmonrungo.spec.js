@@ -47,6 +47,10 @@ module.exports = {
     icon: 'salmonrungo',
     spec: [
         ...K.rb('SALMONRUNGO', '鮭遡碁', 'salmonrungo'),
+        K.params([
+            { key: 'run_interval', label: '遡上の間隔', min: 2, max: 12, def: 6, unit: '手' },
+            { key: 'spawn_bonus', label: '産卵ボーナス', min: 0, max: 6, def: 2, unit: '目' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 川: 中央の横一列 (上流は x=0 側)
@@ -56,7 +60,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 鮭の遡上: 6手ごとに川の石が上流へ。源流に着けば産卵+2目
-            if (history.length > 0 && history.length % 6 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('run_interval') || 6) === 0) {
                 let moved = 0;
                 for (let x = 0; x < BOARD_SIZE; x++) {
                     const i = RIVER_Y * BOARD_SIZE + x;
@@ -65,7 +69,7 @@ module.exports = {
                     if (x === 0) {
                         // 源流に到達: 産卵して川を去る
                         board[i] = 0;
-                        st.spawned[v] += 2;
+                        st.spawned[v] += (P('spawn_bonus') ?? 2);
                         fxGlow(i, '#fb7185', 800);
                         fxText(i, '産卵!', '#f43f5e', 1100);
                         moved++;
@@ -105,7 +109,7 @@ module.exports = {
                 ctx.fill();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'遡上まで ' + (6 - (history.length % 6)) + ' 手 / 産卵 黒' + (st.spawned ? st.spawned[1] : 0) + ' 白' + (st.spawned ? st.spawned[2] : 0)`),
+        ...K.EVENT_CHIP_SPEC(`'遡上まで ' + ((P('run_interval') || 6) - (history.length % (P('run_interval') || 6))) + ' 手 / 産卵 黒' + (st.spawned ? st.spawned[1] : 0) + ' 白' + (st.spawned ? st.spawned[2] : 0)`),
         [K.ONE, K.INFO_ALGO, `            鮭遡碁: 中央の川の石は6手ごとに上流へ。源流に着くと産卵+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
