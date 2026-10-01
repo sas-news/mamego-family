@@ -9,11 +9,18 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('MAHJONGGO', '雀碁', 'mahjonggo'),
+        K.params([
+            { key: 'yaku2', label: '対子の得点', min: 0, max: 5, def: 1, hint: '2連の役' },
+            { key: 'yaku3', label: '刻子の得点', min: 0, max: 8, def: 3, hint: '3連の役' },
+            { key: 'yaku4', label: '棟子の得点', min: 0, max: 12, def: 6, hint: '4連の役' },
+            { key: 'yaku5', label: '役満の得点', min: 0, max: 20, def: 10, hint: '5連以上の役' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.7, max: 2.5, def: 1.4, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 雀碁: 縦横の同色並びを役として得点化 (2連=対子+1 / 3連=刻子+3 / 4連=槓子+6 / 5連以上=役満+10)
         function mahjongBonus() {
             const bonus = { 1: 0, 2: 0 };
-            const table = l => (l >= 5 ? 10 : l === 4 ? 6 : l === 3 ? 3 : l === 2 ? 1 : 0);
+            const table = l => (l >= 5 ? (P('yaku5') ?? 10) : l === 4 ? (P('yaku4') ?? 6) : l === 3 ? (P('yaku3') ?? 3) : l === 2 ? (P('yaku2') ?? 1) : 0);
             for (let y = 0; y < BOARD_SIZE; y++) {
                 let run = 0, col = 0;
                 for (let x = 0; x <= BOARD_SIZE; x++) {
@@ -96,7 +103,21 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.MOVE_CAP_SPEC,
+        // 打ち切り手数は設定で調整可能
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 新規対局 (履歴空) で打ち切りを再武装
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            // (1局につき1回のみ発火。死に石選択を取り消して続行する場合は再発火しない)
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.4))) {
+                moveCapFired = true;
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

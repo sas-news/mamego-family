@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"lunge_dist","label":"後退マス数","min":1,"max":4,"def":1,"hint":"突撃で敵石が何マス後退するか"},{"key":"cap_ratio","label":"打ち切り手数","min":0.5,"max":2.5,"def":0.75,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1845,7 +1845,8 @@
                     if (board[n] !== opponent) return;
                     const dx = (n % BOARD_SIZE) - p0.x;
                     const dy = Math.floor(n / BOARD_SIZE) - p0.y;
-                    const tx = (n % BOARD_SIZE) + dx, ty = Math.floor(n / BOARD_SIZE) + dy;
+                    const LD = Math.max(1, P('lunge_dist') || 1);
+                    const tx = (n % BOARD_SIZE) + dx * LD, ty = Math.floor(n / BOARD_SIZE) + dy * LD;
                     const pc = pieces.find(x => x.cells.some(c => c.y * BOARD_SIZE + c.x === n));
                     board[n] = 0;
                     if (tx < 0 || tx >= BOARD_SIZE || ty < 0 || ty >= BOARD_SIZE || board[ty * BOARD_SIZE + tx] !== 0) {
@@ -1867,7 +1868,7 @@
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 endGameByScore();
                 return;
             }

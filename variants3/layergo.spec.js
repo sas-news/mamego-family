@@ -10,14 +10,19 @@ module.exports = {
     icon: 'layergo',
     spec: [
         ...K.rb('LAYERGO', '層積碁', 'layergo'),
+        K.params([
+            { key: 'layer_n', label: '層の数', min: 2, max: 6, def: 3, hint: '盤を何層にするか (変更時は新規対局から有効)' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        const LV_N = 3;
-        let st = { layer: 1, lv: {} }; // lv[i] = [下,中,上] の色 (0=空)
+        let LV_N = Math.max(2, P('layer_n') || 3);
+        let st = { layer: 1, lv: {} }; // lv[i] = 層ごとの色 (0=空)
         function initSt() { st = { layer: 1, lv: {} }; }
-        function lvGet(lvm, i, z) { const c = lvm[i]; return c ? c[z] : 0; }
+        function lvGet(lvm, i, z) { const c = lvm[i]; return c ? (c[z] || 0) : 0; }
         function lvSet(lvm, i, z, v) {
             let c = lvm[i];
-            if (!c) c = lvm[i] = [0, 0, 0];
+            if (!c) c = lvm[i] = new Array(LV_N).fill(0);
+            while (c.length <= z) c.push(0);
             c[z] = v;
         }
         function lvTop(lvm, i) {
@@ -66,19 +71,40 @@ module.exports = {
             }
             return dead;
         }
-        // 層ボタンの配線
-        document.querySelectorAll('#layerSel .lvBtn').forEach(b => {
-            b.addEventListener('click', () => {
-                st.layer = +b.dataset.z + 1;
-                document.querySelectorAll('#layerSel .lvBtn').forEach(o => {
-                    const on = +o.dataset.z + 1 === st.layer;
-                    o.classList.toggle('bg-neutral-900', on);
-                    o.classList.toggle('text-white', on);
+        // 層ボタンを層数に合わせて生成・配線
+        function rebuildLayerButtons() {
+            const sel = document.getElementById('layerSel');
+            if (!sel) return;
+            sel.innerHTML = '';
+            if (st.layer > LV_N) st.layer = LV_N;
+            for (let z = 0; z < LV_N; z++) {
+                const b = document.createElement('button');
+                b.className = 'lvBtn flex-1 py-1.5 px-2 text-xs font-bold border rounded-xl transition-all';
+                b.dataset.z = z;
+                b.textContent = '層' + (z + 1);
+                b.addEventListener('click', () => {
+                    st.layer = +b.dataset.z + 1;
+                    document.querySelectorAll('#layerSel .lvBtn').forEach(o => {
+                        const on = +o.dataset.z + 1 === st.layer;
+                        o.classList.toggle('bg-neutral-900', on);
+                        o.classList.toggle('text-white', on);
+                    });
                 });
-            });
-        });
-        const _b0 = document.querySelectorAll('#layerSel .lvBtn')[0];
-        if (_b0) { _b0.classList.add('bg-neutral-900'); _b0.classList.add('text-white'); }`],
+                sel.appendChild(b);
+            }
+            const _b0 = document.querySelectorAll('#layerSel .lvBtn')[st.layer - 1];
+            if (_b0) { _b0.classList.add('bg-neutral-900'); _b0.classList.add('text-white'); }
+        }
+        rebuildLayerButtons();
+        function onVariantParam(p) {
+            if (p.key === 'layer_n') {
+                LV_N = Math.max(2, P('layer_n') || 3);
+                // 既存セルの天面を新しい層数で再計算して盤と整合させる
+                for (const k in st.lv) { const i = +k; board[i] = lvTop(st.lv, i); }
+                if (st.layer > LV_N) st.layer = LV_N;
+                rebuildLayerButtons();
+            }
+        }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             initSt();`],
         [K.ONE, K.SNAP_PUSH, `                heldPieces: { ...heldPieces },
@@ -107,12 +133,8 @@ module.exports = {
 `            </button>
         </div>
 
-        <!-- 層選択 -->
-        <div id="layerSel" class="w-full flex justify-between items-center gap-2">
-            <button class="lvBtn flex-1 py-1.5 px-2 text-xs font-bold border rounded-xl transition-all" data-z="0">層1</button>
-            <button class="lvBtn flex-1 py-1.5 px-2 text-xs font-bold border rounded-xl transition-all" data-z="1">層2</button>
-            <button class="lvBtn flex-1 py-1.5 px-2 text-xs font-bold border rounded-xl transition-all" data-z="2">層3</button>
-        </div>
+        <!-- 層選択 (ボタンは層数に応じてJSで生成) -->
+        <div id="layerSel" class="w-full flex justify-between items-center gap-2"></div>
 
         <!-- 死に石選択フェーズ用バナー -->`],
         // 着手判定: 選んだ層のスロットが空いているか (3Dスタックで自殺・コウ判定)
@@ -309,7 +331,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

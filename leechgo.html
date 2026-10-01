@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"grow_ratio","label":"自生倍率","min":0.5,"max":3,"def":1,"step":0.5,"hint":"取った数に対する自生の倍率"},{"key":"keep_lib","label":"残す呼吸点","min":1,"max":4,"def":1,"hint":"肥大化しても必ず残る呼吸点の数"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1830,7 +1830,7 @@
                     const grp = getConnectedGroup(anchor, player);
                     const libs = new Set();
                     grp.forEach(g => getNeighbors(g).forEach(n => { if (board[n] === 0) libs.add(n); }));
-                    let grow = Math.min(captured.length, libs.size - 1);
+                    let grow = Math.min(Math.round(captured.length * (P('grow_ratio') || 1)), libs.size - (P('keep_lib') || 1));
                     const grown = grow;
                     for (const l of libs) {
                         if (grow-- <= 0) break;

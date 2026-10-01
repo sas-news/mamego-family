@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,10 @@ module.exports = {
     icon: 'lotusgo',
     spec: [
         ...K.rb('LOTUSGO', '蓮碁', 'lotusgo'),
+        K.params([
+            { key: 'lotus_pts', label: '蓮の得点', min: 0, max: 6, def: 2, hint: '盤上に残った蓮1つにつき終局加点' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST('{ mud: {}, lotus: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -98,8 +102,8 @@ module.exports = {
         [K.ONE, `            const territory = calculateTerritory();`,
 `            const territory = calculateTerritory();
             for (const k in st.lotus) {
-                if (board[k] === 1) territory.black += 2;
-                else if (board[k] === 2) territory.white += 2;
+                if (board[k] === 1) territory.black += (P('lotus_pts') ?? 2);
+                else if (board[k] === 2) territory.white += (P('lotus_pts') ?? 2);
             }`],
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            蓮碁: 石が取られた跡は泥。泥に置いた石は蓮に咲き、残れば終局時+2目<br>

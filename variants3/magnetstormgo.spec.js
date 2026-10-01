@@ -10,14 +10,19 @@ module.exports = {
     icon: 'magnetstormgo',
     spec: [
         ...K.rb('MAGNETSTORMGO', '磁暴碁', 'magnetstormgo'),
+        K.params([
+            { key: 'storm_interval', label: '磁暴の間隔', min: 4, max: 40, def: 10, hint: 'この手数ごとに磁暴が来る' },
+            { key: 'flip_prob', label: '反転確率', min: 0.1, max: 1, def: 0.5, step: 0.05, hint: '各石が極性反転する確率' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 1.1, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 磁暴: 10手ごとに全ての石が50%の確率で極性反転 (両者共通)
-            if (history.length % 10 === 0) {
+            if (history.length % Math.max(1, P('storm_interval') || 10) === 0) {
                 let flips = 0;
                 for (let i = 0; i < board.length; i++) {
-                    if ((board[i] === 1 || board[i] === 2) && Math.random() < 0.5) {
+                    if ((board[i] === 1 || board[i] === 2) && Math.random() < (P('flip_prob') ?? 0.5)) {
                         board[i] = board[i] === 1 ? 2 : 1;
                         flips++;
                         fxGlow(i, '#c084fc', 500);
@@ -29,7 +34,7 @@ module.exports = {
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -37,7 +42,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'磁暴まで ' + (10 - (history.length % 10)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'磁暴まで ' + (Math.max(1, P('storm_interval') || 10) - (history.length % Math.max(1, P('storm_interval') || 10))) + '手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '磁暴は10手ごとに訪れ、盤上の各石が50%の確率で極性 (色) をランダム反転する。',
             '形勢は磁暴で一変する。反転は完全にランダムで両者同条件 — 残った連の形を活かそう。',

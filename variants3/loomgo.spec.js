@@ -10,6 +10,10 @@ module.exports = {
     icon: 'loomgo',
     spec: [
         ...K.rb('LOOMGO', '織物碁', 'loomgo'),
+        K.params([
+            { key: 'weave_pts', label: '織り目の得点', min: 0, max: 4, def: 1, step: 0.5, hint: '織り目1つにつき終局加点' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let loomDetail = { 1: 0, 2: 0 }; // 直近終局で計上した織り目の数`],
         [K.ONE, `            const territory = calculateTerritory();`,
@@ -24,14 +28,14 @@ module.exports = {
                 const hasV = (y > 0 && board[i - BOARD_SIZE] === p) || (y < BOARD_SIZE - 1 && board[i + BOARD_SIZE] === p);
                 if (hasH && hasV) {
                     loomDetail[p]++;
-                    if (p === 1) territory.black++; else territory.white++;
+                    if (p === 1) territory.black += (P('weave_pts') ?? 1); else territory.white += (P('weave_pts') ?? 1);
                 }
             }`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

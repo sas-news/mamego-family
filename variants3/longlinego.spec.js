@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'longlinego',
     spec: [
         ...K.rb('LONGLINEGO', '延縄碁', 'longlinego'),
+        K.params([
+            { key: 'line_min', label: '延縄になる連の長さ', min: 3, max: 12, def: 5, hint: 'この石数以上の連が延縄になる' },
+            { key: 'hook_interval', label: '釣り上げ間隔', min: 2, max: 20, def: 6, hint: 'この手数ごとに釣り上げる' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // 連をたどる補助関数
         [K.ONE, `        function isValidPlacement(cells, player) {`, `        // 延縄: 連の石と大きさを数える
         function groupCells(idx) {
@@ -49,7 +54,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 延縄: 6手ごとに5個以上の連が隣接する敵の孤立石を釣り上げる
-            if (history.length > 0 && history.length % 6 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('hook_interval') || 6) === 0) {
                 const hooked = [];
                 const counted = new Set();
                 for (let i = 0; i < board.length; i++) {
@@ -57,7 +62,7 @@ module.exports = {
                     if ((pl !== 1 && pl !== 2) || counted.has(i)) continue;
                     const g = groupCells(i);
                     g.forEach(c => counted.add(c));
-                    if (g.length < 5) continue;
+                    if (g.length < Math.max(1, P('line_min') || 5)) continue;
                     // 延縄の隣にいる敵の孤立石を探す
                     g.forEach(c => {
                         getNeighbors(c).forEach(n => {
@@ -91,7 +96,7 @@ module.exports = {
                     if ((pl !== 1 && pl !== 2) || counted.has(i)) continue;
                     const g = groupCells(i);
                     g.forEach(c => counted.add(c));
-                    if (g.length < 5) continue;
+                    if (g.length < Math.max(1, P('line_min') || 5)) continue;
                     ctx.strokeStyle = pl === 1 ? 'rgba(103, 232, 249, 0.8)' : 'rgba(8, 145, 178, 0.8)';
                     ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
                     ctx.beginPath();
@@ -105,7 +110,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'延縄まで ' + (6 - (history.length % 6)) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`'延縄まで ' + (Math.max(1, P('hook_interval') || 6) - (history.length % Math.max(1, P('hook_interval') || 6))) + ' 手'`),
         [K.ONE, K.INFO_ALGO, `            延縄碁: 5個以上の連は延縄。6手ごとに隣の敵の孤立石を釣る<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

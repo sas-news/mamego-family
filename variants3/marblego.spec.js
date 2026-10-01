@@ -10,28 +10,44 @@ module.exports = {
     icon: 'marblego',
     spec: [
         ...K.rb('MARBLEGO', '玉石碁', 'marblego'),
+        K.params([
+            { key: 'gravity_dir', label: '重力の向き', def: 'down', options: [{ v: 'down', l: '下へ落ちる' }, { v: 'up', l: '上へ落ちる' }, { v: 'left', l: '左へ落ちる' }, { v: 'right', l: '右へ落ちる' }] },
+            { key: 'cap_ply', label: '打ち切り手数', min: 60, max: 400, def: 140, hint: 'この手数で地数判定' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 玉石ルール: 全ての石が列の底へ転がり落ちる (列内の順序は保持)
+            // 玉石ルール: 全ての石が重力の向きの底へ転がり落ちる (列・行内の順序は保持)
             {
-                let rolled = 0;
-                for (let x = 0; x < BOARD_SIZE; x++) {
-                    const col = [];
-                    for (let y = BOARD_SIZE - 1; y >= 0; y--) {
-                        const v = board[y * BOARD_SIZE + x];
-                        if (v === 1 || v === 2) col.push(v);
+                const GD = P('gravity_dir') || 'down';
+                const lines = [];
+                if (GD === 'down' || GD === 'up') {
+                    for (let x = 0; x < BOARD_SIZE; x++) {
+                        const idxs = [];
+                        for (let y = 0; y < BOARD_SIZE; y++) idxs.push(y * BOARD_SIZE + x);
+                        if (GD === 'down') idxs.reverse();
+                        lines.push(idxs);
                     }
-                    for (let y = BOARD_SIZE - 1; y >= 0; y--) {
-                        const i = y * BOARD_SIZE + x;
-                        const nv = col.length ? col.shift() : 0;
-                        if (board[i] !== nv) { board[i] = nv; rolled++; }
+                } else {
+                    for (let y = 0; y < BOARD_SIZE; y++) {
+                        const idxs = [];
+                        for (let x = 0; x < BOARD_SIZE; x++) idxs.push(y * BOARD_SIZE + x);
+                        if (GD === 'right') idxs.reverse();
+                        lines.push(idxs);
                     }
                 }
+                let rolled = 0;
+                lines.forEach(idxs => {
+                    const stones = idxs.map(i => board[i]).filter(v => v === 1 || v === 2);
+                    idxs.forEach((i, k) => {
+                        const nv = k < stones.length ? stones[k] : 0;
+                        if (board[i] !== nv) { board[i] = nv; rolled++; }
+                    });
+                });
                 if (rolled) cleanUpPieces();
             }
-            // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 長期戦防止: cap_ply 手経過でその時点の地数判定
+            if (history.length >= Math.max(10, P('cap_ply') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, K.RV_ALGO, K.rv([

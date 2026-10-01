@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"maze_seed","label":"迷路のシード","min":0,"max":99,"def":0,"hint":"迷路の形が変わる (0=標準)"},{"key":"cap_ratio","label":"打ち切り手数","min":0.7,"max":2.5,"def":1.4,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1835,7 +1835,7 @@
             if (moveCapFired && history.length === 0) moveCapFired = false;
             // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
             // (1局につき1回のみ発火。死に石選択を取り消して続行する場合は再発火しない)
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.4))) {
                 moveCapFired = true;
                 startDeadStoneSelectionPhase();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
@@ -2767,7 +2767,7 @@
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(3);
             {
-                let seed = (BOARD_SIZE * 2654435761) % 2147483647;
+                let seed = (BOARD_SIZE * 2654435761 + (P('maze_seed') || 0)) % 2147483647;
                 if (seed <= 0) seed += 2147483646;
                 const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
                 const RW = Math.floor(BOARD_SIZE / 2), RH = Math.floor(BOARD_SIZE / 2);

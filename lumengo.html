@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"lumen_margin","label":"地の確定マージン","min":1,"max":1.4,"def":1.05,"step":0.05,"hint":"光量比がこの倍率を超えたら地になる"},{"key":"light_decay","label":"光の減衰指数","min":1,"max":3,"def":2,"step":0.5,"hint":"距離の何乗で光量が減るか"},{"key":"cap_ratio","label":"打ち切り手数","min":0.5,"max":2.5,"def":1.1,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1863,7 +1863,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -2263,10 +2263,12 @@
                 if (board[i] !== 0) continue;
                 const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
                 let lb = 0, lw = 0;
-                bx.forEach(([sx, sy]) => { const d2 = (sx - x) * (sx - x) + (sy - y) * (sy - y); lb += 1 / (d2 + 1); });
-                wx.forEach(([sx, sy]) => { const d2 = (sx - x) * (sx - x) + (sy - y) * (sy - y); lw += 1 / (d2 + 1); });
-                if (lb > lw * 1.05) blackTerritory++;
-                else if (lw > lb * 1.05) whiteTerritory++;
+                const pw = Math.max(1, P('light_decay') || 2);
+                bx.forEach(([sx, sy]) => { const d2 = Math.pow(Math.abs(sx - x), pw) + Math.pow(Math.abs(sy - y), pw); lb += 1 / (d2 + 1); });
+                wx.forEach(([sx, sy]) => { const d2 = Math.pow(Math.abs(sx - x), pw) + Math.pow(Math.abs(sy - y), pw); lw += 1 / (d2 + 1); });
+                const mg = Math.max(1, P('lumen_margin') || 1.05);
+                if (lb > lw * mg) blackTerritory++;
+                else if (lw > lb * mg) whiteTerritory++;
             }
             return { black: blackTerritory, white: whiteTerritory };
         }

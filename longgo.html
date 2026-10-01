@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"jump_min","label":"最小跳躍距離","min":1,"max":8,"def":3,"hint":"前の自石からのチェビシェフ距離"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1798,9 +1798,10 @@
                     }
                 }
                 if (anchor) {
+                    const jm = P('jump_min') || 3;
                     for (const p of cells) {
                         const d = Math.max(Math.abs(p.x - anchor.x), Math.abs(p.y - anchor.y));
-                        if (d < 3) return false;
+                        if (d < jm) return false;
                     }
                 }
             }
@@ -1882,7 +1883,7 @@
                 }
                 if (anchor && lastMove && lastMove.cells.length > 0) {
                     const d = Math.max(Math.abs(lastMove.cells[0].x - anchor.x), Math.abs(lastMove.cells[0].y - anchor.y));
-                    if (d >= 3) {
+                    if (d >= (P('jump_min') || 3)) {
                         fxSlide(anchor.y * BOARD_SIZE + anchor.x, lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, 420); // 長跳の軌跡
                     }
                 }

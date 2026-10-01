@@ -9,12 +9,25 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('LGO', '拐碁', 'lgo'),
+        K.params([
+            { key: 'shape_mode', label: '着手できる形', options: [{ v: 'l', l: 'L字のみ' }, { v: 'li', l: 'L字と直線3連' }], def: 'l' },
+        ]),
         [K.ONE, `            ORIENTATIONS[type] = list;
         });`, `            ORIENTATIONS[type] = list;
         });
 
         // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
-        ORIENTATIONS.STONE = [[[0,0],[0,1],[1,1]],[[0,0],[1,0],[0,1]],[[0,0],[1,0],[1,1]],[[1,0],[0,1],[1,1]]];`],
+        // 設定で直線3連も許可する場合は回転候補に追加される
+        function rebuildStoneShapes() {
+            ORIENTATIONS.STONE = [[[0,0],[0,1],[1,1]],[[0,0],[1,0],[0,1]],[[0,0],[1,0],[1,1]],[[1,0],[0,1],[1,1]]];
+            if (P('shape_mode') === 'li') {
+                ORIENTATIONS.STONE.push([[0,0],[0,1],[0,2]], [[0,0],[1,0],[2,0]]);
+            }
+        }
+        rebuildStoneShapes();
+        function onVariantParam(p) {
+            if (p.key === 'shape_mode') rebuildStoneShapes();
+        }`],
         [K.ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`, `        const PIECE_SIZE = 3;`],
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
 
@@ -27,6 +40,11 @@ module.exports = {
                 };
                 const _cur = _norm(cells);
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
+                // 設定で直線3連も許可する場合は候補に追加
+                if (P('shape_mode') === 'li') {
+                    _allow.push(_norm([{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }]));
+                    _allow.push(_norm([{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }]));
+                }
                 if (!_allow.includes(_cur)) return false;
             }`],
         [K.ONE, K.RV_ALGO, K.rv(['着手はL字 (拐) の3連ピースのみ (回転=⟳ボタン・Rキー・右クリック・ホイール)。','ピースが入らない3マス未満の連結空領域は窒息領域。'])],

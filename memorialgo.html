@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"grudge_pts","label":"祟りの得点","min":0,"max":4,"def":1,"hint":"踏まれた祟りの地1つにつき終局時に返る目"},{"key":"cap_ratio","label":"打ち切り手数","min":0.5,"max":2.5,"def":0.8,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1865,7 +1865,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -2224,8 +2224,8 @@
             Object.keys(st.grudge).forEach(k => {
                 const i = +k, ow = st.grudge[i];
                 if (board[i] !== (ow === 1 ? 2 : 1)) return;
-                memDetail[ow]++;
-                if (ow === 1) territory.black++; else territory.white++;
+                memDetail[ow] += (P('grudge_pts') ?? 1);
+                if (ow === 1) territory.black += (P('grudge_pts') ?? 1); else territory.white += (P('grudge_pts') ?? 1);
             });
 
             const blackTotal = territory.black + captures[1];

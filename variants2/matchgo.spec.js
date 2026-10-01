@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('MATCHGO', '三消碁', 'matchgo'),
+        K.params([
+            { key: 'match_len', label: '消滅する連の長さ', min: 2, max: 6, def: 3, hint: 'この長さ以上の同色連が消える' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.7, max: 2.5, def: 1.4, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
@@ -22,7 +26,7 @@ module.exports = {
                         const prv = board[y * BOARD_SIZE + x - 1];
                         if (x < BOARD_SIZE && cur === prv && (cur === 1 || cur === 2)) { run++; }
                         else {
-                            if (run >= 3) for (let k = x - run; k < x; k++) vanish.add(y * BOARD_SIZE + k);
+                            if (run >= (P('match_len') || 3)) for (let k = x - run; k < x; k++) vanish.add(y * BOARD_SIZE + k);
                             run = 1;
                         }
                     }
@@ -34,7 +38,7 @@ module.exports = {
                         const prv = board[(y - 1) * BOARD_SIZE + x];
                         if (y < BOARD_SIZE && cur === prv && (cur === 1 || cur === 2)) { run++; }
                         else {
-                            if (run >= 3) for (let k = y - run; k < y; k++) vanish.add(k * BOARD_SIZE + x);
+                            if (run >= (P('match_len') || 3)) for (let k = y - run; k < y; k++) vanish.add(k * BOARD_SIZE + x);
                             run = 1;
                         }
                     }
@@ -63,7 +67,21 @@ module.exports = {
             '相手の列を伸ばして消すか、自分の3連を収穫して得点にするか — 長い連は危険な財産。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
-        ...K.MOVE_CAP_SPEC,
+        // 打ち切り手数は設定で調整可能
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 新規対局 (履歴空) で打ち切りを再武装
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            // (1局につき1回のみ発火。死に石選択を取り消して続行する場合は再発火しない)
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.4))) {
+                moveCapFired = true;
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

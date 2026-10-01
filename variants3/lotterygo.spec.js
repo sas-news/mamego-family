@@ -10,6 +10,11 @@ module.exports = {
     icon: 'lotterygo',
     spec: [
         ...K.rb('LOTTERYGO', '宝籤碁', 'lotterygo'),
+        K.params([
+            { key: 'win_prob', label: '大当りの確率', min: 0.05, max: 0.6, def: 0.2, step: 0.05 },
+            { key: 'lose_prob', label: 'ハズレの確率', min: 0, max: 0.5, def: 0.15, step: 0.05 },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { skipNext: { 1: false, 2: false }, lastLot: '' }; // くじ結果とスキップ`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -43,7 +48,8 @@ module.exports = {
                 const r = s - Math.floor(s);
                 const p0 = move.cells[0];
                 const pi = p0.y * BOARD_SIZE + p0.x;
-                if (r < 0.2) {
+                const wp = P('win_prob') ?? 0.2, lp = P('lose_prob') ?? 0.15;
+                if (r < wp) {
                     // 大当り: 隣接する空点に追加石
                     const emp = getNeighbors(pi).filter(q => board[q] === 0);
                     if (emp.length > 0) {
@@ -55,7 +61,7 @@ module.exports = {
                         captures[player] += 1;
                         st.lastLot = '大当り (+1目)';
                     }
-                } else if (r < 0.35) {
+                } else if (r < wp + lp) {
                     // ハズレ: 次の自分の手番が飛ばされる
                     st.skipNext[player] = true;
                     st.lastLot = 'ハズレ';
@@ -66,7 +72,7 @@ module.exports = {
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 endGameByScore();
                 return;
             }

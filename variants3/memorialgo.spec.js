@@ -10,6 +10,10 @@ module.exports = {
     icon: 'memorialgo',
     spec: [
         ...K.rb('MEMORIALGO', '供養碁', 'memorialgo'),
+        K.params([
+            { key: 'grudge_pts', label: '祟りの得点', min: 0, max: 4, def: 1, hint: '踏まれた祟りの地1つにつき終局時に返る目' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { grudge: {} }; // 祟り: idx -> 供養されなかった側 (1|2)
         let memDetail = { 1: 0, 2: 0 };`],
@@ -53,14 +57,14 @@ module.exports = {
             Object.keys(st.grudge).forEach(k => {
                 const i = +k, ow = st.grudge[i];
                 if (board[i] !== (ow === 1 ? 2 : 1)) return;
-                memDetail[ow]++;
-                if (ow === 1) territory.black++; else territory.white++;
+                memDetail[ow] += (P('grudge_pts') ?? 1);
+                if (ow === 1) territory.black += (P('grudge_pts') ?? 1); else territory.white += (P('grudge_pts') ?? 1);
             });`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

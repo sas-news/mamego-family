@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'lanternloopgo',
     spec: [
         ...K.rb('LANTERNLOOPGO', '巡灯碁', 'lanternloopgo'),
+        K.params([
+            { key: 'win_ratio', label: '勝利に要する灯籠比', min: 0.5, max: 1, def: 1, step: 0.05, hint: '全灯籠×この比だけ灯せば即勝' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 巡灯: 着手点が星の点なら自分の灯籠に灯が入る。全て灯すと一周で即勝
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -57,7 +61,7 @@ module.exports = {
                 if (stars.includes(pi) && !st.lit[player].includes(pi)) {
                     st.lit[player].push(pi);
                     fxGlow(pi, '#fbbf24', 1200);
-                    if (st.lit[player].length >= stars.length) {
+                    if (st.lit[player].length >= Math.ceil(stars.length * (P('win_ratio') || 1))) {
                         gameOver = true;
                         fxText(pi, '一周!', '#fbbf24', 1600);
                         endGameByScore();
@@ -86,7 +90,7 @@ module.exports = {
                     ctx.restore();
                 });
             })`),
-        ...K.EVENT_CHIP_SPEC(`'灯籠 ' + st.lit[turn].length + '/' + getStarPoints(BOARD_SIZE).length`),
+        ...K.EVENT_CHIP_SPEC(`'灯籠 ' + st.lit[turn].length + '/' + Math.ceil(getStarPoints(BOARD_SIZE).length * (P('win_ratio') || 1))`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            巡灯碁: 星の点に着手すると灯籠に灯が入る。全ての灯籠を一周させると即勝<br>
             PC: クリックで配置<br>

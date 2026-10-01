@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"attract_dist","label":"引力の届く距離","min":2,"max":4,"def":2,"hint":"異極の敵石を何マス先から引き寄せるか"},{"key":"repel_push","label":"斥力の押し出し","min":1,"max":3,"def":1,"hint":"同極の敵石を何マス退かせるか"},{"key":"cap_ratio","label":"打ち切り手数","min":0.5,"max":2.5,"def":0.75,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1814,7 +1814,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1867,21 +1867,22 @@
             st.pol[mi] = mine;
             const D = [[1, 0], [-1, 0], [0, 1], [0, -1]];
             const shifts = [];
+            const RP = Math.max(1, P('repel_push') || 1), AD = Math.max(2, P('attract_dist') || 2);
             D.forEach(([dx, dy]) => {
                 const bx = move.cells[0].x, by = move.cells[0].y;
                 const ex = bx + dx, ey = by + dy;
                 if (ex >= 0 && ey >= 0 && ex < BOARD_SIZE && ey < BOARD_SIZE) {
                     const ei = ey * BOARD_SIZE + ex;
                     if (board[ei] === opponent && st.pol[ei] === mine) {
-                        const tx = ex + dx, ty = ey + dy;
+                        const tx = ex + dx * RP, ty = ey + dy * RP;
                         if (tx >= 0 && ty >= 0 && tx < BOARD_SIZE && ty < BOARD_SIZE && board[ty * BOARD_SIZE + tx] === 0) {
                             shifts.push([ei, ty * BOARD_SIZE + tx]);
                         }
                     }
                 }
-                const fx2 = bx + dx * 2, fy2 = by + dy * 2;
+                const fx2 = bx + dx * AD, fy2 = by + dy * AD;
                 if (fx2 >= 0 && fy2 >= 0 && fx2 < BOARD_SIZE && fy2 < BOARD_SIZE) {
-                    const fi = fy2 * BOARD_SIZE + fx2, m2 = (by + dy) * BOARD_SIZE + (bx + dx);
+                    const fi = fy2 * BOARD_SIZE + fx2, m2 = (by + dy * (AD - 1)) * BOARD_SIZE + (bx + dx * (AD - 1));
                     if (board[fi] === opponent && st.pol[fi] && st.pol[fi] !== mine && board[m2] === 0) {
                         shifts.push([fi, m2]);
                     }

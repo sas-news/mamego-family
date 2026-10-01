@@ -130,12 +130,8 @@
             </button>
         </div>
 
-        <!-- 層選択 -->
-        <div id="layerSel" class="w-full flex justify-between items-center gap-2">
-            <button class="lvBtn flex-1 py-1.5 px-2 text-xs font-bold border rounded-xl transition-all" data-z="0">層1</button>
-            <button class="lvBtn flex-1 py-1.5 px-2 text-xs font-bold border rounded-xl transition-all" data-z="1">層2</button>
-            <button class="lvBtn flex-1 py-1.5 px-2 text-xs font-bold border rounded-xl transition-all" data-z="2">層3</button>
-        </div>
+        <!-- 層選択 (ボタンは層数に応じてJSで生成) -->
+        <div id="layerSel" class="w-full flex justify-between items-center gap-2"></div>
 
         <!-- 死に石選択フェーズ用バナー -->
         <div id="bannerDeadStones" class="hidden w-full flex flex-col gap-2 p-3 bg-amber-50 text-amber-900 text-xs sm:text-sm rounded-xl border border-amber-200 shadow-sm">
@@ -326,7 +322,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"layer_n","label":"層の数","min":2,"max":6,"def":3,"hint":"盤を何層にするか (変更時は新規対局から有効)"},{"key":"cap_ratio","label":"打ち切り手数","min":0.5,"max":2.5,"def":0.9,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -645,13 +641,14 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        const LV_N = 3;
-        let st = { layer: 1, lv: {} }; // lv[i] = [下,中,上] の色 (0=空)
+        let LV_N = Math.max(2, P('layer_n') || 3);
+        let st = { layer: 1, lv: {} }; // lv[i] = 層ごとの色 (0=空)
         function initSt() { st = { layer: 1, lv: {} }; }
-        function lvGet(lvm, i, z) { const c = lvm[i]; return c ? c[z] : 0; }
+        function lvGet(lvm, i, z) { const c = lvm[i]; return c ? (c[z] || 0) : 0; }
         function lvSet(lvm, i, z, v) {
             let c = lvm[i];
-            if (!c) c = lvm[i] = [0, 0, 0];
+            if (!c) c = lvm[i] = new Array(LV_N).fill(0);
+            while (c.length <= z) c.push(0);
             c[z] = v;
         }
         function lvTop(lvm, i) {
@@ -700,19 +697,40 @@
             }
             return dead;
         }
-        // 層ボタンの配線
-        document.querySelectorAll('#layerSel .lvBtn').forEach(b => {
-            b.addEventListener('click', () => {
-                st.layer = +b.dataset.z + 1;
-                document.querySelectorAll('#layerSel .lvBtn').forEach(o => {
-                    const on = +o.dataset.z + 1 === st.layer;
-                    o.classList.toggle('bg-neutral-900', on);
-                    o.classList.toggle('text-white', on);
+        // 層ボタンを層数に合わせて生成・配線
+        function rebuildLayerButtons() {
+            const sel = document.getElementById('layerSel');
+            if (!sel) return;
+            sel.innerHTML = '';
+            if (st.layer > LV_N) st.layer = LV_N;
+            for (let z = 0; z < LV_N; z++) {
+                const b = document.createElement('button');
+                b.className = 'lvBtn flex-1 py-1.5 px-2 text-xs font-bold border rounded-xl transition-all';
+                b.dataset.z = z;
+                b.textContent = '層' + (z + 1);
+                b.addEventListener('click', () => {
+                    st.layer = +b.dataset.z + 1;
+                    document.querySelectorAll('#layerSel .lvBtn').forEach(o => {
+                        const on = +o.dataset.z + 1 === st.layer;
+                        o.classList.toggle('bg-neutral-900', on);
+                        o.classList.toggle('text-white', on);
+                    });
                 });
-            });
-        });
-        const _b0 = document.querySelectorAll('#layerSel .lvBtn')[0];
-        if (_b0) { _b0.classList.add('bg-neutral-900'); _b0.classList.add('text-white'); }
+                sel.appendChild(b);
+            }
+            const _b0 = document.querySelectorAll('#layerSel .lvBtn')[st.layer - 1];
+            if (_b0) { _b0.classList.add('bg-neutral-900'); _b0.classList.add('text-white'); }
+        }
+        rebuildLayerButtons();
+        function onVariantParam(p) {
+            if (p.key === 'layer_n') {
+                LV_N = Math.max(2, P('layer_n') || 3);
+                // 既存セルの天面を新しい層数で再計算して盤と整合させる
+                for (const k in st.lv) { const i = +k; board[i] = lvTop(st.lv, i); }
+                if (st.layer > LV_N) st.layer = LV_N;
+                rebuildLayerButtons();
+            }
+        }
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -1891,7 +1909,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

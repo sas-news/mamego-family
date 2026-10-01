@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('LEECHGO', '吸生碁', 'leechgo'),
+        K.params([
+            { key: 'grow_ratio', label: '自生倍率', min: 0.5, max: 3, def: 1, step: 0.5, hint: '取った数に対する自生の倍率' },
+            { key: 'keep_lib', label: '残す呼吸点', min: 1, max: 4, def: 1, hint: '肥大化しても必ず残る呼吸点の数' },
+        ]),
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
@@ -19,7 +23,7 @@ module.exports = {
                     const grp = getConnectedGroup(anchor, player);
                     const libs = new Set();
                     grp.forEach(g => getNeighbors(g).forEach(n => { if (board[n] === 0) libs.add(n); }));
-                    let grow = Math.min(captured.length, libs.size - 1);
+                    let grow = Math.min(Math.round(captured.length * (P('grow_ratio') || 1)), libs.size - (P('keep_lib') || 1));
                     const grown = grow;
                     for (const l of libs) {
                         if (grow-- <= 0) break;

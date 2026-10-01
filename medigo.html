@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"heal_loss","label":"治癒連の散り数","min":1,"max":5,"def":1,"hint":"治癒された連が取られた時に散る石の数"},{"key":"cap_ratio","label":"打ち切り手数","min":0.7,"max":2.5,"def":1.4,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1818,7 +1818,7 @@
             if (moveCapFired && history.length === 0) moveCapFired = false;
             // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
             // (1局につき1回のみ発火。死に石選択を取り消して続行する場合は再発火しない)
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.4))) {
                 moveCapFired = true;
                 startDeadStoneSelectionPhase();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
@@ -1867,9 +1867,10 @@
                     grp.forEach(g => seen.add(g));
                     if (grp.some(g => medMark.has(g))) {
                         grp.forEach(g => medMark.delete(g));
-                        finalRemove.push(grp[0]);
-                        // 治癒発動: 1石だけ散り連が耐える
-                        grp.slice(1).forEach(g => fxGlow(g, 'rgba(40,200,110,0.9)', 820));
+                        // 治癒発動: 治癒連は heal_loss 個だけ散り連が耐える
+                        const loss = Math.min(grp.length, Math.max(1, P('heal_loss') || 1));
+                        finalRemove.push(...grp.slice(0, loss));
+                        grp.slice(loss).forEach(g => fxGlow(g, 'rgba(40,200,110,0.9)', 820));
                         fxText(grp[0], '耐えた', '#34d399', 1000);
                     } else {
                         finalRemove.push(...grp);
