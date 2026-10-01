@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"friction_max","label":"放電する静電気量","min":2,"max":24,"def":6},{"key":"zap_radius","label":"放電の範囲","min":1,"max":3,"def":1,"unit":"マス"},{"key":"cap_ratio","label":"打ち切り手数 (盤面比)","min":0.3,"max":1.5,"step":0.05,"def":0.75}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1794,7 +1794,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1854,10 +1854,10 @@
                 const contact = getNeighbors(bc.y * BOARD_SIZE + bc.x).filter(n => board[n] === opponent).length;
                 st.fr[player] += contact;
                 if (contact) fxGlow(bc.y * BOARD_SIZE + bc.x, '#facc15', 500);
-                if (st.fr[player] >= 6) {
+                if (st.fr[player] >= (P('friction_max') || 6)) {
                     st.fr[player] = 0;
                     let zapped = 0;
-                    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -(P('zap_radius') || 1); dy <= (P('zap_radius') || 1); dy++) for (let dx = -(P('zap_radius') || 1); dx <= (P('zap_radius') || 1); dx++) {
                         const nx = bc.x + dx, ny = bc.y + dy;
                         if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) continue;
                         const i0 = ny * BOARD_SIZE + nx;
@@ -2741,7 +2741,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('静電 ' + (st.fr ? st.fr[turn] || 0 : 0) + '/6');
+                const et = gameOver ? '' : ('静電 ' + (st.fr ? st.fr[turn] || 0 : 0) + '/' + (P('friction_max') || 6));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

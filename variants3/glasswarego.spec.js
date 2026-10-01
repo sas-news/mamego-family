@@ -32,7 +32,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -48,6 +48,10 @@ module.exports = {
     icon: 'glasswarego',
     spec: [
         ...K.rb('GLASSWAREGO', '硝子碁', 'glasswarego'),
+        K.params([
+            { key: 'glass_fog', label: '曇るまでの手数', min: 2, max: 30, def: 8, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 硝子: 透明期 (8手) の石。敵にも味方にも「空点」に見える
@@ -75,7 +79,7 @@ module.exports = {
 
             // 硝子碁: 透明期 (8手) を過ぎた石が曇って確定する
             Object.keys(st.clear).forEach(k => {
-                if (history.length - st.clear[k] >= GLASS_FOG || board[k] === 0) {
+                if (history.length - st.clear[k] >= (P('glass_fog') || GLASS_FOG) || board[k] === 0) {
                     if (board[k] !== 0) { fxGlow(+k, '#93c5fd', 600); fxText(+k, '曇り', '#93c5fd', 800); }
                     delete st.clear[k];
                 }

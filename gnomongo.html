@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"shadow_interval","label":"日影の移動間隔","min":2,"max":30,"def":8,"unit":"手"},{"key":"gnomon_pts","label":"日影の得点","min":1,"max":8,"def":2,"unit":"点"},{"key":"cap_ratio","label":"打ち切り手数 (盤面比)","min":0.3,"max":1.5,"step":0.05,"def":0.9}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -643,7 +643,7 @@
         // 圭表の日影: 8手ごとに影の方角が東→南→西→北と回る
         const SHADOW_DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
         const SHADOW_NAMES = ['東', '南', '西', '北'];
-        const shadowDir = () => SHADOW_DIRS[Math.floor(history.length / 8) % 4];
+        const shadowDir = () => SHADOW_DIRS[Math.floor(history.length / Math.max(1, P('shadow_interval') || 8)) % 4];
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -1823,7 +1823,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1883,7 +1883,7 @@
             const gx2 = (gIdx % BOARD_SIZE) + gd[0], gy2 = ((gIdx / BOARD_SIZE) | 0) + gd[1];
             if (gx2 >= 0 && gx2 < BOARD_SIZE && gy2 >= 0 && gy2 < BOARD_SIZE
                 && board[gy2 * BOARD_SIZE + gx2] === opponent) {
-                st.score[player] += 2;
+                st.score[player] += (P('gnomon_pts') || 2);
             }
 
             turn = opponent;
@@ -2768,7 +2768,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('日影 ' + SHADOW_NAMES[Math.floor(history.length / 8) % 4]);
+                const et = gameOver ? '' : ('日影 ' + SHADOW_NAMES[Math.floor(history.length / Math.max(1, P('shadow_interval') || 8)) % 4]);
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

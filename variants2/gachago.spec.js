@@ -9,12 +9,19 @@ module.exports = {
     kind: 'gacha',
     spec: [
         ...K.rb('GACHAGO', '抽選碁', 'gachago'),
+        K.params([
+            { key: 'ssr_interval', label: 'SSRの周期', min: 4, max: 48, def: 12, unit: '手' },
+            { key: 'r_interval', label: 'Rの周期', min: 2, max: 16, def: 4, unit: '手' },
+            { key: 'ssr_mult', label: 'SSRの取り倍率', min: 2, max: 8, def: 3, unit: '倍' },
+            { key: 'r_mult', label: 'Rの取り倍率', min: 1, max: 6, def: 2, unit: '倍' },
+        ]),
         [K.ONE, '        function executeMove(move, player) {',
 `        // 抽選碁: その手に供給される石のレアリティ (12の倍数=SSR x3, 4の倍数=R x2, 他=N x1)
         function rarityOf(n) {
             const m = n === undefined ? history.length : n;
-            return m % 12 === 0 ? 3 : m % 4 === 0 ? 2 : 1;
+            return m % Math.max(1, P('ssr_interval') || 12) === 0 ? 3 : m % Math.max(1, P('r_interval') || 4) === 0 ? 2 : 1;
         }
+        function multOf(r) { return r === 3 ? (P('ssr_mult') || 3) : r === 2 ? (P('r_mult') || 2) : 1; }
         function rarityName(r) { return r === 3 ? 'SSR' : r === 2 ? 'R' : 'N'; }
 
         function executeMove(move, player) {`],
@@ -36,10 +43,10 @@ module.exports = {
             }
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
-                captures[player] += captured.length * rarityOf();
+                captures[player] += captured.length * multOf(rarityOf());
                 if (rarityOf() > 1) {
                     captured.forEach(idx => fxGlow(idx, '#facc15', 700));
-                    fxText(gi, rarityName(rarityOf()) + ' ×' + rarityOf() + '!', rarityOf() === 3 ? '#facc15' : '#38bdf8', 1200);
+                    fxText(gi, rarityName(rarityOf()) + ' ×' + multOf(rarityOf()) + '!', rarityOf() === 3 ? '#facc15' : '#38bdf8', 1200);
                 }
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -72,7 +79,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'ガチャ: ' + rarityName(rarityOf()) + (rarityOf() > 1 ? ' 取りx' + rarityOf() : '')`),
+        ...K.EVENT_CHIP_SPEC(`'ガチャ: ' + rarityName(rarityOf()) + (rarityOf() > 1 ? ' 取りx' + multOf(rarityOf()) : '')`),
         K.CUE_STARS(`            // SSR/Rの手は盤に輝きが降る
             {
                 const r = rarityOf();

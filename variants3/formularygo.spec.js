@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'formularygo',
     spec: [
         ...K.rb('FORMULARYGO', '処方碁', 'formularygo'),
+        K.params([
+            { key: 'run_need', label: '解毒に必要な連の長さ', min: 2, max: 6, def: 3, unit: '連' },
+            { key: 'cure_max', label: '一度に解毒できる数', min: 1, max: 8, def: 2, unit: '個' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         // 処方完成: 着手した石を通る処方方向 (黒=横, 白=縦) の3連以上で、隣接する敵石を治療除去
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -45,7 +50,7 @@ module.exports = {
                         nx += dir[0] * s; ny += dir[1] * s;
                     }
                 }
-                if (run.length >= 3) {
+                if (run.length >= (P('run_need') || 3)) {
                     const cured = [];
                     for (const r of run) {
                         for (const s of [1, -1]) {
@@ -53,7 +58,7 @@ module.exports = {
                             if (ni >= 0 && board[ni] === opponent && !cured.includes(ni)) cured.push(ni);
                         }
                     }
-                    cured.slice(0, 2).forEach(ni => {
+                    cured.slice(0, P('cure_max') || 2).forEach(ni => {
                         board[ni] = 0;
                         captures[player]++;
                         fxBurst(ni, '#34d399', 10, 1.5);

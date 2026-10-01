@@ -10,6 +10,9 @@ module.exports = {
     icon: 'formationgo',
     spec: [
         ...K.rb('FORMATIONGO', '密集碁', 'formationgo'),
+        K.params([
+            { key: 'cap_moves', label: '打ち切り手数', min: 50, max: 400, def: 140, unit: '手' },
+        ]),
         // 密集隊形: 自石が1つでも盤にあれば、着手は自石への直交隣接に限る
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
@@ -30,7 +33,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

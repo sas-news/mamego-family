@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"goal_radius","label":"ゴールの広さ","min":1,"max":4,"def":1,"unit":"マス"},{"key":"goal_pts","label":"ゴール1回の得点","min":1,"max":5,"def":1,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1161,9 +1161,10 @@
                 ctx.strokeStyle = alphaColor('#16a34a', 0.8);
                 ctx.lineWidth = Math.max(1.5, cellSize * 0.06);
                 ctx.setLineDash([cellSize * 0.15, cellSize * 0.10]);
-                const gx = padding + (c - 1) * cellSize - cellSize / 2;
-                const gy = padding + (c - 1) * cellSize - cellSize / 2;
-                ctx.strokeRect(gx, gy, cellSize * 3, cellSize * 3);
+                const _gr = P('goal_radius') || 1;
+                const gx = padding + (c - _gr) * cellSize - cellSize / 2;
+                const gy = padding + (c - _gr) * cellSize - cellSize / 2;
+                ctx.strokeRect(gx, gy, cellSize * (_gr * 2 + 1), cellSize * (_gr * 2 + 1));
                 ctx.restore();
             }
 
@@ -1858,8 +1859,8 @@
             {
                 const c = Math.floor(BOARD_SIZE / 2);
                 const p = move.cells[0];
-                if (Math.abs(p.x - c) <= 1 && Math.abs(p.y - c) <= 1) {
-                    goals[player]++;
+                if (Math.abs(p.x - c) <= (P('goal_radius') || 1) && Math.abs(p.y - c) <= (P('goal_radius') || 1)) {
+                    goals[player] += (P('goal_pts') || 1);
                     const gi = p.y * BOARD_SIZE + p.x;
                     fxGlow(gi, '#4ade80', 900);
                     fxBurst(gi, '#4ade80', 10, 1.5);

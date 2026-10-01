@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,17 +27,30 @@ module.exports = {
     icon: 'fortressgo',
     spec: [
         ...K.rb('FORTRESSGO', '砦碁', 'fortressgo'),
+        K.params([
+            { key: 'fort_radius', label: '砦の広さ', min: 1, max: 3, def: 1, unit: 'マス' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 砦: 3つの3x3砦 (上左・上右・下中央の三角配置)
         const FORT_F = [[0.22, 0.2], [0.78, 0.2], [0.5, 0.78]];
-        const FORT_SET = new Set();
-        FORT_F.forEach(([fx, fy]) => {
-            const cx = Math.round(fx * (BOARD_SIZE - 1)), cy = Math.round(fy * (BOARD_SIZE - 1));
-            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-                const x = cx + dx, y = cy + dy;
-                if (x >= 0 && y >= 0 && x < BOARD_SIZE && y < BOARD_SIZE) FORT_SET.add(y * BOARD_SIZE + x);
-            }
-        });`],
+        let FORT_SET = new Set();
+        function rebuildFortSet() {
+            FORT_SET = new Set();
+            const fr = P('fort_radius') || 1;
+            FORT_F.forEach(([fx, fy]) => {
+                const cx = Math.round(fx * (BOARD_SIZE - 1)), cy = Math.round(fy * (BOARD_SIZE - 1));
+                for (let dy = -fr; dy <= fr; dy++) for (let dx = -fr; dx <= fr; dx++) {
+                    const x = cx + dx, y = cy + dy;
+                    if (x >= 0 && y >= 0 && x < BOARD_SIZE && y < BOARD_SIZE) FORT_SET.add(y * BOARD_SIZE + x);
+                }
+            });
+        }
+        rebuildFortSet();
+        // 設定変更で砦を再構成
+        function onVariantParam(p) {
+            if (p.key === 'fort_radius') rebuildFortSet();
+        }`],
         // 砦内の石は攻撃不能 (無限の呼吸を持つ)
         [K.ONE, `                    while (queue.length > 0) {
                         const curr = queue.shift();

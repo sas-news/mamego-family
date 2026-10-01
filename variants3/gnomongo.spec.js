@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,11 +64,16 @@ module.exports = {
     icon: 'gnomongo',
     spec: [
         ...K.rb('GNOMONGO', '圭表碁', 'gnomongo'),
+        K.params([
+            { key: 'shadow_interval', label: '日影の移動間隔', min: 2, max: 30, def: 8, unit: '手' },
+            { key: 'gnomon_pts', label: '日影の得点', min: 1, max: 8, def: 2, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT, `
         // 圭表の日影: 8手ごとに影の方角が東→南→西→北と回る
         const SHADOW_DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
         const SHADOW_NAMES = ['東', '南', '西', '北'];
-        const shadowDir = () => SHADOW_DIRS[Math.floor(history.length / 8) % 4];`, ''),
+        const shadowDir = () => SHADOW_DIRS[Math.floor(history.length / Math.max(1, P('shadow_interval') || 8)) % 4];`, ''),
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;`, `            consecutivePasses = 0;
@@ -80,7 +85,7 @@ module.exports = {
             const gx2 = (gIdx % BOARD_SIZE) + gd[0], gy2 = ((gIdx / BOARD_SIZE) | 0) + gd[1];
             if (gx2 >= 0 && gx2 < BOARD_SIZE && gy2 >= 0 && gy2 < BOARD_SIZE
                 && board[gy2 * BOARD_SIZE + gx2] === opponent) {
-                st.score[player] += 2;
+                st.score[player] += (P('gnomon_pts') || 2);
             }
 
             turn = opponent;`],
@@ -102,7 +107,7 @@ module.exports = {
             }`),
         ...GAME_OVER,
         ...SCORE_END,
-        ...K.EVENT_CHIP_SPEC(`'日影 ' + SHADOW_NAMES[Math.floor(history.length / 8) % 4]`),
+        ...K.EVENT_CHIP_SPEC(`'日影 ' + SHADOW_NAMES[Math.floor(history.length / Math.max(1, P('shadow_interval') || 8)) % 4]`),
         [K.ONE, K.INFO_ALGO, `                        圭表碁: 8手ごとに日影の方角が東→南→西→北と回る。着手点の影の方角に敵石がいれば+2点。<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

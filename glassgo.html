@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"shatter_depth","label":"連鎖砕けの深さ","min":1,"max":8,"def":2,"unit":"段"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1826,7 +1826,7 @@
                 const queue = [...captured];
                 while (queue.length > 0) {
                     const c = queue.shift();
-                    if (depth.get(c) >= SHATTER_DEPTH) continue;
+                    if (depth.get(c) >= (P('shatter_depth') || SHATTER_DEPTH)) continue;
                     getNeighbors(c).forEach(n => {
                         if (!depth.has(n) && board[n] !== 0) {
                             depth.set(n, depth.get(c) + 1);

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap_moves') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -28,6 +28,9 @@ module.exports = {
     icon: 'foodchaingo',
     spec: [
         ...K.rb('FOODCHAINGO', '捕食碁', 'foodchaingo'),
+        K.params([
+            { key: 'cap_moves', label: '打ち切り手数', min: 50, max: 400, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { cnt: { 1: 0, 2: 0 }, tier: {} }; // 各プレイヤーの着手数・石の階層 (0草 1虫 2鳥 3獣)`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `

@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'gagakugo',
     spec: [
         ...K.rb('GAGAKUGO', '雅楽碁', 'gagakugo'),
+        K.params([
+            { key: 'gagaku_pts', label: '雅楽の得点', min: 1, max: 8, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         ...ST(ST_INIT),
         // 三種編成: 自分の着手数%3 で 笙(0)・篳篥(1)・箏(2) を担う。自連に三種揃うと +2目
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -61,9 +65,9 @@ module.exports = {
                     const g = getConnectedGroup(mi, player);
                     const kinds = new Set(g.map(j => st.inst[j]).filter(v => v !== undefined));
                     if (kinds.size >= 3) {
-                        captures[player] += 2;
+                        captures[player] += (P('gagaku_pts') || 2);
                         g.forEach(j => fxGlow(j, '#fcd34d', 700));
-                        fxText(mi, '雅楽 +2', '#fbbf24', 1300);
+                        fxText(mi, '雅楽 +' + (P('gagaku_pts') || 2), '#fbbf24', 1300);
                     }
                 }
             }

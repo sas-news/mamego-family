@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"gohei_lib","label":"御幣の追加呼吸","min":1,"max":4,"def":1},{"key":"gohei_pts","label":"御幣所の敵石の得点","min":1,"max":8,"def":2,"unit":"目"},{"key":"cap_ratio","label":"打ち切り手数 (盤面比)","min":0.3,"max":1.5,"step":0.05,"def":0.9}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1815,7 +1815,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1854,8 +1854,8 @@
             if (captured.length > 0) {
                 let gh = 0;
                 captured.forEach(idx => { if (isGohei(idx)) gh++; board[idx] = 0; });
-                captures[player] += captured.length + gh * 2;
-                if (gh > 0) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '御幣 +' + (gh * 2), '#dc2626', 1200);
+                captures[player] += captured.length + gh * (P('gohei_pts') || 2);
+                if (gh > 0) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '御幣 +' + (gh * (P('gohei_pts') || 2)), '#dc2626', 1200);
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {
@@ -1917,7 +1917,7 @@
                             }
                         });
                     }
-                    if (group.some(gi => isGohei(gi))) liberties += 1; // 御幣を立てた連は聖別される
+                    if (group.some(gi => isGohei(gi))) liberties += (P('gohei_lib') || 1); // 御幣を立てた連は聖別される
 
                     if (liberties <= 0) {
                         captured.push(...group);

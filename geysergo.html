@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"erupt_interval","label":"噴出の間隔","min":2,"max":15,"def":5,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1179,7 +1179,8 @@
             // 間欠泉: 噴き口に水色の二重環 (噴火が近づくほど沸き立つ)
             {
                 const c = Math.floor(BOARD_SIZE / 2);
-                const heat = (history.length % 5) / 5; // 噴火間近ほど1に近い
+                const _ei = P('erupt_interval') || 5;
+                const heat = (history.length % _ei) / _ei; // 噴火間近ほど1に近い
                 const now = fxNow();
                 ctx.save();
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
@@ -1869,7 +1870,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 間欠泉ルール: 5手ごとに噴火。噴き口 (中央以外の星) 上の石は吹き飛んでアゲハマへ。
-            if (history.length % 5 === 0) {
+            if (history.length % Math.max(1, P('erupt_interval') || 5) === 0) {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
                 let blown = 0;
                 for (const pt of getStarPoints(N)) {
@@ -2762,7 +2763,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('噴火まで ' + (5 - history.length % 5) + ' 手');
+                const et = gameOver ? '' : ('噴火まで ' + ((P('erupt_interval') || 5) - history.length % (P('erupt_interval') || 5)) + ' 手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

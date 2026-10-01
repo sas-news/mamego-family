@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"sun_interval","label":"太陽の移動間隔","min":1,"max":12,"def":3,"unit":"手"},{"key":"cap_ratio","label":"打ち切り手数 (盤面比)","min":0.3,"max":1.5,"step":0.05,"def":0.75}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1801,7 +1801,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1838,7 +1838,7 @@
             const opponent = player === 1 ? 2 : 1;
             // 夏至碁: 太陽が8方位を巡り、影の向きと長さが変わる。影の敵石は取れない
             const DIRS = [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]];
-            const sun = Math.floor(history.length / 3) % 8;
+            const sun = Math.floor(history.length / Math.max(1, P('sun_interval') || 3)) % 8;
             const d = DIRS[(sun + 4) % 8]; // 影は太陽の反対側に伸びる
             const L = 1 + Math.round(Math.min(sun, 8 - sun) / 2); // 冬至で3・夏至で1
             const shaded = (i) => {
@@ -2738,7 +2738,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('影 ' + (1 + Math.round(Math.min(Math.floor(history.length / 3) % 8, 8 - Math.floor(history.length / 3) % 8) / 2)) + ' ' + '↑↗→↘↓↙←↖'.charAt(Math.floor(history.length / 3) % 8));
+                const et = gameOver ? '' : ('影 ' + (1 + Math.round(Math.min(Math.floor(history.length / Math.max(1, P('sun_interval') || 3)) % 8, 8 - Math.floor(history.length / Math.max(1, P('sun_interval') || 3)) % 8) / 2)) + ' ' + '↑↗→↘↓↙←↖'.charAt(Math.floor(history.length / Math.max(1, P('sun_interval') || 3)) % 8));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

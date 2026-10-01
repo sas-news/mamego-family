@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"wall_pts","label":"城壁1つの得点","min":1,"max":4,"def":1,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2218,8 +2218,8 @@
 
             const fortBlack = Object.keys(fortMap).filter(k => fortMap[k] === 1).length;
             const fortWhite = Object.keys(fortMap).filter(k => fortMap[k] === 2).length;
-            const blackTotal = territory.black + captures[1] + fortBlack;
-            const whiteTotal = territory.white + captures[2] + komi + fortWhite;
+            const blackTotal = territory.black + captures[1] + fortBlack * (P('wall_pts') || 1);
+            const whiteTotal = territory.white + captures[2] + komi + fortWhite * (P('wall_pts') || 1);
             const diff = Math.abs(blackTotal - whiteTotal);
 
             let winnerTitle = '';

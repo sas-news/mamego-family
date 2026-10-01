@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"fragile_lib","label":"砕ける呼吸点 (以下)","min":1,"max":4,"def":2}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1185,7 +1185,7 @@
                     if ((v !== 1 && v !== 2) || seenF.has(i)) continue;
                     const grp = getConnectedGroup(i, v);
                     grp.forEach(g => seenF.add(g));
-                    if (getLiberties(board, i) > 2) continue;
+                    if (getLiberties(board, i) > (P('fragile_lib') || 2)) continue;
                     for (const g of grp) {
                         const x = g % BOARD_SIZE, y = Math.floor(g / BOARD_SIZE);
                         const cx = padding + x * cellSize, cy = padding + y * cellSize;
@@ -1851,7 +1851,7 @@
                 if (board[i] === opponent && !seenGrp.has(i)) {
                     const grp = getConnectedGroup(i, opponent);
                     grp.forEach(g => seenGrp.add(g));
-                    if (getLiberties(board, i) <= 2) captured.push(...grp);
+                    if (getLiberties(board, i) <= (P('fragile_lib') || 2)) captured.push(...grp);
                 }
             }
             if (captured.length > 0) {

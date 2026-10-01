@@ -9,12 +9,15 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('GEYSERGO', '間欠泉碁', 'geysergo'),
+        K.params([
+            { key: 'erupt_interval', label: '噴出の間隔', min: 2, max: 15, def: 5, unit: '手' },
+        ]),
         // 5手ごとに噴火: 噴き口(中央以外の星)上の石を吹き飛ばす
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 間欠泉ルール: 5手ごとに噴火。噴き口 (中央以外の星) 上の石は吹き飛んでアゲハマへ。
-            if (history.length % 5 === 0) {
+            if (history.length % Math.max(1, P('erupt_interval') || 5) === 0) {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
                 let blown = 0;
                 for (const pt of getStarPoints(N)) {
@@ -42,7 +45,8 @@ module.exports = {
         K.CUE_STARS(`            // 間欠泉: 噴き口に水色の二重環 (噴火が近づくほど沸き立つ)
             {
                 const c = Math.floor(BOARD_SIZE / 2);
-                const heat = (history.length % 5) / 5; // 噴火間近ほど1に近い
+                const _ei = P('erupt_interval') || 5;
+                const heat = (history.length % _ei) / _ei; // 噴火間近ほど1に近い
                 const now = fxNow();
                 ctx.save();
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
@@ -69,7 +73,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'噴火まで ' + (5 - history.length % 5) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`'噴火まで ' + ((P('erupt_interval') || 5) - history.length % (P('erupt_interval') || 5)) + ' 手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '四つの星は間欠泉: 5手ごとに一斉噴火して、噴き口上の石を吹き飛ばす。',
             '吹き飛んだ石は相手のアゲハマになる。噴き口を使うのは噴火直後が安全。',

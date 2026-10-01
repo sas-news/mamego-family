@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"tide_interval","label":"潮汐の周期","min":3,"max":30,"def":9,"unit":"手"},{"key":"isle_radius","label":"浮島の半径","min":0.08,"max":0.4,"step":0.01,"def":0.19},{"key":"strait_width","label":"海峡の幅","min":1,"max":3,"def":1,"unit":"列"},{"key":"cap_ratio","label":"打ち切り手数 (盤面比)","min":0.3,"max":1.5,"step":0.05,"def":0.9}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -641,15 +641,24 @@
         // 浮島: 4つの島 (四隅) と中央の海峡
         const ISLE_F = [[0.27, 0.27], [0.73, 0.27], [0.27, 0.73], [0.73, 0.73]];
         function isIsle(x, y) {
-            const r = BOARD_SIZE * 0.19;
+            const r = BOARD_SIZE * (P('isle_radius') || 0.19);
             return ISLE_F.some(([fx, fy]) =>
                 Math.hypot(x - fx * (BOARD_SIZE - 1), y - fy * (BOARD_SIZE - 1)) <= r);
         }
-        const STRAIT_SET = new Set();
-        for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-            const m = (BOARD_SIZE - 1) / 2;
-            if (isIsle(x, y)) continue;
-            if (Math.abs(x - m) <= 1 || Math.abs(y - m) <= 1) STRAIT_SET.add(y * BOARD_SIZE + x);
+        let STRAIT_SET = new Set();
+        function rebuildStraitSet() {
+            STRAIT_SET = new Set();
+            const sw = P('strait_width') || 1;
+            for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                const m = (BOARD_SIZE - 1) / 2;
+                if (isIsle(x, y)) continue;
+                if (Math.abs(x - m) <= sw || Math.abs(y - m) <= sw) STRAIT_SET.add(y * BOARD_SIZE + x);
+            }
+        }
+        rebuildStraitSet();
+        // 設定変更で海峡を再構成
+        function onVariantParam(p) {
+            if (p.key === 'isle_radius' || p.key === 'strait_width') rebuildStraitSet();
         }
         let st = { tide: 0 };
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
@@ -1876,7 +1885,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1931,7 +1940,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 浮島の潮: 9手ごとに満ち引きが入れ替わる
-            if (history.length % 9 === 0) {
+            if (history.length % Math.max(1, P('tide_interval') || 9) === 0) {
                 st.tide = 1 - st.tide;
                 if (st.tide === 1) {
                     // 満潮: 海峡の石は流されて近くの陸に打ち上げられる。行き場がなければアゲハマ
@@ -2854,7 +2863,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (st.tide === 1 ? '満潮' : '満潮まで ' + (9 - (history.length % 9)) + ' 手');
+                const et = gameOver ? '' : (st.tide === 1 ? '満潮' : '満潮まで ' + ((P('tide_interval') || 9) - (history.length % (P('tide_interval') || 9))) + ' 手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

@@ -9,12 +9,15 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('FLOODGO', '洪水碁', 'floodgo'),
+        K.params([
+            { key: 'flood_interval', label: '水位上昇の間隔', min: 1, max: 8, def: 2, unit: '手' },
+        ]),
         // 水没域 (下から水位段の行) には打てない
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
                 // 洪水: 水没域 (下から水位分の行) には打てない
-                if (p.y >= BOARD_SIZE - Math.floor(history.length / 2)) return false;
+                if (p.y >= BOARD_SIZE - Math.floor(history.length / Math.max(1, P('flood_interval') || 2))) return false;
             }`],
         // 着手ごと、水位が上がり低い段の石が沈む
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -23,7 +26,7 @@ module.exports = {
             // 洪水ルール: 2手ごとに水位が1段上がり (下から)。水没域の石は沈んでアゲハマへ。
             {
                 const N = BOARD_SIZE;
-                const wl = Math.floor(history.length / 2);
+                const wl = Math.floor(history.length / Math.max(1, P('flood_interval') || 2));
                 if (wl > 0) {
                     for (let y = N - wl; y < N; y++) for (let x = 0; x < N; x++) {
                         const i = y * N + x;
@@ -41,7 +44,7 @@ module.exports = {
         // 水面の描画
         K.CUE_GRID(`            // 洪水: 下から上がる水面
             {
-                const wl = Math.floor(history.length / 2);
+                const wl = Math.floor(history.length / Math.max(1, P('flood_interval') || 2));
                 if (wl > 0) {
                     ctx.save();
                     ctx.fillStyle = 'rgba(60,140,230,0.30)';
@@ -59,7 +62,7 @@ module.exports = {
                     ctx.restore();
                 }
             }`),
-        ...K.EVENT_CHIP_SPEC(`'水位 ' + Math.floor(history.length / 2) + ' 段'`),
+        ...K.EVENT_CHIP_SPEC(`'水位 ' + Math.floor(history.length / Math.max(1, P('flood_interval') || 2)) + ' 段'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '盤の下から2手ごとに水位が1段上がる。水没域には打てず、そこの石は沈んでアゲハマに。',
             '高みを目指して打ち進め。全部が沈む前に決着を。',
@@ -68,7 +71,7 @@ module.exports = {
         [K.ONE, `        let obstaclePainter = null;`,
 `        let obstaclePainter = null;
         fxAmbient((ctx2, now, pad, cs) => {
-            const wl = Math.floor(history.length / 2);
+            const wl = Math.floor(history.length / Math.max(1, P('flood_interval') || 2));
             if (wl <= 0) return;
             const y0 = pad + (BOARD_SIZE - wl - 0.5) * cs;
             ctx2.save();

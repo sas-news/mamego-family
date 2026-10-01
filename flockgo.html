@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"flock_interval","label":"群行の間隔","min":1,"max":12,"def":3,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1853,7 +1853,7 @@
 
             // 群行ルール: 3手ごとに各連が重心を計算し、中心方向へ1マスまるごと平行移動する。
             //             行き先が塞がっていたらその連は動けない。
-            if (history.length % 3 === 0) {
+            if (history.length % Math.max(1, P('flock_interval') || 3) === 0) {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
                 const seen = new Uint8Array(N * N);
                 const groups = [];

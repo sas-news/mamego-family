@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"fuseki_moves","label":"布石期間","min":4,"max":60,"def":18,"unit":"手"},{"key":"fuseki_pts","label":"布石1つの得点","min":1,"max":4,"def":1,"unit":"目"},{"key":"cap_ratio","label":"打ち切り手数 (盤面比)","min":0.3,"max":1.5,"step":0.05,"def":0.9}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1795,7 +1795,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1850,10 +1850,10 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 布石碁: 序盤 (18手まで) は着手ごとに +1目
-            if (history.length <= 18) {
+            if (history.length <= (P('fuseki_moves') || 18)) {
                 const __pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                st.bonus[player] = (st.bonus[player] || 0) + 1;
-                fxText(__pi, '布石 +1', '#f59e0b', 800);
+                st.bonus[player] = (st.bonus[player] || 0) + (P('fuseki_pts') || 1);
+                fxText(__pi, '布石 +' + (P('fuseki_pts') || 1), '#f59e0b', 800);
             }
 
             turn = opponent;
@@ -2730,7 +2730,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (history.length <= 18 ? '布石 +' + ((st.bonus && st.bonus[turn]) || 0) + '目' : '');
+                const et = gameOver ? '' : (history.length <= (P('fuseki_moves') || 18) ? '布石 +' + ((st.bonus && st.bonus[turn]) || 0) + '目' : '');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

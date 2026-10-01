@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'goheigo',
     spec: [
         ...K.rb('GOHEIGO', '御幣碁', 'goheigo'),
+        K.params([
+            { key: 'gohei_lib', label: '御幣の追加呼吸', min: 1, max: 4, def: 1 },
+            { key: 'gohei_pts', label: '御幣所の敵石の得点', min: 1, max: 8, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 御幣所 = 星の点
         function isGohei(i) {
@@ -40,7 +45,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                    }
-                    if (group.some(gi => isGohei(gi))) liberties += 1; // 御幣を立てた連は聖別される
+                    if (group.some(gi => isGohei(gi))) liberties += (P('gohei_lib') || 1); // 御幣を立てた連は聖別される
 
                     if (liberties <= 0) {`],
         // 御幣所の敵石を取ると+2目
@@ -50,8 +55,8 @@ module.exports = {
 `            if (captured.length > 0) {
                 let gh = 0;
                 captured.forEach(idx => { if (isGohei(idx)) gh++; board[idx] = 0; });
-                captures[player] += captured.length + gh * 2;
-                if (gh > 0) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '御幣 +' + (gh * 2), '#dc2626', 1200);`],
+                captures[player] += captured.length + gh * (P('gohei_pts') || 2);
+                if (gh > 0) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '御幣 +' + (gh * (P('gohei_pts') || 2)), '#dc2626', 1200);`],
         // 御幣所に紙垂を描く
         K.CUE_GRID(`            // 御幣所: 星位に白い紙垂
             {

@@ -10,6 +10,10 @@ module.exports = {
     icon: 'fusebombgo',
     spec: [
         ...K.rb('FUSEBOMBGO', '導線碁', 'fusebombgo'),
+        K.params([
+            { key: 'fuse_turns', label: '爆発までの手数', min: 2, max: 20, def: 5, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         const FUSE_T = 5; // 爆発までの手数
         let st = { fuses: {} }; // idx -> {t: 爆発手数, owner: 色}`],
@@ -43,7 +47,7 @@ module.exports = {
             });
             // 導線: 置いた石に点火 (FUSE_T 手後に起爆)
             move.cells.forEach(p => {
-                st.fuses[p.y * BOARD_SIZE + p.x] = { t: history.length + FUSE_T, owner: player };
+                st.fuses[p.y * BOARD_SIZE + p.x] = { t: history.length + (P('fuse_turns') || FUSE_T), owner: player };
             });`],
         // 起爆処理: 手数が来た爆弾を爆発させる (両者共通)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -100,7 +104,7 @@ module.exports = {
             }
 
             // 打ち切り: 長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -120,7 +124,7 @@ module.exports = {
                     ctx.strokeStyle = 'rgba(251,146,60,0.9)';
                     ctx.lineWidth = Math.max(1.4, cellSize * 0.07);
                     ctx.beginPath();
-                    ctx.arc(cx, cy, cellSize * 0.34, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (left / FUSE_T));
+                    ctx.arc(cx, cy, cellSize * 0.34, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (left / (P('fuse_turns') || FUSE_T)));
                     ctx.stroke();
                     // 火花
                     ctx.fillStyle = 'rgba(251,191,36,0.95)';

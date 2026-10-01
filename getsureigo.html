@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"moon_cycle","label":"月齢の周期","min":8,"max":120,"def":30,"unit":"手"},{"key":"night_rows","label":"夜の帯の深さ","min":2,"max":16,"def":6,"unit":"行"},{"key":"cap_ratio","label":"打ち切り手数 (盤面比)","min":0.3,"max":1.5,"step":0.05,"def":0.75}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1152,7 +1152,7 @@
 
             // 夜の帯を暗くする
             {
-                const nh = Math.round(3 * (1 + Math.cos(2 * Math.PI * (history.length % 30) / 30)));
+                const nh = Math.round((P('night_rows') || 6) / 2 * (1 + Math.cos(2 * Math.PI * (history.length % (P('moon_cycle') || 30)) / (P('moon_cycle') || 30))));
                 if (nh > 0) {
                     ctx.save();
                     const g = ctx.createLinearGradient(0, padding - cellSize / 2, 0, padding + (nh - 0.5) * cellSize);
@@ -1815,7 +1815,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1851,7 +1851,7 @@
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;
             // 月齢碁: 月齢で夜の帯 (上端からの行数) が変わり、夜の石は取れない
-            const nh = Math.round(3 * (1 + Math.cos(2 * Math.PI * (history.length % 30) / 30)));
+            const nh = Math.round((P('night_rows') || 6) / 2 * (1 + Math.cos(2 * Math.PI * (history.length % (P('moon_cycle') || 30)) / (P('moon_cycle') || 30))));
             const captured = getCapturedStones(board, opponent).filter(i => Math.floor(i / BOARD_SIZE) >= nh);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
@@ -2740,7 +2740,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('月齢' + (history.length % 30) + ' 夜' + Math.round(3 * (1 + Math.cos(2 * Math.PI * (history.length % 30) / 30))) + '行');
+                const et = gameOver ? '' : ('月齢' + (history.length % (P('moon_cycle') || 30)) + ' 夜' + Math.round((P('night_rows') || 6) / 2 * (1 + Math.cos(2 * Math.PI * (history.length % (P('moon_cycle') || 30)) / (P('moon_cycle') || 30)))) + '行');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

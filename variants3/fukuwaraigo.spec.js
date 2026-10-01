@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'fukuwaraigo',
     spec: [
         ...K.rb('FUKUWARAIGO', '福笑碁', 'fukuwaraigo'),
+        K.params([
+            { key: 'exact_pts', label: 'ピタリの得点', min: 1, max: 8, def: 2, unit: '目' },
+            { key: 'near_pts', label: '近いの得点', min: 1, max: 4, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         ...ST(ST_INIT),
         // 補助関数をページスコープへ注入
         [K.ONE, `        function executeMove(move, player) {`, `        const FACE_PTS = () => {
@@ -69,13 +74,13 @@ module.exports = {
                     const d = Math.abs(bc.x - fx) + Math.abs(bc.y - fy);
                     if (d === 0) {
                         st.claimed[fi] = player;
-                        captures[player] += 2;
+                        captures[player] += (P('exact_pts') || 2);
                         fxGlow(fi, '#f472b6', 900);
-                        fxText(fi, 'ピタリ +2', '#f472b6', 1300);
+                        fxText(fi, 'ピタリ +' + (P('exact_pts') || 2), '#f472b6', 1300);
                     } else if (d === 1) {
                         st.claimed[fi] = player;
-                        captures[player] += 1;
-                        fxText(fi, '近い! +1', '#f9a8d4', 1100);
+                        captures[player] += (P('near_pts') || 1);
+                        fxText(fi, '近い! +' + (P('near_pts') || 1), '#f9a8d4', 1100);
                     }
                 });
             }

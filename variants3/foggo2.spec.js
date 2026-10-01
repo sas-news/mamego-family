@@ -10,9 +10,14 @@ module.exports = {
     icon: 'foggo2',
     spec: [
         ...K.rb('FOGGO', '濃霧碁', 'foggo2'),
+        K.params([
+            { key: 'fog_step', label: '霧の移動間隔', min: 1, max: 8, def: 2, unit: '手' },
+            { key: 'fog_width', label: '霧の幅', min: 1, max: 8, def: 4, unit: '列' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.5, max: 2, step: 0.05, def: 1.1 },
+        ]),
         // 霧の帯: 2手ごとに1列ずつ進む幅4列の移動域 (ループ)。霧内は着手不可
-        [K.ONE, K.VALID_BOUNDS, `            const fogHead = Math.floor(history.length / 2) % BOARD_SIZE;
-            const inFog = (x) => ((x - fogHead) % BOARD_SIZE + BOARD_SIZE) % BOARD_SIZE < 4;
+        [K.ONE, K.VALID_BOUNDS, `            const fogHead = Math.floor(history.length / Math.max(1, P('fog_step') || 2)) % BOARD_SIZE;
+            const inFog = (x) => ((x - fogHead) % BOARD_SIZE + BOARD_SIZE) % BOARD_SIZE < (P('fog_width') || 4);
             for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -22,7 +27,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -32,8 +37,8 @@ module.exports = {
             turn = opponent;`],
         ...K.STONE_MARKS_SPEC(`            // 濃霧: 霧列を白い帯で覆い、中の石を隠す
             {
-                const fogHead = Math.floor(history.length / 2) % BOARD_SIZE;
-                const inFog = (x) => ((x - fogHead) % BOARD_SIZE + BOARD_SIZE) % BOARD_SIZE < 4;
+                const fogHead = Math.floor(history.length / Math.max(1, P('fog_step') || 2)) % BOARD_SIZE;
+                const inFog = (x) => ((x - fogHead) % BOARD_SIZE + BOARD_SIZE) % BOARD_SIZE < (P('fog_width') || 4);
                 ctx.save();
                 for (let x = 0; x < BOARD_SIZE; x++) {
                     if (!inFog(x)) continue;
@@ -56,7 +61,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'霧 ' + (Math.floor(history.length / 2) % BOARD_SIZE) + '列〜'`),
+        ...K.EVENT_CHIP_SPEC(`'霧 ' + (Math.floor(history.length / Math.max(1, P('fog_step') || 2)) % BOARD_SIZE) + '列〜'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '幅4列の霧の帯が盤を右へ這い回る (2手で1列)。霧の列には着手できず、霧の中の石は見えない。',
             '霧の中の石も捕獲対象として生きている — 位置を記憶して攻めを組み立てよう。霧は両者共通。',

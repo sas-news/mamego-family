@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"frost_interval","label":"霜柱の周期","min":6,"max":90,"def":24,"unit":"手"},{"key":"cap_ratio","label":"打ち切り手数 (盤面比)","min":0.3,"max":1.5,"step":0.05,"def":0.75}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1796,7 +1796,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1851,7 +1851,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 霜柱: 24手ごとの早朝に全石が1段上へ持ち上がる (上が空いていれば)
-            if (history.length > 0 && history.length % 24 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('frost_interval') || 24) === 0) {
                 let lifted = 0;
                 // 上から順に処理 (持ち上げた先の石を連鎖しないよう上から)
                 for (let y = 1; y < BOARD_SIZE; y++) {
@@ -2754,7 +2754,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('霜柱まで ' + (24 - history.length % 24) + '手');
+                const et = gameOver ? '' : ('霜柱まで ' + ((P('frost_interval') || 24) - history.length % (P('frost_interval') || 24)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

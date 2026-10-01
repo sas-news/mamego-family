@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"fog_step","label":"霧の移動間隔","min":1,"max":8,"def":2,"unit":"手"},{"key":"fog_width","label":"霧の幅","min":1,"max":8,"def":4,"unit":"列"},{"key":"cap_ratio","label":"打ち切り手数 (盤面比)","min":0.5,"max":2,"step":0.05,"def":1.1}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1328,8 +1328,8 @@
         function drawStoneMarks(padding, cellSize) {
             // 濃霧: 霧列を白い帯で覆い、中の石を隠す
             {
-                const fogHead = Math.floor(history.length / 2) % BOARD_SIZE;
-                const inFog = (x) => ((x - fogHead) % BOARD_SIZE + BOARD_SIZE) % BOARD_SIZE < 4;
+                const fogHead = Math.floor(history.length / Math.max(1, P('fog_step') || 2)) % BOARD_SIZE;
+                const inFog = (x) => ((x - fogHead) % BOARD_SIZE + BOARD_SIZE) % BOARD_SIZE < (P('fog_width') || 4);
                 ctx.save();
                 for (let x = 0; x < BOARD_SIZE; x++) {
                     if (!inFog(x)) continue;
@@ -1794,8 +1794,8 @@
         }
 
         function isValidPlacement(cells, player) {
-            const fogHead = Math.floor(history.length / 2) % BOARD_SIZE;
-            const inFog = (x) => ((x - fogHead) % BOARD_SIZE + BOARD_SIZE) % BOARD_SIZE < 4;
+            const fogHead = Math.floor(history.length / Math.max(1, P('fog_step') || 2)) % BOARD_SIZE;
+            const inFog = (x) => ((x - fogHead) % BOARD_SIZE + BOARD_SIZE) % BOARD_SIZE < (P('fog_width') || 4);
             for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -1873,7 +1873,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -2750,7 +2750,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('霧 ' + (Math.floor(history.length / 2) % BOARD_SIZE) + '列〜');
+                const et = gameOver ? '' : ('霧 ' + (Math.floor(history.length / Math.max(1, P('fog_step') || 2)) % BOARD_SIZE) + '列〜');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }
