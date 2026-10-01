@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,16 +47,26 @@ module.exports = {
     icon: 'baygo',
     spec: [
         ...K.rb('BAYGO', '湾岸碁', 'baygo'),
+        K.params([
+            { key: 'shore', label: '海岸線の位置', min: 0.4, max: 0.9, def: 0.75, step: 0.05, hint: '盤サイズ×倍率' },
+            { key: 'dock_pts', label: '入港の得点', min: 1, max: 5, def: 1, unit: '点' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 1.8, def: 0.9, step: 0.1, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 湾岸: 左上が海 (x+y<SHORE)、海岸線 x+y==SHORE が船着き場
-        const BAY_SHORE = Math.round(BOARD_SIZE * 0.75);
-        const WHARF_SET = new Set();
-        for (let x = 0; x < BOARD_SIZE; x++) {
-            const y = BAY_SHORE - x;
-            if (y >= 0 && y < BOARD_SIZE) WHARF_SET.add(y * BOARD_SIZE + x);
+        const BAY_SHORE = () => Math.round(BOARD_SIZE * (P('shore') || 0.75));
+        let WHARF_SET = new Set();
+        function rebuildWharf() {
+            WHARF_SET = new Set();
+            for (let x = 0; x < BOARD_SIZE; x++) {
+                const y = BAY_SHORE() - x;
+                if (y >= 0 && y < BOARD_SIZE) WHARF_SET.add(y * BOARD_SIZE + x);
+            }
         }
-        function isSea(x, y) { return x + y < BAY_SHORE; }`],
+        rebuildWharf();
+        function isSea(x, y) { return x + y < BAY_SHORE(); }
+        function onVariantParam(p) { if (p.key === 'shore') rebuildWharf(); }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 if (isSea(x, y)) board[y * BOARD_SIZE + x] = 3;
@@ -71,7 +81,7 @@ module.exports = {
             move.cells.forEach(p => {
                 const wi = p.y * BOARD_SIZE + p.x;
                 if (WHARF_SET.has(wi)) {
-                    st.score[player]++;
+                    st.score[player] += (P('dock_pts') || 1);
                     fxGlow(wi, '#fbbf24', 800);
                     fxText(wi, '+入港', '#fbbf24', 1100);
                 }

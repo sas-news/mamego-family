@@ -10,6 +10,10 @@ module.exports = {
     icon: 'assaultgo',
     spec: [
         ...K.rb('ASSAULTGO', '突撃碁2', 'assaultgo'),
+        K.params([
+            { key: 'vanguard', label: '突撃で削れる石数', min: 1, max: 4, def: 1, unit: '個' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 300, def: 140, unit: '手' },
+        ]),
         // 突撃解決: 着手後、敵連に隣接する全ての連の先鋒を1個削る (黒白同時・対称)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -31,8 +35,12 @@ module.exports = {
                             if (board[n] === c && !seen.has(n)) { seen.add(n); stack.push(n); }
                         });
                     }
+                    // 敵に接する先鋒を最大N個削る (個数は設定で調整)
+                    const vg = Math.max(1, P('vanguard') || 1);
+                    let vCount = 0;
                     for (const u of grp) {
-                        if (getNeighbors(u).some(n => board[n] === (c === 1 ? 2 : 1))) { rem.add(u); break; }
+                        if (vCount >= vg) break;
+                        if (getNeighbors(u).some(n => board[n] === (c === 1 ? 2 : 1))) { rem.add(u); vCount++; }
                     }
                 }
                 if (rem.size) {
@@ -48,7 +56,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

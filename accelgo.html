@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"streak_len","label":"連打ボーナス間隔","min":2,"max":6,"def":3,"unit":"手"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.5,"def":0.75,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1796,7 +1796,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1852,7 +1852,7 @@
 
             // 加速: 連続して石を置き続けると3手ごとに追加着手権
             st.streak[player] = (st.streak[player] || 0) + 1;
-            if (st.streak[player] >= 3) {
+            if (st.streak[player] >= (P('streak_len') || 3)) {
                 st.streak[player] = 0;
                 const ai2 = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 fxGlow(ai2, '#f97316', 800);
@@ -2739,7 +2739,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('加速 ' + (st.streak[turn] || 0) + '/3');
+                const et = gameOver ? '' : ('加速 ' + (st.streak[turn] || 0) + '/' + (P('streak_len') || 3));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

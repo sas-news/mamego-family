@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"interest_rate","label":"利子の割合","min":2,"max":12,"def":5,"hint":"残高÷N"},{"key":"ply_cap","label":"打ち切り手数","min":0,"max":400,"def":0,"unit":"手","hint":"0=制限なし"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1791,7 +1791,15 @@
             return true;
         }
 
+        let moveCapFired = false;
         function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }
             // 1手戻る用に着手前の状態を退避
             history.push({
                 board: [...board],
@@ -1842,7 +1850,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 銀行ルール: 自分の手番のたびアゲハマ残高の1/5 (切捨) が利子
-            const interest = Math.floor(captures[player] / 5);
+            const interest = Math.floor(captures[player] / (P('interest_rate') || 5));
             bankInterest[player] += interest;
             if (interest > 0) {
                 const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"arrow_range","label":"矢の射程","min":1,"max":6,"def":3,"unit":"マス"},{"key":"win_captures","label":"先取勝ちのアゲハマ数","min":8,"max":40,"def":20,"unit":"個"},{"key":"ply_cap","label":"打ち切り手数","min":0,"max":400,"def":0,"unit":"手","hint":"0=制限なし"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1787,7 +1787,15 @@
             return true;
         }
 
+        let moveCapFired = false;
         function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }
             // 1手戻る用に着手前の状態を退避
             history.push({
                 board: [...board],
@@ -1833,7 +1841,7 @@
                 const p0 = move.cells[0];
                 let shot = 0;
                 [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx, dy]) => {
-                    for (let d = 1; d <= 3; d++) {
+                    for (let d = 1; d <= (P('arrow_range') || 3); d++) {
                         const nx = p0.x + dx * d, ny = p0.y + dy * d;
                         if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) break;
                         const v = board[ny * BOARD_SIZE + nx];
@@ -1865,7 +1873,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 弓兵の決闘: 先にアゲハマ20個を取った側は即勝ち (射抜き合戦が無限に続かないよう)
-            if (captures[player] >= 20) {
+            if (captures[player] >= (P('win_captures') || 20)) {
                 winByRule(player, '先取勝ち', '20個のアゲハマを先に取りました'); return;
             }
 

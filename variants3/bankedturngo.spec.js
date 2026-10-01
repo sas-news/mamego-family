@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'bankedturngo',
     spec: [
         ...K.rb('BANKEDTURNGO', '保留碁', 'bankedturngo'),
+        K.params([
+            { key: 'bank_max', label: '貯蓄の上限', min: 3, max: 20, def: 9, unit: '手' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 連打モード: 貯蓄があれば着手後も自分の手番が続く (貯蓄を消費)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -84,7 +88,7 @@ module.exports = {
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
             const p = turn;
             handlePass(); // パスとして手番を渡し、貯蓄に変換
-            st.bank[p] = Math.min(9, st.bank[p] + 1);
+            st.bank[p] = Math.min(P('bank_max') || 9, st.bank[p] + 1);
             updateUI();
         });
         btnBurst.addEventListener('click', () => {

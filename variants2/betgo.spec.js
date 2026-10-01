@@ -9,6 +9,10 @@ module.exports = {
     kind: 'bet',
     spec: [
         ...K.rb('BETGO', '賭碁', 'betgo'),
+        K.params([
+            { key: 'bet_pts', label: '賭け的中の得点', min: 1, max: 5, def: 1, unit: '点' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0, max: 400, def: 0, unit: '手', hint: '0=制限なし' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let betScore = { 1: 0, 2: 0 }; // 的中した賭けの累計得点
         let pendingBet = null; // { idx, owner } 直前の着手への賭け`],
@@ -46,7 +50,7 @@ module.exports = {
             // 賭碁ルール: 相手の直前の石がこの一手を生き延びた → 相手の賭け的中
             if (pendingBet && pendingBet.owner !== player) {
                 if (board[pendingBet.idx] === pendingBet.owner) {
-                    betScore[pendingBet.owner]++;
+                    betScore[pendingBet.owner] += (P('bet_pts') || 1);
                     fxGlow(pendingBet.idx, '#fbbf24', 900);
                     fxText(pendingBet.idx, '+1 的中!', '#fbbf24', 1200);
                 }
@@ -85,6 +89,17 @@ module.exports = {
             '着手するたびその石に「次の一手を生き延びる」賭けが自動で乗る。',
             '相手の手番を越えて石が残っていれば的中で+1点。終局は 地+アゲハマ+賭け点 の合計。',
         ])],
+        // 打ち切り手数 (0=制限なし): 設定で有効化すると超過時に強制採点
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

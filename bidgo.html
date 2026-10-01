@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"bid_start","label":"初回の競り値","min":1,"max":5,"def":1,"unit":"石"},{"key":"bid_step","label":"競り上がり幅","min":1,"max":3,"def":1,"unit":"石"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.5,"def":0.75,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1814,7 +1814,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1872,8 +1872,8 @@
                 const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const onStar = getStarPoints(BOARD_SIZE).some(pt => pt.y * BOARD_SIZE + pt.x === pi);
                 if (onStar) {
-                    const cost = st.level + 1;
-                    st.level++;
+                    const cost = st.level + (P('bid_start') || 1);
+                    st.level += (P('bid_step') || 1);
                     captures[opponent] += cost;
                     fxText(pi, '入札 ' + cost + '石', '#f59e0b', 1300);
                     fxGlow(pi, '#f59e0b', 850);
@@ -2754,7 +2754,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('次の入札 ' + (st.level + 1) + '石');
+                const et = gameOver ? '' : ('次の入札 ' + (st.level + (P('bid_start') || 1)) + '石');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

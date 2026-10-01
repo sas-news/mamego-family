@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'bidgo',
     spec: [
         ...K.rb('BIDGO', '入札碁', 'bidgo'),
+        K.params([
+            { key: 'bid_start', label: '初回の競り値', min: 1, max: 5, def: 1, unit: '石' },
+            { key: 'bid_step', label: '競り上がり幅', min: 1, max: 3, def: 1, unit: '石' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 入札: 星点に打つと現在の競り値 (1,2,3...) をアゲハマで相手に支払う。値は取るたび+1
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -56,8 +61,8 @@ module.exports = {
                 const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const onStar = getStarPoints(BOARD_SIZE).some(pt => pt.y * BOARD_SIZE + pt.x === pi);
                 if (onStar) {
-                    const cost = st.level + 1;
-                    st.level++;
+                    const cost = st.level + (P('bid_start') || 1);
+                    st.level += (P('bid_step') || 1);
                     captures[opponent] += cost;
                     fxText(pi, '入札 ' + cost + '石', '#f59e0b', 1300);
                     fxGlow(pi, '#f59e0b', 850);
@@ -78,7 +83,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             });`),
-        ...K.EVENT_CHIP_SPEC(`'次の入札 ' + (st.level + 1) + '石'`),
+        ...K.EVENT_CHIP_SPEC(`'次の入札 ' + (st.level + (P('bid_start') || 1)) + '石'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            入札碁: 星点に打つと入札成立 — 競り値分のアゲハマを相手に支払う。値は取るたびに上がる<br>
             PC: クリックで配置<br>

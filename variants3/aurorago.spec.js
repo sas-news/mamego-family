@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,10 +47,14 @@ module.exports = {
     icon: 'aurorago',
     spec: [
         ...K.rb('AURORAGO', '極光碁', 'aurorago'),
+        K.params([
+            { key: 'aurora_interval', label: '極光の間隔', min: 2, max: 12, def: 5, unit: '手' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 極光: 各プレイヤー5手ごとの着手では全石に幻影の呼吸点が与えられ、取りが起きない
         [K.ONE, K.CAPTURE_BLOCK, `            st.cnt[player]++;
-            const aurora = st.cnt[player] % 5 === 0;
+            const aurora = st.cnt[player] % (P('aurora_interval') || 5) === 0;
             const captured = aurora ? [] : getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
@@ -68,7 +72,7 @@ module.exports = {
         // 極光ターンは盤全体を淡い光の帯で彩る
         K.CUE_GRID(`            // 極光: 前の手が極光だった局面では空に光の帯が流れる
             {
-                const lastAurora = (turn === 1 ? st.cnt[2] : st.cnt[1]) % 5 === 0 && (turn === 1 ? st.cnt[2] : st.cnt[1]) > 0;
+                const lastAurora = (turn === 1 ? st.cnt[2] : st.cnt[1]) % (P('aurora_interval') || 5) === 0 && (turn === 1 ? st.cnt[2] : st.cnt[1]) > 0;
                 if (lastAurora) {
                     ctx.save();
                     const w = padding * 2 + (BOARD_SIZE - 1) * cellSize;
@@ -81,7 +85,7 @@ module.exports = {
                     ctx.restore();
                 }
             }`),
-        ...K.EVENT_CHIP_SPEC(`'極光まで ' + (5 - st.cnt[turn] % 5) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'極光まで ' + ((P('aurora_interval') || 5) - st.cnt[turn] % (P('aurora_interval') || 5)) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            極光碁: 各側5手ごとの着手で極光が現れ、全石に呼吸点+1。その手では取りが起きない<br>
             PC: クリックで配置<br>

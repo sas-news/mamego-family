@@ -9,6 +9,11 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('ARCHERGO', '弓兵碁', 'archergo'),
+        K.params([
+            { key: 'arrow_range', label: '矢の射程', min: 1, max: 6, def: 3, unit: 'マス' },
+            { key: 'win_captures', label: '先取勝ちのアゲハマ数', min: 8, max: 40, def: 20, unit: '個' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0, max: 400, def: 0, unit: '手', hint: '0=制限なし' },
+        ]),
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
@@ -24,7 +29,7 @@ module.exports = {
                 const p0 = move.cells[0];
                 let shot = 0;
                 [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx, dy]) => {
-                    for (let d = 1; d <= 3; d++) {
+                    for (let d = 1; d <= (P('arrow_range') || 3); d++) {
                         const nx = p0.x + dx * d, ny = p0.y + dy * d;
                         if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) break;
                         const v = board[ny * BOARD_SIZE + nx];
@@ -52,12 +57,23 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 弓兵の決闘: 先にアゲハマ20個を取った側は即勝ち (射抜き合戦が無限に続かないよう)
-            if (captures[player] >= 20) {
+            if (captures[player] >= (P('win_captures') || 20)) {
                 winByRule(player, '先取勝ち', '20個のアゲハマを先に取りました'); return;
             }
 
             turn = opponent;`],
         [K.ONE, K.RV_ALGO, K.rv(['置いた石は矢を放つ: 上下左右の4方向、3マス以内に最初に遇った敵石を1本ずつ射抜く。','途中に石 (自石含む) があれば矢はそこで止まる。射抜きは包囲取りと同じ手に両方起きる。','先にアゲハマ20個を取った側は即勝ち。'])],
+        // 打ち切り手数 (0=制限なし): 設定で有効化すると超過時に強制採点
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

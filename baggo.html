@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"bag_cap","label":"袋の容量","min":2,"max":12,"def":5,"unit":"個"},{"key":"bag_penalty","label":"溢れ1個の減点","min":0,"max":4,"def":1,"step":0.5,"unit":"目"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.8,"def":0.9,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -639,8 +639,8 @@
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         // 袋: アゲハマは袋に詰められる。5個まで価値あり、溢れは重荷
-        const BAG_CAP = 5;
-        function bagScore(c) { return Math.min(c, BAG_CAP) - Math.max(0, c - BAG_CAP); }
+        const BAG_CAP = () => (P('bag_cap') || 5);
+        function bagScore(c) { return Math.min(c, BAG_CAP()) - Math.max(0, c - BAG_CAP()) * (P('bag_penalty') ?? 1); }
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -1334,7 +1334,7 @@
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 const v = board[y * BOARD_SIZE + x];
                 if (v !== 1 && v !== 2) continue;
-                const heavy = captures[v] > BAG_CAP;
+                const heavy = captures[v] > BAG_CAP();
                 if (!heavy) continue;
                 const cx = padding + x * cellSize, cy = padding + y * cellSize;
                 ctx.save();
@@ -1815,7 +1815,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -2738,7 +2738,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('黒袋 ' + captures[1] + '/5 白袋 ' + captures[2] + '/5');
+                const et = gameOver ? '' : ('黒袋 ' + captures[1] + '/' + BAG_CAP() + ' 白袋 ' + captures[2] + '/' + BAG_CAP());
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

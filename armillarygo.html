@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"ring_pts","label":"環上の得点","min":1,"max":4,"def":1,"unit":"点"},{"key":"node_pts","label":"交点の得点","min":1,"max":6,"def":2,"unit":"点"},{"key":"ring_width","label":"環の太さ","min":0.15,"max":0.9,"def":0.45,"step":0.05,"hint":"中心線からの許容距離"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.8,"def":0.9,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -646,7 +646,7 @@
         const ringCell = (x, y) => {
             const c = (BOARD_SIZE - 1) / 2;
             const d = Math.sqrt((x - c) * (x - c) + (y - c) * (y - c));
-            return Math.abs(d - ringR1()) < 0.45 || Math.abs(d - ringR2()) < 0.45;
+            return Math.abs(d - ringR1()) < (P('ring_width') || 0.45) || Math.abs(d - ringR2()) < (P('ring_width') || 0.45);
         };
         const nodeCell = (x, y) => {
             const c = (BOARD_SIZE - 1) / 2;
@@ -1824,7 +1824,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1850,8 +1850,8 @@
 
             move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
             // 環上+1、経緯との交点なら+2
-            if (nodeCell(move.cells[0].x, move.cells[0].y)) st.score[player] += 2;
-            else if (ringCell(move.cells[0].x, move.cells[0].y)) st.score[player] += 1;
+            if (nodeCell(move.cells[0].x, move.cells[0].y)) st.score[player] += (P('node_pts') || 2);
+            else if (ringCell(move.cells[0].x, move.cells[0].y)) st.score[player] += (P('ring_pts') || 1);
 
             pieces.push({
                 id: Date.now() + Math.random(),

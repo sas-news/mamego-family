@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,19 +27,32 @@ module.exports = {
     icon: 'abyssgo',
     spec: [
         ...K.rb('ABYSSGO', '海底碁', 'abyssgo'),
+        K.params([
+            { key: 'warm_radius', label: '温もり範囲', min: 1, max: 5, def: 2, hint: '噴出孔からのチェビシェフ距離' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 熱水噴出孔: 5つの噴出孔。温もりが届くのは周囲2マス — そこだけが呼吸点になる
         const VENT_F = [[0.5, 0.5], [0.22, 0.22], [0.78, 0.22], [0.22, 0.78], [0.78, 0.78]];
         const VENTS = VENT_F.map(([fx, fy]) =>
             [Math.round(fx * (BOARD_SIZE - 1)), Math.round(fy * (BOARD_SIZE - 1))]);
-        const WARM = new Set();
-        VENTS.forEach(([vx, vy]) => {
-            for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
-                const x = vx + dx, y = vy + dy;
-                if (x >= 0 && y >= 0 && x < BOARD_SIZE && y < BOARD_SIZE
-                    && Math.max(Math.abs(dx), Math.abs(dy)) <= 2) WARM.add(y * BOARD_SIZE + x);
-            }
-        });`],
+        let WARM = new Set();
+        // 温もり範囲は設定で調整可能 (変更時に区域を即時再構成)
+        function rebuildWarm() {
+            WARM = new Set();
+            const wr = Math.max(1, P('warm_radius') || 2);
+            VENTS.forEach(([vx, vy]) => {
+                for (let dy = -wr; dy <= wr; dy++) for (let dx = -wr; dx <= wr; dx++) {
+                    const x = vx + dx, y = vy + dy;
+                    if (x >= 0 && y >= 0 && x < BOARD_SIZE && y < BOARD_SIZE
+                        && Math.max(Math.abs(dx), Math.abs(dy)) <= wr) WARM.add(y * BOARD_SIZE + x);
+                }
+            });
+        }
+        rebuildWarm();
+        function onVariantParam(p) {
+            if (p.key === 'warm_radius') rebuildWarm();
+        }`],
         // 呼吸点は「温もりの届く空点」のみ — 寒い深海の空点は呼吸にならない
         [K.ONE, `                        const neighbors = getNeighbors(curr);
                         neighbors.forEach(n => {

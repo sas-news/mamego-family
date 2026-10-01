@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'balltossgo',
     spec: [
         ...K.rb('BALLTOSSGO', '玉入碁', 'balltossgo'),
+        K.params([
+            { key: 'basket_pts', label: '籠の得点', min: 1, max: 8, def: 2, unit: '点' },
+            { key: 'basket_radius', label: '籠の半径', min: 1, max: 3, def: 1, hint: '星点からの距離' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // 籠得点: 各星点の周囲3x3内で石が多い側に+2
         [K.ONE, `        function endGameByScore() {`, `
         function ballZones() {
@@ -34,7 +39,8 @@ module.exports = {
                 : [{x: 2, y: 2}, {x: 6, y: 2}, {x: 4, y: 4}, {x: 2, y: 6}, {x: 6, y: 6}];
             return pts.map(s => {
                 const cells = [];
-                for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+                const br = Math.max(1, P('basket_radius') || 1);
+                for (let dy = -br; dy <= br; dy++) for (let dx = -br; dx <= br; dx++) {
                     const x = s.x + dx, y = s.y + dy;
                     if (x >= 0 && y >= 0 && x < BOARD_SIZE && y < BOARD_SIZE) cells.push(y * BOARD_SIZE + x);
                 }
@@ -49,7 +55,7 @@ module.exports = {
                     if (board[i] === player) mine++;
                     else if (board[i] === (player === 1 ? 2 : 1)) theirs++;
                 });
-                if (mine > theirs) bonus += 2;
+                if (mine > theirs) bonus += (P('basket_pts') || 2);
             });
             return bonus;
         }
@@ -78,7 +84,7 @@ module.exports = {
                     ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
                     ctx.setLineDash([cellSize * 0.18, cellSize * 0.12]);
                     ctx.beginPath();
-                    ctx.arc(cx, cy, cellSize * 1.45, 0, Math.PI * 2);
+                    ctx.arc(cx, cy, cellSize * ((P('basket_radius') || 1) + 0.45), 0, Math.PI * 2);
                     ctx.stroke();
                     ctx.setLineDash([]);
                 });

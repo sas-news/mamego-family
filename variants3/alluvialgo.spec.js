@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'alluvialgo',
     spec: [
         ...K.rb('ALLUVIALGO', '扇状碁', 'alluvialgo'),
+        K.params([
+            { key: 'fan_reach', label: '扇央の広がり', min: 0.15, max: 0.9, def: 0.36, step: 0.02, hint: '盤サイズ×係数' },
+            { key: 'barren_slope', label: '荒れ地の傾斜', min: 0.4, max: 2, def: 0.95, step: 0.05 },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 扇状地: 扇頂(上辺中央)から扇状に広がる土壌。+1=扇央(豊か) -1=扇外(痩せ地)
         let SOIL = new Int8Array(BOARD_SIZE * BOARD_SIZE);
@@ -36,9 +41,13 @@ module.exports = {
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 const i = y * BOARD_SIZE + x;
                 const d = Math.abs(x - c) + y;
-                if (d <= BOARD_SIZE * 0.36) SOIL[i] = 1;
-                else if (Math.abs(x - c) > (y + 1) * 0.95) SOIL[i] = -1;
+                if (d <= BOARD_SIZE * (P('fan_reach') || 0.36)) SOIL[i] = 1;
+                else if (Math.abs(x - c) > (y + 1) * (P('barren_slope') || 0.95)) SOIL[i] = -1;
             }
+        }
+        // 設定変更で土壌を即時再構成
+        function onVariantParam(p) {
+            if (p.key === 'fan_reach' || p.key === 'barren_slope') rebuildSoil();
         }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             rebuildSoil();`],

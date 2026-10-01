@@ -10,6 +10,11 @@ module.exports = {
     icon: 'batterygo',
     spec: [
         ...K.rb('BATTERYGO', '電池碁', 'batterygo'),
+        K.params([
+            { key: 'chg_init', label: '初期充電量', min: 1, max: 6, def: 3 },
+            { key: 'chg_loss', label: '放電量', min: 1, max: 3, def: 1 },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 1.8, def: 0.9, step: 0.1, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { chg: {} }; // 充電量 idx -> 0..3`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -45,15 +50,15 @@ module.exports = {
         // 着弾で充電3。敵に隣接して打ったら双方放電、切れたら死滅
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            move.cells.forEach(p => { st.chg[p.y * BOARD_SIZE + p.x] = 3; });
+            move.cells.forEach(p => { st.chg[p.y * BOARD_SIZE + p.x] = (P('chg_init') || 3); });
             move.cells.forEach(p => {
                 const mi = p.y * BOARD_SIZE + p.x;
                 if (board[mi] !== player) return;
                 const foes = getNeighbors(mi).filter(n => board[n] === opponent);
                 if (foes.length === 0) return;
-                st.chg[mi]--;
+                st.chg[mi] -= (P('chg_loss') || 1);
                 foes.forEach(n => {
-                    st.chg[n] = (st.chg[n] || 0) - 1;
+                    st.chg[n] = (st.chg[n] || 0) - (P('chg_loss') || 1);
                     if (st.chg[n] <= 0 && board[n] === opponent) {
                         board[n] = 0; delete st.chg[n]; captures[player]++;
                         fxBurst(n, '#facc15', 10);
@@ -97,7 +102,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

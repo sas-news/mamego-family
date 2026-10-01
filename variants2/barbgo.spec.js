@@ -9,12 +9,24 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('BARBGO', '槍碁', 'barbgo'),
+        K.params([
+            { key: 'spear_len', label: '槍の長さ', options: [{ v: 3, l: '1x3' }, { v: 4, l: '1x4' }, { v: 5, l: '1x5' }], def: 5 },
+            { key: 'suff_min', label: '窒息領域の閾値', min: 2, max: 8, def: 5, unit: 'マス', hint: 'このマス数未満の連結空領域は死に領域' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0, max: 400, def: 0, unit: '手', hint: '0=制限なし' },
+        ]),
         [K.ONE, `            ORIENTATIONS[type] = list;
         });`, `            ORIENTATIONS[type] = list;
         });
 
         // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
-        ORIENTATIONS.STONE = [[[0,0],[1,0],[2,0],[3,0],[4,0]],[[0,0],[0,1],[0,2],[0,3],[0,4]]];`],
+        ORIENTATIONS.STONE = [[[0,0],[1,0],[2,0],[3,0],[4,0]],[[0,0],[0,1],[0,2],[0,3],[0,4]]];
+        // 槍の長さは設定で調整可能 (変更時にピース形を即時再構成)
+        function onVariantParam(p) {
+            if (p.key === 'spear_len') {
+                const n = Math.max(3, p.val || 5);
+                ORIENTATIONS.STONE = [Array.from({ length: n }, (_, i) => [i, 0]), Array.from({ length: n }, (_, i) => [0, i])];
+            }
+        }`],
         [K.ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`, `        const PIECE_SIZE = 5;`],
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
 
@@ -29,6 +41,8 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
+        // 窒息領域の閾値は設定で調整可能
+        [K.ONE, `                if (region.length < PIECE_SIZE) {`, `                if (region.length < (P('suff_min') || PIECE_SIZE)) {`],
         [K.ONE, K.RV_ALGO, K.rv(['着手は1x5の槍ピースのみ (回転=⟳ボタン・Rキー・右クリック・ホイール)。','ピースが入らない5マス未満の連結空領域は窒息領域。'])],
         // 槍の質感: 5連セルに柄と穂先を重ねる (黒→右/下、白→左/上で対向)
         ...K.STONE_MARKS_SPEC(`            {
@@ -70,6 +84,17 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
+        // 打ち切り手数 (0=制限なし): 設定で有効化すると超過時に強制採点
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

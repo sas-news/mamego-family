@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"bingo_len","label":"ビンゴ成立の連数","min":3,"max":7,"def":5,"unit":"連"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.5,"def":0.75,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1337,7 +1337,7 @@
                             let len = 0, cx = x, cy = y;
                             while (cx >= 0 && cx < BOARD_SIZE && cy >= 0 && cy < BOARD_SIZE &&
                                    board[cy * BOARD_SIZE + cx] === pl) { len++; cx += dx; cy += dy; }
-                            if (len >= 4) {
+                            if (len >= (P('bingo_len') || 5) - 1) {
                                 ctx.strokeStyle = pl === 1 ? 'rgba(250, 204, 21, 0.7)' : 'rgba(250, 204, 21, 0.9)';
                                 ctx.lineWidth = Math.max(1.5, cellSize * 0.08);
                                 ctx.beginPath();
@@ -1868,7 +1868,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 endGameByScore();
                 return;
             }
@@ -2235,7 +2235,7 @@
                            board[cy * BOARD_SIZE + cx] === player) {
                         len++; cx += dx; cy += dy;
                     }
-                    if (len >= 5) bonus += len;
+                    if (len >= (P('bingo_len') || 5)) bonus += len;
                 }
             });
             return bonus;

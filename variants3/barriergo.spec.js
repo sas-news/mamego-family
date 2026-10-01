@@ -10,7 +10,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -19,8 +19,9 @@ const CAP = `
 // 結界ロジック共有部品 (endGameByScore内・描画内の両方で同じ定義を使う)
 const KEYS_FN = `
             // 結界石: 四隅から2目離れた4点
+            const _kd = Math.max(1, P('key_dist') || 2);
             const KEYSTONES = [
-                [2, 2], [BOARD_SIZE - 3, 2], [2, BOARD_SIZE - 3], [BOARD_SIZE - 3, BOARD_SIZE - 3]
+                [_kd, _kd], [BOARD_SIZE - 1 - _kd, _kd], [_kd, BOARD_SIZE - 1 - _kd], [BOARD_SIZE - 1 - _kd, BOARD_SIZE - 1 - _kd]
             ];
             const inPoly = (px, py, poly) => {
                 let inside = false;
@@ -33,7 +34,7 @@ const KEYS_FN = `
             };
             const barrierInfo = (p) => {
                 const owned = KEYSTONES.filter(([x, y]) => board[y * BOARD_SIZE + x] === p);
-                if (owned.length < 3) return null;
+                if (owned.length < (P('key_min') || 3)) return null;
                 // 単純多角形: x昇順→yで整列して凸包相当 (結界石は4点のみ)
                 const hull = owned.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
                 if (hull.length === 3) {
@@ -56,6 +57,11 @@ module.exports = {
     icon: 'barriergo',
     spec: [
         ...K.rb('BARRIERGO', '結界碁', 'barriergo'),
+        K.params([
+            { key: 'key_min', label: '結界に必要な結界石', min: 2, max: 4, def: 3, unit: '個' },
+            { key: 'key_dist', label: '結界石の隅からの距離', min: 1, max: 4, def: 2, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.6, max: 2.2, def: 1.1, step: 0.1, hint: '交点数×倍率' },
+        ]),
         // 結界スコア: キーストーン3つ以上で囲まれた領域を得点化
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
@@ -82,8 +88,9 @@ module.exports = {
                     <div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>`],
         // 結界線の描画: キーストーンの印と、3つ以上占めた側の結界ライン
         ...K.STONE_MARKS_SPEC(`            {
+                const _kd = Math.max(1, P('key_dist') || 2);
                 const KEYS = [
-                    [2, 2], [BOARD_SIZE - 3, 2], [2, BOARD_SIZE - 3], [BOARD_SIZE - 3, BOARD_SIZE - 3]
+                    [_kd, _kd], [BOARD_SIZE - 1 - _kd, _kd], [_kd, BOARD_SIZE - 1 - _kd], [BOARD_SIZE - 1 - _kd, BOARD_SIZE - 1 - _kd]
                 ];
                 const now = fxNow();
                 ctx.save();
@@ -105,7 +112,7 @@ module.exports = {
                 // 結界ライン: 3つ以上を占めた側に発光リンク
                 [1, 2].forEach(p => {
                     const owned = KEYS.filter(([x, y]) => board[y * BOARD_SIZE + x] === p);
-                    if (owned.length < 3) return;
+                    if (owned.length < (P('key_min') || 3)) return;
                     owned.sort((a, b) => Math.atan2(a[1] - 4.5, a[0] - 4.5) - Math.atan2(b[1] - 4.5, b[0] - 4.5));
                     const c = p === 1 ? '96,165,250' : '248,113,113';
                     ctx.strokeStyle = 'rgba(' + c + ',' + (0.5 + 0.3 * Math.sin(now / 450)) + ')';
@@ -126,7 +133,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 ${CAP}
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`(() => { const K2 = [[2, 2], [BOARD_SIZE - 3, 2], [2, BOARD_SIZE - 3], [BOARD_SIZE - 3, BOARD_SIZE - 3]]; let b = 0, w = 0; K2.forEach(([x, y]) => { const v = board[y * BOARD_SIZE + x]; if (v === 1) b++; else if (v === 2) w++; }); return '結界石 黒' + b + ' / 白' + w; })()`),
+        ...K.EVENT_CHIP_SPEC(`(() => { const _kd = Math.max(1, P('key_dist') || 2); const K2 = [[_kd, _kd], [BOARD_SIZE - 1 - _kd, _kd], [_kd, BOARD_SIZE - 1 - _kd], [BOARD_SIZE - 1 - _kd, BOARD_SIZE - 1 - _kd]]; let b = 0, w = 0; K2.forEach(([x, y]) => { const v = board[y * BOARD_SIZE + x]; if (v === 1) b++; else if (v === 2) w++; }); return '結界石 黒' + b + ' / 白' + w; })()`),
         [K.ONE, K.INFO_ALGO, `            結界碁: 四隅の結界石を3つ以上占めると結界発動。内部の空点と敵石が終局時に得点になる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

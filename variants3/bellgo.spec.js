@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,10 +27,14 @@ module.exports = {
     icon: 'bellgo',
     spec: [
         ...K.rb('BELLGO', '釣鐘碁', 'bellgo'),
+        K.params([
+            { key: 'bell_slope', label: '鐘肩の傾斜', min: 0.5, max: 2, def: 1, step: 0.25, hint: '大きいほど上部が広い' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 1.8, def: 0.9, step: 0.1, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 釣鐘: 上半は窄まった鐘肩、下半は全幅の裾
         const BELL_MID = Math.floor(BOARD_SIZE / 2);
-        function inBell(x, y) { return Math.abs(x - BELL_MID) <= (y <= BELL_MID ? y : BELL_MID); }
+        function inBell(x, y) { return Math.abs(x - BELL_MID) <= Math.min(y * (P('bell_slope') || 1), BELL_MID); }
         // 斜面を滑る: 釣鐘の中で外側へ、縁か石に当たるまで転がる
         function bellSlide(x, y) {
             let dir = x > BELL_MID ? 1 : (x < BELL_MID ? -1 : 0);

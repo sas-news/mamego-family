@@ -10,6 +10,10 @@ module.exports = {
     icon: 'bingolinego',
     spec: [
         ...K.rb('BINGOLINEGO', '釣合碁', 'bingolinego'),
+        K.params([
+            { key: 'bingo_len', label: 'ビンゴ成立の連数', min: 3, max: 7, def: 5, unit: '連' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // ビンゴ採点: 斜めの最長連 (5以上) の長さがそのまま加点
         [K.ONE, `        function endGameByScore() {`, `
         function bingoBonus(player) {
@@ -27,7 +31,7 @@ module.exports = {
                            board[cy * BOARD_SIZE + cx] === player) {
                         len++; cx += dx; cy += dy;
                     }
-                    if (len >= 5) bonus += len;
+                    if (len >= (P('bingo_len') || 5)) bonus += len;
                 }
             });
             return bonus;
@@ -48,7 +52,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 endGameByScore();
                 return;
             }
@@ -72,7 +76,7 @@ module.exports = {
                             let len = 0, cx = x, cy = y;
                             while (cx >= 0 && cx < BOARD_SIZE && cy >= 0 && cy < BOARD_SIZE &&
                                    board[cy * BOARD_SIZE + cx] === pl) { len++; cx += dx; cy += dy; }
-                            if (len >= 4) {
+                            if (len >= (P('bingo_len') || 5) - 1) {
                                 ctx.strokeStyle = pl === 1 ? 'rgba(250, 204, 21, 0.7)' : 'rgba(250, 204, 21, 0.9)';
                                 ctx.lineWidth = Math.max(1.5, cellSize * 0.08);
                                 ctx.beginPath();

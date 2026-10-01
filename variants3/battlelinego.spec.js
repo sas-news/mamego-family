@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,12 @@ module.exports = {
     icon: 'battlelinego',
     spec: [
         ...K.rb('BATTLELINEGO', '陣形碁', 'battlelinego'),
+        K.params([
+            { key: 'line_len', label: '槍陣の連数', min: 3, max: 6, def: 4, unit: '連' },
+            { key: 'line_pts', label: '槍陣の得点', min: 1, max: 5, def: 1, unit: '目' },
+            { key: 'square_pts', label: '方陣の得点', min: 1, max: 5, def: 1, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.6, def: 0.8, step: 0.1, hint: '交点数×倍率' },
+        ]),
         // 陣形ルール: 着手で直線4連(槍陣)や2x2(方陣)が完成すると各+1目
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -42,8 +48,8 @@ module.exports = {
                 let runV = 1;
                 for (let d = 1; at(mx, my - d) === player; d++) runV++;
                 for (let d = 1; at(mx, my + d) === player; d++) runV++;
-                if (runH >= 4 || runV >= 4) {
-                    captures[player]++;
+                if (runH >= (P('line_len') || 4) || runV >= (P('line_len') || 4)) {
+                    captures[player] += (P('line_pts') || 1);
                     fxText(my * BOARD_SIZE + mx, '槍陣 +1', '#f87171', 1200);
                     fxShake(4, 280);
                 }
@@ -54,7 +60,7 @@ module.exports = {
                         at(mx + ox, my + oy + 1) === player && at(mx + ox + 1, my + oy + 1) === player) square = true;
                 });
                 if (square) {
-                    captures[player]++;
+                    captures[player] += (P('square_pts') || 1);
                     fxGlow(my * BOARD_SIZE + mx, '#facc15', 700);
                     fxText(my * BOARD_SIZE + mx, '方陣 +1', '#facc15', 1200);
                 }

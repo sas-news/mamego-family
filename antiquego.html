@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"antique_interval","label":"価値が上がる間隔","min":2,"max":12,"def":4,"unit":"手"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.6,"def":0.8,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1329,7 +1329,7 @@
             {
                 ctx.save();
                 pieces.forEach(pc => {
-                    const age = Math.floor(Math.max(0, history.length - (pc.at || 0)) / 4);
+                    const age = Math.floor(Math.max(0, history.length - (pc.at || 0)) / (P('antique_interval') || 4));
                     if (age < 1) return;
                     pc.cells.forEach(c => {
                         const i = c.y * BOARD_SIZE + c.x;
@@ -1862,7 +1862,7 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -2220,7 +2220,7 @@
             pieces.forEach(pc => {
                 const alive = pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
                 if (!alive) return; // 取られた骨董は価値0
-                const bonus = Math.floor(Math.max(0, history.length - (pc.at || 0)) / 4);
+                const bonus = Math.floor(Math.max(0, history.length - (pc.at || 0)) / (P('antique_interval') || 4));
                 if (pc.player === 1) { territory.black += bonus; antiqueDetail[1] += bonus; }
                 else { territory.white += bonus; antiqueDetail[2] += bonus; }
             });

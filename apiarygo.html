@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"honey_interval","label":"採蜜の間隔","min":2,"max":20,"def":8,"unit":"手"},{"key":"honey_pts","label":"採蜜の得点","min":1,"max":5,"def":1,"unit":"点"},{"key":"flower_radius","label":"花畑の半径","min":0.05,"max":0.4,"def":0.14,"step":0.01,"hint":"盤サイズ×係数"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.8,"def":0.9,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -639,16 +639,22 @@
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         // 花花畑と巣箱: 中央の花畑と上辺両隅の巣箱
-        const API_FLOWER = new Set();
+        let API_FLOWER = new Set();
         const API_HIVE = new Set();
-        {
+        API_HIVE.add(1 * BOARD_SIZE + 1);
+        API_HIVE.add(1 * BOARD_SIZE + (BOARD_SIZE - 2));
+        // 花畑の半径は設定で調整可能 (変更時に区域を即時再構成)
+        function rebuildApiary() {
+            API_FLOWER = new Set();
             const m = Math.floor(BOARD_SIZE / 2);
-            const r = Math.max(1, Math.round(BOARD_SIZE * 0.14));
+            const r = Math.max(1, Math.round(BOARD_SIZE * (P('flower_radius') || 0.14)));
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 if (Math.hypot(x - m, y - m) <= r) API_FLOWER.add(y * BOARD_SIZE + x);
             }
-            API_HIVE.add(1 * BOARD_SIZE + 1);
-            API_HIVE.add(1 * BOARD_SIZE + (BOARD_SIZE - 2));
+        }
+        rebuildApiary();
+        function onVariantParam(p) {
+            if (p.key === 'flower_radius') rebuildApiary();
         }
         // 連が花畑と巣箱の両方に届いているか
         function apiaryConnected(player) {
@@ -1855,7 +1861,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1910,12 +1916,12 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 採蜜碁: 8手ごとに、花畑と巣箱を結ぶ連が蜜を貯める (+1点)
-            if (history.length > 0 && history.length % 8 === 0) {
+            if (history.length > 0 && history.length % (P('honey_interval') || 8) === 0) {
                 [1, 2].forEach(p => {
                     if (apiaryConnected(p)) {
-                        st.score[p]++;
+                        st.score[p] += (P('honey_pts') || 1);
                         const h = [...API_HIVE].find(i => board[i] === p);
-                        if (h !== undefined) { fxBurst(h, '#fbbf24', 12, 1.4); fxText(h, '採蜜+1', '#fbbf24', 1100); }
+                        if (h !== undefined) { fxBurst(h, '#fbbf24', 12, 1.4); fxText(h, '採蜜+' + (P('honey_pts') || 1), '#fbbf24', 1100); }
                     }
                 });
             }

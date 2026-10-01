@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"rally_pts","label":"ラリー1回の得点","min":1,"max":8,"def":2,"unit":"目"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":1.5,"def":0.75,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1806,7 +1806,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -2223,8 +2223,8 @@
             gameOver = true;
             const territory = calculateTerritory();
 
-            const blackTotal = territory.black + captures[1] + st.rally[1] * 2;
-            const whiteTotal = territory.white + captures[2] + komi + st.rally[2] * 2;
+            const blackTotal = territory.black + captures[1] + st.rally[1] * (P('rally_pts') || 2);
+            const whiteTotal = territory.white + captures[2] + komi + st.rally[2] * (P('rally_pts') || 2);
             const diff = Math.abs(blackTotal - whiteTotal);
 
             let winnerTitle = '';
@@ -2237,12 +2237,12 @@
                 details: `
                     <div class="flex justify-between"><span>黒の地:</span> <strong>${territory.black}</strong></div>
                     <div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>${captures[1]}</strong></div>
-                    <div class="flex justify-between"><span>黒のラリー:</span> <strong>+${st.rally[1] * 2}</strong></div>
+                    <div class="flex justify-between"><span>黒のラリー:</span> <strong>+${st.rally[1] * (P('rally_pts') || 2)}</strong></div>
                     <div class="flex justify-between font-bold border-t pt-1"><span>黒合計:</span> <span>${blackTotal}</span></div>
                     <div class="my-1 border-b border-current/10"></div>
                     <div class="flex justify-between"><span>白の地:</span> <strong>${territory.white}</strong></div>
                     <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>${captures[2]}</strong></div>
-                    <div class="flex justify-between"><span>白のラリー:</span> <strong>+${st.rally[2] * 2}</strong></div>
+                    <div class="flex justify-between"><span>白のラリー:</span> <strong>+${st.rally[2] * (P('rally_pts') || 2)}</strong></div>
                     <div class="flex justify-between"><span>コミ:</span> <strong>${komi}</strong></div>
                     <div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>${whiteTotal}</span></div>
                 `

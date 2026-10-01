@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"bet_pts","label":"賭け的中の得点","min":1,"max":5,"def":1,"unit":"点"},{"key":"ply_cap","label":"打ち切り手数","min":0,"max":400,"def":0,"unit":"手","hint":"0=制限なし"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1812,7 +1812,15 @@
             return true;
         }
 
+        let moveCapFired = false;
         function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }
             // 1手戻る用に着手前の状態を退避
             history.push({
                 board: [...board],
@@ -1866,7 +1874,7 @@
             // 賭碁ルール: 相手の直前の石がこの一手を生き延びた → 相手の賭け的中
             if (pendingBet && pendingBet.owner !== player) {
                 if (board[pendingBet.idx] === pendingBet.owner) {
-                    betScore[pendingBet.owner]++;
+                    betScore[pendingBet.owner] += (P('bet_pts') || 1);
                     fxGlow(pendingBet.idx, '#fbbf24', 900);
                     fxText(pendingBet.idx, '+1 的中!', '#fbbf24', 1200);
                 }

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'begomago',
     spec: [
         ...K.rb('BEGOMAGO', 'ベーゴマ碁', 'begomago'),
+        K.params([
+            { key: 'push_dist', label: '押し出し距離', min: 1, max: 3, def: 1, unit: 'マス' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.6, def: 0.8, step: 0.1, hint: '交点数×倍率' },
+        ]),
         // ぶつかり: 着地点に隣接する敵石を1マス押し出す (盤外なら場外アゲハマ)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -38,7 +42,8 @@ module.exports = {
                 getNeighbors(ci).forEach(n => {
                     if (board[n] !== opponent) return;
                     const nx = n % BOARD_SIZE, ny = Math.floor(n / BOARD_SIZE);
-                    const tx = nx + (nx - bc.x), ty = ny + (ny - bc.y);
+                    const _pd = Math.max(1, P('push_dist') || 1);
+                    const tx = nx + (nx - bc.x) * _pd, ty = ny + (ny - bc.y) * _pd;
                     if (tx < 0 || ty < 0 || tx >= BOARD_SIZE || ty >= BOARD_SIZE) {
                         // 盤外へ弾き飛ばした → 場外アゲハマ
                         board[n] = 0;

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('ply_cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'arithmeticgo',
     spec: [
         ...K.rb('ARITHMETICGO', '公差碁', 'arithmeticgo'),
+        K.params([
+            { key: 'diff_bonus', label: '公差ボーナス', min: 1, max: 8, def: 2, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 400, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { bonus: { 1: 0, 2: 0 }, last2: { 1: [], 2: [] } }; // 公差ボーナス・直前2手の座標`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -60,10 +64,10 @@ module.exports = {
                     const [a, b] = h;
                     if ((b.x - a.x === p.x - b.x) && (b.y - a.y === p.y - b.y)
                         && (p.x !== b.x || p.y !== b.y)) {
-                        st.bonus[player] += 2;
+                        st.bonus[player] += (P('diff_bonus') || 2);
                         const ci = p.y * BOARD_SIZE + p.x;
                         fxGlow(ci, '#a3e635', 700);
-                        fxText(ci, '公差 +2目', '#a3e635', 1200);
+                        fxText(ci, '公差 +' + (P('diff_bonus') || 2) + '目', '#a3e635', 1200);
                     }
                 }
                 st.last2[player] = [h[h.length - 1] || null, { x: p.x, y: p.y }].filter(Boolean).slice(-2);

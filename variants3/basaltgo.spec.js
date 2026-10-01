@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,11 @@ module.exports = {
     icon: 'basaltgo',
     spec: [
         ...K.rb('BASALTGO', '玄武碁', 'basaltgo'),
+        K.params([
+            { key: 'col_adj', label: '節理に必要な隣接味方数', min: 2, max: 4, def: 3, unit: '方向' },
+            { key: 'col_pts', label: '玄武岩の得点', min: 1, max: 5, def: 1, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 1.8, def: 0.9, step: 0.1, hint: '交点数×倍率' },
+        ]),
         ...ST('{ col: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -56,7 +61,7 @@ module.exports = {
                 const tryColumn = idx => {
                     if (st.col[idx] || board[idx] !== player) return;
                     const nb = getNeighbors(idx);
-                    if (nb.length >= 3 && nb.every(n => board[n] === player)) {
+                    if (nb.length >= (P('col_adj') || 3) && nb.every(n => board[n] === player)) {
                         st.col[idx] = 1;
                         fxBurst(idx, '#78716c', 12);
                         fxText(idx, '節理', '#a8a29e', 1000);
@@ -103,8 +108,8 @@ module.exports = {
         [K.ONE, `            const territory = calculateTerritory();`,
 `            const territory = calculateTerritory();
             for (const k in st.col) {
-                if (board[k] === 1) territory.black += 1;
-                else if (board[k] === 2) territory.white += 1;
+                if (board[k] === 1) territory.black += (P('col_pts') || 1);
+                else if (board[k] === 2) territory.white += (P('col_pts') || 1);
             }`],
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            玄武碁: 全隣接点 (3方向以上) を味方で固めた石は柱状節理 — 取れず終局時+1目<br>
