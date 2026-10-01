@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,16 +27,29 @@ module.exports = {
     icon: 'bunkergo',
     spec: [
         ...K.rb('BUNKERGO', '地下壕碁', 'bunkergo'),
+        K.params([
+            { key: 'bunker_r', label: '壕の半径', min: 2, max: 4, def: 2, hint: '内部はこの値-1の正方形' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.9, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 地下壕: 中央5x5の壕。周壁は石垣、内部は天井で護られた空間、2箇所の出入口
         const BUNK_C = Math.floor(BOARD_SIZE / 2);
-        const BUNK_SET = new Set(); // 壕内部 (3x3)
-        for (let y = BUNK_C - 1; y <= BUNK_C + 1; y++)
-            for (let x = BUNK_C - 1; x <= BUNK_C + 1; x++) BUNK_SET.add(y * BOARD_SIZE + x);
-        const BUNK_DOORS = new Set([BUNK_C - 2, BUNK_C + 2].flatMap(v => [v * BOARD_SIZE + BUNK_C, BUNK_C * BOARD_SIZE + v]));
+        const BUNK_SET = new Set(); // 壕内部
+        const BUNK_DOORS = new Set();
+        // 半径は設定で調整可能。変更は即時再構成される
+        function rebuildBunker() {
+            const R = Math.max(2, P('bunker_r') || 2);
+            BUNK_SET.clear(); BUNK_DOORS.clear();
+            for (let y = BUNK_C - (R - 1); y <= BUNK_C + (R - 1); y++)
+                for (let x = BUNK_C - (R - 1); x <= BUNK_C + (R - 1); x++) BUNK_SET.add(y * BOARD_SIZE + x);
+            [BUNK_C - R, BUNK_C + R].forEach(v => { BUNK_DOORS.add(v * BOARD_SIZE + BUNK_C); BUNK_DOORS.add(BUNK_C * BOARD_SIZE + v); });
+        }
+        rebuildBunker();
+        function onVariantParam(p) { if (p.key === 'bunker_r') rebuildBunker(); }
         function isBunkWall(x, y) {
-            const inRing = Math.abs(x - BUNK_C) === 2 || Math.abs(y - BUNK_C) === 2;
-            const inside = Math.abs(x - BUNK_C) <= 2 && Math.abs(y - BUNK_C) <= 2;
+            const R = Math.max(2, P('bunker_r') || 2);
+            const inRing = Math.abs(x - BUNK_C) === R || Math.abs(y - BUNK_C) === R;
+            const inside = Math.abs(x - BUNK_C) <= R && Math.abs(y - BUNK_C) <= R;
             return inside && inRing && !BUNK_DOORS.has(y * BOARD_SIZE + x);
         }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `

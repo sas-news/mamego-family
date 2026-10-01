@@ -9,6 +9,10 @@ module.exports = {
     kind: 'bury',
     spec: [
         ...K.rb('BURYGO', '埋蔵碁', 'burygo'),
+        K.params([
+            { key: 'bury_interval', label: '埋蔵の間隔', min: 2, max: 8, def: 4, unit: '手' },
+            { key: 'bury_duration', label: '埋蔵期間', min: 2, max: 8, def: 4, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { pcnt: { 1: 0, 2: 0 } }; // 埋蔵碁: 各側の着手数 (4手ごとに埋蔵)`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -33,7 +37,7 @@ module.exports = {
             st = data.st ? JSON.parse(JSON.stringify(data.st)) : { pcnt: { 1: 0, 2: 0 } };`],
         [K.ONE, '        function drawBoardElements(padding, cellSize) {',
 `        // 埋蔵碁: 埋蔵石は配置から4手の間「伏せ」状態
-        function isBuried(pc) { return !!pc.buried && (history.length - (pc.at || 0)) < 4; }
+        function isBuried(pc) { return !!pc.buried && (history.length - (pc.at || 0)) < (P('bury_duration') || 4); }
 
         function drawBoardElements(padding, cellSize) {`],
         [K.ONE, K.PIECES_PUSH, `            st.pcnt[player] = (st.pcnt[player] || 0) + 1;
@@ -44,10 +48,10 @@ module.exports = {
                 rot: move.rot,
                 cells: move.cells,
                 at: history.length,
-                buried: st.pcnt[player] % 4 === 0
+                buried: st.pcnt[player] % (P('bury_interval') || 4) === 0
             });
             // 埋蔵: 土が盛り上がる演出
-            if (st.pcnt[player] % 4 === 0) {
+            if (st.pcnt[player] % (P('bury_interval') || 4) === 0) {
                 move.cells.forEach(p => {
                     const bi = p.y * BOARD_SIZE + p.x;
                     fxBurst(bi, '#8d6e63', 9, 1.0);
@@ -86,7 +90,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`(function(){ const b = pieces.filter(pc => isBuried(pc)).length; return b > 0 ? '埋蔵 ' + b + '石' : '次の埋蔵 ' + (4 - st.pcnt[turn] % 4) + '手後'; })()`),
+        ...K.EVENT_CHIP_SPEC(`(function(){ const b = pieces.filter(pc => isBuried(pc)).length; const iv = P('bury_interval') || 4; return b > 0 ? '埋蔵 ' + b + '石' : '次の埋蔵 ' + (iv - st.pcnt[turn] % iv) + '手後'; })()`),
         [K.ONE, K.INFO_ALGO, `            埋蔵碁: 各側4手ごとの石は土に埋められ、4手の間は土饅頭にしか見えない<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

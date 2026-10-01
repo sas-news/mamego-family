@@ -9,12 +9,20 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('BRIDGEGO', '架橋碁', 'bridgego'),
+        K.params([
+            { key: 'bridge_count', label: '橋の数', min: 1, max: 4, def: 1 },
+        ]),
         // 中央列を海峡に (中央1点だけ橋)
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
                 const c = Math.floor(BOARD_SIZE / 2);
                 for (let y = 0; y < BOARD_SIZE; y++) board[y * BOARD_SIZE + c] = 3;
-                board[c * BOARD_SIZE + c] = 0;
+                // 橋は設定本数だけ海峡に等間隔で架ける
+                const bcnt = Math.max(1, Math.min(BOARD_SIZE, P('bridge_count') || 1));
+                for (let b = 0; b < bcnt; b++) {
+                    const by = Math.floor((b + 0.5) * BOARD_SIZE / bcnt);
+                    board[by * BOARD_SIZE + c] = 0;
+                }
             }`],
         // 海峡は青く
                 [K.ONE, '            const covered = new Set(); // ピース描画でカバー済みのマス', `            const covered = new Set(); // ピース描画でカバー済みのマス
@@ -47,17 +55,21 @@ module.exports = {
         K.CUE_STARS(`            // 架橋: 海峡に架かる板橋
             {
                 const c = Math.floor(BOARD_SIZE / 2);
-                const cx = padding + c * cellSize, cy = padding + c * cellSize;
+                const bcnt = Math.max(1, Math.min(BOARD_SIZE, P('bridge_count') || 1));
                 ctx.save();
-                ctx.fillStyle = '#5d3d20';
-                ctx.fillRect(cx - cellSize * 0.52, cy - cellSize * 0.42, cellSize * 1.04, cellSize * 0.84);
-                ctx.fillStyle = '#8a5a2b';
-                for (let k = 0; k < 4; k++) {
-                    ctx.fillRect(cx - cellSize * 0.46 + k * cellSize * 0.25, cy - cellSize * 0.36, cellSize * 0.19, cellSize * 0.72);
+                for (let b = 0; b < bcnt; b++) {
+                    const by = Math.floor((b + 0.5) * BOARD_SIZE / bcnt);
+                    const cx = padding + c * cellSize, cy = padding + by * cellSize;
+                    ctx.fillStyle = '#5d3d20';
+                    ctx.fillRect(cx - cellSize * 0.52, cy - cellSize * 0.42, cellSize * 1.04, cellSize * 0.84);
+                    ctx.fillStyle = '#8a5a2b';
+                    for (let k = 0; k < 4; k++) {
+                        ctx.fillRect(cx - cellSize * 0.46 + k * cellSize * 0.25, cy - cellSize * 0.36, cellSize * 0.19, cellSize * 0.72);
+                    }
+                    ctx.fillStyle = '#3d2812';
+                    ctx.fillRect(cx - cellSize * 0.52, cy - cellSize * 0.42, cellSize * 1.04, cellSize * 0.07);
+                    ctx.fillRect(cx - cellSize * 0.52, cy + cellSize * 0.35, cellSize * 1.04, cellSize * 0.07);
                 }
-                ctx.fillStyle = '#3d2812';
-                ctx.fillRect(cx - cellSize * 0.52, cy - cellSize * 0.42, cellSize * 1.04, cellSize * 0.07);
-                ctx.fillRect(cx - cellSize * 0.52, cy + cellSize * 0.35, cellSize * 1.04, cellSize * 0.07);
                 ctx.restore();
             }`),
         [K.ONE, K.RV_ALGO, K.rv([

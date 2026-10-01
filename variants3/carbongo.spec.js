@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,12 +47,17 @@ module.exports = {
     icon: 'carbongo',
     spec: [
         ...K.rb('CARBONGO', '炭素碁', 'carbongo'),
+        K.params([
+            { key: 'press_scale', label: '高圧区域の広さ', min: 10, max: 60, def: 32, unit: '%', hint: '盤幅に対する菱形半径の割合' },
+            { key: 'dia_pt', label: 'ダイヤ1個の得点', min: 1, max: 3, def: 1, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.9, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 高圧区域: 中央の菱形地帯。中の石はダイヤに変質する
-        const CARB_R = Math.floor(BOARD_SIZE * 0.32);
+        function carbR() { return Math.max(1, Math.floor(BOARD_SIZE * (P('press_scale') || 32) / 100)); }
         const CARB_C = (BOARD_SIZE - 1) / 2;
-        function isPress(x, y) { return Math.abs(x - CARB_C) + Math.abs(y - CARB_C) <= CARB_R; }`],
+        function isPress(x, y) { return Math.abs(x - CARB_C) + Math.abs(y - CARB_C) <= carbR(); }`],
         // 高圧区域に着いた石はダイヤ化
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
 `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
@@ -74,7 +79,7 @@ module.exports = {
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     if (!isPress(x, y)) continue;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
-                    const d = 1 - (Math.abs(x - CARB_C) + Math.abs(y - CARB_C)) / CARB_R;
+                    const d = 1 - (Math.abs(x - CARB_C) + Math.abs(y - CARB_C)) / carbR();
                     ctx.fillStyle = 'rgba(180, 90, 20, ' + (0.06 + d * 0.16) + ')';
                     ctx.fillRect(cx - cellSize * 0.5, cy - cellSize * 0.5, cellSize, cellSize);
                 }
@@ -107,7 +112,7 @@ module.exports = {
 `        function endGameByScore() {
             if (!st._diaDone) {
                 st._diaDone = true;
-                st.dia.forEach(i => { if (board[i] === 1 || board[i] === 2) captures[board[i]]++; });
+                st.dia.forEach(i => { if (board[i] === 1 || board[i] === 2) captures[board[i]] += (P('dia_pt') || 1); });
             }
             _endGameByScoreCore();
         }

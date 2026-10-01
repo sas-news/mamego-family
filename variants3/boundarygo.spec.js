@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,11 @@ module.exports = {
     icon: 'boundarygo',
     spec: [
         ...K.rb('BOUNDARYGO', '境界碁', 'boundarygo'),
+        K.params([
+            { key: 'boundary_pt', label: '敵石1つあたりの点', min: 1, max: 3, def: 1 },
+            { key: 'boundary_max', label: '1手の上限', min: 1, max: 8, def: 3 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.9, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -74,7 +79,7 @@ module.exports = {
             const bIdx = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             let bN = 0;
             getNeighbors(bIdx).forEach(nb => { if (board[nb] === opponent) bN++; });
-            st.score[player] += Math.min(bN, 3);
+            st.score[player] += Math.min(bN * (P('boundary_pt') || 1), P('boundary_max') || 3);
 
             turn = opponent;`],
         ...K.STONE_MARKS_SPEC(`            // 境界杭: 敵に隣接する最後の着手に杭の印

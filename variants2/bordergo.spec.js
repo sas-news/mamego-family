@@ -9,6 +9,9 @@ module.exports = {
     kind: 'border',
     spec: [
         ...K.rb('BORDERGO', '国境碁', 'bordergo'),
+        K.params([
+            { key: 'border_range', label: '接敵範囲', min: 1, max: 3, def: 1, hint: '敵石からの距離 (1=8近傍)' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -17,13 +20,14 @@ module.exports = {
             // 国境碁ルール: 敵石の8近傍 (斜め含む) にのみ着手可 (敵石が無い間は自由)
             {
                 const enemy = player === 1 ? 2 : 1;
+                const rr = Math.max(1, P('border_range') || 1); // 接敵範囲
                 let hasEnemy = false;
                 const zone = new Set();
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] !== enemy) continue;
                     hasEnemy = true;
                     const ex = i % BOARD_SIZE, ey = Math.floor(i / BOARD_SIZE);
-                    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -rr; dy <= rr; dy++) for (let dx = -rr; dx <= rr; dx++) {
                         if (dx === 0 && dy === 0) continue;
                         const nx = ex + dx, ny = ey + dy;
                         if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE) zone.add(ny * BOARD_SIZE + nx);

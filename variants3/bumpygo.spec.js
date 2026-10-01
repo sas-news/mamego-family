@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,9 +27,14 @@ module.exports = {
     icon: 'bumpygo',
     spec: [
         ...K.rb('BUMPYGO', '凸凹碁', 'bumpygo'),
+        K.params([
+            { key: 'height_max', label: '起伏の最大高さ', min: 3, max: 8, def: 5, hint: '高さは0〜この値-1' },
+            { key: 'roll_scale', label: '転がり上限 (盤の倍数)', min: 4, max: 40, def: 13, hint: '13路で13 (元は盤の2乗ステップ)' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.9, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 起伏: 各交点の高さ 0(窪)〜4(峰) を決定的に持つ
-        const BUMP_H = (x, y) => (x * 31 + y * 17 + ((x * y) % 7) * 5) % 5;`],
+        const BUMP_H = (x, y) => (x * 31 + y * 17 + ((x * y) % 7) * 5) % (P('height_max') || 5);`],
         // 着いた石は下り坂を転がる — 止まった先で再度取り判定
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -39,7 +44,7 @@ module.exports = {
                 const p0 = move.cells[0];
                 let cx = p0.x, cy = p0.y;
                 let rolled = false;
-                for (let guard = 0; guard < BOARD_SIZE * BOARD_SIZE; guard++) {
+                for (let guard = 0; guard < (P('roll_scale') || 13) * BOARD_SIZE; guard++) {
                     const here = BUMP_H(cx, cy);
                     let bx = -1, by = -1, bh = here;
                     [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {

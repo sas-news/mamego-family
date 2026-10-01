@@ -10,9 +10,13 @@ module.exports = {
     icon: 'blockcitygo',
     spec: [
         ...K.rb('BLOCKCITYGO', '街区碁', 'blockcitygo'),
+        K.params([
+            { key: 'block_span', label: '道路の間隔', min: 3, max: 7, def: 4, hint: '街区サイズはこの値-1' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.8, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 街区: 道路 ((x+1)%4==0 || (y+1)%4==0) で分断された陸地成分
-        function isRoad(x, y) { return (x + 1) % 4 === 0 || (y + 1) % 4 === 0; }
+        // 街区: 道路 ((x+1)%span==0 || (y+1)%span==0) で分断された陸地成分
+        function isRoad(x, y) { const s = Math.max(3, P('block_span') || 4); return (x + 1) % s === 0 || (y + 1) % s === 0; }
         let blockDetail = { 1: 0, 2: 0 }; // 直近の終局で領有した街区数`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
@@ -61,7 +65,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

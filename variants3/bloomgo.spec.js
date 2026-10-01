@@ -10,9 +10,15 @@ module.exports = {
     icon: 'bloomgo',
     spec: [
         ...K.rb('BLOOMGO', '開花碁', 'bloomgo'),
+        K.params([
+            { key: 'season_period', label: '季節周期', min: 6, max: 24, def: 12, unit: '手' },
+            { key: 'spring_from', label: '春の開始 (周期内)', min: 2, max: 20, def: 8 },
+            { key: 'bloom_liberty', label: '春の呼吸ボーナス', min: 1, max: 3, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.8, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 開花: 12手周期で mod 8〜11 が「春」。春は全連の呼吸点+1
-        function inSpring() { return history.length % 12 >= 8; }`],
+        // 開花: 周期 mod で「春」。春は全連の呼吸点+ボーナス
+        function inSpring() { return history.length % (P('season_period') || 12) >= (P('spring_from') || 8); }`],
         // 取り判定: 春は全連の呼吸点+1
         [K.ONE, `        function getCapturedStones(boardState, player) {
             const deadMask = computeDeadMask(boardState);
@@ -76,7 +82,7 @@ module.exports = {
                         });
                     }
 
-                    if (spring) liberties += 1; // 開花: 春は呼吸+1
+                    if (spring) liberties += (P('bloom_liberty') || 1); // 開花: 春は呼吸+bonus
                     if (liberties < 1) {
                         captured.push(...group);
                     }
@@ -131,7 +137,7 @@ module.exports = {
                     }
                 });
             }
-            if (inSpring()) liberties += 1; // 開花: 春は呼吸+1
+            if (inSpring()) liberties += (P('bloom_liberty') || 1); // 開花: 春は呼吸+bonus
             return liberties;
         }`],
         // 季節チップ
@@ -163,7 +169,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

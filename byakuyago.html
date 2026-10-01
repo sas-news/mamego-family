@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"night_rows","label":"常夜の行数","min":1,"max":8,"def":3,"unit":"行"},{"key":"wn_period","label":"白夜の周期","min":10,"max":40,"def":20,"unit":"手"},{"key":"wn_start","label":"白夜窓の開始","min":2,"max":30,"def":10},{"key":"wn_end","label":"白夜窓の終了","min":3,"max":35,"def":15},{"key":"cap_ratio","label":"打ち切り手数係数","min":0.4,"max":1.5,"def":0.75,"step":0.05,"hint":"交点数×この値で強制採点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1151,10 +1151,10 @@
             ctx.restore();
 
             // 常夜の帯 (白夜中は消える)
-            if (!((history.length % 20) >= 10 && (history.length % 20) <= 15)) {
+            if (!((history.length % (P('wn_period') || 20)) >= (P('wn_start') || 10) && (history.length % (P('wn_period') || 20)) <= (P('wn_end') || 15))) {
                 ctx.save();
                 ctx.fillStyle = 'rgba(30,27,75,0.45)';
-                ctx.fillRect(padding - cellSize / 2, padding - cellSize / 2, BOARD_SIZE * cellSize, 3 * cellSize);
+                ctx.fillRect(padding - cellSize / 2, padding - cellSize / 2, BOARD_SIZE * cellSize, (P('night_rows') || 3) * cellSize);
                 ctx.restore();
             }
 
@@ -1809,7 +1809,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1845,8 +1845,8 @@
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;
             // 白夜碁: 上3行は常夜 (取れない)。白夜窓 (周期10-15手目) は夜が消える
-            const wn = (history.length % 20) >= 10 && (history.length % 20) <= 15;
-            const captured = getCapturedStones(board, opponent).filter(i => wn || Math.floor(i / BOARD_SIZE) >= 3);
+            const wn = (history.length % (P('wn_period') || 20)) >= (P('wn_start') || 10) && (history.length % (P('wn_period') || 20)) <= (P('wn_end') || 15);
+            const captured = getCapturedStones(board, opponent).filter(i => wn || Math.floor(i / BOARD_SIZE) >= (P('night_rows') || 3));
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
@@ -2734,7 +2734,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ((history.length % 20) >= 10 && (history.length % 20) <= 15 ? '白夜!' : '白夜まで' + (((10 - history.length % 20) + 20) % 20) + '手');
+                const et = gameOver ? '' : ((history.length % (P('wn_period') || 20)) >= (P('wn_start') || 10) && (history.length % (P('wn_period') || 20)) <= (P('wn_end') || 15) ? '白夜!' : '白夜まで' + ((((P('wn_start') || 10) - history.length % (P('wn_period') || 20)) + (P('wn_period') || 20)) % (P('wn_period') || 20)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

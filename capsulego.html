@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"ring_dist","label":"中身の飛距離","min":1,"max":4,"def":2,"hint":"捕獲点からこの距離のリングに出る"},{"key":"cap_moves","label":"打ち切り手数","min":60,"max":400,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1826,9 +1826,10 @@
                 captured.forEach(ci => {
                     const cx = ci % BOARD_SIZE, cy = Math.floor(ci / BOARD_SIZE);
                     let placed2 = false;
-                    for (let dy = -2; dy <= 2 && !placed2; dy++) {
-                        for (let dx = -2; dx <= 2 && !placed2; dx++) {
-                            if (Math.max(Math.abs(dx), Math.abs(dy)) !== 2) continue;
+                    const rd = Math.max(1, P('ring_dist') || 2);
+                    for (let dy = -rd; dy <= rd && !placed2; dy++) {
+                        for (let dx = -rd; dx <= rd && !placed2; dx++) {
+                            if (Math.max(Math.abs(dx), Math.abs(dy)) !== rd) continue;
                             const nx = cx + dx, ny = cy + dy;
                             if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) continue;
                             const ni = ny * BOARD_SIZE + nx;
@@ -1855,7 +1856,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'byoubugo',
     spec: [
         ...K.rb('BYOUBUGO', '屏風碁', 'byoubugo'),
+        K.params([
+            { key: 'screen_len', label: '屏風になる連数', min: 3, max: 7, def: 4, unit: '連' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.8, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         // 屏風捕獲ブロック: 横4連を含む敵連は取り除かない
         [K.ONE, K.CAPTURE_BLOCK, `            let captured = getCapturedStones(board, opponent);
             // 屏風ルール: 横一線4連以上を含む連は風を遮られて取られない
@@ -42,9 +46,12 @@ module.exports = {
                         });
                     }
                     const inG = new Set(grp);
+                    const L = Math.max(3, P('screen_len') || 4);
                     const screen = grp.some(i0 => {
                         const x = i0 % BOARD_SIZE;
-                        return x <= BOARD_SIZE - 4 && inG.has(i0 + 1) && inG.has(i0 + 2) && inG.has(i0 + 3);
+                        if (x > BOARD_SIZE - L) return false;
+                        for (let k = 1; k < L; k++) if (!inG.has(i0 + k)) return false;
+                        return true;
                     });
                     if (screen) grp.forEach(g => keep.add(g));
                 });
@@ -60,20 +67,23 @@ module.exports = {
             }`],
         // 屏風の描画: 横4連の走りに金の帯マーク (drawStoneMarks)
         ...K.STONE_MARKS_SPEC(`            {
-                // 屏風連: 横4連の走りの上に薄い金帯
-                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x <= BOARD_SIZE - 4; x++) {
+                // 屏風連: 横の長連の走りの上に薄い金帯
+                const L = Math.max(3, P('screen_len') || 4);
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x <= BOARD_SIZE - L; x++) {
                     const i0 = y * BOARD_SIZE + x;
                     const v = board[i0];
-                    if ((v === 1 || v === 2) && board[i0 + 1] === v && board[i0 + 2] === v && board[i0 + 3] === v) {
+                    let run = (v === 1 || v === 2);
+                    for (let k = 1; k < L; k++) if (board[i0 + k] !== v) { run = false; break; }
+                    if (run) {
                         ctx.save();
                         ctx.strokeStyle = 'rgba(212,175,55,0.75)';
                         ctx.lineWidth = Math.max(1.5, cellSize * 0.06);
                         ctx.beginPath();
                         ctx.moveTo(padding + x * cellSize - cellSize * 0.3, padding + y * cellSize - cellSize * 0.36);
-                        ctx.lineTo(padding + (x + 3) * cellSize + cellSize * 0.3, padding + y * cellSize - cellSize * 0.36);
+                        ctx.lineTo(padding + (x + L - 1) * cellSize + cellSize * 0.3, padding + y * cellSize - cellSize * 0.36);
                         ctx.stroke();
                         ctx.restore();
-                        x += 3;
+                        x += L - 1;
                     }
                 }
             }`),

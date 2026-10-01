@@ -11,13 +11,13 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
             }`],
 ];
-const IS_CASTLE = `                    const inCastle = (x, y) => (x < 3 || x >= BOARD_SIZE - 3) && (y < 3 || y >= BOARD_SIZE - 3);`;
+const IS_CASTLE = `                    const inCastle = (x, y) => (x < (P('castle_size') || 3) || x >= BOARD_SIZE - (P('castle_size') || 3)) && (y < (P('castle_size') || 3) || y >= BOARD_SIZE - (P('castle_size') || 3));`;
 module.exports = {
     file: 'castleholdgo.html',
     en: 'CASTLEHOLDGO',
@@ -28,10 +28,16 @@ module.exports = {
     icon: 'castleholdgo',
     spec: [
         ...K.rb('CASTLEHOLDGO', '篭城碁', 'castleholdgo'),
+        K.params([
+            { key: 'castle_size', label: '城の幅', min: 2, max: 6, def: 3, hint: '四隅の城域はこの幅の正方形' },
+            { key: 'ration_every', label: '兵糧の間隔', min: 2, max: 12, def: 4, unit: '手' },
+            { key: 'ration_min', label: '兵糧対象の最小連', min: 2, max: 5, def: 2, unit: '連' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.8, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         // 捕獲改変: 城内に完全に篭った連は外から取れない
         [K.ONE, K.CAPTURE_BLOCK, `            const captured0 = getCapturedStones(board, opponent);
             // 篭城: 四隅の城(角3x3)に完全に籠る連は城内で守られる
-            const inCastle = (x, y) => (x < 3 || x >= BOARD_SIZE - 3) && (y < 3 || y >= BOARD_SIZE - 3);
+            const inCastle = (x, y) => (x < (P('castle_size') || 3) || x >= BOARD_SIZE - (P('castle_size') || 3)) && (y < (P('castle_size') || 3) || y >= BOARD_SIZE - (P('castle_size') || 3));
             const held = new Set();
             captured0.forEach(i => {
                 const g = getConnectedGroup(i, opponent);
@@ -56,15 +62,15 @@ module.exports = {
 
             // 籠城の兵糧: 自分の4手ごと、城内に完全に篭った自連(2石以上)から1人脱落
             {
-                const inCastle = (x, y) => (x < 3 || x >= BOARD_SIZE - 3) && (y < 3 || y >= BOARD_SIZE - 3);
-                if (history.length % 4 === 3) {
+                const inCastle = (x, y) => (x < (P('castle_size') || 3) || x >= BOARD_SIZE - (P('castle_size') || 3)) && (y < (P('castle_size') || 3) || y >= BOARD_SIZE - (P('castle_size') || 3));
+                if (history.length % (P('ration_every') || 4) === (P('ration_every') || 4) - 1) {
                     const seenC = {};
                     let holdGroup = null;
                     for (let i = 0; i < board.length; i++) {
                         if (board[i] !== player || seenC[i]) continue;
                         const g = getConnectedGroup(i, player);
                         g.forEach(j => { seenC[j] = true; });
-                        if (g.length >= 2 && g.every(j => inCastle(j % BOARD_SIZE, Math.floor(j / BOARD_SIZE)))) { holdGroup = g; break; }
+                        if (g.length >= (P('ration_min') || 2) && g.every(j => inCastle(j % BOARD_SIZE, Math.floor(j / BOARD_SIZE)))) { holdGroup = g; break; }
                     }
                     if (holdGroup) {
                         const starve = Math.max.apply(null, holdGroup);
@@ -81,7 +87,7 @@ module.exports = {
         // 城域の描画: 四隅に石垣色の城内エリア
         ...K.CUE_GRID(`            // 城域: 四隅3x3に石垣色の帯
             {
-                const inC = (x, y) => (x < 3 || x >= BOARD_SIZE - 3) && (y < 3 || y >= BOARD_SIZE - 3);
+                const inC = (x, y) => (x < (P('castle_size') || 3) || x >= BOARD_SIZE - (P('castle_size') || 3)) && (y < (P('castle_size') || 3) || y >= BOARD_SIZE - (P('castle_size') || 3));
                 ctx.save();
                 ctx.fillStyle = 'rgba(120,113,108,0.28)';
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {

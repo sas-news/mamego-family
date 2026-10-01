@@ -9,9 +9,13 @@ module.exports = {
     kind: 'card',
     spec: [
         ...K.rb('CARDGO', '札碁', 'cardgo'),
+        K.params([
+            { key: 'card_period', label: '札の周期', min: 3, max: 6, def: 3, hint: '恵み→呪い→通常…の並び' },
+            { key: 'bless_mult', label: '恵みの取り倍率', min: 1, max: 4, def: 2 },
+        ]),
         [K.ONE, '        function executeMove(move, player) {',
 `        // 札碁: 手数 mod 3 でその手の札が決まる (1=恵み:取り2倍, 2=呪い:取り不可, 0=通常)
-        function currentCard(n) { return (n === undefined ? history.length : n) % 3; }
+        function currentCard(n) { return (n === undefined ? history.length : n) % (P('card_period') || 3); }
         function cardName(c) { return c === 1 ? '恵みの札 (取り2倍)' : c === 2 ? '呪いの札 (取り不可)' : '通常の札'; }
 
         function executeMove(move, player) {`],
@@ -21,7 +25,7 @@ module.exports = {
             const cardIdx = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             if (captured.length > 0 && card !== 2) {
                 captured.forEach(idx => board[idx] = 0);
-                captures[player] += captured.length * (card === 1 ? 2 : 1);
+                captures[player] += captured.length * (card === 1 ? (P('bless_mult') || 2) : 1);
                 // 恵みの札: 取りた石が金色に滲み、×2の宣言が舞う
                 if (card === 1) {
                     captured.forEach(idx => fxGlow(idx, '#facc15', 800));

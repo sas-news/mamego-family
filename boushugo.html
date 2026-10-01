@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"sow_period","label":"芒種の周期","min":10,"max":40,"def":20,"unit":"手"},{"key":"sow_start","label":"蒔き期の開始","min":1,"max":15,"def":5},{"key":"sow_end","label":"蒔き期の終了","min":2,"max":15,"def":7},{"key":"sprout_delay","label":"発芽までの手数","min":4,"max":16,"def":8,"unit":"手"},{"key":"cap_ratio","label":"打ち切り手数係数","min":0.4,"max":1.5,"def":0.75,"step":0.05,"hint":"交点数×この値で強制採点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1809,7 +1809,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1846,11 +1846,11 @@
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;
             // 芒種碁: 周期の5-7手目は種蒔き期。着手が種として埋まる
-            const sowing = (history.length % 20) >= 5 && (history.length % 20) <= 7;
+            const sowing = (history.length % (P('sow_period') || 20)) >= (P('sow_start') || 5) && (history.length % (P('sow_period') || 20)) <= (P('sow_end') || 7);
             const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             if (sowing) {
                 board[mi] = 4;
-                st.seed[mi] = { p: player, at: history.length + 8 };
+                st.seed[mi] = { p: player, at: history.length + (P('sprout_delay') || 8) };
                 fxGlow(mi, '#a3e635', 700);
                 fxText(mi, '種', '#84cc16', 900);
                 soundManager.playPlace();
@@ -2760,7 +2760,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('芒種 ' + ((history.length % 20) >= 5 && (history.length % 20) <= 7 ? '種蒔き期' : (history.length % 20) < 5 ? '蒔まで' + (5 - history.length % 20) + '手' : '次周期'));
+                const et = gameOver ? '' : ('芒種 ' + ((history.length % (P('sow_period') || 20)) >= (P('sow_start') || 5) && (history.length % (P('sow_period') || 20)) <= (P('sow_end') || 7) ? '種蒔き期' : (history.length % 20) < 5 ? '蒔まで' + ((P('sow_start') || 5) - history.length % (P('sow_period') || 20)) + '手' : '次周期'));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

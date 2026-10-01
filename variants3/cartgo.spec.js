@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'cartgo',
     spec: [
         ...K.rb('CARTGO', '荷車碁', 'cartgo'),
+        K.params([
+            { key: 'cart_len', label: '荷車になる連長', min: 2, max: 4, def: 2, unit: '連' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.8, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         // 荷車: 横に丁度2つ並んだ連は荷車。荷車が取られるとき、両側の「車輪」は転がって逃げる (端の1石だけアゲハマ)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured0 = getCapturedStones(board, opponent);
             const real = [];
@@ -37,7 +41,8 @@ module.exports = {
                 g.forEach(j => { seenG[j] = true; });
                 // 荷車: 丁度2石で横一列の連は車 — 轢かれても荷物(端の1石)だけ渡り、車体は残る
                 const coords = g.map(j => [j % BOARD_SIZE, Math.floor(j / BOARD_SIZE)]);
-                const isCart = g.length === 2 && coords[0][1] === coords[1][1] && Math.abs(coords[0][0] - coords[1][0]) === 1;
+                const cartLen = Math.max(2, P('cart_len') || 2);
+                const isCart = g.length === cartLen && coords.every(c => c[1] === coords[0][1]) && Math.abs(coords[0][0] - coords[cartLen - 1][0]) === cartLen - 1;
                 if (isCart) {
                     const minX = Math.min(coords[0][0], coords[1][0]);
                     const wheel = g.find(j => j % BOARD_SIZE === minX); // 片側の車輪は逃げる

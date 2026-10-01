@@ -10,6 +10,11 @@ module.exports = {
     icon: 'branchgo',
     spec: [
         ...K.rb('BRANCHGO', '枝分碁', 'branchgo'),
+        K.params([
+            { key: 'branch_deg', label: '分岐とみなす次数', min: 3, max: 4, def: 3 },
+            { key: 'branch_bonus', label: '分岐点ボーナス', min: 1, max: 3, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.8, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let branchDetail = { 1: 0, 2: 0 }; // 直近終局で計上した分岐点の数`],
         [K.ONE, `            const territory = calculateTerritory();`,
@@ -20,16 +25,16 @@ module.exports = {
                 const p = board[i];
                 if (p !== 1 && p !== 2) continue;
                 const deg = getNeighbors(i).filter(n => board[n] === p).length;
-                if (deg >= 3) {
+                if (deg >= (P('branch_deg') || 3)) {
                     branchDetail[p]++;
-                    if (p === 1) territory.black++; else territory.white++;
+                    if (p === 1) territory.black += (P('branch_bonus') || 1); else territory.white += (P('branch_bonus') || 1);
                 }
             }`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -44,7 +49,7 @@ module.exports = {
                 board.forEach((v, i) => {
                     if (v !== 1 && v !== 2) return;
                     const own = getNeighbors(i).filter(n => board[n] === v);
-                    if (own.length < 3) return;
+                    if (own.length < (P('branch_deg') || 3)) return;
                     const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
                     ctx.lineWidth = Math.max(1.2, cellSize * 0.05);

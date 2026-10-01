@@ -10,6 +10,11 @@ module.exports = {
     icon: 'bonsaigo',
     spec: [
         ...K.rb('BONSAIGO', '盆栽碁', 'bonsaigo'),
+        K.params([
+            { key: 'bonsai_bonus', label: '樹形ボーナス', min: 1, max: 6, def: 2, unit: '目' },
+            { key: 'junction_deg', label: '分岐とみなす次数', min: 3, max: 4, def: 3 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.8, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let bonsaiDetail = { 1: 0, 2: 0 }; // 直近終局で計上した樹形ボーナス`],
         [K.ONE, `            const territory = calculateTerritory();`,
@@ -34,18 +39,19 @@ module.exports = {
                 grp.forEach(c => {
                     const deg = getNeighbors(c).filter(n => board[n] === p).length;
                     if (deg === 1) leaf = true;
-                    if (deg >= 3) junction = true;
+                    if (deg >= (P('junction_deg') || 3)) junction = true;
                 });
                 if (leaf && junction) { if (p === 1) bB++; else bW++; }
             }
             bonsaiDetail = { 1: bB, 2: bW };
-            territory.black += bB * 2;
-            territory.white += bW * 2;`],
+            const bonus = P('bonsai_bonus') || 2;
+            territory.black += bB * bonus;
+            territory.white += bW * bonus;`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -60,7 +66,7 @@ module.exports = {
                 board.forEach((v, i) => {
                     if (v !== 1 && v !== 2) return;
                     const deg = getNeighbors(i).filter(n => board[n] === v).length;
-                    if (deg < 3) return;
+                    if (deg < (P('junction_deg') || 3)) return;
                     const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
                     ctx.beginPath();

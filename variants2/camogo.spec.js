@@ -9,9 +9,12 @@ module.exports = {
     kind: 'camo',
     spec: [
         ...K.rb('CAMOGO', '迷彩碁', 'camogo'),
+        K.params([
+            { key: 'camo_duration', label: '迷彩期間', min: 2, max: 10, def: 5, unit: '手' },
+        ]),
         [K.ONE, '        function drawBoardElements(padding, cellSize) {',
 `        // 迷彩碁: 配置から5手未満の石は敵色に見える
-        function isCamo(pc) { return pc.at !== undefined && (history.length - pc.at) < 5; }
+        function isCamo(pc) { return pc.at !== undefined && (history.length - pc.at) < (P('camo_duration') || 5); }
 
         function drawBoardElements(padding, cellSize) {`],
         [K.ONE, K.PIECES_PUSH, `            pieces.push({
@@ -58,7 +61,7 @@ module.exports = {
 
             // 迷彩碁: 迷彩が解けた石は本来の色で発光し「正体」と表示
             pieces.forEach(pc => {
-                if (pc.at === undefined || history.length - pc.at !== 5) return;
+                if (pc.at === undefined || history.length - pc.at !== (P('camo_duration') || 5)) return;
                 pc.cells.forEach(p => {
                     const i = p.y * BOARD_SIZE + p.x;
                     if (board[i] !== pc.player) return;

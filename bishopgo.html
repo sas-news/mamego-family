@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"free_places","label":"自由着手の数","min":1,"max":5,"def":1,"hint":"この個数の自石までは斜線外にも着手できる"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1789,17 +1789,18 @@
 
             // 角行碁ルール: 既存の自石と同じ斜線 (|dx|=|dy|>0) 上にのみ着手可 (初手は自由)
             {
-                let hasOwn = false, onDiag = false;
+                let ownCount = 0, onDiag = false;
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] !== player) continue;
-                    hasOwn = true;
+                    ownCount++;
                     const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
                     for (const p of cells) {
                         if (Math.abs(p.x - sx) === Math.abs(p.y - sy) && (p.x !== sx || p.y !== sy)) onDiag = true;
                     }
                     if (onDiag) break;
                 }
-                if (hasOwn && !onDiag) return false;
+                // 自由着手の数を超える自石があると斜線制限が効く
+                if (ownCount >= Math.max(1, P('free_places') || 1) && !onDiag) return false;
             }
 
             // 仮配置

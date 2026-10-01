@@ -10,6 +10,10 @@ module.exports = {
     icon: 'catalystgo',
     spec: [
         ...K.rb('CATALYSTGO', '触媒碁', 'catalystgo'),
+        K.params([
+            { key: 'cat_every', label: '触媒の間隔', min: 2, max: 15, def: 6, unit: '個目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.8, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { pcnt: { 1: 0, 2: 0 }, cats: {} }; // 各プレイヤーの着手数と触媒の位置`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -42,7 +46,7 @@ module.exports = {
             });
             // 触媒: 6個目ごとの自分の石は触媒 → 隣接する敵石を自石に変質
             st.pcnt[player] = (st.pcnt[player] || 0) + 1;
-            if (st.pcnt[player] % 6 === 0) {
+            if (st.pcnt[player] % (P('cat_every') || 6) === 0) {
                 move.cells.forEach(p => {
                     const pi = p.y * BOARD_SIZE + p.x;
                     st.cats[pi] = true; // 触媒マーク
@@ -88,7 +92,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

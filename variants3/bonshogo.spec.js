@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'bonshogo',
     spec: [
         ...K.rb('BONSHOGO', '鐘撞碁', 'bonshogo'),
+        K.params([
+            { key: 'push_dist', label: '押し出し距離', min: 1, max: 3, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         // 鐘の音: 天元着手で周囲1目を外へ押す
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -36,9 +40,10 @@ module.exports = {
                 const c = Math.floor(BOARD_SIZE / 2);
                 if (move.cells[0].x === c && move.cells[0].y === c) {
                     const pushes = [];
+                    const pd = Math.max(1, P('push_dist') || 1);
                     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
                         if (!dx && !dy) continue;
-                        const sx = c + dx, sy = c + dy, tx = c + dx * 2, ty = c + dy * 2;
+                        const sx = c + dx, sy = c + dy, tx = c + dx * (1 + pd), ty = c + dy * (1 + pd);
                         const si = sy * BOARD_SIZE + sx, ti = ty * BOARD_SIZE + tx;
                         if (board[si] !== 0 && board[si] !== 4 &&
                             tx >= 0 && ty >= 0 && tx < BOARD_SIZE && ty < BOARD_SIZE &&

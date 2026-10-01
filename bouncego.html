@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"step_scale","label":"弾の射程 (盤サイズ倍数)","min":1,"max":8,"def":4,"hint":"跳ね返りの最大ステップ数 = 盤サイズ×この値"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1865,7 +1865,7 @@
                 let dy = sy < c ? 1 : (sy > c ? -1 : 1);
                 let rx = sx, ry = sy, steps = 0;
                 const path = [[sx, sy]]; // 弾道 (演出再生用)
-                while (steps++ < 4 * N) {
+                while (steps++ < (P('step_scale') || 4) * N) {
                     const px = rx + dx, py = ry + dy;
                     const blX = px < 0 || px >= N || board[py * N + px] !== 0;
                     const blY = py < 0 || py >= N || board[py * N + px] !== 0;

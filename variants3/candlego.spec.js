@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'candlego',
     spec: [
         ...K.rb('CANDLEGO', '蝋燭碁', 'candlego'),
+        K.params([
+            { key: 'wind_every', label: '風の間隔', min: 4, max: 30, def: 12, unit: '手' },
+            { key: 'wind_max', label: '風で燃える各軍の本数', min: 1, max: 4, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.9, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 灯り判定: 隣接する空点の数 (蝋燭の火が灯る範囲)
@@ -63,18 +68,19 @@ module.exports = {
 
             // 風: 12手ごとに灯り1つの孤立蝋燭が各軍1本まで燃え尽きる
             st.ply++;
-            if (st.ply % 12 === 0) {
+            if (st.ply % (P('wind_every') || 12) === 0) {
                 let blown = 0;
+                const wmax = Math.max(1, P('wind_max') || 1);
                 [1, 2].forEach(v => {
-                    for (let i = 0; i < board.length; i++) {
+                    let n = 0;
+                    for (let i = 0; i < board.length && n < wmax; i++) {
                         if (board[i] !== v) continue;
                         if (isLone(i, v) && lightCount(i) <= 1) {
                             board[i] = 0;
                             captures[v === 1 ? 2 : 1]++;
-                            blown++;
+                            blown++; n++;
                             fxSplash(i, '#f59e0b', 9);
                             fxText(i, '燃え尽き', '#fb923c', 1100);
-                            break; // 各軍1本まで
                         }
                     }
                 });
@@ -103,7 +109,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'風まで ' + (12 - (st.ply % 12)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'風まで ' + ((P('wind_every') || 12) - (st.ply % (P('wind_every') || 12))) + '手'`),
         [K.ONE, K.INFO_ALGO, `            蝋燭碁: 石は蝋燭。灯り(隣の空点)が1つしか無い孤立石は12手ごとの風で燃え尽きる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
