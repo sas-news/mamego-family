@@ -9,8 +9,8 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
                 endGameByScore();`];
 
 const CAP = `
-            // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            // 打ち切り: 交点数の一定割合を超えた長期戦は採点終局 (終局不能の防止)
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -61,10 +61,15 @@ module.exports = {
     icon: 'cloudseago',
     spec: [
         ...K.rb('CLOUDSEAGO', '雲海碁', 'cloudseago'),
+        K.params([
+            { key: 'cloud_period', label: '雲の移動間隔', min: 2, max: 15, def: 7, unit: '手' },
+            { key: 'cloud_width', label: '雲の帯の幅', min: 0, max: 3, def: 1, unit: '段', hint: '中心から±段' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 1.1 },
+        ]),
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        // 雲海: 7手ごとに中央を漂う雲の帯 (中心±1段)
-        const cloudCenter = () => ((BOARD_SIZE / 2) | 0) + [-1, 0, 1][Math.floor(history.length / 7) % 3];
-        const inCloud = (i) => Math.abs(((i / BOARD_SIZE) | 0) - cloudCenter()) <= 1;
+        const cloudCenter = () => ((BOARD_SIZE / 2) | 0) + [-1, 0, 1][Math.floor(history.length / Math.max(1, P('cloud_period') || 7)) % 3];
+        const inCloud = (i) => Math.abs(((i / BOARD_SIZE) | 0) - cloudCenter()) <= (P('cloud_width') ?? 1);
         function isValidPlacement(cells, player) {`],
         // 雲ルール: 雲に触れる連は霧で呼吸する
         [K.ONE, GETCAP, `        function getCapturedStones(boardState, player) {
@@ -129,7 +134,7 @@ ${CAP}
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'雲 ' + (cloudCenter() + 1) + '段目 移動まで' + (7 - history.length % 7) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'雲 ' + (cloudCenter() + 1) + '段目 移動まで' + (Math.max(1, P('cloud_period') || 7) - history.length % Math.max(1, P('cloud_period') || 7)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            雲海碁: 中央の雲の帯は7手ごとに上下へ漂う。雲に触れる連は霧で呼吸し取られない<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

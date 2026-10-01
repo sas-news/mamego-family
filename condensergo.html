@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"charge_max","label":"放電に必要な充電","min":2,"max":20,"def":8,"unit":"手"},{"key":"zap_radius","label":"放電の範囲","min":0,"max":3,"def":1,"hint":"1=着手点の3x3"},{"key":"cap_ratio","label":"打ち切り手数 (交点数比)","min":0.3,"max":1.5,"step":0.05,"def":0.75}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1794,7 +1794,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1842,11 +1842,12 @@
             }
             // 蓄電: 着手ごとに+1充電、8で放電 (3x3の敵石を打ち抜く)
             st.charge[player]++;
-            if (st.charge[player] >= 8) {
+            if (st.charge[player] >= (P('charge_max') || 8)) {
                 st.charge[player] = 0;
                 const bc = move.cells[0];
+                const _zr = P('zap_radius') ?? 1;
                 let zapped = 0;
-                for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -_zr; dy <= _zr; dy++) for (let dx = -_zr; dx <= _zr; dx++) {
                     const nx = bc.x + dx, ny = bc.y + dy;
                     if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) continue;
                     const i0 = ny * BOARD_SIZE + nx;
@@ -2740,7 +2741,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('蓄電 ' + (st.charge ? st.charge[turn] || 0 : 0) + '/8');
+                const et = gameOver ? '' : ('蓄電 ' + (st.charge ? st.charge[turn] || 0 : 0) + '/' + (P('charge_max') || 8));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

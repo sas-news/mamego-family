@@ -9,20 +9,29 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('CONVEYORGO', '搬送碁', 'conveyorgo'),
+        K.params([
+            { key: 'belt_dir', label: 'ベルトの向き', options: [{ v: 'right', l: '右へ' }, { v: 'left', l: '左へ' }], def: 'right' },
+            { key: 'belt_speed', label: 'ベルトの速さ', min: 1, max: 3, def: 1, unit: 'マス/手' },
+        ]),
         // 着手ごと、中央ベルト行の石を1マス右へ運ぶ
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 搬送ルール: 中央行の石を右へ1マス運ぶ (詰まったら停止・右端は降車済み)
+            // 搬送ルール: 中央行の石をベルト向きへ運ぶ (詰まったら停止・端は降車済み)
             {
                 const N = BOARD_SIZE, by = Math.floor(N / 2);
-                for (let x = N - 2; x >= 0; x--) {
+                const _spd = Math.max(1, P('belt_speed') || 1);
+                const _dir = P('belt_dir') === 'left' ? -1 : 1;
+                for (let _s = 0; _s < _spd; _s++) {
+                for (let k = 0; k < N - 1; k++) {
+                    const x = _dir === 1 ? N - 2 - k : 1 + k; // 流出側から処理して追い越しを防ぐ
                     const i = by * N + x;
                     if (board[i] !== 1 && board[i] !== 2) continue;
-                    if (board[i + 1] === 0) {
-                        board[i + 1] = board[i]; board[i] = 0;
-                        fxSlide(i, i + 1, 340); // ベルトで運ばれる軌跡
+                    if (board[i + _dir] === 0) {
+                        board[i + _dir] = board[i]; board[i] = 0;
+                        fxSlide(i, i + _dir, 340); // ベルトで運ばれる軌跡
                     }
+                }
                 }
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
@@ -49,7 +58,7 @@ module.exports = {
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 for (let x = 0; x < BOARD_SIZE; x += 2) {
-                    ctx.fillText('▶', padding + x * cellSize, padding + by * cellSize);
+                    ctx.fillText(P('belt_dir') === 'left' ? '◀' : '▶', padding + x * cellSize, padding + by * cellSize);
                 }
                 ctx.restore();
             }`),

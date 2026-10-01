@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap_moves') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'cremationgo',
     spec: [
         ...K.rb('CREMATIONGO', '荼毘碁', 'cremationgo'),
+        K.params([
+            { key: 'ritual_pts', label: '供養点', min: 0, max: 4, def: 1, unit: '目', hint: '0=供養なし' },
+            { key: 'ash_life', label: '灰の残存手数', min: 2, max: 15, def: 6, unit: '手' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 40, max: 300, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { bonus: { 1: 0, 2: 0 }, ash: {} }; // 供養点・灰の生成手数`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -56,7 +61,7 @@ module.exports = {
                     board[idx] = 4; // 荼毘に付されて灰になる
                     st.ash[idx] = history.length;
                     captures[player]++;
-                    st.bonus[player]++; // 供養点
+                    st.bonus[player] += (P('ritual_pts') ?? 1); // 供養点
                     fxBurst(idx, '#f97316', 10, 1.4);
                 });
                 fxShake(3, 300);
@@ -73,7 +78,7 @@ module.exports = {
                 Object.keys(st.ash).forEach(k => {
                     const i = +k;
                     if (board[i] !== 4) { delete st.ash[i]; return; }
-                    if (history.length - st.ash[i] >= 6) {
+                    if (history.length - st.ash[i] >= (P('ash_life') || 6)) {
                         board[i] = 0;
                         delete st.ash[i];
                         fxGlow(i, '#d6d3d1', 600);

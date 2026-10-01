@@ -10,6 +10,11 @@ module.exports = {
     icon: 'crowngo2',
     spec: [
         ...K.rb('CROWNGO2', '王冠碁', 'crowngo2'),
+        K.params([
+            { key: 'tooth_step', label: '歯の間隔', min: 2, max: 6, def: 3, unit: '点' },
+            { key: 'pit_penalty', label: '陥穽の呼吸低下', min: 0, max: 3, def: 1, unit: '点', hint: '0=呼吸低下なし' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 王冠: 外周2重環 + 3つ置きの歯。歯の間の凹部は陥穽 (置けず呼吸-1)
         function crownD(x, y) {
@@ -18,8 +23,9 @@ module.exports = {
         function isCrownTooth(x, y) {
             if (crownD(x, y) !== 2) return false;
             const N = BOARD_SIZE;
-            if (y === 2 || y === N - 3) return x % 3 === 0;
-            return y % 3 === 0;
+            const _ts = Math.max(2, P('tooth_step') || 3);
+            if (y === 2 || y === N - 3) return x % _ts === 0;
+            return y % _ts === 0;
         }
         function isCrownPlayable(x, y) {
             const d = crownD(x, y);
@@ -98,7 +104,7 @@ module.exports = {
                                 visited[n] = true;
                                 queue.push(n);
                             } else if (isCrownPit(n) && !isToothCell(curr)) {
-                                liberties--; // 凹部の陥穽に面した環状筋は呼吸-1
+                                liberties -= (P('pit_penalty') ?? 1); // 凹部の陥穽に面した環状筋は呼吸低下
                             }
                         });
                     }
@@ -155,7 +161,7 @@ module.exports = {
                         visited[n] = true;
                         queue.push(n);
                     } else if (isCrownPit(n) && !isToothCell(curr)) {
-                        liberties--; // 凹部の陥穽に面した環状筋は呼吸-1
+                        liberties -= (P('pit_penalty') ?? 1); // 凹部の陥穽に面した環状筋は呼吸低下
                     }
                 });
             }
@@ -197,7 +203,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

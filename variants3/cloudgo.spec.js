@@ -10,11 +10,15 @@ module.exports = {
     icon: 'cloudgo',
     spec: [
         ...K.rb('CLOUDGO', '雲碁', 'cloudgo'),
+        K.params([
+            { key: 'cloud_r', label: '浮遊島の半径', min: 0, max: 6, def: 0, hint: '0=自動 (盤幅の1/5)' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 3つの浮遊島 (円) + 細い接続筋
         const CLOUD_F = Math.max(2, Math.floor(BOARD_SIZE / 4));
         const CLOUD_M = (BOARD_SIZE - 1) / 2;
-        const CLOUD_R = Math.max(2, Math.floor(BOARD_SIZE / 5));
+        const CLOUD_R = Math.max(1, P('cloud_r') || Math.max(2, Math.floor(BOARD_SIZE / 5)));
         const CLOUD_A = { x: CLOUD_F, y: CLOUD_F };
         const CLOUD_B = { x: BOARD_SIZE - 1 - CLOUD_F, y: CLOUD_F };
         const CLOUD_D = { x: CLOUD_M, y: BOARD_SIZE - 1 - CLOUD_F };
@@ -68,7 +72,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

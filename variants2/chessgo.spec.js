@@ -9,6 +9,10 @@ module.exports = {
     kind: 'crown',
     spec: [
         ...K.rb('CHESSGO', '騎士碁', 'chessgo'),
+        K.params([
+            { key: 'check_warn', label: 'チェック警告の呼吸点', min: 1, max: 4, def: 1, unit: '点', hint: 'この呼吸点以下の王に警告' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0, max: 400, def: 0, unit: '手', hint: '0=制限なし' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         function endGameByScore() {`],
         [K.ONE, K.BOARD_DECL, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
@@ -33,7 +37,7 @@ module.exports = {
 
             turn = opponent;`],
         // チェック表示チップ
-        ...K.EVENT_CHIP_SPEC('kingIdx[turn] >= 0 && board[kingIdx[turn]] === turn && getLiberties(board, kingIdx[turn]) === 1 ? "チェック!" : ""'),
+        ...K.EVENT_CHIP_SPEC('kingIdx[turn] >= 0 && board[kingIdx[turn]] === turn && getLiberties(board, kingIdx[turn]) <= (P(\'check_warn\') || 1) ? "チェック!" : ""'),
         // チェック警報: 呼吸点1の王は赤く脈動し続ける
         [K.ONE, `        let obstaclePainter = null;`,
 `        let obstaclePainter = null;
@@ -41,7 +45,7 @@ module.exports = {
             [1, 2].forEach(pl => {
                 const ki = kingIdx[pl];
                 if (ki < 0 || board[ki] !== pl || gameOver) return;
-                if (getLiberties(board, ki) !== 1) return;
+                if (getLiberties(board, ki) > (P('check_warn') || 1)) return;
                 const cx = pad + (ki % BOARD_SIZE) * cs, cy = pad + Math.floor(ki / BOARD_SIZE) * cs;
                 ctx2.save();
                 ctx2.globalAlpha = 0.35 + 0.3 * Math.sin(now / 230);
@@ -82,6 +86,17 @@ module.exports = {
             '王を含む連が取られた側は即負け。王の呼吸点が1になるとチェック警告が出る。',
             '王を守りつつ敵の王を追い詰めろ — ただし普通の地取り決着もあり得る。',
         ])],
+        // 打ち切り手数: 設定で有効化した場合のみ長期戦を強制採点
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

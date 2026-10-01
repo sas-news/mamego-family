@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('CELLGO', '細胞碁', 'cellgo'),
+        K.params([
+            { key: 'ply_cap', label: '打ち切り手数', min: 0, max: 400, def: 0, unit: '手', hint: '0=制限なし' },
+        ]),
         [K.ONE, `            ORIENTATIONS[type] = list;
         });`, `            ORIENTATIONS[type] = list;
         });
@@ -63,6 +66,17 @@ module.exports = {
             });
             ctx.restore();
         }`],
+        // 打ち切り手数 (0=制限なし): 設定で有効化すると超過時に強制採点
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

@@ -10,6 +10,11 @@ module.exports = {
     icon: 'circle2go',
     spec: [
         ...K.rb('CIRCLE2GO', '環状碁', 'circle2go'),
+        K.params([
+            { key: 'ring_min', label: '環に必要な囲み点数', min: 1, max: 6, def: 2, unit: '点' },
+            { key: 'ring_pts', label: '環内空点の得点', min: 0, max: 3, def: 1, unit: '点/点' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 40, max: 300, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { inv: [], zone: [] }; // 無敵の環石idx / 封印された環内部idx`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -70,7 +75,7 @@ module.exports = {
                         });
                     }
                     region.forEach(i => floodDone.add(i));
-                    if (touchesEdge || region.length < 2) return;
+                    if (touchesEdge || region.length < (P('ring_min') || 2)) return;
                     sealedAny = true;
                     const wall = new Set();
                     region.forEach(i => getNeighbors(i).forEach(n => { if (board[n] === player) wall.add(n); }));
@@ -84,7 +89,7 @@ module.exports = {
                         }
                         if (st.zone.indexOf(i) < 0) st.zone.push(i);
                     });
-                    captures[player] += bonus;
+                    captures[player] += bonus * (P('ring_pts') ?? 1);
                     wall.forEach(i => { if (st.inv.indexOf(i) < 0) st.inv.push(i); });
                     fxGlow(gi, '#c4b5fd', 900);
                     fxText(gi, '環完成! +' + bonus + '点', '#8b5cf6', 1400);
@@ -92,8 +97,8 @@ module.exports = {
                 if (sealedAny) fxShake(4, 300);
                 cleanUpPieces();
             }
-            // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 長期戦防止: 既定の手数経過でその時点の地数判定
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         // 無敵の環石に金縁マーク

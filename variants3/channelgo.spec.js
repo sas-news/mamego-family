@@ -10,6 +10,10 @@ module.exports = {
     icon: 'channelgo',
     spec: [
         ...K.rb('CHANNELGO', '媒介碁', 'channelgo'),
+        K.params([
+            { key: 'link_range', label: '媒介の届く距離', min: 0, max: 15, def: 0, unit: 'マス', hint: '0=無制限' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, K.NBRS_GRID, `        function getNeighbors(idx) {
             const x = idx % BOARD_SIZE;
             const y = Math.floor(idx / BOARD_SIZE);
@@ -19,10 +23,11 @@ module.exports = {
             if (x < BOARD_SIZE - 1) neighbors.push(idx + 1);
             if (y > 0) neighbors.push(idx - BOARD_SIZE);
             if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
-            // 媒介: 同行・同列で間が全て空いた先に見える最初の石とも結ばれる
+            // 媒介: 同行・同列で間が全て空いた先に見える最初の石とも結ばれる (届く距離は設定で調整)
+            const _maxR = P('link_range') || 0; // 0=無制限
             [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dx, dy]) => {
                 let dist = 1, cx = x + dx, cy = y + dy;
-                while (cx >= 0 && cy >= 0 && cx < BOARD_SIZE && cy < BOARD_SIZE) {
+                while (cx >= 0 && cy >= 0 && cx < BOARD_SIZE && cy < BOARD_SIZE && (_maxR === 0 || dist <= _maxR)) {
                     const ci = cy * BOARD_SIZE + cx;
                     if (board[ci] !== 0) { if (dist > 1) neighbors.push(ci); break; }
                     cx += dx; cy += dy; dist++;
@@ -33,8 +38,8 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            // 満局打ち切り: 交点数の一定割合を超える長期戦は即採点終局
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

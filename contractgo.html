@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"need","label":"請負の必要個数","min":1,"max":4,"def":3,"unit":"箇所","hint":"四隅・星で達成に必要な数"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2224,10 +2224,10 @@
             const isP = (x, y) => board[y * BOARD_SIZE + x] === player;
             const m = BOARD_SIZE - 1;
             if (t === 'corners') {
-                return [[0,0],[m,0],[0,m],[m,m]].filter(([x,y]) => isP(x,y)).length >= 3;
+                return [[0,0],[m,0],[0,m],[m,m]].filter(([x,y]) => isP(x,y)).length >= (P('need') || 3);
             }
             if (t === 'stars') {
-                return getStarPoints(BOARD_SIZE).filter(pt => isP(pt.x, pt.y)).length >= 3;
+                return getStarPoints(BOARD_SIZE).filter(pt => isP(pt.x, pt.y)).length >= (P('need') || 3);
             }
             if (t === 'edges') {
                 let top = false, bot = false, left = false, right = false;

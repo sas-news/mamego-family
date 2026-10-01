@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"cliff_ratio","label":"崖の位置","min":0,"max":0.9,"step":0.05,"def":0,"hint":"0=自動 (盤の55%の行)"},{"key":"cap_ratio","label":"打ち切り手数 (交点数比)","min":0.3,"max":1.5,"step":0.05,"def":0.8}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -636,8 +636,8 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        // 岩壁: CLIFF_Y が崖下の最上段。その1つ上の行が「縁」— 縁の石は崖下へ落ちる
-        const CLIFF_Y = Math.floor(BOARD_SIZE * 0.55);
+        // 岩壁: cliffY() が崖下の最上段。その1つ上の行が「縁」— 縁の石は崖下へ落ちる
+        const cliffY = () => Math.floor(BOARD_SIZE * (P('cliff_ratio') || 0.55));
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -1154,7 +1154,7 @@
             // 岩壁: 縁線と崖面のハッチ
             {
                 ctx.save();
-                const ey = padding + CLIFF_Y * cellSize - cellSize / 2;
+                const ey = padding + cliffY() * cellSize - cellSize / 2;
                 ctx.strokeStyle = 'rgba(87,83,78,0.8)';
                 ctx.lineWidth = Math.max(1.6, cellSize * 0.07);
                 ctx.beginPath();
@@ -1864,12 +1864,12 @@
 
             // 岩壁: 縁の石は崖下へ落下
             {
-                const lipY = CLIFF_Y - 1;
+                const lipY = cliffY() - 1;
                 for (let x = 0; x < BOARD_SIZE; x++) {
                     const li = lipY * BOARD_SIZE + x;
                     if (board[li] !== 1 && board[li] !== 2) continue;
                     // 崖下方向に空きがあるかぎり落ち続ける
-                    let y = CLIFF_Y;
+                    let y = cliffY();
                     while (y + 1 < BOARD_SIZE && board[(y + 1) * BOARD_SIZE + x] === 0) y++;
                     const ti = y * BOARD_SIZE + x;
                     if (board[ti] === 0) {
@@ -1895,7 +1895,7 @@
                 cleanUpPieces();
             }
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"arrow_range","label":"弓兵の射程","min":1,"max":6,"def":3,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1878,7 +1878,7 @@
                 if (classMap[p0.y * BOARD_SIZE + p0.x] === 'A') {
                     let shot = 0;
                     [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx, dy]) => {
-                        for (let d = 1; d <= 3; d++) {
+                        for (let d = 1; d <= (P('arrow_range') || 3); d++) {
                             const nx = p0.x + dx * d, ny = p0.y + dy * d;
                             if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) break;
                             const v = board[ny * BOARD_SIZE + nx];

@@ -9,11 +9,14 @@ module.exports = {
     kind: 'crown',
     spec: [
         ...K.rb('CROWNGO', '王冠碁', 'crowngo'),
+        K.params([
+            { key: 'crown_pts', label: '王冠ボーナス', min: 0, max: 10, def: 3, unit: '点' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, `
         // 王冠ボーナス: 天元の石を持つ側に+3
         function crownBonus(player) {
             const c = Math.floor(BOARD_SIZE / 2);
-            return board[c * BOARD_SIZE + c] === player ? 3 : 0;
+            return board[c * BOARD_SIZE + c] === player ? (P('crown_pts') ?? 3) : 0;
         }
 
         function endGameByScore() {`],

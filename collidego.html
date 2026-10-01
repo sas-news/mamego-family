@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"slide_max","label":"滑走の最大距離","min":0,"max":12,"def":5,"unit":"マス","hint":"0=滑らない"},{"key":"cap_moves","label":"打ち切り手数","min":40,"max":300,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1848,7 +1848,7 @@
                     else sy = Math.sign(ddy);
                     if (sx || sy) {
                         let cur = ci, steps = 0;
-                        while (steps < 5) {
+                        while (steps < (P('slide_max') ?? 5)) {
                             const nx = (cur % BOARD_SIZE) + sx, ny = Math.floor(cur / BOARD_SIZE) + sy;
                             if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) break;
                             const ni = ny * BOARD_SIZE + nx;
@@ -1870,8 +1870,8 @@
                     }
                 }
             }
-            // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 長期戦防止: 既定の手数経過でその時点の地数判定
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

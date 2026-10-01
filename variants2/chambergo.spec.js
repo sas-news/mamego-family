@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('CHAMBERGO', '四室碁', 'chambergo'),
+        K.params([
+            { key: 'ply_cap', label: '打ち切り手数', min: 0, max: 400, def: 0, unit: '手', hint: '0=制限なし' },
+        ]),
         // 十字壁 + 各辺2枚の扉
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
@@ -44,6 +47,17 @@ module.exports = {
             '十字の隔壁で4つの大部屋に分割。各部屋は2つの扉で隣室と繋がる。',
             '扉を押さえれば敵の侵入を防げる。部屋ごとの局地戦。',
         ])],
+        // 打ち切り手数 (0=制限なし): 設定で有効化すると超過時に強制採点
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

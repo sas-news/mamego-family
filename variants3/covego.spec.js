@@ -10,6 +10,10 @@ module.exports = {
     icon: 'covego',
     spec: [
         ...K.rb('COVEGO', '入江碁', 'covego'),
+        K.params([
+            { key: 'bay_lib', label: '湾内好地の呼吸ボーナス', min: 0, max: 3, def: 1, unit: '点', hint: '0=ボーナスなし' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 湾: 各辺に切れ込み。湾内の好地は呼吸点+1
         const COVE_Q1 = Math.max(2, Math.floor(BOARD_SIZE / 3));
@@ -97,7 +101,7 @@ module.exports = {
                                 queue.push(n);
                             }
                         });
-                        if (isCoveBay(curr)) liberties++; // 湾内の好地は呼吸+1
+                        if (isCoveBay(curr)) liberties += (P('bay_lib') ?? 1); // 湾内の好地は呼吸+ボーナス
                     }
 
                     if (liberties <= 0) {
@@ -153,7 +157,7 @@ module.exports = {
                         queue.push(n);
                     }
                 });
-                if (isCoveBay(curr)) liberties++; // 湾内の好地は呼吸+1
+                if (isCoveBay(curr)) liberties += (P('bay_lib') ?? 1); // 湾内の好地は呼吸+ボーナス
             }
             return liberties;
         }`],
@@ -189,7 +193,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('CLASSGO', '職業碁', 'classgo'),
+        K.params([
+            { key: 'arrow_range', label: '弓兵の射程', min: 1, max: 6, def: 3, unit: 'マス' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let classMap = {}; // 各石の兵種 idx→'W'|'A'|'M'
         let currentClass = 0; // 現在選択中の兵種 (CLASS_KEYSのindex)
@@ -70,7 +73,7 @@ module.exports = {
                 if (classMap[p0.y * BOARD_SIZE + p0.x] === 'A') {
                     let shot = 0;
                     [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx, dy]) => {
-                        for (let d = 1; d <= 3; d++) {
+                        for (let d = 1; d <= (P('arrow_range') || 3); d++) {
                             const nx = p0.x + dx * d, ny = p0.y + dy * d;
                             if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) break;
                             const v = board[ny * BOARD_SIZE + nx];

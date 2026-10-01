@@ -10,6 +10,10 @@ module.exports = {
     icon: 'collidego',
     spec: [
         ...K.rb('COLLIDEGO', '衝突碁', 'collidego'),
+        K.params([
+            { key: 'slide_max', label: '滑走の最大距離', min: 0, max: 12, def: 5, unit: 'マス', hint: '0=滑らない' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 40, max: 300, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
@@ -25,7 +29,7 @@ module.exports = {
                     else sy = Math.sign(ddy);
                     if (sx || sy) {
                         let cur = ci, steps = 0;
-                        while (steps < 5) {
+                        while (steps < (P('slide_max') ?? 5)) {
                             const nx = (cur % BOARD_SIZE) + sx, ny = Math.floor(cur / BOARD_SIZE) + sy;
                             if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) break;
                             const ni = ny * BOARD_SIZE + nx;
@@ -47,8 +51,8 @@ module.exports = {
                     }
                 }
             }
-            // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 長期戦防止: 既定の手数経過でその時点の地数判定
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, K.RV_ALGO, K.rv([

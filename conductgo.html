@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"short_penalty","label":"短絡の呼吸点低下","min":0,"max":4,"def":2,"unit":"点","hint":"0=短絡で弱化しない"},{"key":"cap_ratio","label":"打ち切り手数 (交点数比)","min":0.3,"max":1.5,"step":0.05,"def":0.8}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1883,7 +1883,7 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -1917,7 +1917,7 @@
             for (let i = 0; i < boardState.length; i++) {
                 if (boardState[i] === player && !visited[i]) {
                     const { group, liberties, shorted } = groupLiberties(boardState, i, visited);
-                    const eff = liberties - (shorted ? 2 : 0); // 短絡で呼吸点-2
+                    const eff = liberties - (shorted ? (P('short_penalty') ?? 2) : 0); // 短絡で呼吸点低下
                     if (eff < 1) {
                         captured.push(...group);
                     }
@@ -1931,7 +1931,7 @@
             if (player === 0) return 0;
             const visited = Array(boardState.length).fill(false);
             const { liberties, shorted } = groupLiberties(boardState, idx, visited);
-            return liberties - (shorted ? 2 : 0);
+            return liberties - (shorted ? (P('short_penalty') ?? 2) : 0);
         }
 
         function getNeighbors(idx) {

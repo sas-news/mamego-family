@@ -10,6 +10,10 @@ module.exports = {
     icon: 'crystalgo',
     spec: [
         ...K.rb('CRYSTALGO', '結晶碁', 'crystalgo'),
+        K.params([
+            { key: 'crystal_min', label: '結晶化に必要な連サイズ', min: 2, max: 8, def: 4, unit: '石' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { cry: {} }; // 結晶マス idx -> 1`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -46,7 +50,7 @@ module.exports = {
                     if ((board[i] === 1 || board[i] === 2) && !seen[i] && !st.cry[i]) {
                         const grp = getConnectedGroup(i, board[i]);
                         grp.forEach(g => { seen[g] = true; });
-                        if (grp.length >= 4) grp.forEach(g => { st.cry[g] = 1; fxGlow(g, '#67e8f9', 700); });
+                        if (grp.length >= (P('crystal_min') || 4)) grp.forEach(g => { st.cry[g] = 1; fxGlow(g, '#67e8f9', 700); });
                     }
                 }
             }
@@ -87,7 +91,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

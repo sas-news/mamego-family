@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,15 +27,22 @@ module.exports = {
     icon: 'currentgo',
     spec: [
         ...K.rb('CURRENTGO', '海流碁', 'currentgo'),
+        K.params([
+            { key: 'current_period', label: '潮汐の間隔', min: 2, max: 20, def: 8, unit: '手' },
+            { key: 'current_step', label: '海流の行間隔', min: 3, max: 8, def: 5, unit: '行' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         // 海流: 8手ごとに流れのある段の石を1マス流す
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 海流: 8手ごとに、流れの段の石が1マス流される (盤外に出ると取られる)
-            if (history.length > 0 && history.length % 8 === 0) {
+            // 海流: 一定間隔の手数ごとに、流れの段の石が1マス流される (盤外に出ると取られる)
+            const _cp = Math.max(1, P('current_period') || 8);
+            const _cs = Math.max(3, P('current_step') || 5);
+            if (history.length > 0 && history.length % _cp === 0) {
                 const drifted = [];
                 for (let y = 0; y < BOARD_SIZE; y++) {
-                    const dir = y % 5 === 2 ? 1 : (y % 5 === 4 ? -1 : 0);
+                    const dir = y % _cs === 2 ? 1 : (y % _cs === _cs - 1 ? -1 : 0);
                     if (!dir) continue;
                     const xs = [];
                     for (let x = 0; x < BOARD_SIZE; x++) xs.push(x);
@@ -71,7 +78,8 @@ module.exports = {
             {
                 ctx.save();
                 for (let y = 0; y < BOARD_SIZE; y++) {
-                    const dir = y % 5 === 2 ? 1 : (y % 5 === 4 ? -1 : 0);
+                    const _cs = Math.max(3, P('current_step') || 5);
+                    const dir = y % _cs === 2 ? 1 : (y % _cs === _cs - 1 ? -1 : 0);
                     if (!dir) continue;
                     ctx.strokeStyle = 'rgba(34,211,238,0.55)';
                     ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
@@ -87,7 +95,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'海流まで ' + (8 - history.length % 8) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'海流まで ' + (Math.max(1, P('current_period') || 8) - history.length % Math.max(1, P('current_period') || 8)) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            海流碁: 5行おきの海流が8手ごとに石を1マス流す。盤外に流されると取られる<br>
             PC: クリックで配置<br>

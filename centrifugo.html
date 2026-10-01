@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"cap_moves","label":"打ち切り手数","min":60,"max":480,"def":240,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1889,8 +1889,8 @@
                 cleanUpPieces();
             }
 
-            // 遠心渋滞で盤が埋まるのが遅いため、240手で自動的に点数計算して終局
-            if (history.length >= 240 && !gameOver) {
+            // 遠心渋滞で盤が埋まるのが遅いため、既定の手数で自動的に点数計算して終局
+            if (history.length >= (P('cap_moves') || 240) && !gameOver) {
                 endGameByScore();
                 return;
             }

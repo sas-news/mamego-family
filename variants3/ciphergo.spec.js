@@ -34,8 +34,8 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
                 endGameByScore();`];
 
 const CAP = `
-            // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            // 打ち切り: 交点数の一定割合を超えた長期戦は採点終局 (終局不能の防止)
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -51,6 +51,10 @@ module.exports = {
     icon: 'ciphergo',
     spec: [
         ...K.rb('CIPHERGO', '暗号碁', 'ciphergo'),
+        K.params([
+            { key: 'cipher_mult', label: '解読点の倍率', min: 1, max: 3, def: 1, unit: '倍' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 1.1 },
+        ]),
         ...PERSIST('{ rev: { 1: 0, 2: 0 } }'),
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        // 暗号文: 交点ごとの秘匿数字 (0=意味なし, 1-2=解読点)
@@ -63,7 +67,7 @@ module.exports = {
             // 暗号ルール: 着手点の秘匿数字を解読して得点化
             {
                 const i0 = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                const v = CIPHER_AT(i0);
+                const v = CIPHER_AT(i0) * (P('cipher_mult') || 1);
                 if (v > 0) {
                     st.rev[player] += v;
                     fxText(i0, '解読+' + v, '#38bdf8', 1100);

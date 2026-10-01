@@ -9,16 +9,20 @@ module.exports = {
     kind: 'core',
     spec: [
         ...K.rb('COREGO', '内核碁', 'corego'),
+        K.params([
+            { key: 'core_radius', label: '内核の半径', min: 1, max: 6, def: 2, hint: '中央の着手可区域 (半径2=5x5)' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
             }
 
-            // 内核碁ルール: 中央5x5の交点にのみ着手可
+            // 内核碁ルール: 中央の方形区域にのみ着手可 (半径は設定で調整)
             {
                 const c = (BOARD_SIZE - 1) / 2;
+                const _r = Math.max(1, P('core_radius') || 2);
                 for (const p of cells) {
-                    if (Math.abs(p.x - c) > 2 || Math.abs(p.y - c) > 2) return false;
+                    if (Math.abs(p.x - c) > _r || Math.abs(p.y - c) > _r) return false;
                 }
             }`],
         // 内核の鼓動: 核の縁を巡る脈動リングと内部に漂う光の粒
@@ -27,12 +31,13 @@ module.exports = {
         fxAmbient((ctx2, now, pad, cs) => {
             const cc = (BOARD_SIZE - 1) / 2;
             const cx = pad + cc * cs, cy = pad + cc * cs;
+            const _r = Math.max(1, P('core_radius') || 2);
             ctx2.save();
             // 核の縁の脈動リング
             ctx2.globalAlpha = 0.30 + 0.18 * Math.sin(now / 520);
             ctx2.strokeStyle = '#67e8f9';
             ctx2.lineWidth = Math.max(1.4, cs * 0.08);
-            ctx2.strokeRect(pad + (cc - 2.5) * cs, pad + (cc - 2.5) * cs, cs * 5, cs * 5);
+            ctx2.strokeRect(pad + (cc - _r - 0.5) * cs, pad + (cc - _r - 0.5) * cs, cs * (_r * 2 + 1), cs * (_r * 2 + 1));
             // 内部に漂う光の粒
             for (let k = 0; k < 10; k++) {
                 const t = now / 3000 + k * 0.61;
@@ -49,10 +54,11 @@ module.exports = {
         K.CUE_GRID(`            // 内核: 中央5x5の外側を暗く沈め、核を照らす
             {
                 const cc = (BOARD_SIZE - 1) / 2;
+                const _r = Math.max(1, P('core_radius') || 2);
                 ctx.save();
                 ctx.fillStyle = alphaColor(shiftColor(currentTheme.boardBg, -0.5), 0.45);
-                const x0 = padding + (cc - 2.5) * cellSize, y0 = padding + (cc - 2.5) * cellSize;
-                const x1 = padding + (cc + 2.5) * cellSize, y1 = padding + (cc + 2.5) * cellSize;
+                const x0 = padding + (cc - _r - 0.5) * cellSize, y0 = padding + (cc - _r - 0.5) * cellSize;
+                const x1 = padding + (cc + _r + 0.5) * cellSize, y1 = padding + (cc + _r + 0.5) * cellSize;
                 const W = padding * 2 + (BOARD_SIZE - 1) * cellSize;
                 ctx.fillRect(-cellSize, -cellSize, W + cellSize * 2, y0 + cellSize);
                 ctx.fillRect(-cellSize, y1, W + cellSize * 2, W);

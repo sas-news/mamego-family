@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,9 +27,13 @@ module.exports = {
     icon: 'corridorgo',
     spec: [
         ...K.rb('CORRIDORGO', '渡廊碁', 'corridorgo'),
+        K.params([
+            { key: 'garden_w', label: '庭園の幅', min: 0, max: 0.45, step: 0.05, def: 0, hint: '0=自動 (盤の30%)' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 渡廊: 左右の庭園 (各3割の幅) を中央1列の廊下が結ぶ
-        const COR_G = Math.ceil(BOARD_SIZE * 0.30);
+        const COR_G = Math.ceil(BOARD_SIZE * (P('garden_w') || 0.30));
         const COR_Y = Math.floor(BOARD_SIZE / 2);
         function isGardenOrCorridor(x, y) {
             return x < COR_G || x >= BOARD_SIZE - COR_G || y === COR_Y;
