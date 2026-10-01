@@ -27,6 +27,9 @@ module.exports = {
     icon: 'iwatogo',
     spec: [
         ...K.rb('IWATOGO', '天岩戸碁', 'iwatogo'),
+        K.params([
+            { key: 'sun_pts', label: '御光の得点', min: 1, max: 10, def: 4, unit: '目' },
+        ]),
         // 太陽: 盤中央の天元に輝く日輪
         K.CUE_STARS(`            // 天岩戸の太陽: 盤中央に日輪を描く (石が隠せば光は失せる)
             {
@@ -61,7 +64,7 @@ module.exports = {
 `        // 天岩戸: 終局時に盤中央の太陽を占める側は+4目の御光
         function iwatoBonus(player) {
             const ci = ((BOARD_SIZE - 1) / 2) * (BOARD_SIZE + 1);
-            return board[ci] === player ? 4 : 0;
+            return board[ci] === player ? (P('sun_pts') || 4) : 0;
         }
 
         function endGameByScore() {`],

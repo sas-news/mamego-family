@@ -46,13 +46,16 @@ module.exports = {
     icon: 'judogo',
     spec: [
         ...K.rb('JUDOGO', '柔道碁', 'judogo'),
+        K.params([
+            { key: 'throw_max', label: '巴投げの条件', min: 1, max: 4, def: 1, hint: 'この個数以下の捕獲で投げる' },
+        ]),
         ...ST('{ thrown: 0 }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 柔道碁: 単石を取られた側は巴投げで隣の取り手石を1個投げて取り返す
             {
-                if (captured.length === 1) {
+                if (captured.length >= 1 && captured.length <= (P('throw_max') || 1)) {
                     const spot = captured[0];
                     const grab = getNeighbors(spot).find(n => board[n] === player && n !== (move.cells[0].y * BOARD_SIZE + move.cells[0].x));
                     const grabTarget = grab !== undefined ? grab : getNeighbors(spot).find(n => board[n] === player);

@@ -9,12 +9,15 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('ISOLATEGO', '孤点碁', 'isolatego'),
+        K.params([
+            { key: 'iso_parity', label: '孤点の配置', options: [{ v: 'even', l: '市松の偶数マス' }, { v: 'odd', l: '市松の奇数マス' }], def: 'even' },
+        ]),
         [K.ONE, K.NBRS_GRID, `        function getNeighbors(idx) {
             const x = idx % BOARD_SIZE;
             const y = Math.floor(idx / BOARD_SIZE);
             const neighbors = [];
 
-            if ((x + y) % 2 === 0) {
+            if ((x + y) % 2 === ((P('iso_parity') || 'even') === 'odd' ? 1 : 0)) {
                 // 孤点: 斜めだけで繋がる (直交とは断たれた点)
                 if (x > 0 && y > 0) neighbors.push(idx - BOARD_SIZE - 1);
                 if (x < BOARD_SIZE - 1 && y > 0) neighbors.push(idx - BOARD_SIZE + 1);
@@ -34,7 +37,7 @@ module.exports = {
                 ctx.save();
                 ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.10);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if ((x + y) % 2 === 0) {
+                    if ((x + y) % 2 === ((P('iso_parity') || 'even') === 'odd' ? 1 : 0)) {
                         ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
                     }
                 }
@@ -46,7 +49,7 @@ module.exports = {
                 ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.45);
                 ctx.lineWidth = Math.max(1, cellSize * 0.035);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if ((x + y) % 2 !== 0) continue;
+                    if ((x + y) % 2 !== ((P('iso_parity') || 'even') === 'odd' ? 1 : 0)) continue;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize, r = cellSize * 0.13;
                     ctx.beginPath();
                     ctx.moveTo(cx, cy - r);

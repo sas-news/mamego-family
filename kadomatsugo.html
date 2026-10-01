@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"matsu_len","label":"門松に必要な連数","min":3,"max":5,"def":3,"unit":"連"},{"key":"matsu_pts","label":"門松1本の得点","min":0,"max":9,"def":3,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2219,7 +2219,7 @@
                 for (let x = 0; x <= BOARD_SIZE; x++) {
                     const v = x < BOARD_SIZE ? board[y * BOARD_SIZE + x] : -1;
                     if (v === pl) run.push(y * BOARD_SIZE + x);
-                    else { if (run.length >= 3) runs.push(run); run = []; }
+                    else { if (run.length >= (P('matsu_len') || 3)) runs.push(run); run = []; }
                 }
             }
             for (let x = 0; x < BOARD_SIZE; x++) {
@@ -2227,12 +2227,12 @@
                 for (let y = 0; y <= BOARD_SIZE; y++) {
                     const v = y < BOARD_SIZE ? board[y * BOARD_SIZE + x] : -1;
                     if (v === pl) run.push(y * BOARD_SIZE + x);
-                    else { if (run.length >= 3) runs.push(run); run = []; }
+                    else { if (run.length >= (P('matsu_len') || 3)) runs.push(run); run = []; }
                 }
             }
             return runs;
         }
-        function kadomatsuBonus(pl) { return kadomatsuRuns(pl).length * 3; }
+        function kadomatsuBonus(pl) { return kadomatsuRuns(pl).length * (P('matsu_pts') ?? 3); }
 
         function endGameByScore() {
             gameOver = true;

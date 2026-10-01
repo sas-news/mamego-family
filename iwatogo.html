@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"sun_pts","label":"御光の得点","min":1,"max":10,"def":4,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2220,7 +2220,7 @@
         // 天岩戸: 終局時に盤中央の太陽を占める側は+4目の御光
         function iwatoBonus(player) {
             const ci = ((BOARD_SIZE - 1) / 2) * (BOARD_SIZE + 1);
-            return board[ci] === player ? 4 : 0;
+            return board[ci] === player ? (P('sun_pts') || 4) : 0;
         }
 
         function endGameByScore() {

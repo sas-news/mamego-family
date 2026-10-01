@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"charge_dist","label":"突進に必要な距離","min":2,"max":6,"def":3,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1877,7 +1877,7 @@
                     const px = prev % BOARD_SIZE, py = Math.floor(prev / BOARD_SIZE);
                     const sameLine = (px === mx) !== (py === my); // 行か列のどちらか一方だけ一致
                     const dist = Math.abs(px - mx) + Math.abs(py - my);
-                    if (sameLine && dist >= 3) {
+                    if (sameLine && dist >= (P('charge_dist') || 3)) {
                         const dx = Math.sign(mx - px), dy = Math.sign(my - py);
                         let dug = 0;
                         for (let k = 1; k < dist; k++) {

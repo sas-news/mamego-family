@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"wall_gap","label":"隔壁の間隔","min":3,"max":9,"def":5,"hint":"大きいほど巣房が広く壁が疎になる"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2760,7 +2760,7 @@
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                if ((x + y) % 5 === 0 || (x - y + 2 * BOARD_SIZE) % 5 === 0) board[y * BOARD_SIZE + x] = 3;
+                if ((x + y) % Math.max(2, P('wall_gap') || 5) === 0 || (x - y + 2 * BOARD_SIZE) % Math.max(2, P('wall_gap') || 5) === 0) board[y * BOARD_SIZE + x] = 3;
             }
             pieces = [];
             turn = 1;

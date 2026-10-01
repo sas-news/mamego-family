@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"ink_min","label":"滲みに必要な敵石数","min":2,"max":4,"def":2,"unit":"個"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1160,8 +1160,8 @@
                         if (board[n] === 1) b++; else if (board[n] === 2) w++;
                     });
                     let f = null;
-                    if (b >= 2 && w === 0) f = 'rgba(15, 23, 42, 0.28)';
-                    else if (w >= 2 && b === 0) f = 'rgba(15, 23, 42, 0.14)';
+                    if (b >= (P('ink_min') || 2) && w === 0) f = 'rgba(15, 23, 42, 0.28)';
+                    else if (w >= (P('ink_min') || 2) && b === 0) f = 'rgba(15, 23, 42, 0.14)';
                     if (!f) continue;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
                     ctx.fillStyle = f;
@@ -1798,7 +1798,7 @@
                         if (board[n] === foe) ink++;
                         else if (board[n] === player) own++;
                     });
-                    if (ink >= 2 && own === 0) return false;
+                    if (ink >= (P('ink_min') || 2) && own === 0) return false;
                 }
             }
 

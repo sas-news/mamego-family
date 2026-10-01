@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"pale_interval","label":"逸品石の間隔","min":2,"max":12,"def":4,"unit":"手"},{"key":"pale_bonus","label":"逸品ボーナス","min":0,"max":4,"def":1,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1842,7 +1842,7 @@
                 const ci = cell.y * BOARD_SIZE + cell.x;
                 st.hue[ci] = (st.hue[ci] || 0) + 60 + (history.length * 37) % 120;
                 // 4手ごとに淡色の逸品石が現れる (色相が淡い側に振り切れる)
-                if (history.length % 4 === 0) st.pale.add(ci);
+                if (history.length % Math.max(1, P('pale_interval') || 4) === 0) st.pale.add(ci);
             });
 
             pieces.push({
@@ -1860,7 +1860,7 @@
                 let bonus = 0;
                 captured.forEach(idx => {
                     board[idx] = 0;
-                    if (st.pale.has(idx)) { st.pale.delete(idx); bonus++; }
+                    if (st.pale.has(idx)) { st.pale.delete(idx); bonus += (P('pale_bonus') ?? 1); }
                     delete st.hue[idx];
                 });
                 captures[player] += captured.length + bonus;

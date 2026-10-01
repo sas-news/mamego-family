@@ -27,6 +27,9 @@ module.exports = {
     icon: 'irisgo',
     spec: [
         ...K.rb('IRISGO', '菖蒲碁', 'irisgo'),
+        K.params([
+            { key: 'edge_depth', label: '水辺の深さ', min: 1, max: 3, def: 1, hint: '菖蒲が効く外周からの行数' },
+        ]),
         // 外周の菖蒲は敵の水辺着手を退ける (菖蒲連を取る手は合法)
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
@@ -35,12 +38,12 @@ module.exports = {
 
             // 菖蒲碁: 外周の菖蒲の隣の外周点には敵を寄せ付けない (菖蒲連を取る手は除く)
             for (const p of cells) {
-                const onEdge = p.x === 0 || p.y === 0 || p.x === BOARD_SIZE - 1 || p.y === BOARD_SIZE - 1;
+                const onEdge = Math.min(p.x, p.y, BOARD_SIZE - 1 - p.x, BOARD_SIZE - 1 - p.y) < (P('edge_depth') || 1);
                 if (!onEdge) continue;
                 const cellIdx = p.y * BOARD_SIZE + p.x;
                 for (const n of getNeighbors(cellIdx)) {
                     const nx = n % BOARD_SIZE, ny = (n / BOARD_SIZE) | 0;
-                    const nEdge = nx === 0 || ny === 0 || nx === BOARD_SIZE - 1 || ny === BOARD_SIZE - 1;
+                    const nEdge = Math.min(nx, ny, BOARD_SIZE - 1 - nx, BOARD_SIZE - 1 - ny) < (P('edge_depth') || 1);
                     if (!nEdge) continue;
                     const c = board[n];
                     if (c === 0 || c === 3 || c === player) continue;
@@ -57,7 +60,7 @@ module.exports = {
                 ctx.save();
                 for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
                     const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
-                    const onEdge = x === 0 || y === 0 || x === BOARD_SIZE - 1 || y === BOARD_SIZE - 1;
+                    const onEdge = Math.min(x, y, BOARD_SIZE - 1 - x, BOARD_SIZE - 1 - y) < (P('edge_depth') || 1);
                     if (!onEdge || (board[i] !== 1 && board[i] !== 2)) continue;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
                     ctx.strokeStyle = 'rgba(139,92,246,0.9)';

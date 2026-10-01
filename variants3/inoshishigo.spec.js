@@ -47,6 +47,9 @@ module.exports = {
     icon: 'inoshishigo',
     spec: [
         ...K.rb('INOSHISHIGO', '野猪碁', 'inoshishigo'),
+        K.params([
+            { key: 'charge_dist', label: '突進に必要な距離', min: 2, max: 6, def: 3, unit: '目' },
+        ]),
         ...ST(ST_INIT),
         // 野猪ルール: 自分の前の石と同じ行/列へ3目以上離れて着手 → 突進して間を掘り起こす
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -61,7 +64,7 @@ module.exports = {
                     const px = prev % BOARD_SIZE, py = Math.floor(prev / BOARD_SIZE);
                     const sameLine = (px === mx) !== (py === my); // 行か列のどちらか一方だけ一致
                     const dist = Math.abs(px - mx) + Math.abs(py - my);
-                    if (sameLine && dist >= 3) {
+                    if (sameLine && dist >= (P('charge_dist') || 3)) {
                         const dx = Math.sign(mx - px), dy = Math.sign(my - py);
                         let dug = 0;
                         for (let k = 1; k < dist; k++) {

@@ -47,6 +47,9 @@ module.exports = {
     icon: 'joyago',
     spec: [
         ...K.rb('JOYAGO', '除夜碁', 'joyago'),
+        K.params([
+            { key: 'bell_interval', label: '鐘の間隔', min: 3, max: 18, def: 9, unit: '手' },
+        ]),
         ...ST(ST_INIT),
         // 鐘撞き: 自分の9手目ごとに孤立した敵石(1石の連)を全て取る
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -55,7 +58,7 @@ module.exports = {
             // 除夜の鐘: 自分の9手ごとの着手で孤立した敵石(煩悩)を祓う
             {
                 st.pcnt[player] = (st.pcnt[player] || 0) + 1;
-                if (st.pcnt[player] % 9 === 0) {
+                if (st.pcnt[player] % Math.max(1, P('bell_interval') || 9) === 0) {
                     const visited = new Set();
                     const singles = [];
                     for (let i = 0; i < board.length; i++) {
@@ -87,7 +90,7 @@ module.exports = {
         K.CUE_STARS(`            // 除夜の鐘: 左上の小さな梵鐘
             {
                 const bx = padding, by = padding;
-                const left = 9 - (st.pcnt[turn] % 9);
+                const left = Math.max(1, P('bell_interval') || 9) - (st.pcnt[turn] % Math.max(1, P('bell_interval') || 9));
                 ctx.save();
                 ctx.strokeStyle = 'rgba(180,140,60,0.9)';
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
@@ -102,7 +105,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'鐘まで ' + (9 - (st.pcnt[turn] % 9)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'鐘まで ' + (Math.max(1, P('bell_interval') || 9) - (st.pcnt[turn] % Math.max(1, P('bell_interval') || 9))) + '手'`),
         [K.ONE, K.INFO_ALGO, `            除夜碁: 各プレイヤーの9手ごとの着手で除夜の鐘が鳴り、孤立した敵石(連が1石だけ)が全て祓われる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

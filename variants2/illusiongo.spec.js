@@ -9,28 +9,32 @@ module.exports = {
     kind: 'illusion',
     spec: [
         ...K.rb('ILLUSIONGO', '幻影碁', 'illusiongo'),
+        K.params([
+            { key: 'band', label: '幻影帯の幅', min: 1, max: 4, def: 1, hint: '中心からの行数' },
+        ]),
         [K.ONE, '        function drawBoardElements(padding, cellSize) {',
-`        // 幻影碁: 中央3行の帯は幻影エリア — その中の石は敵色に見える
+`        // 幻影碁: 中央の帯は幻影エリア — その中の石は敵色に見える (帯幅は設定で調整)
         function inIllusion(x, y) {
             const c = (BOARD_SIZE - 1) / 2;
-            return Math.abs(y - c) <= 1;
+            return Math.abs(y - c) <= (P('band') || 1);
         }
 
         function drawBoardElements(padding, cellSize) {`],
         K.CUE_GRID(`            // 幻影帯を虹のうねりで示す
             {
                 const c = (BOARD_SIZE - 1) / 2;
+                const bw = P('band') || 1; // 幻影帯の幅は設定で調整
                 ctx.save();
                 ctx.fillStyle = 'rgba(168, 85, 247, 0.10)';
-                ctx.fillRect(0, padding + (c - 1 - 0.5) * cellSize,
-                    padding * 2 + (BOARD_SIZE - 1) * cellSize, cellSize * 3);
+                ctx.fillRect(0, padding + (c - bw - 0.5) * cellSize,
+                    padding * 2 + (BOARD_SIZE - 1) * cellSize, cellSize * (bw * 2 + 1));
                 ctx.strokeStyle = 'rgba(168, 85, 247, 0.45)';
                 ctx.setLineDash([cellSize * 0.18, cellSize * 0.14]);
                 ctx.lineWidth = Math.max(1.2, cellSize * 0.045);
                 [-1, 1].forEach(s => {
                     ctx.beginPath();
-                    ctx.moveTo(0, padding + (c + s * 1.5 - s * 0.5) * cellSize);
-                    ctx.lineTo(padding * 2 + (BOARD_SIZE - 1) * cellSize, padding + (c + s * 1.5 - s * 0.5) * cellSize);
+                    ctx.moveTo(0, padding + (c + s * (bw + 0.5) - s * 0.5) * cellSize);
+                    ctx.lineTo(padding * 2 + (BOARD_SIZE - 1) * cellSize, padding + (c + s * (bw + 0.5) - s * 0.5) * cellSize);
                     ctx.stroke();
                 });
                 ctx.restore();

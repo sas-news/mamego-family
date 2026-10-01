@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"streak_bonus","label":"連勝ボーナス","min":0,"max":3,"def":1,"unit":"星"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1851,8 +1851,8 @@
             if (captured.length > 0) {
                 st.stars[player] += captured.length;
                 if (st.hot[player]) {
-                    st.stars[player] += 1;
-                    fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '連勝+1星', '#fde047', 1200);
+                    st.stars[player] += (P('streak_bonus') ?? 1);
+                    fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '連勝+' + (P('streak_bonus') ?? 1) + '星', '#fde047', 1200);
                 }
                 st.hot[player] = true;
             } else {

@@ -46,6 +46,9 @@ module.exports = {
     icon: 'iaidogo',
     spec: [
         ...K.rb('IAIDOGO', '居合碁', 'iaidogo'),
+        K.params([
+            { key: 'blade_mode', label: '抜刀の届き', options: [{ v: 'first', l: '最初の敵石のみ' }, { v: 'all', l: '直線上の全敵石' }], def: 'first' },
+        ]),
         ...ST('{ iai: { 1: 0, 2: 0 } }'),
         [K.ONE, `            <button id="btnPass" class="flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold border rounded-xl hover:opacity-80 active:scale-95 transition-all shadow-sm">
                 パス
@@ -86,6 +89,7 @@ module.exports = {
                                     captures[player]++;
                                     fxBurst(t, '#fbbf24', 16);
                                     fxText(t, '斬', '#f59e0b', 1100);
+                                    if ((P('blade_mode') || 'first') === 'all') { x += d[0]; y += d[1]; continue; }
                                 }
                                 break;
                             }

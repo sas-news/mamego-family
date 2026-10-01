@@ -47,6 +47,9 @@ module.exports = {
     icon: 'jibikigo',
     spec: [
         ...K.rb('JIBIKIGO', '地引碁', 'jibikigo'),
+        K.params([
+            { key: 'haul_min', label: '大漁に必要な捕獲数', min: 2, max: 8, def: 4, unit: '石' },
+        ]),
         ...ST(ST_INIT),
         // 大漁: 1手の捕獲が4個以上なら漁獲として別計上 (終局時にもう1回数える)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
@@ -55,7 +58,7 @@ module.exports = {
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 // 地引網: 4個以上の一網打尽は大漁 (終局時に2倍計上)
-                if (captured.length >= 4) {
+                if (captured.length >= (P('haul_min') || 4)) {
                     st.haul[player] += captured.length;
                     captured.forEach(i => fxBurst(i, '#38bdf8', 6, 1.3));
                     fxText(captured[0], '大漁!', '#0ea5e9', 1200);

@@ -27,13 +27,16 @@ module.exports = {
     icon: 'ignitiongo',
     spec: [
         ...K.rb('IGNITIONGO', '点火碁', 'ignitiongo'),
+        K.params([
+            { key: 'ign_need', label: '点火に必要な方角', min: 2, max: 4, def: 4, hint: 'この数以上の方角が自石なら点火' },
+        ]),
         // 点火判定関数を挿入 (winByRule と共に)
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN +
 `        // 点火勝利: 聖火台 (天元) の四方4点が全て自石
         function checkIgnitionWin(player) {
             const m = Math.floor(BOARD_SIZE / 2);
             const flanks = [[m - 1, m], [m + 1, m], [m, m - 1], [m, m + 1]];
-            return flanks.every(([x, y]) => board[y * BOARD_SIZE + x] === player);
+            return flanks.filter(([x, y]) => board[y * BOARD_SIZE + x] === player).length >= (P('ign_need') || 4);
         }
         function endGameByScore() {`],
         // 聖火台セル: 天元は中立障害で石を置けない (呼吸も通らない)

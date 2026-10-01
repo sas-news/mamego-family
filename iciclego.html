@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"melt_hits","label":"溶解までの日射回数","min":1,"max":5,"def":2,"unit":"回"},{"key":"sun_step","label":"陽射しの進み","min":1,"max":3,"def":1,"hint":"1手で進む列数"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -639,8 +639,8 @@
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         // 陽射し: 手数とともに盤を西から東へ巡る光の列
-        function iciSunX() { return history.length % BOARD_SIZE; }
-        const ICI_MELT = 2; // 二度晒されると溶ける
+        function iciSunX() { return (history.length * (P('sun_step') || 1)) % BOARD_SIZE; }
+        const ICI_MELT = 2; // 二度晒されると溶ける (日射回数は設定で調整)
         let st = { melt: {} };
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
@@ -1894,7 +1894,7 @@
                     const i = y * BOARD_SIZE + sx;
                     if (board[i] !== 1 && board[i] !== 2) { if (st.melt[i]) delete st.melt[i]; continue; }
                     st.melt[i] = (st.melt[i] || 0) + 1;
-                    if (st.melt[i] >= ICI_MELT) {
+                    if (st.melt[i] >= (P('melt_hits') || 2)) {
                         board[i] = 0;
                         delete st.melt[i];
                         fxSplash(i, '#7dd3fc', 10);

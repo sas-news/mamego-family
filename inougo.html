@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"full_pts","label":"全行制覇ボーナス","min":5,"max":30,"def":15,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1890,7 +1890,7 @@
             }
             if (!st.full[player] && inou.count === BOARD_SIZE) {
                 st.full[player] = true;
-                st.score[player] += 15;
+                st.score[player] += (P('full_pts') || 15);
             }
 
             turn = opponent;

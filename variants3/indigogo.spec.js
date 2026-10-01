@@ -27,13 +27,17 @@ module.exports = {
     icon: 'indigogo',
     spec: [
         ...K.rb('INDIGOGO', '藍染碁', 'indigogo'),
+        K.params([
+            { key: 'dye_min', label: '濃染に必要な同色隣接', min: 2, max: 4, def: 2, unit: '個' },
+            { key: 'dye_pts', label: '濃染の得点', min: 0, max: 3, def: 1, unit: '目' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let indigoDone = false;
         // 濃染: 同色の石に2方以上隣接した石は藍が深く染まる
         function isDeepDyed(b, i) {
             const pl = b[i];
             if (pl !== 1 && pl !== 2) return false;
-            return getNeighbors(i).filter(n => b[n] === pl).length >= 2;
+            return getNeighbors(i).filter(n => b[n] === pl).length >= (P('dye_min') || 2);
         }
         function dyeCount(pl) {
             let n = 0;
@@ -47,8 +51,8 @@ module.exports = {
 `        function endGameByScore() {
             if (!indigoDone) {
                 indigoDone = true;
-                captures[1] += dyeCount(1);
-                captures[2] += dyeCount(2);
+                captures[1] += dyeCount(1) * (P('dye_pts') ?? 1);
+                captures[2] += dyeCount(2) * (P('dye_pts') ?? 1);
             }
             _endGameByScoreCore();
         }

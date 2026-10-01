@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"throw_max","label":"巴投げの条件","min":1,"max":4,"def":1,"hint":"この個数以下の捕獲で投げる"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1852,7 +1852,7 @@
 
             // 柔道碁: 単石を取られた側は巴投げで隣の取り手石を1個投げて取り返す
             {
-                if (captured.length === 1) {
+                if (captured.length >= 1 && captured.length <= (P('throw_max') || 1)) {
                     const spot = captured[0];
                     const grab = getNeighbors(spot).find(n => board[n] === player && n !== (move.cells[0].y * BOARD_SIZE + move.cells[0].x));
                     const grabTarget = grab !== undefined ? grab : getNeighbors(spot).find(n => board[n] === player);

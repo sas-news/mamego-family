@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"coil_min","label":"コイル化の最小連","min":2,"max":6,"def":3,"unit":"石"},{"key":"pull_dist","label":"磁力の届く距離","min":2,"max":4,"def":2,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1848,7 +1848,7 @@
             {
                 let best = null;
                 vChains(board, player).forEach(g => { if (!best || g.length > best.length) best = g; });
-                if (best && best.length >= 3) {
+                if (best && best.length >= (P('coil_min') || 3)) {
                     const inCoil = new Set(best);
                     const D = [[1, 0], [-1, 0], [0, 1], [0, -1]];
                     const pulls = [];
@@ -1856,7 +1856,7 @@
                         if (board[i] !== opponent) continue;
                         const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
                         for (const [dx, dy] of D) {
-                            const mx = x + dx, my = y + dy, sx = x + dx * 2, sy = y + dy * 2;
+                            const mx = x + dx, my = y + dy, sx = x + dx * (P('pull_dist') || 2), sy = y + dy * (P('pull_dist') || 2);
                             if (sx < 0 || sy < 0 || sx >= BOARD_SIZE || sy >= BOARD_SIZE) continue;
                             const mi2 = my * BOARD_SIZE + mx, si = sy * BOARD_SIZE + sx;
                             if (inCoil.has(si) && board[mi2] === 0) { pulls.push([i, mi2]); break; }

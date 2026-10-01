@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"lantern_pts","label":"灯籠1基の得点","min":2,"max":12,"def":6,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2238,7 +2238,7 @@
                 .map(p => p.y * BOARD_SIZE + p.x);
         }
         function lanternBonus(player) {
-            return lanternIdxs().filter(i => board[i] === player).length * 6;
+            return lanternIdxs().filter(i => board[i] === player).length * (P('lantern_pts') || 6);
         }
 
         function endGameByScore() {
@@ -2767,7 +2767,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('灯籠 黒' + (lanternBonus(1) / 6) + '/白' + (lanternBonus(2) / 6));
+                const et = gameOver ? '' : ('灯籠 黒' + (lanternBonus(1) / (P('lantern_pts') || 6)) + '/白' + (lanternBonus(2) / (P('lantern_pts') || 6)));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

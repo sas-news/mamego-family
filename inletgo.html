@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"port_pts","label":"入港の得点","min":0,"max":4,"def":1,"unit":"目"},{"key":"port_lib","label":"港の追加呼吸","min":0,"max":3,"def":1,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1926,9 +1926,9 @@
             move.cells.forEach(p => {
                 const pi = p.y * BOARD_SIZE + p.x;
                 if (INLET_PORT.has(pi)) {
-                    st.score[player]++;
+                    st.score[player] += (P('port_pts') ?? 1);
                     fxGlow(pi, '#67e8f9', 800);
-                    fxText(pi, '入港+1', '#67e8f9', 1100);
+                    fxText(pi, '入港+' + (P('port_pts') ?? 1), '#67e8f9', 1100);
                 }
             });
 
@@ -2006,7 +2006,7 @@
                                 queue.push(n);
                             }
                         });
-                        if (INLET_PORT.has(curr)) liberties++; // 港内の石は停泊して安全
+                        if (INLET_PORT.has(curr)) liberties += (P('port_lib') ?? 1); // 港内の石は停泊して安全
                     }
 
                     if (liberties <= 0) {
@@ -2038,7 +2038,7 @@
                         queue.push(n);
                     }
                 });
-                if (INLET_PORT.has(curr)) liberties++; // 港内の石は停泊して安全
+                if (INLET_PORT.has(curr)) liberties += (P('port_lib') ?? 1); // 港内の石は停泊して安全
             }
             return liberties;
         }

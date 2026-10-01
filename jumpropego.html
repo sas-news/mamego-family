@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"rope_dist","label":"跳越距離","min":2,"max":4,"def":2,"hint":"敵石からの着地先"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1852,7 +1852,7 @@
                 const from = bc.y * BOARD_SIZE + bc.x;
                 for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
                     const mx = bc.x + dx, my = bc.y + dy;
-                    const lx = bc.x + dx * 2, ly = bc.y + dy * 2;
+                    const lx = bc.x + dx * (P('rope_dist') || 2), ly = bc.y + dy * (P('rope_dist') || 2);
                     if (lx < 0 || ly < 0 || lx >= BOARD_SIZE || ly >= BOARD_SIZE) continue;
                     if (board[my * BOARD_SIZE + mx] !== opponent) continue;
                     const land = ly * BOARD_SIZE + lx;

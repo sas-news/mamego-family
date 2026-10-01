@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"guard_mode","label":"分割不能の連","options":[{"v":"prime","l":"素数連"},{"v":"odd","l":"奇数連"}],"def":"prime"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1899,7 +1899,7 @@
                     }
 
                     if (!hasLiberty) {
-                        if (isPrimeNum(group.length)) {
+                        if ((P('guard_mode') || 'prime') === 'odd' ? group.length % 2 === 1 : isPrimeNum(group.length)) {
                             let worst = group[0], worstScore = -1;
                             group.forEach(g => {
                                 let s = 0;

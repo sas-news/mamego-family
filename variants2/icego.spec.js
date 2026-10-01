@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('ICEGO', '氷上碁', 'icego'),
+        K.params([
+            { key: 'slide_dir', label: '滑走方向', options: [{ v: 'all', l: '全方向に滑る' }, { v: 'ortho', l: '直交方向のみ' }], def: 'all' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let prevOwn = { 1: null, 2: null }; // 各プレイヤーの直前の着手点 (滑走方向の基準)`],
         [K.ONE, K.RESET_HELD, `            heldPieces = { 1: null, 2: null };
@@ -43,7 +46,8 @@ module.exports = {
                 prevOwn[player] = np;
                 if (pp) {
                     const dx = Math.sign(np.x - pp.x), dy = Math.sign(np.y - pp.y);
-                    if (dx !== 0 || dy !== 0) {
+                    const orthoOnly = (P('slide_dir') || 'all') === 'ortho'; // 設定: 直交のみ滑る
+                    if ((dx !== 0 || dy !== 0) && !(orthoOnly && dx !== 0 && dy !== 0)) {
                         let cx = np.x, cy2 = np.y;
                         while (true) {
                             const nx = cx + dx, ny = cy2 + dy;

@@ -322,7 +322,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"ins_max","label":"付保の上限","min":1,"max":5,"def":2,"unit":"件"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1685,7 +1685,7 @@
             // 保険モード: 自石をクリックして付保する (手番は消費しない)
             if (st.armed[turn]) {
                 const gi = Math.round(anchor.v) * BOARD_SIZE + Math.round(anchor.u);
-                if (gi >= 0 && gi < board.length && board[gi] === turn && !(st.insured[turn] || []).includes(gi) && (st.insured[turn] || []).length < 2) {
+                if (gi >= 0 && gi < board.length && board[gi] === turn && !(st.insured[turn] || []).includes(gi) && (st.insured[turn] || []).length < (P('ins_max') || 2)) {
                     (st.insured[turn] = st.insured[turn] || []).push(gi);
                     st.armed[turn] = false;
                     fxText(gi, '付保', '#38bdf8', 900);
@@ -2800,7 +2800,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('被保険 ' + ((st.insured[turn] || []).length) + '/2');
+                const et = gameOver ? '' : ('被保険 ' + ((st.insured[turn] || []).length) + '/' + (P('ins_max') || 2));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"kago_pts","label":"駕籠の護送費","min":0,"max":6,"def":2,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1860,7 +1860,7 @@
                     }
                 });
                 if (carried) {
-                    captures[player] += carried * 2;
+                    captures[player] += carried * (P('kago_pts') ?? 2);
                     fxShake(3, 260);
                 }
             }
@@ -2736,7 +2736,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('要人の四方を塞いで駕籠 +2');
+                const et = gameOver ? '' : ('要人の四方を塞いで駕籠 +' + (P('kago_pts') ?? 2));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

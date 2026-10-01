@@ -10,6 +10,11 @@ module.exports = {
     icon: 'insectgo',
     spec: [
         ...K.rb('INSECTGO', '昆虫碁', 'insectgo'),
+        K.params([
+            { key: 'pupa_age', label: '蛹になる齢', min: 1, max: 8, def: 3, unit: '手' },
+            { key: 'adult_age', label: '成虫になる齢', min: 3, max: 16, def: 6, unit: '手' },
+            { key: 'fly_dist', label: '飛翔距離', min: 1, max: 4, def: 2, unit: '目' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { born: {} }; // idx→打たれた手数 (変態段階の判定用)`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -38,7 +43,7 @@ module.exports = {
             const b = st.born[i];
             if (b === undefined) return 0;
             const age = history.length - b;
-            return age >= 6 ? 2 : age >= 3 ? 1 : 0;
+            return age >= (P('adult_age') || 6) ? 2 : age >= (P('pupa_age') || 3) ? 1 : 0;
         }
         function pruneBorn() {
             for (const k in st.born) if (board[k] === 0 || board[k] === 3) delete st.born[k];
@@ -57,7 +62,7 @@ module.exports = {
                         // 成虫は飛び去る: 2マス先の空きへ
                         const ix = i % BOARD_SIZE, iy = Math.floor(i / BOARD_SIZE);
                         for (const [dx, dy] of dirOrder) {
-                            const nx = ix + dx * 2, ny = iy + dy * 2;
+                            const nx = ix + dx * (P('fly_dist') || 2), ny = iy + dy * (P('fly_dist') || 2);
                             if (nx >= 0 && ny >= 0 && nx < BOARD_SIZE && ny < BOARD_SIZE
                                 && board[ny * BOARD_SIZE + nx] === 0) {
                                 board[i] = 0;

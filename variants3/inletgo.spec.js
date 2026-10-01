@@ -47,6 +47,10 @@ module.exports = {
     icon: 'inletgo',
     spec: [
         ...K.rb('INLETGO', '入江碁', 'inletgo'),
+        K.params([
+            { key: 'port_pts', label: '入港の得点', min: 0, max: 4, def: 1, unit: '目' },
+            { key: 'port_lib', label: '港の追加呼吸', min: 0, max: 3, def: 1, unit: '点' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 入り江: 四辺の中央に海の凹部。凹部に面した陸地は安全な港 (+1呼吸・入港点)
@@ -86,7 +90,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                        });
-                        if (INLET_PORT.has(curr)) liberties++; // 港内の石は停泊して安全
+                        if (INLET_PORT.has(curr)) liberties += (P('port_lib') ?? 1); // 港内の石は停泊して安全
                     }
 
                     if (liberties <= 0) {`],
@@ -94,7 +98,7 @@ module.exports = {
             }
             return liberties;`,
 `                });
-                if (INLET_PORT.has(curr)) liberties++; // 港内の石は停泊して安全
+                if (INLET_PORT.has(curr)) liberties += (P('port_lib') ?? 1); // 港内の石は停泊して安全
             }
             return liberties;`],
         // 入港: 港に置くと+1点
@@ -103,9 +107,9 @@ module.exports = {
             move.cells.forEach(p => {
                 const pi = p.y * BOARD_SIZE + p.x;
                 if (INLET_PORT.has(pi)) {
-                    st.score[player]++;
+                    st.score[player] += (P('port_pts') ?? 1);
                     fxGlow(pi, '#67e8f9', 800);
-                    fxText(pi, '入港+1', '#67e8f9', 1100);
+                    fxText(pi, '入港+' + (P('port_pts') ?? 1), '#67e8f9', 1100);
                 }
             });`],
         // 海の描画 + 港のブイ

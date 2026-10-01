@@ -322,7 +322,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"pull_pts","label":"抜き取りの得点","min":1,"max":4,"def":1,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2777,11 +2777,11 @@
                 }
                 collapsed = !ownNbs.every(n => reach.has(n));
             }
-            captures[turn] += 1;
+            captures[turn] += (P('pull_pts') || 1);
             cleanUpPieces();
             st.pullMode = false;
             if (collapsed) {
-                captures[turn] -= 1;
+                captures[turn] -= (P('pull_pts') || 1);
                 fxShake(8, 700);
                 winByRule(turn === 1 ? 2 : 1, '塔が崩れた', '抜いた石で自軍の連が分断された');
                 return;

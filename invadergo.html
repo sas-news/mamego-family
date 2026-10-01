@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"inv_interval","label":"侵攻間隔","min":2,"max":12,"def":4,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1889,7 +1889,7 @@
                     }
                 }
             }
-            if (moveCount % 4 === 0) {
+            if (moveCount % Math.max(1, P('inv_interval') || 4) === 0) {
                 const tops = [];
                 for (let x = 0; x < BOARD_SIZE; x++) if (board[x] === 0) tops.push(x);
                 if (tops.length > 0) {
@@ -2770,7 +2770,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (moveCount % 4 >= 2 ? "あと" + (4 - moveCount % 4) + "手で侵攻" : "");
+                const et = gameOver ? '' : (moveCount % Math.max(1, P("inv_interval") || 4) >= 2 ? "あと" + (Math.max(1, P("inv_interval") || 4) - moveCount % Math.max(1, P("inv_interval") || 4)) + "手で侵攻" : "");
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

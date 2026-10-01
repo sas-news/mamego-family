@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"momen_interval","label":"木綿の間隔","min":3,"max":14,"def":7,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1849,7 +1849,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 一反碁: 7手ごとの石は一反木綿 — 隣の敵石を包んで運び去る
-            if (st.cnt[player] % 7 === 0) {
+            if (st.cnt[player] % Math.max(1, P('momen_interval') || 7) === 0) {
                 const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const tgt = getNeighbors(ci).find(n => board[n] === opponent);
                 if (tgt !== undefined) {

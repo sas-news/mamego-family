@@ -27,6 +27,9 @@ module.exports = {
     icon: 'horagaigo',
     spec: [
         ...K.rb('HORAGAIGO', '法螺碁', 'horagaigo'),
+        K.params([
+            { key: 'conch_pts', label: '法螺の得点', min: 1, max: 9, def: 3, unit: '目' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 法螺貝の点: 四辺の中央
         function conchIdxs() {
@@ -42,9 +45,9 @@ module.exports = {
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (conchIdxs().includes(mi)) {
-                    captures[player] += 3;
+                    captures[player] += (P('conch_pts') || 3);
                     fxGlow(mi, '#f97316', 900);
-                    fxText(mi, '法螺 +3', '#fb923c', 1300);
+                    fxText(mi, '法螺 +' + (P('conch_pts') || 3), '#fb923c', 1300);
                     fxShake(4, 300);
                     fxBurst(mi, '#fdba74', 12, 1.6);
                 }

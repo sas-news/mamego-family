@@ -10,6 +10,10 @@ module.exports = {
     icon: 'ikebanago',
     spec: [
         ...K.rb('IKEBANAGO', '生花碁', 'ikebanago'),
+        K.params([
+            { key: 'run_len', label: '構図の連数', min: 3, max: 5, def: 3, hint: '真・副に必要な連の長さ' },
+            { key: 'comp_win', label: '生花勝ちの構図数', min: 2, max: 8, def: 4, unit: '個' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { comp: { 1: 0, 2: 0 } }; // 構図点`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -40,12 +44,16 @@ module.exports = {
             for (let y = 0; y < BOARD_SIZE; y++) {
                 for (let x = 0; x < BOARD_SIZE; x++) {
                     if (board[y * BOARD_SIZE + x] !== player) continue;
+                    const L = Math.max(2, Math.round(P('run_len') || 3)); // 構図に必要な連の長さは設定で調整
                     for (const [dx, dy] of dirs) {
-                        const x1 = x + dx, y1 = y + dy, x2 = x + dx * 2, y2 = y + dy * 2;
-                        if (x2 < 0 || y2 < 0 || x2 >= BOARD_SIZE || y2 >= BOARD_SIZE) continue;
-                        if (board[y1 * BOARD_SIZE + x1] === player && board[y2 * BOARD_SIZE + x2] === player) {
-                            runs.push([y2 * BOARD_SIZE + x2, y1 * BOARD_SIZE + x1, y * BOARD_SIZE + x]);
+                        const run = [y * BOARD_SIZE + x];
+                        for (let k = 1; k < L; k++) {
+                            const xk = x + dx * k, yk = y + dy * k;
+                            if (xk < 0 || yk < 0 || xk >= BOARD_SIZE || yk >= BOARD_SIZE) { run.length = 0; break; }
+                            if (board[yk * BOARD_SIZE + xk] !== player) { run.length = 0; break; }
+                            run.push(yk * BOARD_SIZE + xk);
                         }
+                        if (run.length === L) runs.push(run.slice().reverse());
                     }
                 }
             }
@@ -66,7 +74,7 @@ module.exports = {
                     st.comp[player]++;
                     runs[0].forEach(i => fxGlow(i, '#f9a8d4', 800));
                     fxText(li, '生花!', '#f9a8d4', 1100);
-                    if (st.comp[player] >= 4) {
+                    if (st.comp[player] >= (P('comp_win') || 4)) {
                         winByRule(player, '生花勝ち', '構図を4つ完成させました'); return;
                     }
                 }

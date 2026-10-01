@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"ign_need","label":"点火に必要な方角","min":2,"max":4,"def":4,"hint":"この数以上の方角が自石なら点火"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2234,7 +2234,7 @@
         function checkIgnitionWin(player) {
             const m = Math.floor(BOARD_SIZE / 2);
             const flanks = [[m - 1, m], [m + 1, m], [m, m - 1], [m, m + 1]];
-            return flanks.every(([x, y]) => board[y * BOARD_SIZE + x] === player);
+            return flanks.filter(([x, y]) => board[y * BOARD_SIZE + x] === player).length >= (P('ign_need') || 4);
         }
         function endGameByScore() {
             gameOver = true;

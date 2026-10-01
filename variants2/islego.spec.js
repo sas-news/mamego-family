@@ -9,13 +9,16 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('ISLEGO', '諸島碁', 'islego'),
+        K.params([
+            { key: 'bridge_w', label: '橋の幅', options: [{ v: 1, l: '1列' }, { v: 3, l: '3列' }, { v: 5, l: '5列' }], def: 1 },
+        ]),
         // 2条の海 (中央列だけ橋) + 中島は左右も海で囲む
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
                 const q = Math.floor(BOARD_SIZE / 3), c = Math.floor(BOARD_SIZE / 2);
                 const m = Math.floor(BOARD_SIZE / 6);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    const sea = (y === q || y === BOARD_SIZE - 1 - q) && x !== c;
+                    const sea = (y === q || y === BOARD_SIZE - 1 - q) && Math.abs(x - c) > ((P('bridge_w') || 1) - 1) / 2;
                     const shore = y > q && y < BOARD_SIZE - 1 - q && (x < m || x > BOARD_SIZE - 1 - m);
                     if (sea || shore) board[y * BOARD_SIZE + x] = 3;
                 }
@@ -30,11 +33,14 @@ module.exports = {
                 const q = Math.floor(BOARD_SIZE / 3), c = Math.floor(BOARD_SIZE / 2);
                 ctx.save();
                 ctx.fillStyle = '#8a5a2b';
-                [[c, q], [c, BOARD_SIZE - 1 - q]].forEach(([bx, by]) => {
-                    ctx.beginPath();
-                    ctx.arc(padding + bx * cellSize, padding + by * cellSize, cellSize * 0.20, 0, Math.PI * 2);
-                    ctx.fill();
-                });
+                const bhw = ((P('bridge_w') || 1) - 1) / 2;
+                for (let bx = Math.ceil(c - bhw); bx <= c + bhw; bx++) {
+                    [q, BOARD_SIZE - 1 - q].forEach(by => {
+                        ctx.beginPath();
+                        ctx.arc(padding + bx * cellSize, padding + by * cellSize, cellSize * 0.20, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
                 ctx.restore();
             }`),
         [K.ONE, K.RV_ALGO, K.rv([

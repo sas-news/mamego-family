@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"iso_turns","label":"絶縁の持続","min":2,"max":20,"def":8,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1886,7 +1886,7 @@
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const alone = getNeighbors(mi).every(n => board[n] !== player);
                 if (board[mi] === player && alone) {
-                    st.iso[mi] = history.length + 8;
+                    st.iso[mi] = history.length + (P('iso_turns') || 8);
                     fxGlow(mi, '#e2e8f0', 800);
                 }
             }

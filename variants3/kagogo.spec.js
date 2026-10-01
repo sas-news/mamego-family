@@ -27,6 +27,9 @@ module.exports = {
     icon: 'kagogo',
     spec: [
         ...K.rb('KAGOGO', '駕籠碁', 'kagogo'),
+        K.params([
+            { key: 'kago_pts', label: '駕籠の護送費', min: 0, max: 6, def: 2, unit: '目' },
+        ]),
         // 駕籠: 着手で要人(中央4星)の四方を自石が全て塞ぐと、要人を担いで+2目 (要人は中立のまま)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -46,7 +49,7 @@ module.exports = {
                     }
                 });
                 if (carried) {
-                    captures[player] += carried * 2;
+                    captures[player] += carried * (P('kago_pts') ?? 2);
                     fxShake(3, 260);
                 }
             }
@@ -70,7 +73,7 @@ module.exports = {
                     ctx.restore();
                 });
             }`),
-        ...K.EVENT_CHIP_SPEC(`'要人の四方を塞いで駕籠 +2'`),
+        ...K.EVENT_CHIP_SPEC(`'要人の四方を塞いで駕籠 +' + (P('kago_pts') ?? 2)`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            駕籠碁: 星は中立の要人。座の隣接4方を自石で塞ぐと駕籠で担ぎ+2目 (要人は空点のまま残る)<br>
             PC: クリックで配置<br>

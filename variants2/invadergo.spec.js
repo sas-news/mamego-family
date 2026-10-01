@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('INVADERGO', '侵攻碁', 'invadergo'),
+        K.params([
+            { key: 'inv_interval', label: '侵攻間隔', min: 2, max: 12, def: 4, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白, 3:侵攻ブロック
         let moveCount = 0;`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -27,7 +30,7 @@ module.exports = {
                     }
                 }
             }
-            if (moveCount % 4 === 0) {
+            if (moveCount % Math.max(1, P('inv_interval') || 4) === 0) {
                 const tops = [];
                 for (let x = 0; x < BOARD_SIZE; x++) if (board[x] === 0) tops.push(x);
                 if (tops.length > 0) {
@@ -39,7 +42,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC('moveCount % 4 >= 2 ? "あと" + (4 - moveCount % 4) + "手で侵攻" : ""'),
+        ...K.EVENT_CHIP_SPEC('moveCount % Math.max(1, P("inv_interval") || 4) >= 2 ? "あと" + (Math.max(1, P("inv_interval") || 4) - moveCount % Math.max(1, P("inv_interval") || 4)) + "手で侵攻" : ""'),
         // 侵攻ブロック: 暗緑の装甲面に瞬く複眼 (侵攻らしい質感)
         [K.ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
 `            const covered = new Set(); // ピース描画でカバー済みのマス

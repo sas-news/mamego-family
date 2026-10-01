@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"waist","label":"咽喉の広さ","min":-2,"max":3,"def":0,"hint":"大きいほど上下の繋がりが広い"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2771,7 +2771,7 @@
             {
                 const c = Math.floor(BOARD_SIZE / 2);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if (Math.abs(x - c) > Math.abs(y - c)) board[y * BOARD_SIZE + x] = 3;
+                    if (Math.abs(x - c) > Math.abs(y - c) + (P('waist') || 0)) board[y * BOARD_SIZE + x] = 3;
                 }
             }
             pieces = [];

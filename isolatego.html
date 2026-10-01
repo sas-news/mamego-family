@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"iso_parity","label":"孤点の配置","options":[{"v":"even","l":"市松の偶数マス"},{"v":"odd","l":"市松の奇数マス"}],"def":"even"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1153,7 +1153,7 @@
                 ctx.save();
                 ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.10);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if ((x + y) % 2 === 0) {
+                    if ((x + y) % 2 === ((P('iso_parity') || 'even') === 'odd' ? 1 : 0)) {
                         ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
                     }
                 }
@@ -1190,7 +1190,7 @@
                 ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.45);
                 ctx.lineWidth = Math.max(1, cellSize * 0.035);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if ((x + y) % 2 !== 0) continue;
+                    if ((x + y) % 2 !== ((P('iso_parity') || 'even') === 'odd' ? 1 : 0)) continue;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize, r = cellSize * 0.13;
                     ctx.beginPath();
                     ctx.moveTo(cx, cy - r);
@@ -1950,7 +1950,7 @@
             const y = Math.floor(idx / BOARD_SIZE);
             const neighbors = [];
 
-            if ((x + y) % 2 === 0) {
+            if ((x + y) % 2 === ((P('iso_parity') || 'even') === 'odd' ? 1 : 0)) {
                 // 孤点: 斜めだけで繋がる (直交とは断たれた点)
                 if (x > 0 && y > 0) neighbors.push(idx - BOARD_SIZE - 1);
                 if (x < BOARD_SIZE - 1 && y > 0) neighbors.push(idx - BOARD_SIZE + 1);

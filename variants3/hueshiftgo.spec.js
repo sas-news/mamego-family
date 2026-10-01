@@ -47,6 +47,10 @@ module.exports = {
     icon: 'hueshiftgo',
     spec: [
         ...K.rb('HUESHIFTGO', '色違碁', 'hueshiftgo'),
+        K.params([
+            { key: 'pale_interval', label: '逸品石の間隔', min: 2, max: 12, def: 4, unit: '手' },
+            { key: 'pale_bonus', label: '逸品ボーナス', min: 0, max: 4, def: 1, unit: '目' },
+        ]),
         ...ST(ST_INIT),
         // 色違い: 着手ごとに色相がずれ、4回に1度は淡色石。淡色石を取ると+1ボーナス
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -55,14 +59,14 @@ module.exports = {
                 const ci = cell.y * BOARD_SIZE + cell.x;
                 st.hue[ci] = (st.hue[ci] || 0) + 60 + (history.length * 37) % 120;
                 // 4手ごとに淡色の逸品石が現れる (色相が淡い側に振り切れる)
-                if (history.length % 4 === 0) st.pale.add(ci);
+                if (history.length % Math.max(1, P('pale_interval') || 4) === 0) st.pale.add(ci);
             });`],
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 let bonus = 0;
                 captured.forEach(idx => {
                     board[idx] = 0;
-                    if (st.pale.has(idx)) { st.pale.delete(idx); bonus++; }
+                    if (st.pale.has(idx)) { st.pale.delete(idx); bonus += (P('pale_bonus') ?? 1); }
                     delete st.hue[idx];
                 });
                 captures[player] += captured.length + bonus;

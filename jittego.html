@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"blade_mode","label":"十手の挟み方","options":[{"v":"ortho","l":"直交のみ"},{"v":"diag","l":"直交+斜め"}],"def":"ortho"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -644,6 +644,11 @@
             const caught = [];
             if (x > 0 && x < BOARD_SIZE - 1 && b[idx - 1] === opp && b[idx + 1] === opp) caught.push(idx - 1, idx + 1);
             if (y > 0 && y < BOARD_SIZE - 1 && b[idx - BOARD_SIZE] === opp && b[idx + BOARD_SIZE] === opp) caught.push(idx - BOARD_SIZE, idx + BOARD_SIZE);
+            // 設定: 斜めの対向も刃にする
+            if ((P('blade_mode') || 'ortho') === 'diag' && x > 0 && y > 0 && x < BOARD_SIZE - 1 && y < BOARD_SIZE - 1) {
+                if (b[idx - BOARD_SIZE - 1] === opp && b[idx + BOARD_SIZE + 1] === opp) caught.push(idx - BOARD_SIZE - 1, idx + BOARD_SIZE + 1);
+                if (b[idx - BOARD_SIZE + 1] === opp && b[idx + BOARD_SIZE - 1] === opp) caught.push(idx - BOARD_SIZE + 1, idx + BOARD_SIZE - 1);
+            }
             return caught;
         }
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]

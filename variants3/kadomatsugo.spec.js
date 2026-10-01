@@ -27,6 +27,10 @@ module.exports = {
     icon: 'kadomatsugo',
     spec: [
         ...K.rb('KADOMATSUGO', '門松碁', 'kadomatsugo'),
+        K.params([
+            { key: 'matsu_len', label: '門松に必要な連数', min: 3, max: 5, def: 3, unit: '連' },
+            { key: 'matsu_pts', label: '門松1本の得点', min: 0, max: 9, def: 3, unit: '目' },
+        ]),
         // 門松判定ヘルパー (採点・描画・テスト共通)
         [K.ONE, `        function endGameByScore() {`, `        // 門松判定: 盤上の直線ラン (縦または横の3連以上) を数える
         function kadomatsuRuns(pl) {
@@ -36,7 +40,7 @@ module.exports = {
                 for (let x = 0; x <= BOARD_SIZE; x++) {
                     const v = x < BOARD_SIZE ? board[y * BOARD_SIZE + x] : -1;
                     if (v === pl) run.push(y * BOARD_SIZE + x);
-                    else { if (run.length >= 3) runs.push(run); run = []; }
+                    else { if (run.length >= (P('matsu_len') || 3)) runs.push(run); run = []; }
                 }
             }
             for (let x = 0; x < BOARD_SIZE; x++) {
@@ -44,12 +48,12 @@ module.exports = {
                 for (let y = 0; y <= BOARD_SIZE; y++) {
                     const v = y < BOARD_SIZE ? board[y * BOARD_SIZE + x] : -1;
                     if (v === pl) run.push(y * BOARD_SIZE + x);
-                    else { if (run.length >= 3) runs.push(run); run = []; }
+                    else { if (run.length >= (P('matsu_len') || 3)) runs.push(run); run = []; }
                 }
             }
             return runs;
         }
-        function kadomatsuBonus(pl) { return kadomatsuRuns(pl).length * 3; }
+        function kadomatsuBonus(pl) { return kadomatsuRuns(pl).length * (P('matsu_pts') ?? 3); }
 
         function endGameByScore() {`],
         // 採点に門松点を加算
