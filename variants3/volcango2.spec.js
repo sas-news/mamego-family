@@ -36,6 +36,10 @@ module.exports = {
     icon: 'volcango2',
     spec: [
         ...K.rb('VOLCANGO', '噴火碁', 'volcango2'),
+        K.params([
+            { key: 'eruption_interval', label: '噴火の間隔', min: 5, max: 60, def: 20, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 1.1 },
+        ]),
         ...K.WALL_SPEC,
         // 火口: 天元は永久の壁 (石は置けず呼吸点にもならない)
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -48,7 +52,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 噴火: 20手ごとに火口から縦/横どちらか一線に溶岩が流れ、経路上の石を全て焼失
-            if (history.length % 20 === 0) {
+            if (history.length % Math.max(1, P('eruption_interval') || 20) === 0) {
                 const vc = Math.floor(BOARD_SIZE / 2);
                 const horizontal = Math.random() < 0.5;
                 const burnt = [];
@@ -66,7 +70,7 @@ module.exports = {
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -85,7 +89,7 @@ module.exports = {
                 ctx.fill();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'噴火まで ' + (20 - (history.length % 20)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'噴火まで ' + (Math.max(1, P('eruption_interval') || 20) - (history.length % Math.max(1, P('eruption_interval') || 20))) + '手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '天元は火山の火口 (永久の壁)。20手ごとに噴火し、火口から縦か横の一直線に溶岩が流れる。',
             '溶岩の経路上の石は全て焼失 (アゲハマにはならない)。噴火周期は両者共通。',

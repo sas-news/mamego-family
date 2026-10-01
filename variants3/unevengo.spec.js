@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'unevengo',
     spec: [
         ...K.rb('UNEVENGO', '非対称碁', 'unevengo'),
+        K.params([
+            { key: 'black_extra', label: '黒の追加石数', min: 0, max: 3, def: 1, unit: '石' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         // 非対称: コミなし
         [K.ONE, 'let komi = 6.5;', 'let komi = 0;'],
         // 黒は毎手+1石 (数の勢力)
@@ -35,12 +39,15 @@ module.exports = {
             // 非対称: 黒は着手ごとに隣の空点へ+1石 (数で押す勢力)
             if (player === 1) {
                 const bi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                let extra = P('black_extra') === undefined ? 1 : P('black_extra');
                 for (const nb of getNeighbors(bi)) {
+                    if (extra <= 0) break;
                     if (board[nb] !== 0) continue;
                     board[nb] = 1;
                     if (getCapturedStones(board, 1).length === 0) {
                         pieces.push({ id: Date.now() + Math.random(), player: 1, type: move.type, rot: move.rot, cells: [{ x: nb % BOARD_SIZE, y: Math.floor(nb / BOARD_SIZE) }] });
-                        break;
+                        extra--;
+                        continue;
                     }
                     board[nb] = 0;
                 }

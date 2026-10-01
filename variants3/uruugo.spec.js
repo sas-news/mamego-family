@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'uruugo',
     spec: [
         ...K.rb('URUUGO', '閏年碁', 'uruugo'),
+        K.params([
+            { key: 'uruu_interval', label: '閏の間隔', min: 2, max: 12, def: 4, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         ...ST(ST_INIT),
         // 閏: 4手ごとに同じ側がもう一手 (pcntは全着手を数え、閏自身も数えるので閏は白黒交互)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -54,7 +58,7 @@ module.exports = {
 
             // 閏: 4手ごとに打った側がもう一手打てる
             st.pcnt++;
-            if (st.pcnt % 4 === 0) {
+            if (st.pcnt % Math.max(1, P('uruu_interval') || 4) === 0) {
                 const cell = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 fxGlow(cell, '#a3e635', 800);
                 fxText(cell, '閏!', '#a3e635', 1200);
@@ -62,7 +66,7 @@ module.exports = {
             } else {
                 turn = opponent;
             }`],
-        ...K.EVENT_CHIP_SPEC(`'閏まで: ' + (4 - st.pcnt % 4) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'閏まで: ' + (Math.max(1, P('uruu_interval') || 4) - st.pcnt % Math.max(1, P('uruu_interval') || 4)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            閏年碁: 4手ごとに閏が入り、打った側がそのままもう一手打てる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"cap_rows","label":"打ち切り手数 (盤+N行)","min":1,"max":8,"def":2,"unit":"行"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1882,7 +1882,7 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + Math.max(1, P('cap_rows') || 2))) {
                 endGameByScore();
                 return;
             }

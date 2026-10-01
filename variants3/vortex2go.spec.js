@@ -10,6 +10,9 @@ module.exports = {
     icon: 'vortex2go',
     spec: [
         ...K.rb('VORTEX2GO', '旋風碁', 'vortex2go'),
+        K.params([
+            { key: 'cap_moves', label: '打ち切り手数', min: 40, max: 300, step: 10, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
@@ -33,7 +36,7 @@ module.exports = {
                 }
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, K.RV_ALGO, K.rv([

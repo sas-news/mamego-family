@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,11 +27,16 @@ module.exports = {
     icon: 'tsumikigo',
     spec: [
         ...K.rb('TSUMIKIGO', '積木碁', 'tsumikigo'),
+        K.params([
+            { key: 'stack_low', label: '安定する連の石数', min: 2, max: 9, def: 5, unit: '石' },
+            { key: 'stack_high', label: '崩れそうな連の石数', min: 6, max: 20, def: 10, unit: '石' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 積み木の安定判定: 5-9石で安定 (+1)、10石以上で頭でっかち (-1)
         function stackBonus(n) {
-            if (n >= 10) return -1;
-            if (n >= 5) return 1;
+            if (n >= (P('stack_high') || 10)) return -1;
+            if (n >= (P('stack_low') || 5)) return 1;
             return 0;
         }`],
         // 連の高さで呼吸が変わる
@@ -90,8 +95,8 @@ module.exports = {
                         const c = q.shift(); g.push(c);
                         getNeighbors(c).forEach(n => { if (board[n] === v && !seen.has(n)) { seen.add(n); q.push(n); } });
                     }
-                    if (g.length < 5) continue;
-                    const wob = g.length >= 10;
+                    if (g.length < (P('stack_low') || 5)) continue;
+                    const wob = g.length >= (P('stack_high') || 10);
                     ctx.strokeStyle = wob ? 'rgba(220,38,38,0.55)' : 'rgba(146,64,14,0.5)';
                     g.forEach(j => {
                         const x = j % BOARD_SIZE, y = (j / BOARD_SIZE) | 0;

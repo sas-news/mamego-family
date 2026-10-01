@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('VAMPGO', '吸血碁', 'vampgo'),
+        K.params([
+            { key: 'cap_rows', label: '打ち切り手数 (盤+N行)', min: 1, max: 8, def: 2, unit: '行' },
+        ]),
         // 装甲マーク vampArmor (idx の Set) の状態登録
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let vampArmor = new Set(); // 吸血で得た装甲 (idx)。取られそうな時1度だけ剥がれて耐える`],
@@ -86,7 +89,7 @@ module.exports = {
         // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + Math.max(1, P('cap_rows') || 2))) {
                 endGameByScore();
                 return;
             }

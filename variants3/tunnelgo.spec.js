@@ -10,17 +10,32 @@ module.exports = {
     icon: 'tunnelgo',
     spec: [
         ...K.rb('TUNNELGO', '隧道碁', 'tunnelgo'),
+        K.params([
+            { key: 'tun_in', label: '隧道入口の位置 (端から)', min: 0, max: 8, def: 0, hint: '0=自動 (盤の1/6)' },
+            { key: 'tun_out', label: '隧道出口の位置 (端から)', min: 0, max: 12, def: 0, hint: '0=自動 (盤の2/5)' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 隧道: 入口 (隅寄り) -> 出口 (中央寄り) の4本
-        const TUN_A = Math.max(1, Math.floor(BOARD_SIZE / 6));
-        const TUN_B = Math.max(2, Math.floor(BOARD_SIZE * 0.4));
-        const TUNNELS = new Map([
-            [TUN_A * BOARD_SIZE + TUN_A, TUN_B * BOARD_SIZE + TUN_B],
-            [TUN_A * BOARD_SIZE + (BOARD_SIZE - 1 - TUN_A), TUN_B * BOARD_SIZE + (BOARD_SIZE - 1 - TUN_B)],
-            [(BOARD_SIZE - 1 - TUN_A) * BOARD_SIZE + TUN_A, (BOARD_SIZE - 1 - TUN_B) * BOARD_SIZE + TUN_B],
-            [(BOARD_SIZE - 1 - TUN_A) * BOARD_SIZE + (BOARD_SIZE - 1 - TUN_A), (BOARD_SIZE - 1 - TUN_B) * BOARD_SIZE + (BOARD_SIZE - 1 - TUN_B)],
-        ]);
-        const TUNNEL_EXITS = new Set(TUNNELS.values());
+        // 隧道: 入口 (隅寄り) -> 出口 (中央寄り) の4本。位置は設定で調整 (0=自動)
+        const TUN_A = Math.max(1, P('tun_in') || Math.floor(BOARD_SIZE / 6));
+        const TUN_B = Math.max(2, P('tun_out') || Math.floor(BOARD_SIZE * 0.4));
+        let TUNNELS = new Map();
+        let TUNNEL_EXITS = new Set();
+        function rebuildTunnels() {
+            const a = Math.max(1, P('tun_in') || Math.floor(BOARD_SIZE / 6));
+            const b = Math.max(2, P('tun_out') || Math.floor(BOARD_SIZE * 0.4));
+            TUNNELS = new Map([
+                [a * BOARD_SIZE + a, b * BOARD_SIZE + b],
+                [a * BOARD_SIZE + (BOARD_SIZE - 1 - a), b * BOARD_SIZE + (BOARD_SIZE - 1 - b)],
+                [(BOARD_SIZE - 1 - a) * BOARD_SIZE + a, (BOARD_SIZE - 1 - b) * BOARD_SIZE + b],
+                [(BOARD_SIZE - 1 - a) * BOARD_SIZE + (BOARD_SIZE - 1 - a), (BOARD_SIZE - 1 - b) * BOARD_SIZE + (BOARD_SIZE - 1 - b)],
+            ]);
+            TUNNEL_EXITS = new Set(TUNNELS.values());
+        }
+        rebuildTunnels();
+        function onVariantParam(p) {
+            if (p.key === 'tun_in' || p.key === 'tun_out') rebuildTunnels();
+        }
         function tunnelExit(x, y) {
             const e = TUNNELS.get(y * BOARD_SIZE + x);
             return e === undefined ? -1 : e;
@@ -87,7 +102,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

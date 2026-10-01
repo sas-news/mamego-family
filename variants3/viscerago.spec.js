@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'viscerago',
     spec: [
         ...K.rb('VISCERAGO', '五臓碁', 'viscerago'),
+        K.params([
+            { key: 'kiketsu_lib', label: '気血の追加呼吸', min: 1, max: 4, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 五臓: 0=肝(左上) 1=心(右上) 2=脾(左下) 3=肺(右下) 4=腎(中臓の菱形)
         const ORGAN_NAMES = ['肝', '心', '脾', '肺', '腎'];
@@ -52,7 +56,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                    }
-                    if (bodyAlive) liberties += 1; // 五臓が揃うと気血が巡り+1呼吸
+                    if (bodyAlive) liberties += P('kiketsu_lib') || 1; // 五臓が揃うと気血が巡り+N呼吸
 
                     if (liberties <= 0) {`],
         // 五五臓の領域描画 (4象限+中臓)

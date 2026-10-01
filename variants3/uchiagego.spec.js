@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'uchiagego',
     spec: [
         ...K.rb('UCHIAGEGO', '花火碁', 'uchiagego'),
+        K.params([
+            { key: 'hanabi_interval', label: '花火玉の間隔', min: 2, max: 16, def: 8, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         ...ST(ST_INIT),
         // 各側8手目の着手は花火玉: 打ち上がって4斜めの空点に自石が開く
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -54,7 +58,7 @@ module.exports = {
 
             // 花火碁: 8手ごとの着手は花火玉 — 打ち上がり4斜めに開く
             st.cnt[player] = (st.cnt[player] || 0) + 1;
-            if (st.cnt[player] % 8 === 0) {
+            if (st.cnt[player] % Math.max(1, P('hanabi_interval') || 8) === 0) {
                 const bc = move.cells[0];
                 const ci = bc.y * BOARD_SIZE + bc.x;
                 board[ci] = 0; // 玉は打ち上がって消える
@@ -75,7 +79,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'花火まで ' + (8 - ((st.cnt[turn] || 0) % 8)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'花火まで ' + (Math.max(1, P('hanabi_interval') || 8) - ((st.cnt[turn] || 0) % Math.max(1, P('hanabi_interval') || 8))) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            花火碁: 各側8手目の着手は花火玉。打ち上がって4斜めの空点に自石が咲く<br>
             PC: クリックで配置<br>

@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"rain_interval","label":"雨の間隔","min":3,"max":20,"def":9,"unit":"手"},{"key":"mud_rows","label":"泥濘になる行数","min":1,"max":6,"def":3,"unit":"行"},{"key":"cap_ratio","label":"打ち切り手数 (交点数比)","min":0.3,"max":1.5,"step":0.05,"def":0.75}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1816,7 +1816,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1872,9 +1872,9 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 雨水: 9手ごとに雨帯が下り、その3行が泥濘になる (以後ずっと取れない土地)
-            if (history.length % 9 === 0 && st.buried) {
-                const bandTop = (Math.floor(history.length / 9) * 3) % BOARD_SIZE;
-                for (let y = bandTop; y < Math.min(bandTop + 3, BOARD_SIZE); y++) {
+            if (history.length % Math.max(1, P('rain_interval') || 9) === 0 && st.buried) {
+                const bandTop = (Math.floor(history.length / Math.max(1, P('rain_interval') || 9)) * Math.max(1, P('mud_rows') || 3)) % BOARD_SIZE;
+                for (let y = bandTop; y < Math.min(bandTop + Math.max(1, P('mud_rows') || 3), BOARD_SIZE); y++) {
                     for (let x = 0; x < BOARD_SIZE; x++) {
                         const i = y * BOARD_SIZE + x;
                         if (!st.buried[i]) {
@@ -2760,7 +2760,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('雨まで' + (9 - history.length % 9) + '手');
+                const et = gameOver ? '' : ('雨まで' + (Math.max(1, P('rain_interval') || 9) - history.length % Math.max(1, P('rain_interval') || 9)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

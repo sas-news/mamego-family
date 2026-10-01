@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'upliftgo',
     spec: [
         ...K.rb('UPLIFTGO', '隆起碁', 'upliftgo'),
+        K.params([
+            { key: 'uplift_interval', label: '隆起の間隔', min: 4, max: 30, def: 12, unit: '手' },
+            { key: 'high_bonus', label: '高地の追加呼吸', min: 1, max: 4, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 隆起: 順番に隆起する2x2高地のブロック位置 (中央→四隅)
@@ -67,7 +72,7 @@ module.exports = {
 
             // 隆起: 12手ごとに新しい2x2高地がせり上がる
             st.ply++;
-            if (st.ply % 12 === 0 && st.upCount < upliftSets().length) {
+            if (st.ply % Math.max(1, P('uplift_interval') || 12) === 0 && st.upCount < upliftSets().length) {
                 const set = upliftSets()[st.upCount];
                 st.upCount++;
                 set.forEach(([x, y]) => {
@@ -89,7 +94,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                        });
-                        if (isHigh(curr)) liberties++; // 高地の石は風を受けて硬い
+                        if (isHigh(curr)) liberties += P('high_bonus') || 1; // 高地の石は風を受けて硬い
                     }
 
                     if (liberties <= 0) {`],
@@ -97,7 +102,7 @@ module.exports = {
             }
             return liberties;`,
 `                });
-                if (isHigh(curr)) liberties++; // 高地の石は風を受けて硬い
+                if (isHigh(curr)) liberties += P('high_bonus') || 1; // 高地の石は風を受けて硬い
             }
             return liberties;`],
         // 高地の描画: 茶色の盛り上がり + 縁の段差線
@@ -118,7 +123,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'次の隆起まで ' + (12 - (st.ply % 12)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'次の隆起まで ' + (Math.max(1, P('uplift_interval') || 12) - (st.ply % Math.max(1, P('uplift_interval') || 12))) + '手'`),
         [K.ONE, K.INFO_ALGO, `            隆起碁: 12手ごとに盤の一部が隆起して新しい高地になる (高地の石は呼吸+1)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

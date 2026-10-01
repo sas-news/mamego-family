@@ -10,6 +10,9 @@ module.exports = {
     icon: 'voltagego',
     spec: [
         ...K.rb('VOLTAGEGO', '電圧碁', 'voltagego'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         // 中和: 着手石の隣の敵石とペアで消滅 (通常の取りの後)
         [K.ONE, K.TURN_FLIP, `            // 電圧: 着手石と最初に接した敵石が中和して消える
             {
@@ -46,7 +49,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

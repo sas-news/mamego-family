@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'troopgo',
     spec: [
         ...K.rb('TROOPGO', '猿山碁', 'troopgo'),
+        K.params([
+            { key: 'troop_min', label: '群れと認める最小石数', min: 2, max: 8, def: 3, unit: '石' },
+            { key: 'tribute', label: '貢物ボーナス', min: 1, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         ...ST(ST_INIT),
         // 猿山ルール: 着手した連が自己最大の群れ(3石以上)を更新するたび+1目
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -56,11 +61,11 @@ module.exports = {
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const g = getConnectedGroup(mi, player);
-                if (g.length >= 3 && g.length > st.troop[player]) {
+                if (g.length >= (P('troop_min') || 3) && g.length > st.troop[player]) {
                     st.troop[player] = g.length;
-                    captures[player]++;
+                    captures[player] += P('tribute') || 1;
                     fxGlow(mi, '#fbbf24', 700);
-                    fxText(mi, 'ボスに貢物 +1', '#fbbf24', 1200);
+                    fxText(mi, 'ボスに貢物 +' + (P('tribute') || 1), '#fbbf24', 1200);
                 }
             }
 
@@ -76,7 +81,7 @@ module.exports = {
                     g.forEach(j => { seen[j] = true; });
                     if (!best || g.length > best.length) best = g;
                 }
-                if (best && best.length >= 3) {
+                if (best && best.length >= (P('troop_min') || 3)) {
                     const i = best[0];
                     const cx = padding + (i % BOARD_SIZE) * cellSize;
                     const cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;

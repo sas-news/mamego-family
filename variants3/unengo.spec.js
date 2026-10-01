@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -48,10 +48,16 @@ module.exports = {
     icon: "unengo",
     spec: [
         ...K.rb("Un-Go", "暈碁", "unengo"),
+        K.params([
+            { key: 'unen_cycle', label: '暈の周期', min: 6, max: 40, def: 18, unit: '手' },
+            { key: 'unen_delay', label: '暈から嵐まで', min: 1, max: 10, def: 3, unit: '手' },
+            { key: 'storm_lib', label: '嵐で流される呼吸', min: 1, max: 4, def: 1, unit: '点以下' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         ...PERSIST("{ rain: 0 }"),
         [K.ONE, K.NBRS_GRID, K.NBRS_GRID + "\n\n        // 指定色の全連を返す\n        function vChains(b, p) {\n            const seen = new Uint8Array(b.length), out = [];\n            for (let i = 0; i < b.length; i++) {\n                if (b[i] !== p || seen[i]) continue;\n                const g = [], q = [i]; seen[i] = 1;\n                while (q.length) {\n                    const cur = q.pop(); g.push(cur);\n                    getNeighbors(cur).forEach(n => { if (b[n] === p && !seen[n]) { seen[n] = 1; q.push(n); } });\n                }\n                out.push(g);\n            }\n            return out;\n        }\n        // 取りリストを連結成分に分割する\n        function vGroups(cells) {\n            const set = new Set(cells), out = [];\n            for (const s of cells) {\n                if (!set.has(s)) continue;\n                const g = [], q = [s]; set.delete(s);\n                while (q.length) {\n                    const cur = q.pop(); g.push(cur);\n                    getNeighbors(cur).forEach(n => { if (set.has(n)) { set.delete(n); q.push(n); } });\n                }\n                out.push(g);\n            }\n            return out;\n        }"],
-        [K.ONE, K.TURN_FLIP, "            consecutivePasses = 0;\n            holdUsed = false; // 着手でホールド権利が戻る\n\n            // 暈: 18手周期の15手目に月の暈が出て3手後に嵐が来る\n            if (history.length % 18 === 15) {\n                st.rain = history.length + 3;\n                const cc = Math.floor(BOARD_SIZE / 2) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2);\n                fxText(cc, '暈…', '#93c5fd', 1200);\n            }\n            if (st.rain && history.length >= st.rain) {\n                st.rain = 0;\n                // 嵐: 呼吸1以下の脆い連が双方から洗い流される\n                const swept = [];\n                [1, 2].forEach(pl => {\n                    vChains(board, pl).forEach(g => {\n                        if (getLiberties(board, g[0]) <= 1) g.forEach(i => swept.push(i));\n                    });\n                });\n                if (swept.length) {\n                    swept.forEach(i => {\n                        fxBurst(i, '#60a5fa', 8, 1.2);\n                        captures[3 - board[i]]++;\n                        board[i] = 0;\n                    });\n                    cleanUpPieces();\n                    fxShake(6, 420);\n                }\n            }\n\n            turn = opponent;"],
-        ...K.EVENT_CHIP_SPEC("st.rain ? '嵐まで' + (st.rain - history.length) + '手' : '暈まで' + ((15 - history.length % 18 + 18) % 18) + '手'"),
+        [K.ONE, K.TURN_FLIP, "            consecutivePasses = 0;\n            holdUsed = false; // 着手でホールド権利が戻る\n\n            // 暈: 18手周期の15手目に月の暈が出て3手後に嵐が来る\n            if (history.length % Math.max(1, P('unen_cycle') || 18) === Math.max(1, (P('unen_cycle') || 18) - (P('unen_delay') || 3))) {\n                st.rain = history.length + (P('unen_delay') || 3);\n                const cc = Math.floor(BOARD_SIZE / 2) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2);\n                fxText(cc, '暈…', '#93c5fd', 1200);\n            }\n            if (st.rain && history.length >= st.rain) {\n                st.rain = 0;\n                // 嵐: 呼吸1以下の脆い連が双方から洗い流される\n                const swept = [];\n                [1, 2].forEach(pl => {\n                    vChains(board, pl).forEach(g => {\n                        if (getLiberties(board, g[0]) <= Math.max(1, P('storm_lib') || 1)) g.forEach(i => swept.push(i));\n                    });\n                });\n                if (swept.length) {\n                    swept.forEach(i => {\n                        fxBurst(i, '#60a5fa', 8, 1.2);\n                        captures[3 - board[i]]++;\n                        board[i] = 0;\n                    });\n                    cleanUpPieces();\n                    fxShake(6, 420);\n                }\n            }\n\n            turn = opponent;"],
+        ...K.EVENT_CHIP_SPEC("st.rain ? '嵐まで' + (st.rain - history.length) + '手' : '暈まで' + ((Math.max(1, (P('unen_cycle') || 18) - (P('unen_delay') || 3)) - history.length % Math.max(1, P('unen_cycle') || 18) + Math.max(1, P('unen_cycle') || 18)) % Math.max(1, P('unen_cycle') || 18)) + '手'"),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, "18手周期の15手目に月に暈がかかる — 雨の前兆。3手後に嵐が来て、呼吸1以下の脆い連が双方から洗い流されて相手のアゲハマになる。暈が出たら守りを固めよ。"],
         [K.ONE, K.RV_ALGO, K.rv(["18手周期で暈が出て3手後に嵐が来る",

@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,11 @@ module.exports = {
     icon: 'tsugitego',
     spec: [
         ...K.rb('TSUGITEGO', '継手碁', 'tsugitego'),
+        K.params([
+            { key: 'joint_min', label: '継手に必要な連の数', min: 2, max: 4, def: 2 },
+            { key: 'joint_bonus', label: '継手報酬 (係数)', min: 1, max: 6, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`, `            // 継手: 着手前に隣接する別々の自連の数を数える
             const tIdx = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
@@ -73,7 +78,7 @@ module.exports = {
                     tReps.add(Math.min.apply(null, getConnectedGroup(nb, player)));
                 }
             });
-            if (tReps.size >= 2) st.score[player] += (tReps.size - 1) * 2;
+            if (tReps.size >= (P('joint_min') || 2)) st.score[player] += (tReps.size - 1) * (P('joint_bonus') || 2);
             move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`],
         ...K.STONE_MARKS_SPEC(`            // 継手: 最後の着手が複数連を継いだら継ぎ目に楔の印
             {

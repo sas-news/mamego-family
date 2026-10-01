@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'tuggo',
     spec: [
         ...K.rb('TUGGO', '綱引碁', 'tuggo'),
+        K.params([
+            { key: 'tug_step', label: '標の移動量', min: 1, max: 4, def: 1, unit: '段' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         // winByRule + 綱標の状態 (st.knot: 標の行 = 黒側に近いほど小さい)
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN +
 `        // 綱標: st.knot は標の行位置 (0=白陣端, BOARD_SIZE-1=黒陣端, 中央=mid)
@@ -39,8 +43,9 @@ module.exports = {
                 if (board[i] === 1 && y < mid) blackInv++;
                 if (board[i] === 2 && y > mid) whiteInv++;
             }
-            if (blackInv > whiteInv) st.knot++;
-            else if (whiteInv > blackInv) st.knot--;
+            const step = Math.max(1, P('tug_step') || 1);
+            if (blackInv > whiteInv) st.knot += step;
+            else if (whiteInv > blackInv) st.knot -= step;
             if (st.knot <= 0) { st.knot = 0; winByRule(2, '綱引き勝ち', '綱標を白陣端まで引いた'); }
             else if (st.knot >= BOARD_SIZE - 1) { st.knot = BOARD_SIZE - 1; winByRule(1, '綱引き勝ち', '綱標を黒陣端まで引いた'); }
         }

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"flip_interval","label":"裏返しの間隔","min":2,"max":15,"def":5,"unit":"手"},{"key":"cap_ratio","label":"打ち切り手数 (交点数比)","min":0.3,"max":1.5,"step":0.05,"def":0.9}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1815,7 +1815,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1868,7 +1868,7 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            if (history.length % 5 === 0) flipWafer();
+            if (history.length % Math.max(1, P('flip_interval') || 5) === 0) flipWafer();
             turn = opponent;
             updateUI();
 
@@ -2748,7 +2748,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ((st.side ? '裏面' : '表面') + ' 反転まで ' + (5 - (history.length % 5)) + ' 手');
+                const et = gameOver ? '' : ((st.side ? '裏面' : '表面') + ' 反転まで ' + (Math.max(1, P('flip_interval') || 5) - (history.length % Math.max(1, P('flip_interval') || 5))) + ' 手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'tsukubaigo',
     spec: [
         ...K.rb('TSUKUBAIGO', '蹲踞碁', 'tsukubaigo'),
+        K.params([
+            { key: 'wash', label: '洗い流すアゲハマ数', min: 1, max: 6, def: 2, unit: '個' },
+            { key: 'tsukubai_bonus', label: '蹲踞の終局ボーナス', min: 1, max: 10, def: 3, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 蹲踞: 四隅の低い水盤の点
         function tsukubaiIdxs() {
@@ -36,7 +41,7 @@ module.exports = {
         // 蹲踞清め + 心静めボーナス
         [K.ONE, `        function endGameByScore() {`,
 `        function tsukubaiBonus(player) {
-            return tsukubaiIdxs().filter(i => board[i] === player).length * 3;
+            return tsukubaiIdxs().filter(i => board[i] === player).length * (P('tsukubai_bonus') || 3);
         }
 
         function endGameByScore() {`],
@@ -55,7 +60,7 @@ module.exports = {
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (tsukubaiIdxs().includes(mi)) {
-                    const washed = Math.min(2, captures[opponent]);
+                    const washed = Math.min(P('wash') || 2, captures[opponent]);
                     if (washed > 0) {
                         captures[opponent] -= washed;
                         fxText(mi, '清め -' + washed, '#38bdf8', 1300);
@@ -87,7 +92,7 @@ module.exports = {
                     ctx.restore();
                 });
             }`),
-        ...K.EVENT_CHIP_SPEC(`'蹲踞 黒' + (tsukubaiBonus(1) / 3) + '/白' + (tsukubaiBonus(2) / 3)`),
+        ...K.EVENT_CHIP_SPEC(`'蹲踞 黒' + (tsukubaiBonus(1) / (P('tsukubai_bonus') || 3)) + '/白' + (tsukubaiBonus(2) / (P('tsukubai_bonus') || 3))`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            蹲踞碁: 四隅の蹲踞(つくばい)に置くと手が清められ、取られた自石2つ分が帳消し。終局時+3目<br>
             PC: クリックで配置<br>

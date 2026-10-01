@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,12 +27,26 @@ module.exports = {
     icon: 'twinringgo',
     spec: [
         ...K.rb('TWINRINGGO', '双環碁', 'twinringgo'),
+        K.params([
+            { key: 'ring_r', label: '環の半径 (盤比)', min: 0.1, max: 0.45, step: 0.01, def: 0.2 },
+            { key: 'ring_w', label: '環の太さ', min: 0.2, max: 1.5, step: 0.05, def: 0.62 },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 双環: 左右の環 (半径 R の帯) が中央の接点1点で繋がる8の字
         const TR_MID = (BOARD_SIZE - 1) / 2;
-        const TR_R = BOARD_SIZE * 0.20;
-        const TR_C1 = TR_MID - TR_R, TR_C2 = TR_MID + TR_R;
-        const TR_W = 0.62;
+        let TR_R = BOARD_SIZE * 0.20;
+        let TR_C1 = TR_MID - TR_R, TR_C2 = TR_MID + TR_R;
+        let TR_W = 0.62;
+        function rebuildRings() {
+            TR_R = BOARD_SIZE * (P('ring_r') || 0.20);
+            TR_C1 = TR_MID - TR_R; TR_C2 = TR_MID + TR_R;
+            TR_W = P('ring_w') || 0.62;
+        }
+        rebuildRings();
+        function onVariantParam(p) {
+            if (p.key === 'ring_r' || p.key === 'ring_w') rebuildRings();
+        }
         function isRing(x, y) {
             const d1 = Math.hypot(x - TR_C1, y - TR_MID);
             const d2 = Math.hypot(x - TR_C2, y - TR_MID);

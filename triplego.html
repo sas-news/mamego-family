@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"stones_per_turn","label":"1手番の石数","min":1,"max":6,"def":3,"unit":"石"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -636,7 +636,7 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        let stonesLeftInTurn = 3; // この手番であと何石置けるか
+        let stonesLeftInTurn = P('stones_per_turn') || 3; // この手番であと何石置けるか
         let turnPlaced = []; // この手番で置いた石の idx (順序印用)
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
@@ -1330,7 +1330,7 @@
         function drawStoneMarks(padding, cellSize) {
             // 三手: この手番で置いた石に順序印
             {
-                const nums = ['①', '②', '③'];
+                const nums = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧'];
                 ctx.save();
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -1866,7 +1866,7 @@
             turnPlaced.push(move.cells[0].y * BOARD_SIZE + move.cells[0].x);
             stonesLeftInTurn--;
             if (stonesLeftInTurn <= 0) {
-                stonesLeftInTurn = 3;
+                stonesLeftInTurn = P('stones_per_turn') || 3;
                 turnPlaced = [];
                 turn = opponent;
             }
@@ -2145,7 +2145,7 @@
                 }
             } else {
                 turn = turn === 1 ? 2 : 1;
-                stonesLeftInTurn = 3; // パスは残り手を放棄して交代
+                stonesLeftInTurn = P('stones_per_turn') || 3; // パスは残り手を放棄して交代
                 turnPlaced = [];
                 updateUI();
 
@@ -2765,7 +2765,7 @@
             history = [];
             currentRot = 0;
             heldPieces = { 1: null, 2: null };
-            stonesLeftInTurn = 3;
+            stonesLeftInTurn = P('stones_per_turn') || 3;
             turnPlaced = [];
             holdUsed = false;
             if (pieceMode === 'next') {

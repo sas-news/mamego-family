@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,13 +27,27 @@ module.exports = {
     icon: 'valleygo',
     spec: [
         ...K.rb('VALLEYGO', '谷間碁', 'valleygo'),
+        K.params([
+            { key: 'valley_half', label: '谷の半幅 (盤比)', min: 0.05, max: 0.45, step: 0.01, def: 0.19 },
+            { key: 'floor_lib', label: '谷底の追加呼吸', min: 1, max: 4, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 峡谷: 中央の帯が河床、上下は崖。谷底行の石は+1呼吸
         const VALLEY_MID = Math.floor(BOARD_SIZE / 2);
-        const VALLEY_H = Math.max(2, Math.round(BOARD_SIZE * 0.19));
-        const VALLEY_Y0 = VALLEY_MID - VALLEY_H, VALLEY_Y1 = VALLEY_MID + VALLEY_H;
-        const FLOOR_SET = new Set();
-        for (let x = 0; x < BOARD_SIZE; x++) FLOOR_SET.add(VALLEY_MID * BOARD_SIZE + x);`],
+        let VALLEY_H = Math.max(2, Math.round(BOARD_SIZE * 0.19));
+        let VALLEY_Y0 = VALLEY_MID - VALLEY_H, VALLEY_Y1 = VALLEY_MID + VALLEY_H;
+        let FLOOR_SET = new Set();
+        function rebuildValley() {
+            VALLEY_H = Math.max(1, Math.round(BOARD_SIZE * (P('valley_half') || 0.19)));
+            VALLEY_Y0 = VALLEY_MID - VALLEY_H; VALLEY_Y1 = VALLEY_MID + VALLEY_H;
+            FLOOR_SET = new Set();
+            for (let x = 0; x < BOARD_SIZE; x++) FLOOR_SET.add(VALLEY_MID * BOARD_SIZE + x);
+        }
+        rebuildValley();
+        function onVariantParam(p) {
+            if (p.key === 'valley_half') rebuildValley();
+        }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 if (y < VALLEY_Y0 || y > VALLEY_Y1) board[y * BOARD_SIZE + x] = 3;
@@ -44,7 +58,7 @@ module.exports = {
                             if (boardState[n] === 0 && !deadMask[n]) {
                                 hasLiberty = true;
                             }`,
-`                        if (FLOOR_SET.has(curr)) libScore++;
+`                        if (FLOOR_SET.has(curr)) libScore += P('floor_lib') || 1;
                         const neighbors = getNeighbors(curr);
                         neighbors.forEach(n => {
                             if (boardState[n] === 0 && !deadMask[n]) {
@@ -60,7 +74,7 @@ module.exports = {
                 neighbors.forEach(n => {
                     if (boardState[n] === 0 && !deadMask[n]) {
                         liberties++;`,
-`                if (FLOOR_SET.has(curr)) liberties++;
+`                if (FLOOR_SET.has(curr)) liberties += P('floor_lib') || 1;
                 const neighbors = getNeighbors(curr);
                 neighbors.forEach(n => {
                     if (boardState[n] === 0 && !deadMask[n]) {

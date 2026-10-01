@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -36,7 +36,7 @@ const ST = (init) => [
                 deadStones: [...deadStones],`],
     [K.ONE, K.ONLINE_RECV, K.ONLINE_RECV + `\n            st = data.st ? JSON.parse(JSON.stringify(data.st)) : ${init};`],
 ];
-const ST_INIT = `{ uses: { 1: 4, 2: 4 }, armed: { 1: false, 2: false } }`;
+const ST_INIT = `{ uses: { 1: P('dig_uses') || 4, 2: P('dig_uses') || 4 }, armed: { 1: false, 2: false } }`;
 module.exports = {
     file: 'underminego.html',
     en: 'UNDERMINEGO',
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'underminego',
     spec: [
         ...K.rb('UNDERMINEGO', '掘削碁', 'underminego'),
+        K.params([
+            { key: 'dig_uses', label: '掘削の使用回数', min: 1, max: 10, def: 4, unit: '回' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         ...ST(ST_INIT),
         // 補助関数をページスコープへ注入
         [K.ONE, `        function executeMove(move, player) {`, `        const undermineDig = (idx, player) => {
@@ -83,7 +87,7 @@ module.exports = {
     consecutivePasses = 0;
     holdUsed = false;
     turn = foe;
-    if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) { endGameByScore(); return true; }
+    if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) { endGameByScore(); return true; }
     updateUI();
     if (gameMode === 'online' && onlineRoomId) syncOnlineState();
     saveState();

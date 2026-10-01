@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -48,13 +48,18 @@ module.exports = {
     icon: "usuigo",
     spec: [
         ...K.rb("Usui-Go", "雨水碁", "usuigo"),
+        K.params([
+            { key: 'rain_interval', label: '雨の間隔', min: 3, max: 20, def: 9, unit: '手' },
+            { key: 'mud_rows', label: '泥濘になる行数', min: 1, max: 6, def: 3, unit: '行' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         ...PERSIST("{ buried: {} }"),
         [K.ONE, '            if (getCapturedStones(after, player).length > 0) return false;',
             "            // 変則: 取り残された死に連が残り得るため、着手した石の連だけを窒息判定する\n            const placedSuicide = cells.some(p => {\n                const pi = p.y * BOARD_SIZE + p.x;\n                const seen = new Set([pi]), q = [pi];\n                while (q.length) {\n                    const cur = q.pop();\n                    for (const n of getNeighbors(cur)) if (after[n] === player && !seen.has(n)) { seen.add(n); q.push(n); }\n                }\n                return getCapturedStones(after, player).some(d => seen.has(d));\n            });\n            if (placedSuicide) return false;"],
         [K.ONE, K.CAPTURE_BLOCK, "            // 雨水碁: 泥濘の上の石は埋まって取れない\n            const captured = getCapturedStones(board, opponent).filter(i => !(st.buried && st.buried[i]));\n            if (captured.length > 0) {\n                captured.forEach(idx => board[idx] = 0);\n                captures[player] += captured.length;\n                soundManager.playCapture();\n                cleanUpPieces();\n            } else {\n                soundManager.playPlace();\n            }"],
-        [K.ONE, K.TURN_FLIP, "            consecutivePasses = 0;\n            holdUsed = false; // 着手でホールド権利が戻る\n\n            // 雨水: 9手ごとに雨帯が下り、その3行が泥濘になる (以後ずっと取れない土地)\n            if (history.length % 9 === 0 && st.buried) {\n                const bandTop = (Math.floor(history.length / 9) * 3) % BOARD_SIZE;\n                for (let y = bandTop; y < Math.min(bandTop + 3, BOARD_SIZE); y++) {\n                    for (let x = 0; x < BOARD_SIZE; x++) {\n                        const i = y * BOARD_SIZE + x;\n                        if (!st.buried[i]) {\n                            st.buried[i] = 1;\n                            fxSplash(i, '#a78bfa', 5);\n                        }\n                    }\n                }\n                fxText(Math.min(bandTop + 1, BOARD_SIZE - 1) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2), '泥濘', '#8b5cf6', 1000);\n            }\n\n            turn = opponent;"],
+        [K.ONE, K.TURN_FLIP, "            consecutivePasses = 0;\n            holdUsed = false; // 着手でホールド権利が戻る\n\n            // 雨水: 9手ごとに雨帯が下り、その3行が泥濘になる (以後ずっと取れない土地)\n            if (history.length % Math.max(1, P('rain_interval') || 9) === 0 && st.buried) {\n                const bandTop = (Math.floor(history.length / Math.max(1, P('rain_interval') || 9)) * Math.max(1, P('mud_rows') || 3)) % BOARD_SIZE;\n                for (let y = bandTop; y < Math.min(bandTop + Math.max(1, P('mud_rows') || 3), BOARD_SIZE); y++) {\n                    for (let x = 0; x < BOARD_SIZE; x++) {\n                        const i = y * BOARD_SIZE + x;\n                        if (!st.buried[i]) {\n                            st.buried[i] = 1;\n                            fxSplash(i, '#a78bfa', 5);\n                        }\n                    }\n                }\n                fxText(Math.min(bandTop + 1, BOARD_SIZE - 1) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2), '泥濘', '#8b5cf6', 1000);\n            }\n\n            turn = opponent;"],
         K.CUE_GRID("            // 泥濘地を茶色く染める\n            if (typeof st !== 'undefined' && st.buried) {\n                ctx.save();\n                ctx.fillStyle = 'rgba(146,64,14,0.18)';\n                for (let i = 0; i < board.length; i++) {\n                    if (!st.buried[i]) continue;\n                    const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);\n                    ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);\n                }\n                ctx.restore();\n            }"),
-        ...K.EVENT_CHIP_SPEC("'雨まで' + (9 - history.length % 9) + '手'"),
+        ...K.EVENT_CHIP_SPEC("'雨まで' + (Math.max(1, P('rain_interval') || 9) - history.length % Math.max(1, P('rain_interval') || 9)) + '手'"),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, "9手ごとに雨が降り、3行の帯が泥濘になる。泥の上の石は埋まって以後ずっと取られない。帯は下へ巡回する。泥地は取り合いの絶対安全地帯。"],
         [K.ONE, K.RV_ALGO, K.rv(["9手ごとに3行が泥濘になり、そこに置いた石は永続して取れない",

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,22 +27,27 @@ module.exports = {
     icon: 'unbango',
     spec: [
         ...K.rb('UNBANGO', '雲版碁', 'unbango'),
+        K.params([
+            { key: 'bell_interval', label: '雲版の間隔', min: 2, max: 20, def: 8, unit: '手' },
+            { key: 'merit', label: '雲版ごとの功徳', min: 1, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         // 雲版: 合計8手ごとに鳴り両者+1
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 雲版ルール: 合計8手ごとに雲版が鳴り、両者に+1の功徳 (対称)
-            if (history.length % 8 === 0) {
+            if (history.length % Math.max(1, P('bell_interval') || 8) === 0) {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                captures[1] += 1;
-                captures[2] += 1;
+                captures[1] += P('merit') || 1;
+                captures[2] += P('merit') || 1;
                 fxGlow(mi, '#94a3b8', 900);
                 fxText(mi, '雲版の刻', '#cbd5e1', 1300);
                 fxShake(4, 300);
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'雲版まで ' + (8 - (history.length % 8)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'雲版まで ' + (Math.max(1, P('bell_interval') || 8) - (history.length % Math.max(1, P('bell_interval') || 8))) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            雲版碁: 合計8手ごとに雲版が鳴って禅堂の時が進み、両者へ+1目の功徳<br>
             PC: クリックで配置<br>

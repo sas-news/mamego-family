@@ -9,6 +9,10 @@ module.exports = {
     kind: 'vote',
     spec: [
         ...K.rb('VOTEGO', '選挙碁', 'votego'),
+        K.params([
+            { key: 'zone_n', label: '選挙区の数 (縦横)', min: 2, max: 5, def: 3, unit: '区' },
+            { key: 'cap_rows', label: '打ち切り手数 (盤+N行)', min: 1, max: 8, def: 2, unit: '行' },
+        ]),
         // 区画多数派の地計算に差替 (3×3の選挙区)
         [K.ONE, `        function calculateTerritory() {
             const deadMask = computeDeadMask(board);
@@ -52,12 +56,14 @@ module.exports = {
         }`,
 `        // 選挙制: 盤を3×3の9選挙区に分け、各区で石数多数派がその区の空点を総取り
         function districtOf(x, y) {
-            const zw = Math.ceil(BOARD_SIZE / 3), zh = Math.ceil(BOARD_SIZE / 3);
-            return Math.min(2, Math.floor(y / zh)) * 3 + Math.min(2, Math.floor(x / zw));
+            const nz = Math.max(2, P('zone_n') || 3);
+            const zw = Math.ceil(BOARD_SIZE / nz), zh = Math.ceil(BOARD_SIZE / nz);
+            return Math.min(nz - 1, Math.floor(y / zh)) * nz + Math.min(nz - 1, Math.floor(x / zw));
         }
         function calculateTerritory() {
+            const nz = Math.max(2, P('zone_n') || 3);
             const zones = [];
-            for (let z = 0; z < 9; z++) zones.push({ empty: 0, b: 0, w: 0 });
+            for (let z = 0; z < nz * nz; z++) zones.push({ empty: 0, b: 0, w: 0 });
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 const v = board[y * BOARD_SIZE + x];
                 const z = districtOf(x, y);
@@ -74,17 +80,18 @@ module.exports = {
         }`],
         // 区勢速報: 各区の現在の多数派の色で区全体を薄く染める
         K.CUE_GRID(`            {
-                const zw = Math.ceil(BOARD_SIZE / 3), zh = Math.ceil(BOARD_SIZE / 3);
+                const nz = Math.max(2, P('zone_n') || 3);
+                const zw = Math.ceil(BOARD_SIZE / nz), zh = Math.ceil(BOARD_SIZE / nz);
                 const zc = [];
-                for (let z = 0; z < 9; z++) zc.push({ b: 0, w: 0 });
+                for (let z = 0; z < nz * nz; z++) zc.push({ b: 0, w: 0 });
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     const v = board[y * BOARD_SIZE + x];
                     if (v === 1) zc[districtOf(x, y)].b++;
                     else if (v === 2) zc[districtOf(x, y)].w++;
                 }
                 ctx.save();
-                for (let zy = 0; zy < 3; zy++) for (let zx = 0; zx < 3; zx++) {
-                    const z = zc[zy * 3 + zx];
+                for (let zy = 0; zy < nz; zy++) for (let zx = 0; zx < nz; zx++) {
+                    const z = zc[zy * nz + zx];
                     if (z.b === z.w) continue;
                     ctx.fillStyle = z.b > z.w ? 'rgba(15,15,15,0.12)' : 'rgba(255,255,255,0.20)';
                     const x0 = padding + (zx * zw - 0.5) * cellSize;
@@ -97,11 +104,12 @@ module.exports = {
             }`),
         // 区画境界を太線で描く
         K.CUE_STARS(`            {
-                const zw = Math.ceil(BOARD_SIZE / 3);
+                const nz = Math.max(2, P('zone_n') || 3);
+                const zw = Math.ceil(BOARD_SIZE / nz);
                 ctx.save();
                 ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.75);
                 ctx.lineWidth = Math.max(1.6, cellSize * 0.06);
-                for (let k = 1; k <= 2; k++) {
+                for (let k = 1; k <= nz - 1; k++) {
                     const x = padding + k * zw * cellSize;
                     ctx.beginPath();
                     ctx.moveTo(x, padding);
@@ -123,7 +131,7 @@ module.exports = {
         // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + Math.max(1, P('cap_rows') || 2))) {
                 endGameByScore();
                 return;
             }

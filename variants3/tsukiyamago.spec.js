@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,12 +27,17 @@ module.exports = {
     icon: 'tsukiyamago',
     spec: [
         ...K.rb('TSUKIYAMAGO', '築山碁', 'tsukiyamago'),
+        K.params([
+            { key: 'hill_bonus', label: '築山ごとのボーナス', min: 1, max: 12, def: 4, unit: '目' },
+            { key: 'win_ratio', label: '即勝ちに必要な占有率', min: 0.3, max: 1, step: 0.05, def: 0.5 },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         // 築山: 占拠している星点の数
         function hillCount(player) {
             return getStarPoints(BOARD_SIZE).filter(p => board[p.y * BOARD_SIZE + p.x] === player).length;
         }
-        function hillBonus(player) { return hillCount(player) * 4; }
+        function hillBonus(player) { return hillCount(player) * (P('hill_bonus') || 4); }
 
         function endGameByScore() {`],
         [K.ONE, `            const blackTotal = territory.black + captures[1];
@@ -48,7 +53,7 @@ module.exports = {
 
             // 築山ルール: 星点の過半数を自石で占拠 → 主景完成で即勝ち
             {
-                const need = Math.ceil(getStarPoints(BOARD_SIZE).length / 2);
+                const need = Math.ceil(getStarPoints(BOARD_SIZE).length * (P('win_ratio') || 0.5));
                 if (hillCount(player) >= need) {
                     const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                     fxGlow(mi, '#facc15', 950);
@@ -76,7 +81,7 @@ module.exports = {
                     ctx.restore();
                 });
             }`),
-        ...K.EVENT_CHIP_SPEC(`'築山 黒' + hillCount(1) + '/白' + hillCount(2) + ' (要' + Math.ceil(getStarPoints(BOARD_SIZE).length / 2) + ')'`),
+        ...K.EVENT_CHIP_SPEC(`'築山 黒' + hillCount(1) + '/白' + hillCount(2) + ' (要' + Math.ceil(getStarPoints(BOARD_SIZE).length * (P('win_ratio') || 0.5)) + ')'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            築山碁: 星点は築山候補地。過半数を占拠すると庭の主景が完成し即勝ち<br>
             PC: クリックで配置<br>

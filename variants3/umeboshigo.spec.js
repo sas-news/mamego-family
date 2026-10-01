@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'umeboshigo',
     spec: [
         ...K.rb('UMEBOSHIGO', '梅干碁', 'umeboshigo'),
+        K.params([
+            { key: 'salt_interval', label: '塩漬けの間隔', min: 2, max: 20, def: 8, unit: '手' },
+            { key: 'ume_bonus', label: '梅干ごとの終局点', min: 1, max: 6, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 梅の木: 5つの点 (天元+四隅寄り)
@@ -62,7 +67,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 梅干: 8手ごとに梅の木の下の石が塩漬けされる
-            if (history.length > 0 && history.length % 8 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('salt_interval') || 8) === 0) {
                 Object.keys(st.salted).forEach(k => { if (board[+k] !== 1 && board[+k] !== 2) delete st.salted[k]; });
                 let salted = 0;
                 UME_PTS.forEach(i => {
@@ -82,7 +87,7 @@ module.exports = {
             const b = { 1: 0, 2: 0 };
             Object.keys(st.salted || {}).forEach(k => {
                 const i = +k;
-                if (board[i] === 1 || board[i] === 2) b[board[i]] += 2;
+                if (board[i] === 1 || board[i] === 2) b[board[i]] += (P('ume_bonus') || 2);
             });
             return b;
         }
@@ -132,7 +137,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'塩漬けまで ' + (8 - (history.length % 8)) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`'塩漬けまで ' + (Math.max(1, P('salt_interval') || 8) - (history.length % Math.max(1, P('salt_interval') || 8))) + ' 手'`),
         [K.ONE, K.INFO_ALGO, `            梅干碁: 梅の木の下の石は8手ごとに塩漬けされ終局時+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'tsukimigo',
     spec: [
         ...K.rb('TSUKIMIGO', '月見碁', 'tsukimigo'),
+        K.params([
+            { key: 'moon_bonus', label: '団子ごとの月見点', min: 1, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         // 月を天元に置く (中立障害 board=4)
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             // 天元に月を置く (中立: 置けず呼吸も通らない)
@@ -46,7 +50,7 @@ module.exports = {
         function tsukiBonus(pl) {
             let n = 0;
             tsukiRing().forEach(i => { if (board[i] === pl) n++; });
-            return n;
+            return n * (P('moon_bonus') || 1);
         }
 
         function endGameByScore() {`],
