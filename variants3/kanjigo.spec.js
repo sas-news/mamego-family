@@ -35,7 +35,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -58,6 +58,10 @@ module.exports = {
     icon: 'kanjigo',
     spec: [
         ...K.rb('KANJIGO', '漢字碁', 'kanjigo'),
+        K.params([
+            { key: 'word_pts', label: '熟語1組の得点', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 1.1, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...PERSIST('{ word: { 1: 0, 2: 0 }, bonds: {} }'),
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `${KDEF}
@@ -75,8 +79,8 @@ module.exports = {
                     if (st.bonds[key]) return;
                     if (isCompound(KANJI_AT(i0), KANJI_AT(n))) {
                         st.bonds[key] = 1;
-                        st.word[player] += 2;
-                        fxText(n, KANJI_AT(n) + KANJI_AT(i0) + '+2', '#f59e0b', 1300);
+                        st.word[player] += (P('word_pts') ?? 2);
+                        fxText(n, KANJI_AT(n) + KANJI_AT(i0) + '+' + (P('word_pts') ?? 2), '#f59e0b', 1300);
                         fxGlow(i0, '#fbbf24', 700);
                     }
                 });

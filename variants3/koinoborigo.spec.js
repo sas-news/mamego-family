@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'koinoborigo',
     spec: [
         ...K.rb('KOINOBORIGO', '鯉幟碁', 'koinoborigo'),
+        K.params([
+            { key: 'koi_min', label: '泳ぐ鯉の最小連サイズ', min: 2, max: 8, def: 3, unit: '石' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 風呲み: 着手した側の連(3以上)が風下へ1マス泳ぐ
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -71,7 +75,7 @@ module.exports = {
                     groups.push(g);
                 }
                 groups.forEach(g => {
-                    if (g.length < 3) return;
+                    if (g.length < (P('koi_min') || 3)) return;
                     const inset = new Set(g);
                     const ok = g.every(i => {
                         const x = i % BOARD_SIZE + w[0], y = Math.floor(i / BOARD_SIZE) + w[1];

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"mer_min","label":"経絡が通る最小連","min":3,"max":12,"def":6,"unit":"子"},{"key":"mer_max","label":"得点の上限","min":4,"max":30,"def":12,"unit":"目"},{"key":"cap_factor","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":0.8,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1338,7 +1338,7 @@
                                 if (board[nx] === pl && !seen.has(nx)) { seen.add(nx); q.push(nx); }
                             });
                         }
-                        if (grp.length < 6) continue;
+                        if (grp.length < (P('mer_min') || 6)) continue;
                         ctx.save();
                         ctx.strokeStyle = pl === 1 ? 'rgba(34,160,80,0.55)' : 'rgba(20,120,60,0.6)';
                         ctx.lineWidth = Math.max(1.2, cellSize * 0.04);
@@ -1825,7 +1825,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -2237,7 +2237,7 @@
                 }
                 if (n > best) best = n;
             }
-            return best >= 6 ? Math.min(best, 12) : 0;
+            return best >= (P('mer_min') || 6) ? Math.min(best, P('mer_max') || 12) : 0;
         }
 
         function endGameByScore() {

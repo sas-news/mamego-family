@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"net_init","label":"網の初期強さ","min":1,"max":10,"def":4},{"key":"net_interval","label":"網が強化される間隔","min":2,"max":15,"def":5,"unit":"手"},{"key":"net_max","label":"網の強さ上限","min":4,"max":20,"def":12},{"key":"cap_factor","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":0.75,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -638,7 +638,7 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        let st = { net: { 1: 4, 2: 4 }, pcnt: { 1: 0, 2: 0 } };
+        let st = (function () { const n = Math.max(1, P('net_init') || 4); return { net: { 1: n, 2: n }, pcnt: { 1: 0, 2: 0 } }; })();
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -750,7 +750,7 @@
                     2: PIECE_TYPES.includes(s.heldPieces[2]) ? s.heldPieces[2] : null }
                 : { 1: null, 2: null };
             holdUsed = !!s.holdUsed;
-            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { net: { 1: 4, 2: 4 }, pcnt: { 1: 0, 2: 0 } };
+            st = s.st ? JSON.parse(JSON.stringify(s.st)) : (function () { const n = Math.max(1, P('net_init') || 4); return { net: { 1: n, 2: n }, pcnt: { 1: 0, 2: 0 } }; })();
             gameMode = ['local', 'ai', 'online'].includes(s.gameMode) ? s.gameMode : 'local';
             aiPlayer = s.aiPlayer === 1 ? 1 : 2;
             myOnlineRole = s.myOnlineRole || null;
@@ -1796,7 +1796,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1856,9 +1856,9 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 金魚碁: 5手ごとに自分の網が強化される (最大12)
+            // 金魚碁: N手ごとに自分の網が強化される (上限は設定で調整)
             st.pcnt[player]++;
-            if (st.pcnt[player] % 5 === 0 && st.net[player] < 12) {
+            if (st.pcnt[player] % Math.max(1, P('net_interval') || 5) === 0 && st.net[player] < (P('net_max') || 12)) {
                 st.net[player]++;
                 const pi1 = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 fxGlow(pi1, '#38bdf8', 800);
@@ -2099,7 +2099,7 @@
             if (snap.pieceQueue) pieceQueue = snap.pieceQueue;
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
             holdUsed = !!snap.holdUsed;
-            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { net: { 1: 4, 2: 4 }, pcnt: { 1: 0, 2: 0 } };
+            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : (function () { const n = Math.max(1, P('net_init') || 4); return { net: { 1: n, 2: n }, pcnt: { 1: 0, 2: 0 } }; })();
             previewPos = null;
             updateUI();
 
@@ -2481,7 +2481,7 @@
             if (data.pieceQueue) pieceQueue = data.pieceQueue;
             if (data.heldPieces) heldPieces = { ...data.heldPieces };
             holdUsed = !!data.holdUsed;
-            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { net: { 1: 4, 2: 4 }, pcnt: { 1: 0, 2: 0 } };
+            st = data.st ? JSON.parse(JSON.stringify(data.st)) : (function () { const n = Math.max(1, P('net_init') || 4); return { net: { 1: n, 2: n }, pcnt: { 1: 0, 2: 0 } }; })();
             previewPos = null;
 
             if (gamePhase === 'dead_stone_selection') {
@@ -2751,7 +2751,7 @@
         function resetGame() {
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            st = { net: { 1: 4, 2: 4 }, pcnt: { 1: 0, 2: 0 } };
+            st = (function () { const n = Math.max(1, P('net_init') || 4); return { net: { 1: n, 2: n }, pcnt: { 1: 0, 2: 0 } }; })();
             pieces = [];
             turn = 1;
             captures = { 1: 0, 2: 0 };

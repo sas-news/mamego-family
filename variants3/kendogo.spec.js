@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,13 @@ module.exports = {
     icon: 'kendogo',
     spec: [
         ...K.rb('KENDOGO', '剣道碁', 'kendogo'),
+        K.params([
+            { key: 'men_min', label: '面になる石数', min: 2, max: 8, def: 4, unit: '石' },
+            { key: 'men_pts', label: '面の打突点', min: 1, max: 8, def: 3, unit: '点' },
+            { key: 'do_pts', label: '胴の打突点', min: 0, max: 6, def: 2, unit: '点' },
+            { key: 'kote_pts', label: '小手の打突点', min: 0, max: 4, def: 1, unit: '点' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST('{ ippon: { 1: 0, 2: 0 } }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -54,9 +61,10 @@ module.exports = {
             {
                 const n = captured.length;
                 if (n > 0) {
-                    const pt = n >= 4 ? 3 : n >= 2 ? 2 : 1;
+                    const __mm = Math.max(2, P('men_min') || 4);
+                    const pt = n >= __mm ? (P('men_pts') ?? 3) : n >= 2 ? (P('do_pts') ?? 2) : (P('kote_pts') ?? 1);
                     st.ippon[player] += pt;
-                    const waza = n >= 4 ? 'メン!' : n >= 2 ? 'ドウ!' : 'コテ!';
+                    const waza = n >= __mm ? 'メン!' : n >= 2 ? 'ドウ!' : 'コテ!';
                     const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                     fxText(mi, waza, '#ef4444', 1200);
                     fxShake();

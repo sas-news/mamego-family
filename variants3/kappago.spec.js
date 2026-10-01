@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'kappago',
     spec: [
         ...K.rb('KAPPAGO', '河童碁', 'kappago'),
+        K.params([
+            { key: 'water_pts', label: '水辺の元気ボーナス', min: 0, max: 2, def: 0.5, step: 0.5, unit: '目' },
+            { key: 'dry_pts', label: '干きた石のペナルティ', min: 0, max: 2, def: 0.5, step: 0.5, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 河童: 外周(水辺)の自石は+0.5目。四方に空点が無い干きた石は-0.5目
         function kappaBonus(player) {
@@ -34,8 +39,8 @@ module.exports = {
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== player) continue;
                 const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
-                if (x === 0 || y === 0 || x === BOARD_SIZE - 1 || y === BOARD_SIZE - 1) b += 0.5;
-                if (!getNeighbors(i).some(n => board[n] === 0)) b -= 0.5;
+                if (x === 0 || y === 0 || x === BOARD_SIZE - 1 || y === BOARD_SIZE - 1) b += (P('water_pts') ?? 0.5);
+                if (!getNeighbors(i).some(n => board[n] === 0)) b -= (P('dry_pts') ?? 0.5);
             }
             return b;
         }

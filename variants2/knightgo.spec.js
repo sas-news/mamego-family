@@ -9,6 +9,21 @@ module.exports = {
     kind: 'knight',
     spec: [
         ...K.rb('KNIGHTGO', '桂馬碁', 'knightgo'),
+        K.params([
+            { key: 'jump_a', label: '跳びの短辺', min: 0, max: 4, def: 1 },
+            { key: 'jump_b', label: '跳びの長辺', min: 1, max: 5, def: 2, hint: '桂馬は1×2' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let knightCapFired = false;
+        function executeMove(move, player) {
+            // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
+            if (knightCapFired && history.length === 0) knightCapFired = false;
+            if (!knightCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
+                knightCapFired = true;
+                endGameByScore();
+                return;
+            }`],
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -17,13 +32,14 @@ module.exports = {
             // 桂馬碁ルール: 自石から桂馬飛び (縦横1:2) の点にのみ着手可 (初手は自由)
             {
                 let hasOwn = false, canJump = false;
+                const ja = Math.max(0, P('jump_a') ?? 1), jb = Math.max(1, P('jump_b') || 2);
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] !== player) continue;
                     hasOwn = true;
                     const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
                     for (const p of cells) {
                         const dx = Math.abs(p.x - sx), dy = Math.abs(p.y - sy);
-                        if ((dx === 1 && dy === 2) || (dx === 2 && dy === 1)) canJump = true;
+                        if ((dx === ja && dy === jb) || (dx === jb && dy === ja)) canJump = true;
                     }
                     if (canJump) break;
                 }
@@ -40,7 +56,7 @@ module.exports = {
                     if (board[i] !== player || i === didx) continue;
                     const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
                     const dx = Math.abs(dp.x - sx), dy = Math.abs(dp.y - sy);
-                    if ((dx === 1 && dy === 2) || (dx === 2 && dy === 1)) {
+                    if ((dx === (P('jump_a') ?? 1) && dy === (P('jump_b') || 2)) || (dx === (P('jump_b') || 2) && dy === (P('jump_a') ?? 1))) {
                         fxSlide(i, didx, 380);
                         fxText(didx, '跳!', '#a78bfa', 800);
                         break;

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -36,7 +36,7 @@ const ST = (init) => [
                 deadStones: [...deadStones],`],
     [K.ONE, K.ONLINE_RECV, K.ONLINE_RECV + `\n            st = data.st ? JSON.parse(JSON.stringify(data.st)) : ${init};`],
 ];
-const ST_INIT = `{ net: { 1: 4, 2: 4 }, pcnt: { 1: 0, 2: 0 } }`;
+const ST_INIT = `(function () { const n = Math.max(1, P('net_init') || 4); return { net: { 1: n, 2: n }, pcnt: { 1: 0, 2: 0 } }; })()`;
 module.exports = {
     file: 'kingyogo.html',
     en: 'KINGYOGO',
@@ -47,6 +47,12 @@ module.exports = {
     icon: 'kingyogo',
     spec: [
         ...K.rb('KINGYOGO', '金魚碁', 'kingyogo'),
+        K.params([
+            { key: 'net_init', label: '網の初期強さ', min: 1, max: 10, def: 4 },
+            { key: 'net_interval', label: '網が強化される間隔', min: 2, max: 15, def: 5, unit: '手' },
+            { key: 'net_max', label: '網の強さ上限', min: 4, max: 20, def: 12 },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
 
         // 掬い: 網の強さ分だけしか獲れない — 余った金魚は逃げて盤に残る
@@ -68,9 +74,9 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 金魚碁: 5手ごとに自分の網が強化される (最大12)
+            // 金魚碁: N手ごとに自分の網が強化される (上限は設定で調整)
             st.pcnt[player]++;
-            if (st.pcnt[player] % 5 === 0 && st.net[player] < 12) {
+            if (st.pcnt[player] % Math.max(1, P('net_interval') || 5) === 0 && st.net[player] < (P('net_max') || 12)) {
                 st.net[player]++;
                 const pi1 = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 fxGlow(pi1, '#38bdf8', 800);

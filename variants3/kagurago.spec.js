@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'kagurago',
     spec: [
         ...K.rb('KAGURAGO', '神楽碁', 'kagurago'),
+        K.params([
+            { key: 'god_sides', label: '神を招く隣方数', min: 2, max: 4, def: 3 },
+            { key: 'god_bonus', label: '招き点', min: 0, max: 12, def: 4, unit: '点' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 神を対角の星に配置 (中立障害 board=4)
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -76,9 +81,9 @@ module.exports = {
                     if (board[i] !== 4 || st.gods[i]) return; // 招かれた神は二度と降りない
                     let n = 0;
                     getNeighbors(i).forEach(nb => { if (board[nb] === player) n++; });
-                    if (n >= 3) {
+                    if (n >= (P('god_sides') || 3)) {
                         st.gods[i] = player;
-                        st.claim[player] += 4;
+                        st.claim[player] += (P('god_bonus') ?? 4);
                         fxGlow(i, player === 1 ? '#fbbf24' : '#c4b5fd', 1000);
                         fxText(i, '神降り +4', '#fbbf24', 1400);
                         fxShake(4, 300);

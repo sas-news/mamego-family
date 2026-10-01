@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'keimago',
     spec: [
         ...K.rb('KEIMAGO', 'ケイマ碁', 'keimago'),
+        K.params([
+            { key: 'keima_pts', label: 'ケイマの得点', min: 0, max: 6, def: 1, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // ケイマ: 自軍石から (±1,±2)/(±2,±1) オフセットの着手 → +1目
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -61,8 +65,8 @@ module.exports = {
                 const __off = [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]];
                 const __keima = __off.some(([dx, dy]) => __at(__p.x + dx, __p.y + dy) === player);
                 if (__keima) {
-                    st.bonus[player] = (st.bonus[player] || 0) + 1;
-                    fxText(__pi, 'ケイマ +1', '#4ade80', 1000);
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('keima_pts') ?? 1);
+                    fxText(__pi, 'ケイマ +' + (P('keima_pts') ?? 1), '#4ade80', 1000);
                     fxGlow(__pi, '#4ade80', 700);
                 }
             }

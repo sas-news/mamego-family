@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'kajirigo',
     spec: [
         ...K.rb('KAJIRIGO', '祝由碁', 'kajirigo'),
+        K.params([
+            { key: 'exor_libs', label: '祓える連の最大呼吸', min: 1, max: 4, def: 2 },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 祝由の祓い: 着点に隣接する敵連で呼吸2以下のものを除去 (1回の着手につき1連まで)
@@ -57,7 +61,7 @@ module.exports = {
                 if (board[n] !== opponent || seen.has(n)) continue;
                 const grp = getConnectedGroup(n, opponent);
                 grp.forEach(g => seen.add(g));
-                if (getLiberties(board, n) <= 2) {
+                if (getLiberties(board, n) <= (P('exor_libs') || 2)) {
                     grp.forEach(g => { board[g] = 0; captures[player]++; fxBurst(g, '#c4b5fd', 8, 1.4); });
                     fxText(ci, '祓!', '#a78bfa', 1200);
                     fxShake(4, 300);

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'kendamago',
     spec: [
         ...K.rb('KENDAMAGO', 'けん玉碁', 'kendamago'),
+        K.params([
+            { key: 'kenzaki_pts', label: '剣先のボーナス', min: 1, max: 10, def: 4, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
 
         // けん玉: 捕獲で技が進みボーナス (小皿+1 中皿+2 剣先+4、剣先でリセット)
@@ -55,7 +59,7 @@ module.exports = {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
                 st.stage[player] = (st.stage[player] || 0) + 1;
-                const bonus = st.stage[player] >= 3 ? 4 : st.stage[player];
+                const bonus = st.stage[player] >= 3 ? (P('kenzaki_pts') ?? 4) : st.stage[player];
                 captures[player] += bonus;
                 const waza = ['', '小皿', '中皿', '剣先'][st.stage[player]];
                 const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'kyokusuigo',
     spec: [
         ...K.rb('KYOKUSUIGO', '曲水碁', 'kyokusuigo'),
+        K.params([
+            { key: 'uta_interval', label: '歌会の間隔', min: 2, max: 15, def: 5, unit: '手' },
+            { key: 'uta_pts', label: '歌成の得点', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 曲水: 中央の1つ上の横一列 (下流は x 大側)
@@ -55,8 +60,8 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 曲水の宴: 5手ごと — 盃が岸の味方石に触れれば歌が成り+2目で去る
-            if (history.length > 0 && history.length % 5 === 0) {
+            // 曲水の宴: N手ごと — 盃が岸の味方石に触れれば歌が成り+N目で去る
+            if (history.length > 0 && history.length % Math.max(1, P('uta_interval') || 5) === 0) {
                 const sung = new Set();
                 for (let x = 0; x < BOARD_SIZE; x++) {
                     const i = NAGARE_Y * BOARD_SIZE + x;
@@ -66,7 +71,7 @@ module.exports = {
                     const shore = getNeighbors(i).find(n =>
                         Math.floor(n / BOARD_SIZE) !== NAGARE_Y && board[n] === v);
                     if (shore !== undefined) {
-                        st.uta[v] += 2;
+                        st.uta[v] += (P('uta_pts') ?? 2);
                         board[i] = 0;
                         board[shore] = 0;
                         sung.add(i); sung.add(shore);
@@ -112,7 +117,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'歌会まで ' + (5 - (history.length % 5)) + ' 手 / 歌 黒' + (st.uta ? st.uta[1] : 0) + ' 白' + (st.uta ? st.uta[2] : 0)`),
+        ...K.EVENT_CHIP_SPEC(`'歌会まで ' + (Math.max(1, P('uta_interval') || 5) - (history.length % Math.max(1, P('uta_interval') || 5))) + ' 手 / 歌 黒' + (st.uta ? st.uta[1] : 0) + ' 白' + (st.uta ? st.uta[2] : 0)`),
         [K.ONE, K.INFO_ALGO, `            曲水碁: 曲水の盃は5手ごとに流れる。岸の味方石に触れれば歌が成り+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

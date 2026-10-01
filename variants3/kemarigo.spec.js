@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'kemarigo',
     spec: [
         ...K.rb('KEMARIGO', '蹴鞠碁', 'kemarigo'),
+        K.params([
+            { key: 'kick_pts', label: '蹴り1回の得点', min: 0, max: 6, def: 1, unit: '目' },
+            { key: 'kick_range', label: '蹴れる距離', min: 1, max: 3, def: 1, hint: '鞠からこの距離内の着手で蹴る' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 鞠の上には置けない
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
@@ -63,8 +68,8 @@ module.exports = {
             {
                 const mc = move.cells[0];
                 const bx = st.ball % BOARD_SIZE, by = (st.ball / BOARD_SIZE) | 0;
-                if (Math.abs(mc.x - bx) + Math.abs(mc.y - by) === 1) {
-                    st.kicks[player]++;
+                if (Math.abs(mc.x - bx) + Math.abs(mc.y - by) <= (P('kick_range') || 1)) {
+                    st.kicks[player] += (P('kick_pts') ?? 1);
                     // 鞠は石の向こう側 (反射点) へ跳ねる
                     const nx = 2 * bx - mc.x, ny = 2 * by - mc.y;
                     const ni = ny * BOARD_SIZE + nx;

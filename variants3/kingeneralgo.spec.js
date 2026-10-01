@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'kingeneralgo',
     spec: [
         ...K.rb('KINGENERALGO', '金碁', 'kingeneralgo'),
+        K.params([
+            { key: 'gold_sides', label: '金将に必要な囲み方数', min: 3, max: 4, def: 4 },
+            { key: 'gold_pts', label: '金将の得点', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 金将は取れない: 取り対象から除外
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent).filter(__i => !st.gold[__i]);
@@ -68,11 +73,11 @@ module.exports = {
                 const __targets = [__pi, ...getNeighbors(__pi).filter(__n => board[__n] === player)];
                 __targets.forEach(__i => {
                     if (st.gold[__i]) return;
-                    if (getNeighbors(__i).length >= 4 &&
+                    if (getNeighbors(__i).length >= (P('gold_sides') || 4) &&
                         getNeighbors(__i).every(__n => board[__n] === player)) {
                         st.gold[__i] = 1;
-                        st.bonus[player] = (st.bonus[player] || 0) + 2;
-                        fxText(__i, '金将 +2', '#fbbf24', 1100);
+                        st.bonus[player] = (st.bonus[player] || 0) + (P('gold_pts') ?? 2);
+                        fxText(__i, '金将 +' + (P('gold_pts') ?? 2), '#fbbf24', 1100);
                         fxGlow(__i, '#fbbf24', 900);
                     }
                 });

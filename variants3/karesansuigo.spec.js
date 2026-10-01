@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'karesansuigo',
     spec: [
         ...K.rb('KARESANSUIGO', '枯山碁', 'karesansuigo'),
+        K.params([
+            { key: 'sand_mult', label: '砂紋ボーナス倍率', min: 0, max: 4, def: 1, hint: '区域の点数×この倍率' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 砂紋ボーナス: 一色だけに接する空区域の点ごとに+1 (通常の地に加算)
         [K.ONE, `        function endGameByScore() {`,
 `        // 砂紋: 空区域が一方の色の石にだけ接していれば、その色の砂紋になる
@@ -46,7 +50,7 @@ module.exports = {
                         else if (board[m] !== player) touch = false;
                     });
                 }
-                if (touch && !edge) bonus += n; // 砂紋は盤端に届かない囲まれた区域のみ
+                if (touch && !edge) bonus += n * (P('sand_mult') ?? 1); // 砂紋は盤端に届かない囲まれた区域のみ
             }
             return bonus;
         }

@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"kei_period","label":"啓蟄の周期","min":6,"max":30,"def":16,"unit":"手"},{"key":"winter_len","label":"冬期の長さ","min":1,"max":8,"def":3,"unit":"手"},{"key":"cap_factor","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":0.75,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1807,7 +1807,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1845,7 +1845,9 @@
             const opponent = player === 1 ? 2 : 1;
             // 啓蟄碁: 周期の13-15手目 (冬期) の着手は冬眠石として伏せる
             const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-            const winter = (history.length % 16) >= 13;
+            const __per = Math.max(1, P('kei_period') || 16);
+            const __wl = Math.min(__per - 1, Math.max(1, P('winter_len') || 3));
+            const winter = (history.length % __per) >= __per - __wl;
             if (winter) {
                 board[mi] = 4;
                 st.dorm[mi] = player;
@@ -1873,7 +1875,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 啓蟄: 16手周期の境界で冬眠石が一斉に目覚める
-            if (history.length % 16 === 0 && st.dorm) {
+            if (history.length % Math.max(1, P('kei_period') || 16) === 0 && st.dorm) {
                 Object.keys(st.dorm).forEach(k => {
                     const i = +k;
                     if (board[i] === 4) {
@@ -2760,7 +2762,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('啓蟄まで' + (16 - history.length % 16) + '手' + ((history.length % 16) >= 13 ? ' 冬期' : ''));
+                const et = gameOver ? '' : ('啓蟄まで' + (Math.max(1, P('kei_period') || 16) - history.length % Math.max(1, P('kei_period') || 16)) + '手' + ((history.length % Math.max(1, P('kei_period') || 16)) >= Math.max(1, P('kei_period') || 16) - Math.min(Math.max(1, P('kei_period') || 16) - 1, Math.max(1, P('winter_len') || 3)) ? ' 冬期' : ''));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

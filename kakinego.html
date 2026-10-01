@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"fence_pts","label":"垣根石1個の得点","min":0,"max":6,"def":2,"unit":"目"},{"key":"cap_factor","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":0.8,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1808,7 +1808,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -2214,7 +2214,7 @@
                 if (board[i * BOARD_SIZE + c] === player) n++;
             }
             if (board[c * BOARD_SIZE + c] === player) n--; // 交差点は二重計上を戻す
-            return n * 2;
+            return n * (P('fence_pts') ?? 2);
         }
 
         function endGameByScore() {
@@ -2743,7 +2743,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('垣根 黒' + (fenceBonus(1) / 2) + '/白' + (fenceBonus(2) / 2));
+                const et = gameOver ? '' : ('垣根 黒' + (fenceBonus(1) / Math.max(1, P('fence_pts') || 2)) + '/白' + (fenceBonus(2) / Math.max(1, P('fence_pts') || 2)));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'kakinego',
     spec: [
         ...K.rb('KAKINEGO', '垣根碁', 'kakinego'),
+        K.params([
+            { key: 'fence_pts', label: '垣根石1個の得点', min: 0, max: 6, def: 2, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 垣根ボーナス: 中央の行・列にある自石ごとに+2
         [K.ONE, `        function endGameByScore() {`,
 `        function fenceBonus(player) {
@@ -37,7 +41,7 @@ module.exports = {
                 if (board[i * BOARD_SIZE + c] === player) n++;
             }
             if (board[c * BOARD_SIZE + c] === player) n--; // 交差点は二重計上を戻す
-            return n * 2;
+            return n * (P('fence_pts') ?? 2);
         }
 
         function endGameByScore() {`],
@@ -64,7 +68,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'垣根 黒' + (fenceBonus(1) / 2) + '/白' + (fenceBonus(2) / 2)`),
+        ...K.EVENT_CHIP_SPEC(`'垣根 黒' + (fenceBonus(1) / Math.max(1, P('fence_pts') || 2)) + '/白' + (fenceBonus(2) / Math.max(1, P('fence_pts') || 2))`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            垣根碁: 中央十字は垣根ライン。その上に立てた石は垣根として終局時に1つ+2目<br>
             PC: クリックで配置<br>

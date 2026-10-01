@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,9 @@ module.exports = {
     icon: 'labyrinthgo',
     spec: [
         ...K.rb('LABYRINTHGO', '迷路碁', 'labyrinthgo'),
+        K.params([
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 迷路: 偶数行は壁、奇数行は通路。偶数行の開口部「関門」は左右交互に開く
         const GATE_SET = new Set();

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"cards_to_win","label":"歌牌勝ちに必要な札数","min":2,"max":7,"def":4,"unit":"枚"},{"key":"cap_moves","label":"打ち切り手数","min":40,"max":400,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1877,14 +1877,14 @@
                     st.got[player]++;
                     fxBurst(li, '#fde047', 10, 1.6);
                     fxText(li, '札を取った!', '#fde047', 1200);
-                    if (st.got[player] >= 4) {
-                        winByRule(player, '歌牌勝ち', '札を4枚取りました'); return;
+                    if (st.got[player] >= (P('cards_to_win') || 4)) {
+                        winByRule(player, '歌牌勝ち', '札を' + (P('cards_to_win') || 4) + '枚取りました'); return;
                     }
                 }
             }
 
-            // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 打ち切り終局 (手数は設定で調整)
+            if (history.length >= Math.max(1, P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

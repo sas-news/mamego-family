@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'kajigo',
     spec: [
         ...K.rb('KAJIGO', '加持碁', 'kajigo'),
+        K.params([
+            { key: 'ren_min', label: '加持が届く連の大きさ', min: 2, max: 9, def: 4, unit: '子' },
+            { key: 'kaji_pts', label: '連ごとの守護点', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 加持: 4個以上の連は祈りが届く — 1連+2目
         function kajiBonus(player) {
@@ -41,7 +46,7 @@ module.exports = {
                     seen.add(c); g.push(c);
                     getNeighbors(c).forEach(n => { if (board[n] === player && !seen.has(n)) stack.push(n); });
                 }
-                if (g.length >= 4) b += 2;
+                if (g.length >= (P('ren_min') || 4)) b += (P('kaji_pts') ?? 2);
             }
             return b;
         }

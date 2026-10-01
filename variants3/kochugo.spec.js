@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'kochugo',
     spec: [
         ...K.rb('KOCHUGO', '講中碁', 'kochugo'),
+        K.params([
+            { key: 'kochu_min', label: '講と認める連の最小石数', min: 2, max: 10, def: 4, unit: '石' },
+            { key: 'kochu_pts', label: '講1つの得点', min: 0, max: 10, def: 3, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 講数えヘルパー
         [K.ONE, `        function endGameByScore() {`, `        // 講中: pl の4石以上の連の数を数える
         function kochuGroups(pl) {
@@ -41,7 +46,7 @@ module.exports = {
                         if (!seen.has(nb) && board[nb] === pl) { seen.add(nb); g.push(nb); stack.push(nb); }
                     });
                 }
-                if (g.length >= 4) count++;
+                if (g.length >= (P('kochu_min') || 4)) count++;
             }
             return count;
         }
@@ -50,8 +55,8 @@ module.exports = {
         // 採点に講点を加算
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
-`            const blackTotal = territory.black + captures[1] + kochuGroups(1) * 3;
-            const whiteTotal = territory.white + captures[2] + komi + kochuGroups(2) * 3;`],
+`            const blackTotal = territory.black + captures[1] + kochuGroups(1) * (P('kochu_pts') ?? 3);
+            const whiteTotal = territory.white + captures[2] + komi + kochuGroups(2) * (P('kochu_pts') ?? 3);`],
         // 4石以上の連に小さな講の印 (結び) を描く
         ...K.STONE_MARKS_SPEC(`            // 講中: 4石以上の連の中央に小さな講の印
             {
@@ -68,7 +73,7 @@ module.exports = {
                             if (!seen.has(nb) && board[nb] === pl) { seen.add(nb); g.push(nb); stack.push(nb); }
                         });
                     }
-                    if (g.length >= 4) {
+                    if (g.length >= (P('kochu_min') || 4)) {
                         const mid = g[Math.floor(g.length / 2)];
                         const x = mid % BOARD_SIZE, y = Math.floor(mid / BOARD_SIZE);
                         const cx = padding + x * cellSize, cy = padding + y * cellSize;

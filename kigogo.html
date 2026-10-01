@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"kigo_first","label":"最初の節目の連サイズ","min":3,"max":12,"def":6,"unit":"石"},{"key":"kigo_step","label":"節目の間隔","min":2,"max":8,"def":4,"unit":"石","hint":"節目は 初回・+間隔・+間隔×2"},{"key":"cap_factor","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":0.9,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1335,7 +1335,7 @@
             {
                 ctx.save();
                 const lastIdx = lastMove && lastMove.cells ? lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x : -1;
-                if (lastIdx >= 0 && board[lastIdx] !== 0 && getConnectedGroup(lastIdx, board[lastIdx]).length >= 6) {
+                if (lastIdx >= 0 && board[lastIdx] !== 0 && getConnectedGroup(lastIdx, board[lastIdx]).length >= (P('kigo_first') || 6)) {
                     const x = lastIdx % BOARD_SIZE, y = (lastIdx / BOARD_SIZE) | 0;
                     ctx.fillStyle = 'rgba(185,28,28,0.8)';
                     ctx.fillRect(padding + x * cellSize - cellSize * 0.14, padding + y * cellSize - cellSize * 0.14, cellSize * 0.28, cellSize * 0.28);
@@ -1814,7 +1814,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1871,7 +1871,8 @@
             // 揮毫: 着手した連が節目の大きさ(6/10/14)に達するたび +連サイズ
             const kIdx = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             st.kigo[player] = st.kigo[player] || [];
-            [6, 10, 14].forEach(t => {
+            const __kf = Math.max(1, P('kigo_first') || 6), __ks = Math.max(1, P('kigo_step') || 4);
+            [__kf, __kf + __ks, __kf + 2 * __ks].forEach(t => {
                 if (getConnectedGroup(kIdx, player).length >= t && !st.kigo[player].includes(t)) {
                     st.kigo[player].push(t);
                     st.score[player] += t;

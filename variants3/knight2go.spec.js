@@ -10,10 +10,16 @@ module.exports = {
     icon: 'knight2go',
     spec: [
         ...K.rb('KNIGHT2GO', '跳馬碁', 'knight2go'),
+        K.params([
+            { key: 'jump_a', label: '跳びの短辺', min: 0, max: 4, def: 1 },
+            { key: 'jump_b', label: '跳びの長辺', min: 1, max: 5, def: 2, hint: '桂馬は1×2' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, '        function executeMove(move, player) {',
 `        // 跳馬: 桂馬跳びの位置か (盤上に自石がなければ自由)
         function knightOffsets() {
-            return [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]];
+            const a = Math.max(0, P('jump_a') ?? 1), b = Math.max(1, P('jump_b') || 2);
+            return [[a, b], [b, a], [-a, b], [-b, a], [a, -b], [b, -a], [-a, -b], [-b, -a]];
         }
         function knightFree(player) {
             // 自石が1つもなければ自由、あれば桂馬跳びのみ
@@ -51,7 +57,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 endGameByScore();
                 return;
             }

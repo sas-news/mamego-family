@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'kyudogo',
     spec: [
         ...K.rb('KYUDOGO', '弓道碁', 'kyudogo'),
+        K.params([
+            { key: 'arrow_min', label: '矢が届く最小距離', min: 2, max: 6, def: 3, unit: '点' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
@@ -34,7 +38,7 @@ module.exports = {
             {
                 const mx = move.cells[0].x, my = move.cells[0].y;
                 [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(d => {
-                    for (let dist = 3; dist < BOARD_SIZE; dist++) {
+                    for (let dist = Math.max(2, P('arrow_min') || 3); dist < BOARD_SIZE; dist++) {
                         const x = mx + d[0] * dist, y = my + d[1] * dist;
                         if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) break;
                         const t = y * BOARD_SIZE + x;

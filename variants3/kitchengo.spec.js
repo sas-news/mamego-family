@@ -34,7 +34,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -50,6 +50,13 @@ module.exports = {
     icon: 'kitchengo',
     spec: [
         ...K.rb('KITCHENGO', '厨房碁', 'kitchengo'),
+        K.params([
+            { key: 'order_len', label: 'オーダー完成の連数', min: 2, max: 6, def: 3, unit: '連' },
+            { key: 'order_pts', label: 'オーダー完成の得点', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'big_len', label: '大盛りの連数', min: 4, max: 8, def: 5, unit: '連' },
+            { key: 'big_pts', label: '大盛りの得点', min: 0, max: 12, def: 4, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 1.1, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...PERSIST('{ orderPts: { 1: 0, 2: 0 } }'),
         // 厨房ルール: 着手点を通る自石の直線ランが 3連→+2 / 5連→+4
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -71,13 +78,13 @@ module.exports = {
                     }
                     if (run > maxRun) maxRun = run;
                 });
-                if (maxRun === 3) {
-                    st.orderPts[player] += 2;
-                    fxText(i0, 'オーダー完成+2', '#fb923c', 1100);
+                if (maxRun === (P('order_len') || 3)) {
+                    st.orderPts[player] += (P('order_pts') ?? 2);
+                    fxText(i0, 'オーダー完成+' + (P('order_pts') ?? 2), '#fb923c', 1100);
                     fxGlow(i0, '#fbbf24', 700);
-                } else if (maxRun >= 5) {
-                    st.orderPts[player] += 4;
-                    fxText(i0, '大盛り+4!', '#f59e0b', 1300);
+                } else if (maxRun >= (P('big_len') || 5)) {
+                    st.orderPts[player] += (P('big_pts') ?? 4);
+                    fxText(i0, '大盛り+' + (P('big_pts') ?? 4) + '!', '#f59e0b', 1300);
                     fxGlow(i0, '#f59e0b', 900);
                     fxShake(3, 220);
                 }
