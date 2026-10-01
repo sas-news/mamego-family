@@ -10,12 +10,16 @@ module.exports = {
     icon: 'dicebuildgo',
     spec: [
         ...K.rb('DICEBUILDGO', '骰子建築碁', 'dicebuildgo'),
+        K.params([
+            { key: 'die_max', label: '賽の最大値', min: 1, max: 6, def: 3 },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 75, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         [K.ONE, '        function executeMove(move, player) {',
 `        // 骰子建築: 出目は手数から決定論的に振る (1-3)
         function buildDie() {
             const s = Math.sin(history.length * 33.7 + 5.1) * 43758.5453;
             const r = s - Math.floor(s);
-            return 1 + Math.floor(r * 3);
+            return 1 + Math.floor(r * (P('die_max') || 3));
         }
 
         function executeMove(move, player) {`],
@@ -50,7 +54,7 @@ module.exports = {
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 endGameByScore();
                 return;
             }

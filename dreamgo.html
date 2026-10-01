@@ -322,7 +322,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"swap_interval","label":"入れ替え周期","min":4,"max":30,"def":10,"unit":"手"},{"key":"seed_dist","label":"夢の種石の距離","min":1,"max":5,"def":3,"hint":"中心からの距離"},{"key":"cap_pct","label":"打ち切り手数","min":50,"max":150,"def":75,"unit":"%","hint":"盤面交点数に対する割合"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -644,13 +644,13 @@
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         // 夢盤と夢の石 (最初から夢の石が1つずつ置かれている)
         let st = (() => {
-            const c = Math.floor(BOARD_SIZE / 2);
+            const c = Math.floor(BOARD_SIZE / 2), sd = P('seed_dist') || 3;
             const d = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            d[(c - 3) * BOARD_SIZE + (c - 3)] = 1;
-            d[(c + 3) * BOARD_SIZE + (c + 3)] = 2;
+            d[(c - sd) * BOARD_SIZE + (c - sd)] = 1;
+            d[(c + sd) * BOARD_SIZE + (c + sd)] = 2;
             return { dream: d, dp: [
-                { id: -1, player: 1, cells: [{ x: c - 3, y: c - 3 }] },
-                { id: -2, player: 2, cells: [{ x: c + 3, y: c + 3 }] }
+                { id: -1, player: 1, cells: [{ x: c - sd, y: c - sd }] },
+                { id: -2, player: 2, cells: [{ x: c + sd, y: c + sd }] }
             ] };
         })();
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
@@ -1860,8 +1860,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 夢幻ルール: 10手ごとに現実盤と夢盤が入れ替わる
-            if (history.length % 10 === 0) {
+            // 夢幻ルール: N手ごとに現実盤と夢盤が入れ替わる (周期は設定で調整)
+            if (history.length % Math.max(1, P('swap_interval') || 10) === 0) {
                 const tmpB = board; board = st.dream; st.dream = tmpB;
                 const tmpP = pieces; pieces = st.dp; st.dp = tmpP;
                 fxShake(6, 500);
@@ -1869,7 +1869,7 @@
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 endGameByScore();
                 return;
             }
@@ -2786,7 +2786,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('夢盤入替 あと' + (10 - history.length % 10) + '手');
+                const et = gameOver ? '' : ('夢盤入替 あと' + ((P('swap_interval') || 10) - history.length % (P('swap_interval') || 10)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }
@@ -2799,13 +2799,13 @@
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
-                const c = Math.floor(BOARD_SIZE / 2);
+                const c = Math.floor(BOARD_SIZE / 2), sd = P('seed_dist') || 3;
                 const d = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-                d[(c - 3) * BOARD_SIZE + (c - 3)] = 1;
-                d[(c + 3) * BOARD_SIZE + (c + 3)] = 2;
+                d[(c - sd) * BOARD_SIZE + (c - sd)] = 1;
+                d[(c + sd) * BOARD_SIZE + (c + sd)] = 2;
                 st = { dream: d, dp: [
-                    { id: -1, player: 1, cells: [{ x: c - 3, y: c - 3 }] },
-                    { id: -2, player: 2, cells: [{ x: c + 3, y: c + 3 }] }
+                    { id: -1, player: 1, cells: [{ x: c - sd, y: c - sd }] },
+                    { id: -2, player: 2, cells: [{ x: c + sd, y: c + sd }] }
                 ] };
             }
             pieces = [];

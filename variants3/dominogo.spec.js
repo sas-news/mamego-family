@@ -10,6 +10,11 @@ module.exports = {
     icon: 'dominogo',
     spec: [
         ...K.rb('DOMINOGO', '骨牌碁', 'dominogo'),
+        K.params([
+            { key: 'domino_n', label: '倒れるのに必要な石数', min: 2, max: 6, def: 3, unit: '個' },
+            { key: 'domino_len', label: '伝播する最大石数', min: 1, max: 8, def: 3, unit: '個' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 75, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         // ドミノ倒し: 同じ筋に3個目の自石 → 上下方向へ空点に石が倒れ伝播する
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -19,11 +24,12 @@ module.exports = {
                 const px = move.cells[0].x;
                 let col = 0;
                 for (let y = 0; y < BOARD_SIZE; y++) if (board[y * BOARD_SIZE + px] === player) col++;
-                if (col >= 3 && col % 3 === 0) {
+                const dn = Math.max(1, P('domino_n') || 3);
+                if (col >= dn && col % dn === 0) {
                     const s = Math.sin(history.length * 47.7 + 9.3) * 43758.5453;
                     const dir = (s - Math.floor(s)) < 0.5 ? -1 : 1; // 上か下へ倒れる
                     let y = move.cells[0].y + dir, n = 0;
-                    while (y >= 0 && y < BOARD_SIZE && n < 3) {
+                    while (y >= 0 && y < BOARD_SIZE && n < (P('domino_len') || 3)) {
                         const i = y * BOARD_SIZE + px;
                         if (board[i] === 0) {
                             board[i] = player;
@@ -41,7 +47,7 @@ module.exports = {
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 endGameByScore();
                 return;
             }
@@ -59,7 +65,7 @@ module.exports = {
                     [1, 2].forEach(pl => {
                         let col = 0;
                         for (let y = 0; y < BOARD_SIZE; y++) if (board[y * BOARD_SIZE + x] === pl) col++;
-                        const m = col % 3;
+                        const m = col % (P('domino_n') || 3);
                         if (m === 0) return;
                         const cx = padding + x * cellSize;
                         const cy = padding - cellSize * 0.35;

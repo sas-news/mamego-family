@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,13 +27,19 @@ module.exports = {
     icon: 'daynightgo',
     spec: [
         ...K.rb('DAYNIGHTGO', '二時碁', 'daynightgo'),
+        K.params([
+            { key: 'cycle', label: '昼夜の周期', min: 4, max: 40, def: 20, unit: '手' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 75, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         // 20手ごとの昼夜反転 (両者共通の周期イベント)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 二時: 20手ごとに昼面⇄夜面が入れ替わり、全石の持ち主が反転する
-            if (history.length > 0 && history.length % 20 === 0) {
-                const night = Math.floor(history.length / 20) % 2 === 1;
+            // 二時: N手ごとに昼面⇄夜面が入れ替わり、全石の持ち主が反転する (周期は設定で調整)
+            {
+                const __cyc = Math.max(1, P('cycle') || 20);
+                if (history.length > 0 && history.length % __cyc === 0) {
+                const night = Math.floor(history.length / __cyc) % 2 === 1;
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] === 1 || board[i] === 2) {
                         board[i] = 3 - board[i];
@@ -44,6 +50,7 @@ module.exports = {
                 const cc = Math.floor(BOARD_SIZE / 2) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2);
                 fxText(cc, night ? '夜面!' : '昼面!', night ? '#818cf8' : '#f59e0b', 1300);
                 fxShake(4, 360);
+                }
             }
 
             turn = opponent;`],
@@ -51,7 +58,7 @@ module.exports = {
         [K.ONE, K.FX_BOOT, K.FX_BOOT + `
         // 夜面の暗がり: 夜パリティの間だけ盤を藍色に沈める
         fxAmbient((ctx2, now, pad, cs) => {
-            if (Math.floor(history.length / 20) % 2 !== 1) return;
+            if (Math.floor(history.length / (P('cycle') || 20)) % 2 !== 1) return;
             ctx2.save();
             const w = pad * 2 + (BOARD_SIZE - 1) * cs;
             ctx2.fillStyle = 'rgba(10,14,58,0.22)';
@@ -68,7 +75,7 @@ module.exports = {
             }
             ctx2.restore();
         });`],
-        ...K.EVENT_CHIP_SPEC(`(Math.floor(history.length / 20) % 2 === 1 ? '夜面 ' : '昼面 ') + '反転まで ' + (20 - history.length % 20) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`(Math.floor(history.length / (P('cycle') || 20)) % 2 === 1 ? '夜面 ' : '昼面 ') + '反転まで ' + ((P('cycle') || 20) - history.length % (P('cycle') || 20)) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            二時碁: 20手ごとに昼面⇄夜面が入れ替わり全石の持ち主が反転する<br>
             PC: クリックで配置<br>

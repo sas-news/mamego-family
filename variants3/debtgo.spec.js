@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,13 +47,17 @@ module.exports = {
     icon: 'debtgo',
     spec: [
         ...K.rb('DEBTGO', '貸付碁', 'debtgo'),
+        K.params([
+            { key: 'loan_due', label: '返済までの手数', min: 5, max: 40, def: 20, unit: '手' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 75, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         ...ST(ST_INIT),
         // 貸付: 置いた石は相手色 (借用石) として記録される
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
 `            const __borrow = st.armed[player] ? 3 - player : player;
             if (st.armed[player]) {
                 st.armed[player] = false;
-                st.loans.push({ by: player, due: history.length + 20, i: move.cells[0].y * BOARD_SIZE + move.cells[0].x });
+                st.loans.push({ by: player, due: history.length + (P('loan_due') || 20), i: move.cells[0].y * BOARD_SIZE + move.cells[0].x });
             }
             move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = __borrow; });`],
         [K.ONE, `                player: player,`,

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"king_count","label":"王の数","min":1,"max":4,"def":2,"unit":"個","hint":"先の着手が王になる個数"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -636,7 +636,7 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        let kingIdx = { 1: [], 2: [] }; // 各プレイヤーの王石の位置 (最大2)
+        let kingIdx = { 1: [], 2: [] }; // 各プレイヤーの王石の位置 (王の数まで)
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -1869,8 +1869,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 双王ルール: 最初の2手の石が王になる
-            if (kingIdx[player].length < 2) {
+            // 双王ルール: 最初のN手の石が王になる (数は設定で調整)
+            if (kingIdx[player].length < (P('king_count') || 2)) {
                 kingIdx[player].push(move.cells[0].y * BOARD_SIZE + move.cells[0].x);
             }
             // 敵の王のどちらかが消えた → 王取り勝ち

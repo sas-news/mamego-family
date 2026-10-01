@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"multi_n","label":"並列集中の倍率","min":1,"max":4,"def":2,"unit":"倍"},{"key":"long_min","label":"直列とみなす連の長さ","min":3,"max":10,"def":5,"unit":"個"},{"key":"long_disc","label":"直列の減算","min":0,"max":5,"def":2,"unit":"個"},{"key":"cap_pct","label":"打ち切り手数","min":50,"max":150,"def":75,"unit":"%","hint":"盤面交点数に対する割合"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1791,7 +1791,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1831,17 +1831,17 @@
             const groups = vGroups(captured0);
             let yieldN = captured0.length;
             if (groups.length >= 2) {
-                yieldN = captured0.length * 2; // 並列集中
-            } else if (groups.length === 1 && groups[0].length >= 5) {
-                yieldN = Math.max(1, groups[0].length - 2); // 直列分散
+                yieldN = captured0.length * (P('multi_n') || 2); // 並列集中
+            } else if (groups.length === 1 && groups[0].length >= (P('long_min') || 5)) {
+                yieldN = Math.max(1, groups[0].length - (P('long_disc') ?? 2)); // 直列分散
             }
             const captured = captured0;
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += yieldN;
                 const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                if (groups.length >= 2) fxText(ci, '並列x2!', '#38bdf8', 1000);
-                else if (groups.length === 1 && groups[0].length >= 5) fxText(ci, '分圧', '#94a3b8', 900);
+                if (groups.length >= 2) fxText(ci, '並列x' + (P('multi_n') || 2) + '!', '#38bdf8', 1000);
+                else if (groups.length === 1 && groups[0].length >= (P('long_min') || 5)) fxText(ci, '分圧', '#94a3b8', 900);
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {

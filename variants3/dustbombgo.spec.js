@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'dustbombgo',
     spec: [
         ...K.rb('DUSTBOMBGO', '粉塵碁', 'dustbombgo'),
+        K.params([
+            { key: 'dust_max', label: '爆発する粉塵量', min: 2, max: 6, def: 3, unit: '個' },
+            { key: 'chain_max', label: '連鎖の上限', min: 5, max: 60, def: 30, unit: '箇所' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 75, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         ...ST(ST_INIT),
 
         // 粉塵: 着手の隣の空点に堆積、3溜まると爆発 (3x3・連鎖)
@@ -60,9 +65,10 @@ module.exports = {
                 getNeighbors(pi).forEach(n => { if (board[n] === 0) st.dust[n]++; });
                 let boom = 0;
                 const queue = [];
-                for (let i = 0; i < st.dust.length; i++) if (st.dust[i] >= 3 && board[i] === 0) queue.push(i);
+                const dm = P('dust_max') || 3;
+                for (let i = 0; i < st.dust.length; i++) if (st.dust[i] >= dm && board[i] === 0) queue.push(i);
                 const seen = new Set(queue);
-                while (queue.length && boom < 30) {
+                while (queue.length && boom < (P('chain_max') || 30)) {
                     const c = queue.shift();
                     const cx = c % BOARD_SIZE, cy = Math.floor(c / BOARD_SIZE);
                     const extra = [];
@@ -71,7 +77,7 @@ module.exports = {
                             const nx = cx + dx, ny = cy + dy;
                             if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) continue;
                             const i0 = ny * BOARD_SIZE + nx;
-                            if (st.dust[i0] >= 3 && board[i0] === 0 && !seen.has(i0)) { seen.add(i0); extra.push(i0); }
+                            if (st.dust[i0] >= dm && board[i0] === 0 && !seen.has(i0)) { seen.add(i0); extra.push(i0); }
                             if (board[i0] === opponent) { captures[player]++; board[i0] = 0; }
                             st.dust[i0] = 0;
                         }

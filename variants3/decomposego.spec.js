@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap_moves') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'decomposego',
     spec: [
         ...K.rb('DECOMPOSEGO', '腐生碁', 'decomposego'),
+        K.params([
+            { key: 'soil_turns', label: '土壌が還るまでの手数', min: 5, max: 60, def: 25, unit: '手' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 60, max: 300, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { soil: {} }; // 土壌セル idx→生成手数`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -71,7 +75,7 @@ module.exports = {
                 Object.keys(st.soil).forEach(k => {
                     const i = +k;
                     if (board[i] !== 4) { delete st.soil[i]; return; }
-                    if (history.length - st.soil[i] >= 25) {
+                    if (history.length - st.soil[i] >= (P('soil_turns') || 25)) {
                         board[i] = 0;
                         delete st.soil[i];
                         fxGlow(i, '#84cc16', 700);

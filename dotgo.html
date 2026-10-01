@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"dot_min_dist","label":"2点間の最小距離","min":0,"max":8,"def":0,"hint":"マンハッタン距離。0=制限なし"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1794,6 +1794,14 @@
             for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
+            }
+            // 双点碁: 2点間の最小距離 (設定で調整、0=制限なし)
+            if (cells.length === 2) {
+                const md = P('dot_min_dist') ?? 0;
+                if (md > 0) {
+                    const d = Math.abs(cells[0].x - cells[1].x) + Math.abs(cells[0].y - cells[1].y);
+                    if (d < md) return false;
+                }
             }
 
             // 仮配置

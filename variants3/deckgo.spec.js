@@ -10,6 +10,10 @@ module.exports = {
     icon: 'deckgo',
     spec: [
         ...K.rb('DECKGO', '山札碁', 'deckgo'),
+        K.params([
+            { key: 'norm_pct', label: '通常カードの出やすさ', min: 20, max: 90, def: 45, unit: '%' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 75, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { lastCard: '' }; // 直近にめくったカード`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -41,7 +45,8 @@ module.exports = {
                 const n = history.length;
                 const s = Math.sin(n * 57.3 + 7.9) * 43758.5453;
                 const r = s - Math.floor(s);
-                const card = r < 0.45 ? 0 : r < 0.7 ? 1 : r < 0.85 ? 2 : 3; // 通常/複製/爆破/交換
+                const n0 = (P('norm_pct') ?? 45) / 100, u = (r - n0) / Math.max(0.05, 1 - n0);
+                const card = r < n0 ? 0 : u < 5 / 11 ? 1 : u < 8 / 11 ? 2 : 3; // 通常/複製/爆破/交換
                 const names = ['通常', '複製', '爆破', '交換'];
                 st.lastCard = names[card];
                 const p0 = move.cells[0];
@@ -78,7 +83,7 @@ module.exports = {
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 endGameByScore();
                 return;
             }

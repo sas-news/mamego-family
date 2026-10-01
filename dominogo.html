@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"domino_n","label":"倒れるのに必要な石数","min":2,"max":6,"def":3,"unit":"個"},{"key":"domino_len","label":"伝播する最大石数","min":1,"max":8,"def":3,"unit":"個"},{"key":"cap_pct","label":"打ち切り手数","min":50,"max":150,"def":75,"unit":"%","hint":"盤面交点数に対する割合"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1331,7 +1331,7 @@
                     [1, 2].forEach(pl => {
                         let col = 0;
                         for (let y = 0; y < BOARD_SIZE; y++) if (board[y * BOARD_SIZE + x] === pl) col++;
-                        const m = col % 3;
+                        const m = col % (P('domino_n') || 3);
                         if (m === 0) return;
                         const cx = padding + x * cellSize;
                         const cy = padding - cellSize * 0.35;
@@ -1865,11 +1865,12 @@
                 const px = move.cells[0].x;
                 let col = 0;
                 for (let y = 0; y < BOARD_SIZE; y++) if (board[y * BOARD_SIZE + px] === player) col++;
-                if (col >= 3 && col % 3 === 0) {
+                const dn = Math.max(1, P('domino_n') || 3);
+                if (col >= dn && col % dn === 0) {
                     const s = Math.sin(history.length * 47.7 + 9.3) * 43758.5453;
                     const dir = (s - Math.floor(s)) < 0.5 ? -1 : 1; // 上か下へ倒れる
                     let y = move.cells[0].y + dir, n = 0;
-                    while (y >= 0 && y < BOARD_SIZE && n < 3) {
+                    while (y >= 0 && y < BOARD_SIZE && n < (P('domino_len') || 3)) {
                         const i = y * BOARD_SIZE + px;
                         if (board[i] === 0) {
                             board[i] = player;
@@ -1887,7 +1888,7 @@
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 endGameByScore();
                 return;
             }

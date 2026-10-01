@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 80) / 100))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -20,9 +20,9 @@ const GAME_OVER = [
 // 土俵の外 (中心から半径を超えるセル) は俵の壁
 const RING = `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
-                const cr = (BOARD_SIZE - 1) / 2;
+                const cr = (BOARD_SIZE - 1) / 2, rr = Math.max(1, cr + (P('ring_grow') ?? 0));
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if ((x - cr) * (x - cr) + (y - cr) * (y - cr) > cr * cr) board[y * BOARD_SIZE + x] = 3; // 土俵の外
+                    if ((x - cr) * (x - cr) + (y - cr) * (y - cr) > rr * rr) board[y * BOARD_SIZE + x] = 3; // 土俵の外
                 }
             }`;
 module.exports = {
@@ -35,6 +35,10 @@ module.exports = {
     icon: 'dohyogo',
     spec: [
         ...K.rb('DOHYOGO', '土俵碁', 'dohyogo'),
+        K.params([
+            { key: 'ring_grow', label: '土俵の半径調整', min: -2, max: 2, step: 0.5, def: 0, hint: '0で元の大きさ' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 80, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         [K.ONE, K.RESET_BOARD, RING],
         // 突き出し: 着手で、置いた石に隣接し俵(壁)に隣接する敵石は土俵外へ
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;

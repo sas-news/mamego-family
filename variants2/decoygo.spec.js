@@ -9,6 +9,10 @@ module.exports = {
     kind: 'decoy',
     spec: [
         ...K.rb('DECOYGO', '囮碁', 'decoygo'),
+        K.params([
+            { key: 'decoy_interval', label: '囮石の出現間隔', min: 2, max: 15, def: 5, unit: '手' },
+            { key: 'decoy_life', label: '囮石の寿命', min: 1, max: 8, def: 3, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { pcnt: { 1: 0, 2: 0 } }; // 囮碁: 各側の着手数 (5手ごとに囮石)`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -32,9 +36,9 @@ module.exports = {
         [K.ONE, K.ONLINE_RECV, K.ONLINE_RECV + `
             st = data.st ? JSON.parse(JSON.stringify(data.st)) : { pcnt: { 1: 0, 2: 0 } };`],
         [K.ONE, '        function executeMove(move, player) {',
-`        // 囮碁: そのプレイヤーの5手ごとの着手は囮石
+`        // 囮碁: そのプレイヤーのN手ごとの着手は囮石 (間隔・寿命は設定で調整)
         function isDecoyPiece(pc) { return !!pc.decoy; }
-        function decoyLeft(pc) { return pc.at === undefined ? 99 : 3 - (history.length - pc.at); }
+        function decoyLeft(pc) { return pc.at === undefined ? 99 : (P('decoy_life') || 3) - (history.length - pc.at); }
 
         function executeMove(move, player) {`],
         [K.ONE, K.PIECES_PUSH, `            st.pcnt[player] = (st.pcnt[player] || 0) + 1;
@@ -45,17 +49,17 @@ module.exports = {
                 rot: move.rot,
                 cells: move.cells,
                 at: history.length,
-                decoy: st.pcnt[player] % 5 === 0
+                decoy: st.pcnt[player] % (P('decoy_interval') || 5) === 0
             });`],
         // 囮石は配置から3手後に霧散する
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 囮碁: 囮石は置いてから3手後に消える — 霧散の演出つき
+            // 囮碁: 囮石は置いてから寿命分手後に消える — 霧散の演出つき
             {
                 let vanished = false;
                 pieces.forEach(pc => {
-                    if (!pc.decoy || history.length - (pc.at || 0) < 3) return;
+                    if (!pc.decoy || history.length - (pc.at || 0) < (P('decoy_life') || 3)) return;
                     pc.cells.forEach(p => {
                         const pi = p.y * BOARD_SIZE + p.x;
                         if (board[pi] === pc.player) {
@@ -97,7 +101,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`(function(){ const d = pieces.filter(pc => pc.decoy).length; return d > 0 ? '囮石 ' + d + '個' : '次の囮 ' + (5 - st.pcnt[turn] % 5) + '手後'; })()`),
+        ...K.EVENT_CHIP_SPEC(`(function(){ const d = pieces.filter(pc => pc.decoy).length; const n = P('decoy_interval') || 5; return d > 0 ? '囮石 ' + d + '個' : '次の囮 ' + (n - st.pcnt[turn] % n) + '手後'; })()`),
         [K.ONE, K.INFO_ALGO, `            囮碁: 各側5手ごとの石は偽物で、置いてから3手後に跡形もなく消える<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

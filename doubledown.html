@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"dd_mult","label":"倍返しの倍率","min":1,"max":5,"def":2,"unit":"倍"},{"key":"cap_pct","label":"打ち切り手数","min":80,"max":150,"def":110,"unit":"%","hint":"盤面交点数に対する割合"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1848,7 +1848,7 @@
                 let got = captured.length;
                 if (!st.firstCap[player]) {
                     st.firstCap[player] = true;
-                    got *= 2;
+                    got *= (P('dd_mult') || 2);
                     fxText(captured[0], '倍返し!', '#fbbf24', 1200);
                     fxShake(5, 300);
                     captured.forEach(ci => fxBurst(ci, '#fbbf24', 6, 1.3));
@@ -1869,7 +1869,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 110) / 100))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();

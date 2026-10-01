@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap_moves') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,15 +27,19 @@ module.exports = {
     icon: 'digitgo',
     spec: [
         ...K.rb('DIGITGO', '位取碁', 'digitgo'),
+        K.params([
+            { key: 'digit_base', label: '位取りの基数', min: 2, max: 5, def: 3, hint: '列をこの数で割った余り+1が得点' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 60, max: 300, def: 150, unit: '手' },
+        ]),
         // 位取り: 捕獲した石1つにつき 列の位 (x%3+1) 目を得る
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 let gain = 0;
                 captured.forEach(idx => {
                     board[idx] = 0;
-                    const v = (idx % BOARD_SIZE) % 3 + 1; // 位取り値: 列を3で割った余り+1
+                    const v = (idx % BOARD_SIZE) % (P('digit_base') || 3) + 1; // 位取り値: 列を基数で割った余り+1
                     gain += v;
-                    if (v >= 3) fxText(idx, '+' + v + '目', '#facc15', 1100);
+                    if (v >= (P('digit_base') || 3)) fxText(idx, '+' + v + '目', '#facc15', 1100);
                 });
                 captures[player] += gain;
                 fxShake(3, 240);
@@ -49,10 +53,10 @@ module.exports = {
             {
                 ctx.save();
                 for (let x = 0; x < BOARD_SIZE; x++) {
-                    const v = x % 3 + 1;
+                    const v = x % (P('digit_base') || 3) + 1;
                     if (v < 2) continue;
                     const cx = padding + x * cellSize;
-                    ctx.fillStyle = v === 3 ? 'rgba(250,204,21,0.16)' : 'rgba(250,204,21,0.07)';
+                    ctx.fillStyle = v === (P('digit_base') || 3) ? 'rgba(250,204,21,0.16)' : 'rgba(250,204,21,0.07)';
                     ctx.fillRect(cx - cellSize / 2, padding - cellSize * 0.5, cellSize, BOARD_SIZE * cellSize);
                 }
                 ctx.restore();

@@ -10,6 +10,10 @@ module.exports = {
     icon: 'dominiongo',
     spec: [
         ...K.rb('DOMINIONGO', '版図碁', 'dominiongo'),
+        K.params([
+            { key: 'dom_margin', label: '版図勝ちの必要差', min: 0, max: 5, def: 0, unit: '点', hint: '0で1差でも勝ち' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 60, max: 300, def: 140, unit: '手' },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 最大連結区域の大きさ
         function largestGroup(player) {
@@ -34,7 +38,7 @@ module.exports = {
             // 版図ルール: 最大連結区域が大きい側が勝ち (同数なら通常地数判定)
             {
                 const lb = largestGroup(1), lw = largestGroup(2);
-                if (lb !== lw) {
+                if (Math.abs(lb - lw) > (P('dom_margin') ?? 0)) {
                     gameOver = true;
                     const name = lb > lw ? '黒' : '白';
                     gameResultData = {
@@ -53,7 +57,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         // 現在の最大連結数をステータスチップに表示

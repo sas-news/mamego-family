@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"tornado_interval","label":"竜巻の間隔","min":5,"max":30,"def":15,"unit":"手"},{"key":"cap_pct","label":"打ち切り手数","min":50,"max":150,"def":75,"unit":"%","hint":"盤面交点数に対する割合"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1807,7 +1807,7 @@
 
         // 竜巻の通路: 手数から決定論的に段を選ぶ
         function tornadoRow() {
-            const n = Math.floor(history.length / 15);
+            const n = Math.floor(history.length / (P('tornado_interval') || 15));
             const s = Math.sin(n * 157.3 + 23.7) * 43758.5453;
             return Math.floor((s - Math.floor(s)) * BOARD_SIZE);
         }
@@ -1862,7 +1862,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 竜巻ルール: 15手ごとに通路段の石を全て吹き飛ばす
-            if (history.length % 15 === 0) {
+            if (history.length % Math.max(1, P('tornado_interval') || 15) === 0) {
                 const r = tornadoRow();
                 let blew = 0;
                 for (let x = 0; x < BOARD_SIZE; x++) {
@@ -1881,7 +1881,7 @@
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 endGameByScore();
                 return;
             }
@@ -2757,7 +2757,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('竜巻 ' + (15 - history.length % 15) + '手後 ' + tornadoRow() + '段');
+                const et = gameOver ? '' : ('竜巻 ' + ((P('tornado_interval') || 15) - history.length % (P('tornado_interval') || 15)) + '手後 ' + tornadoRow() + '段');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

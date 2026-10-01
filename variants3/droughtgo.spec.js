@@ -10,13 +10,18 @@ module.exports = {
     icon: 'droughtgo',
     spec: [
         ...K.rb('DROUGHTGO', '干ばつ碁', 'droughtgo'),
+        K.params([
+            { key: 'drought_interval', label: '干ばつの間隔', min: 2, max: 15, def: 5, unit: '手' },
+            { key: 'oasis_range', label: '水源の生存圏', min: 1, max: 5, def: 2, hint: 'マンハッタン距離の広がり' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 80, max: 150, def: 110, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 干ばつ: 5手ごとに、水源 (天元) から遠い石が渇いて消える (両者共通)
-            if (history.length % 5 === 0) {
+            if (history.length % Math.max(1, P('drought_interval') || 5) === 0) {
                 const c = Math.floor(BOARD_SIZE / 2);
-                const limit = Math.floor(BOARD_SIZE / 2) + 2; // マンハッタン距離の生存圏
+                const limit = Math.floor(BOARD_SIZE / 2) + (P('oasis_range') || 2); // マンハッタン距離の生存圏
                 const dry = [];
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] !== 1 && board[i] !== 2) continue;
@@ -32,7 +37,7 @@ module.exports = {
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 110) / 100))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -51,7 +56,7 @@ module.exports = {
                 ctx.arc(cx, cy, cellSize * 0.30, 0, Math.PI * 2);
                 ctx.fill();
                 // 生存圏の輪郭 (マンハッタン距離 <= limit)
-                const limit = Math.floor(BOARD_SIZE / 2) + 2;
+                const limit = Math.floor(BOARD_SIZE / 2) + (P('oasis_range') || 2);
                 ctx.strokeStyle = 'rgba(212,163,115,0.55)';
                 ctx.lineWidth = Math.max(1.5, cellSize * 0.05);
                 ctx.setLineDash([cellSize * 0.18, cellSize * 0.12]);
@@ -69,7 +74,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'次の干ばつ ' + (5 - (history.length % 5)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'次の干ばつ ' + ((P('drought_interval') || 5) - (history.length % (P('drought_interval') || 5))) + '手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '天元は水源 (オアシス)。5手ごとの「干ばつ」で、水源から遠い石 (破線の外側) が渇いて消える。',
             '遠くに逃げる布石は干上がる。水源の周りで争う密度の高い戦いになる。',

@@ -9,17 +9,21 @@ module.exports = {
     kind: 'dusk',
     spec: [
         ...K.rb('DIMGO', '薄暮碁', 'dimgo'),
+        K.params([
+            { key: 'dim_grow', label: '薄暮エリアの広さ調整', min: -2, max: 2, def: 0, step: 0.5, hint: '−で薄暮が広く、+で狭くなる' },
+        ]),
         [K.ONE, '        function drawBoardElements(padding, cellSize) {',
-`        // 薄暮碁: 中央1/2領域の外側は薄暮エリア
+`        // 薄暮碁: 中央1/2領域の外側は薄暮エリア (広さは設定で微調整可)
         function isDim(x, y) {
             const c = (BOARD_SIZE - 1) / 2;
-            return Math.max(Math.abs(x - c), Math.abs(y - c)) > BOARD_SIZE / 4;
+            const t = BOARD_SIZE / 4 + (P('dim_grow') ?? 0);
+            return Math.max(Math.abs(x - c), Math.abs(y - c)) > t;
         }
 
         function drawBoardElements(padding, cellSize) {`],
         K.CUE_GRID(`            // 薄暮: 中央領域だけ明るく、外周を宵闇で覆う
             {
-                const c = (BOARD_SIZE - 1) / 2, rr = BOARD_SIZE / 4;
+                const c = (BOARD_SIZE - 1) / 2, rr = Math.max(0.5, BOARD_SIZE / 4 + (P('dim_grow') ?? 0));
                 const w = padding * 2 + (BOARD_SIZE - 1) * cellSize;
                 const x0 = padding + (c - rr) * cellSize - cellSize * 0.5;
                 const y0 = padding + (c - rr) * cellSize - cellSize * 0.5;

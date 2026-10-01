@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"domino_shape","label":"ドミノの向き","options":[{"v":"diag","l":"斜めのみ"},{"v":"both","l":"斜め+縦横"}],"def":"diag"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -621,7 +621,14 @@
         });
 
         // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
-        ORIENTATIONS.STONE = [[[0,0],[1,1]],[[0,1],[1,0]]];
+        // 向きは設定で変更可: '斜めのみ'(def) / '斜め+縦横'
+        function applyDominoShape() {
+            ORIENTATIONS.STONE = (P('domino_shape') || 'diag') === 'both'
+                ? [[[0,0],[1,1]],[[0,1],[1,0]],[[0,0],[0,1]],[[0,0],[1,0]]]
+                : [[[0,0],[1,1]],[[0,1],[1,0]]];
+        }
+        applyDominoShape();
+        function onVariantParam(p) { if (p.key === 'domino_shape') applyDominoShape(); }
 
         // 全7種1巡バッグ (テトリス方式) のシャッフル
         function shuffledBag() {

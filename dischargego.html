@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"bolt_interval","label":"雷の間隔","min":4,"max":40,"def":14,"unit":"手"},{"key":"cap_pct","label":"打ち切り手数","min":50,"max":150,"def":75,"unit":"%","hint":"盤面交点数に対する割合"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1791,7 +1791,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1845,7 +1845,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 放電: 14手ごとに稲妻が盤上で最も呼吸の少ない連を打ち抜く
-            if (history.length % 14 === 0) {
+            if (history.length % Math.max(1, P('bolt_interval') || 14) === 0) {
                 let weak = null, weakLibs = 1e9;
                 [1, 2].forEach(pl => {
                     vChains(board, pl).forEach(g => {
@@ -2765,7 +2765,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('雷まで' + (14 - history.length % 14) + '手');
+                const et = gameOver ? '' : ('雷まで' + ((P('bolt_interval') || 14) - history.length % (P('bolt_interval') || 14)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"cycle","label":"大寒の周期","min":8,"max":48,"def":24,"unit":"手"},{"key":"freeze_len","label":"大寒期の長さ","min":2,"max":8,"def":4,"unit":"手"},{"key":"cap_pct","label":"打ち切り手数","min":50,"max":150,"def":75,"unit":"%","hint":"盤面交点数に対する割合"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1808,7 +1808,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1844,8 +1844,9 @@
 
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;
-            // 大寒碁: 周期の20-23手目は大寒期。着手が凍結石になる
-            const freeze = (history.length % 24) >= 20;
+            // 大寒碁: 周期の最後の大寒期は着手が凍結石になる (周期・長さは設定で調整)
+            const __cyc = P('cycle') || 24, __fl = Math.min(P('freeze_len') || 4, __cyc - 1);
+            const freeze = (history.length % __cyc) >= __cyc - __fl;
             const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             if (freeze) {
                 board[mi] = 4;
@@ -1874,7 +1875,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 大寒明け: 周期頭で凍った石が融けて持ち主の色に戻る
-            if (history.length % 24 === 0 && st.dorm) {
+            if (history.length % (P('cycle') || 24) === 0 && st.dorm) {
                 Object.keys(st.dorm).forEach(k => {
                     const i = +k;
                     if (board[i] === 4) { board[i] = st.dorm[k]; fxGlow(i, '#fde68a', 700); }
@@ -2757,7 +2758,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('大寒まで' + (24 - history.length % 24) + '手' + ((history.length % 24) >= 20 ? ' 凍結期' : ''));
+                const et = gameOver ? '' : ((function(){ const c = P('cycle') || 24, f = Math.min(P('freeze_len') || 4, c - 1); return '大寒まで' + (c - history.length % c) + '手' + ((history.length % c) >= c - f ? ' 凍結期' : ''); })());
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

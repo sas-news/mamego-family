@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"curse_turns","label":"呪いの持続手数","min":1,"max":5,"def":1,"unit":"手","hint":"取られた側が取跡にしか打てない手数"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -637,6 +637,7 @@
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         let cursePoint = { 1: null, 2: null }; // 呪いで強制される着手点 (idx または null)
+        let curseLeft = { 1: 0, 2: 0 }; // 呪いの残り手数 (呪いの持続手数分)
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -703,6 +704,7 @@
                     pieceQueue,
                     heldPieces,
                     cursePoint,
+                    curseLeft,
                     holdUsed,
                     gameMode,
                     aiPlayer,
@@ -749,6 +751,7 @@
                 : { 1: null, 2: null };
             holdUsed = !!s.holdUsed;
             cursePoint = (s.cursePoint && typeof s.cursePoint === 'object') ? { ...s.cursePoint } : { 1: null, 2: null };
+            curseLeft = (s.curseLeft && typeof s.curseLeft === 'object') ? { ...s.curseLeft } : { 1: 0, 2: 0 };
             gameMode = ['local', 'ai', 'online'].includes(s.gameMode) ? s.gameMode : 'local';
             aiPlayer = s.aiPlayer === 1 ? 1 : 2;
             myOnlineRole = s.myOnlineRole || null;
@@ -1795,6 +1798,7 @@
                         if (!cells.some(p => p.y * BOARD_SIZE + p.x === cp)) return false;
                     } else {
                         cursePoint[player] = null; // 呪いの点が埋まっていれば自然に解ける
+                        curseLeft[player] = 0;
                     }
                 }
             }
@@ -1834,6 +1838,7 @@
                 pieceQueue: [...pieceQueue],
                 heldPieces: { ...heldPieces },
                 cursePoint: { ...cursePoint },
+                curseLeft: { ...curseLeft },
                 holdUsed
             });
 
@@ -1857,6 +1862,7 @@
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
                 cursePoint[opponent] = captured[0]; // 呪い: 取られた側は取跡にしか打てない
+                curseLeft[opponent] = Math.max(1, P('curse_turns') || 1); // 呪いの持続手数
                 fxGlow(captured[0], '#a855f7', 900);
                 fxText(captured[0], '呪', '#d8b4fe', 1200);
                 soundManager.playCapture();
@@ -1872,7 +1878,11 @@
 
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            cursePoint[player] = null; // 呪いは1手だけ
+            // 呪いは持続手数分だけ続く (設定で調整)
+            if (cursePoint[player] !== null && cursePoint[player] !== undefined) {
+                curseLeft[player]--;
+                if (curseLeft[player] <= 0) cursePoint[player] = null;
+            }
             turn = opponent;
             updateUI();
 
@@ -2108,6 +2118,7 @@
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
             holdUsed = !!snap.holdUsed;
             cursePoint = snap.cursePoint ? { ...snap.cursePoint } : { 1: null, 2: null };
+            curseLeft = snap.curseLeft ? { ...snap.curseLeft } : { 1: 0, 2: 0 };
             previewPos = null;
             updateUI();
 
@@ -2489,6 +2500,7 @@
             if (data.heldPieces) heldPieces = { ...data.heldPieces };
             holdUsed = !!data.holdUsed;
             cursePoint = (data.cursePoint && typeof data.cursePoint === 'object') ? { ...data.cursePoint } : { 1: null, 2: null };
+            curseLeft = (data.curseLeft && typeof data.curseLeft === 'object') ? { ...data.curseLeft } : { 1: 0, 2: 0 };
             previewPos = null;
 
             if (gamePhase === 'dead_stone_selection') {
@@ -2527,6 +2539,7 @@
                 pieceQueue,
                 heldPieces,
                 cursePoint,
+                curseLeft,
                 holdUsed,
                 deadStones: [...deadStones],
                 history
@@ -2754,6 +2767,7 @@
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             cursePoint = { 1: null, 2: null };
+            curseLeft = { 1: 0, 2: 0 };
             pieces = [];
             turn = 1;
             captures = { 1: 0, 2: 0 };

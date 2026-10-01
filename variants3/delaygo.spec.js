@@ -36,10 +36,14 @@ module.exports = {
     icon: 'delaygo',
     spec: [
         ...K.rb('DELAYGO', '遅延碁', 'delaygo'),
+        K.params([
+            { key: 'delay_turns', label: '着弾までの遅延', min: 1, max: 5, def: 2, unit: '手' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 80, max: 150, def: 110, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         ...PERSIST('{ queue: [] }'),
         // 着手は盤に置かず予約キューへ (実体化は2手後)
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
-`            st.queue.push({ cells: move.cells.map(p => ({ x: p.x, y: p.y })), player, due: history.length + 2 });
+`            st.queue.push({ cells: move.cells.map(p => ({ x: p.x, y: p.y })), player, due: history.length + (P('delay_turns') || 2) });
             fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '予約', '#a5b4fc', 900);`],
         // 予約手は即座の捕獲を起こさない
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
@@ -83,7 +87,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 110) / 100))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();

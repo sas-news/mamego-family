@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap_moves') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'densitygo',
     spec: [
         ...K.rb('DENSITYGO', '濃度碁', 'densitygo'),
+        K.params([
+            { key: 'zone_n', label: 'ゾーン分割数', min: 2, max: 5, def: 3, unit: '×' },
+            { key: 'occ_pct', label: '相転移の占有率', min: 60, max: 95, def: 80, unit: '%' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 60, max: 300, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { zones: {} }; // 相転移済みゾーン`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -54,7 +59,7 @@ module.exports = {
 
             // 濃度相転移: 占有率8割超のゾーンで多数派が少数派を全て取る (1ゾーン1回)
             {
-                const Z = 3;
+                const Z = Math.max(1, P('zone_n') || 3);
                 const zs = Math.ceil(BOARD_SIZE / Z);
                 for (let zy = 0; zy < Z; zy++) for (let zx = 0; zx < Z; zx++) {
                     const zk = zy * Z + zx;
@@ -67,7 +72,7 @@ module.exports = {
                         }
                     }
                     const total = c1 + c2 + ce;
-                    if (ce <= Math.floor(total * 0.2) && c1 !== c2) {
+                    if (ce <= Math.floor(total * (1 - (P('occ_pct') ?? 80) / 100)) && c1 !== c2) {
                         st.zones[zk] = true;
                         const win = c1 > c2 ? 1 : 2, lose = win === 1 ? 2 : 1;
                         const taken = [];
@@ -93,11 +98,12 @@ module.exports = {
         K.CUE_GRID(`            // 濃度ゾーンの境界 (3x3 破線)
             {
                 ctx.save();
-                const zs2 = Math.ceil(BOARD_SIZE / 3);
+                const Z2 = Math.max(1, P('zone_n') || 3);
+                const zs2 = Math.ceil(BOARD_SIZE / Z2);
                 ctx.strokeStyle = 'rgba(34,211,238,0.35)';
                 ctx.lineWidth = Math.max(1, cellSize * 0.04);
                 ctx.setLineDash([cellSize * 0.2, cellSize * 0.15]);
-                for (let k = 1; k < 3; k++) {
+                for (let k = 1; k < Z2; k++) {
                     const p = padding + k * zs2 * cellSize - cellSize * 0.5;
                     ctx.beginPath(); ctx.moveTo(p, padding - cellSize * 0.5); ctx.lineTo(p, padding + (BOARD_SIZE - 1) * cellSize + cellSize * 0.5); ctx.stroke();
                     ctx.beginPath(); ctx.moveTo(padding - cellSize * 0.5, p); ctx.lineTo(padding + (BOARD_SIZE - 1) * cellSize + cellSize * 0.5, p); ctx.stroke();

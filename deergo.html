@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"antler_range","label":"角の届く距離","min":1,"max":2,"def":1,"hint":"星の石からのマンハッタン距離"},{"key":"cap_pct","label":"打ち切り手数","min":50,"max":150,"def":80,"unit":"%","hint":"盤面交点数に対する割合"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1820,7 +1820,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 80) / 100))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1880,8 +1880,9 @@
                 const isolated = getNeighbors(mi).every(i => board[i] !== player);
                 if (stillOnBoard && isolated) {
                     const stars = getStarPoints(BOARD_SIZE);
+                    const ar = P('antler_range') || 1;
                     const deer = stars.some(pt => board[pt.y * BOARD_SIZE + pt.x] === opponent &&
-                        getNeighbors(mi).includes(pt.y * BOARD_SIZE + pt.x));
+                        Math.abs(pt.x - move.cells[0].x) + Math.abs(pt.y - move.cells[0].y) <= ar);
                     if (deer) {
                         board[mi] = 0;
                         captures[opponent]++;

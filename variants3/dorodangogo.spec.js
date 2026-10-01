@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 80) / 100))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'dorodangogo',
     spec: [
         ...K.rb('DORODANGOGO', '泥団子碁', 'dorodangogo'),
+        K.params([
+            { key: 'pol_max', label: '磨きの最大段数', min: 2, max: 10, def: 5, unit: '段' },
+            { key: 'pol_pt', label: '磨き1段の得点', min: 0, max: 2, step: 0.5, def: 0.5, unit: '目' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 80, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         ...ST(ST_INIT),
         // 自分の手番ごとに自分の全石を1段磨く (新しい石は磨き0から)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -57,7 +62,7 @@ module.exports = {
                 if (board[+k] === 0) delete st.pol[k]; // 取られた石の磨きは消える
             });
             for (let i = 0; i < board.length; i++) {
-                if (board[i] === player) st.pol[i] = Math.min(5, (st.pol[i] || 0) + 1);
+                if (board[i] === player) st.pol[i] = Math.min((P('pol_max') || 5), (st.pol[i] || 0) + 1);
             }
 
             turn = opponent;`],
@@ -74,7 +79,7 @@ module.exports = {
         function polBonus(player) {
             let b = 0;
             for (let i = 0; i < board.length; i++)
-                if (board[i] === player) b += (st.pol[i] || 0) * 0.5;
+                if (board[i] === player) b += (st.pol[i] || 0) * (P('pol_pt') ?? 0.5);
             return b;
         }
 

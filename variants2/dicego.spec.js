@@ -9,6 +9,9 @@ module.exports = {
     kind: 'dice',
     spec: [
         ...K.rb('DICEGO', '賽碁', 'dicego'),
+        K.params([
+            { key: 'six_mult', label: '出目6の取り倍率', min: 1, max: 4, def: 2, unit: '倍' },
+        ]),
         [K.ONE, '        function executeMove(move, player) {',
 `        // 賽碁: 手数 mod 6 +1 がその手の出目 (6=取り2倍, 1=取り不可)
         function dieRoll(n) { return (n === undefined ? history.length : n) % 6 + 1; }
@@ -19,11 +22,11 @@ module.exports = {
             const dieIdx = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             if (captured.length > 0 && die !== 1) {
                 captured.forEach(idx => board[idx] = 0);
-                captures[player] += captured.length * (die === 6 ? 2 : 1);
+                captures[player] += captured.length * (die === 6 ? Math.max(1, P('six_mult') || 2) : 1);
                 // 出目6の取り: 金色の倍賭け宣言
                 if (die === 6) {
                     captured.forEach(idx => fxGlow(idx, '#facc15', 800));
-                    fxText(dieIdx, '出目6 ×2!', '#facc15', 1200);
+                    fxText(dieIdx, '出目6 ×' + (P('six_mult') || 2) + '!', '#facc15', 1200);
                 }
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -35,7 +38,7 @@ module.exports = {
                 }
                 soundManager.playPlace();
             }`],
-        ...K.EVENT_CHIP_SPEC(`'出目 ' + dieRoll() + (dieRoll() === 6 ? ' (取り2倍!)' : dieRoll() === 1 ? ' (取り不可)' : '')`),
+        ...K.EVENT_CHIP_SPEC(`'出目 ' + dieRoll() + (dieRoll() === 6 ? ' (取り' + (P('six_mult') || 2) + '倍!)' : dieRoll() === 1 ? ' (取り不可)' : '')`),
         // 現在の出目を盤左の賽で常に見せる
         ...K.STONE_MARKS_SPEC(`            {
                 const d = dieRoll();

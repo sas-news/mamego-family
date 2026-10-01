@@ -27,16 +27,30 @@ module.exports = {
     icon: 'dashigo',
     spec: [
         ...K.rb('DASHIGO', '出汁碁', 'dashigo'),
+        K.params([
+            { key: 'pool_pt', label: '旨みボーナス', min: 0, max: 5, def: 1, step: 0.5, unit: '目' },
+            { key: 'pool_radius', label: '池の半径', min: 1, max: 3, def: 1 },
+            { key: 'pool_offset', label: '池の位置', min: 1, max: 6, def: 2, hint: '隅からの距離' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 出汁区域: 対角の2つの琥珀色の池 (菱型5点ずつ)
-        const DASHI_SET = new Set();
-        {
-            const dc = Math.floor(BOARD_SIZE * 0.28);
+        // 出汁区域: 対角の2つの琥珀色の池 (半径・位置は設定で調整可能)
+        let DASHI_SET = new Set();
+        function rebuildDashi() {
+            DASHI_SET = new Set();
+            const dc = Math.min(BOARD_SIZE - 2, Math.max(1, P('pool_offset') || 2));
+            const rr = Math.max(1, P('pool_radius') || 1);
             [[dc, dc], [BOARD_SIZE - 1 - dc, BOARD_SIZE - 1 - dc]].forEach(([cx, cy]) => {
-                for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-                    if (Math.abs(dx) + Math.abs(dy) <= 1) DASHI_SET.add((cy + dy) * BOARD_SIZE + (cx + dx));
+                for (let dy = -rr; dy <= rr; dy++) for (let dx = -rr; dx <= rr; dx++) {
+                    if (Math.abs(dx) + Math.abs(dy) > rr) continue;
+                    const x = cx + dx, y = cy + dy;
+                    if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE) DASHI_SET.add(y * BOARD_SIZE + x);
                 }
             });
+        }
+        rebuildDashi();
+        // 設定変更で区域を即時再構成
+        function onVariantParam(p) {
+            if (p.key === 'pool_radius' || p.key === 'pool_offset') rebuildDashi();
         }`],
         // 旨み集計: 区域の生きた石は1石+1目
         [K.ONE, `        function endGameByScore() {`, `        // 出汁: 区域内の石を数える
@@ -49,11 +63,12 @@ module.exports = {
         function endGameByScore() {`],
         [K.ONE, `            const territory = calculateTerritory();`,
 `            const territory = calculateTerritory();
-            // 出汁ルール: 区域内の生きた石は旨み+1目ずつ
+            // 出汁ルール: 区域内の生きた石は旨みボーナス (設定で調整)
             {
                 const db = dashiBonus();
-                territory.black += db[1];
-                territory.white += db[2];
+                const pt = P('pool_pt') ?? 1;
+                territory.black += db[1] * pt;
+                territory.white += db[2] * pt;
             }`],
         // 池の描画: 琥珀色の揺らぐ水面
         K.CUE_GRID(`            // 出汁区域: 琥珀色の池

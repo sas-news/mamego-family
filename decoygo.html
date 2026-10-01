@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"decoy_interval","label":"囮石の出現間隔","min":2,"max":15,"def":5,"unit":"手"},{"key":"decoy_life","label":"囮石の寿命","min":1,"max":8,"def":3,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1814,9 +1814,9 @@
             return true;
         }
 
-        // 囮碁: そのプレイヤーの5手ごとの着手は囮石
+        // 囮碁: そのプレイヤーのN手ごとの着手は囮石 (間隔・寿命は設定で調整)
         function isDecoyPiece(pc) { return !!pc.decoy; }
-        function decoyLeft(pc) { return pc.at === undefined ? 99 : 3 - (history.length - pc.at); }
+        function decoyLeft(pc) { return pc.at === undefined ? 99 : (P('decoy_life') || 3) - (history.length - pc.at); }
 
         function executeMove(move, player) {
             // 1手戻る用に着手前の状態を退避
@@ -1848,7 +1848,7 @@
                 rot: move.rot,
                 cells: move.cells,
                 at: history.length,
-                decoy: st.pcnt[player] % 5 === 0
+                decoy: st.pcnt[player] % (P('decoy_interval') || 5) === 0
             });
 
             // 捕獲処理
@@ -1871,11 +1871,11 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 囮碁: 囮石は置いてから3手後に消える — 霧散の演出つき
+            // 囮碁: 囮石は置いてから寿命分手後に消える — 霧散の演出つき
             {
                 let vanished = false;
                 pieces.forEach(pc => {
-                    if (!pc.decoy || history.length - (pc.at || 0) < 3) return;
+                    if (!pc.decoy || history.length - (pc.at || 0) < (P('decoy_life') || 3)) return;
                     pc.cells.forEach(p => {
                         const pi = p.y * BOARD_SIZE + p.x;
                         if (board[pi] === pc.player) {
@@ -2772,7 +2772,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ((function(){ const d = pieces.filter(pc => pc.decoy).length; return d > 0 ? '囮石 ' + d + '個' : '次の囮 ' + (5 - st.pcnt[turn] % 5) + '手後'; })());
+                const et = gameOver ? '' : ((function(){ const d = pieces.filter(pc => pc.decoy).length; const n = P('decoy_interval') || 5; return d > 0 ? '囮石 ' + d + '個' : '次の囮 ' + (n - st.pcnt[turn] % n) + '手後'; })());
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

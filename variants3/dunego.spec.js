@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 90) / 100))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'dunego',
     spec: [
         ...K.rb('DUNEGO', '砂丘碁', 'dunego'),
+        K.params([
+            { key: 'dune_interval', label: '砂丘の移動間隔', min: 3, max: 20, def: 7, unit: '手' },
+            { key: 'dune_dir', label: '砂丘の流れる向き', options: [{ v: 'e', l: '東' }, { v: 'w', l: '西' }, { v: 's', l: '南' }, { v: 'n', l: '北' }], def: 'e' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 90, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 砂丘: 2条の斜めリッジ (board=3 の移動壁)。7手ごとに +1x で流れる
@@ -71,12 +76,16 @@ module.exports = {
 
             // 砂丘の流動
             st.ply++;
-            if (st.ply % 7 === 0) {
+            if (st.ply % Math.max(1, P('dune_interval') || 7) === 0) {
                 DUNE.forEach(i => { if (board[i] === 3) board[i] = 0; });
                 const next = new Set();
+                const ddir = P('dune_dir') || 'e';
                 DUNE.forEach(i => {
                     const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
-                    next.add(y * BOARD_SIZE + ((x + 1) % BOARD_SIZE));
+                    next.add(ddir === 'w' ? y * BOARD_SIZE + ((x - 1 + BOARD_SIZE) % BOARD_SIZE)
+                        : ddir === 's' ? ((y + 1) % BOARD_SIZE) * BOARD_SIZE + x
+                        : ddir === 'n' ? ((y - 1 + BOARD_SIZE) % BOARD_SIZE) * BOARD_SIZE + x
+                        : y * BOARD_SIZE + ((x + 1) % BOARD_SIZE));
                 });
                 DUNE = next;
                 let swallowed = 0;
@@ -113,7 +122,7 @@ module.exports = {
                     ctx.quadraticCurveTo(cx, cy + cellSize * 0.08, cx + hh * 0.7, cy - cellSize * 0.1 - ph * cellSize * 0.06);
                     ctx.stroke();`)],
         ...K.WALL_GUARD_SPEC,
-        ...K.EVENT_CHIP_SPEC(`'砂丘移動まで ' + (7 - (st.ply % 7)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'砂丘移動まで ' + ((P('dune_interval') || 7) - (st.ply % (P('dune_interval') || 7))) + '手'`),
         [K.ONE, K.INFO_ALGO, `            砂丘碁: 砂丘の斜めリッジは移動する壁。7手ごとに東へ1歩流れ、乗った石は砂に呑まれる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

@@ -10,6 +10,10 @@ module.exports = {
     icon: 'divego',
     spec: [
         ...K.rb('DIVEGO', '潜水碁', 'divego'),
+        K.params([
+            { key: 'dive_turns', label: '潜水の手数', min: 1, max: 6, def: 3, unit: '手' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 60, max: 300, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { dives: [] }; // 潜行中の石 [{idx, player, n}]`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -66,7 +70,7 @@ module.exports = {
             if (isDive) {
                 move.cells.forEach(p => {
                     const di = p.y * BOARD_SIZE + p.x;
-                    st.dives.push({ idx: di, player, n: 3 });
+                    st.dives.push({ idx: di, player, n: P('dive_turns') || 3 });
                     fxSplash(di, '#38bdf8', 12);
                     fxText(di, '潜水!', '#38bdf8', 1000);
                 });
@@ -113,7 +117,7 @@ module.exports = {
                 if (surfacing.length) cleanUpPieces();
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         // 潜行石を波紋マークで表示
@@ -125,7 +129,7 @@ module.exports = {
                 ctx.lineWidth = Math.max(1, cellSize * 0.05);
                 for (let k = 0; k < 2; k++) {
                     ctx.beginPath();
-                    ctx.arc(cx, cy, cellSize * (0.14 + k * 0.10 + (3 - d.n) * 0.03), 0, Math.PI * 2);
+                    ctx.arc(cx, cy, cellSize * (0.14 + k * 0.10 + ((P('dive_turns') || 3) - d.n) * 0.03), 0, Math.PI * 2);
                     ctx.stroke();
                 }
                 ctx.restore();

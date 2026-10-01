@@ -9,6 +9,10 @@ module.exports = {
     kind: 'dynasty',
     spec: [
         ...K.rb('DYNASTYGO', '王朝碁', 'dynastygo'),
+        K.params([
+            { key: 'dynasty_len', label: '必要な無血連続数', min: 2, max: 10, def: 5, unit: '手番' },
+            { key: 'dynasty_pt', label: '王朝ボーナス', min: 1, max: 20, def: 5, unit: '点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let dynasty = { 1: 0, 2: 0 };    // 王朝ボーナス累計
         let streak = { 1: 0, 2: 0 };     // 無血手番の連続数
@@ -56,12 +60,12 @@ module.exports = {
                 const lostNow = captures[opponent]; // 相手のアゲハマ = 自分の被取石数
                 if (lostNow === lastLost[player]) {
                     streak[player]++;
-                    if (streak[player] >= 5) {
-                        dynasty[player] += 5;
+                    if (streak[player] >= (P('dynasty_len') || 5)) {
+                        dynasty[player] += (P('dynasty_pt') || 5);
                         streak[player] = 0;
                         if (lastMove && lastMove.cells[0]) {
                             const di = lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x;
-                            fxText(di, '王朝+5!', '#facc15', 1500);
+                            fxText(di, '王朝+' + (P('dynasty_pt') || 5) + '!', '#facc15', 1500);
                             fxGlow(di, '#facc15', 950);
                             fxShake(5, 340);
                         }

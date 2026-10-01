@@ -9,13 +9,17 @@ module.exports = {
     kind: 'dist',
     spec: [
         ...K.rb('DISTGO', '距離碁', 'distgo'),
+        K.params([
+            { key: 'dist_mult', label: '距離点の倍率', min: 0, max: 4, def: 1, step: 0.5, unit: '倍' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, `
-        // 距離得点: 黒は上端(y=0)から、白は下端(y=末)からの行数の合計
+        // 距離得点: 黒は上端(y=0)から、白は下端(y=末)からの行数の合計×倍率 (倍率は設定で調整)
         function distScore(player) {
+            const m = P('dist_mult') ?? 1;
             let s = 0;
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 if (board[y * BOARD_SIZE + x] !== player) continue;
-                s += player === 1 ? y : (BOARD_SIZE - 1 - y);
+                s += (player === 1 ? y : (BOARD_SIZE - 1 - y)) * m;
             }
             return s;
         }
