@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,15 +27,20 @@ module.exports = {
     icon: 'fastingo',
     spec: [
         ...K.rb('FASTINGO', '斎戒碁', 'fastingo'),
+        K.params([
+            { key: 'fast_interval', label: '斎戒手番の間隔', min: 3, max: 24, def: 6, unit: '手' },
+            { key: 'rim_width', label: '斎戒中に打てる縁の幅', min: 1, max: 4, def: 2, unit: '路' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 斎戒手番: 6手ごと (historyの手数が6の倍数の次手)
         function isFastingTurn() {
-            return (history.length + 1) % 6 === 0;
+            return (history.length + 1) % Math.max(1, P('fast_interval') || 6) === 0;
         }
         // 縁点: 盤外周2路以内
         function isRimPoint(x, y) {
             const d = Math.min(x, y, BOARD_SIZE - 1 - x, BOARD_SIZE - 1 - y);
-            return d <= 1;
+            return d <= (P('rim_width') || 2) - 1;
         }`],
         // 着手禁止: 斎戒手番は縁のみ
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
@@ -49,14 +54,15 @@ module.exports = {
         K.CUE_GRID(`            // 斎戒手番: 中央域を白く祓って縁のみ残す
             if (isFastingTurn()) {
                 ctx.save();
+                const _rw = P('rim_width') || 2;
                 ctx.fillStyle = 'rgba(240,240,235,0.4)';
-                ctx.fillRect(padding + 1.5 * cellSize, padding + 1.5 * cellSize, (BOARD_SIZE - 3) * cellSize, (BOARD_SIZE - 3) * cellSize);
+                ctx.fillRect(padding + (_rw - 0.5) * cellSize, padding + (_rw - 0.5) * cellSize, (BOARD_SIZE - 2 * _rw + 1) * cellSize, (BOARD_SIZE - 2 * _rw + 1) * cellSize);
                 ctx.strokeStyle = 'rgba(180,160,90,0.5)';
                 ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
-                ctx.strokeRect(padding + 1.5 * cellSize, padding + 1.5 * cellSize, (BOARD_SIZE - 3) * cellSize, (BOARD_SIZE - 3) * cellSize);
+                ctx.strokeRect(padding + (_rw - 0.5) * cellSize, padding + (_rw - 0.5) * cellSize, (BOARD_SIZE - 2 * _rw + 1) * cellSize, (BOARD_SIZE - 2 * _rw + 1) * cellSize);
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`isFastingTurn() ? '斎戒中: 縁のみ' : '斎戒まで' + (6 - ((history.length + 1) % 6)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`isFastingTurn() ? '斎戒中: 縁のみ' : '斎戒まで' + ((P('fast_interval') || 6) - ((history.length + 1) % (P('fast_interval') || 6))) + '手'`),
         [K.ONE, K.INFO_ALGO, `            斎戒碁: 6手ごとの斎戒手番は身を清めて縁 (外周2路) のみに打てる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

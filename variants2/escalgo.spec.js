@@ -9,13 +9,16 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('ESCALGO', '昇降碁', 'escalgo'),
+        K.params([
+            { key: 'escal_interval', label: 'エスカレーターの間隔', min: 1, max: 12, def: 3, unit: '手' },
+        ]),
         // 3手ごと、中央列の中身が丸ごと1マス上へ循環
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 昇降ルール: 中央列は3手ごとに循環するエスカレーター。列の全セルが1マス上へ動き、
             //             最上段の内容は最下段へ回る。
-            if (history.length % 3 === 0) {
+            if (history.length % Math.max(1, P('escal_interval') || 3) === 0) {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
                 const first = board[c];
                 for (let y = 0; y < N - 1; y++) {

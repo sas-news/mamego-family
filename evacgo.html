@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"wave_interval","label":"災害波の間隔","min":4,"max":40,"def":10,"unit":"手"},{"key":"ply_cap","label":"打ち切り手数","min":60,"max":600,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1183,7 +1183,7 @@
             // 避難所 (緑の屋敷) と次に襲う半盤の警告色
             {
                 const mid = Math.floor(BOARD_SIZE / 2);
-                const nextWave = Math.floor(history.length / 10) + 1;
+                const nextWave = Math.floor(history.length / Math.max(1, P('wave_interval') || 10)) + 1;
                 const topNext = nextWave % 2 === 1;
                 const horizon = Math.floor((BOARD_SIZE - 1) / 2);
                 ctx.save();
@@ -1879,8 +1879,9 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 災害波: 10手ごとに盤の半分を舐める — 孤立石は飲まれる
-            if (history.length > 0 && history.length % 10 === 0) {
-                const waveNo = Math.floor(history.length / 10);
+            const wi = Math.max(1, P('wave_interval') || 10);
+            if (history.length > 0 && history.length % wi === 0) {
+                const waveNo = Math.floor(history.length / wi);
                 const topHalf = waveNo % 2 === 1; // 奇数回は上半分、偶数回は下半分
                 const shel = shelterCells();
                 const gone = [];
@@ -1905,7 +1906,7 @@
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

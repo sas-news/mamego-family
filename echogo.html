@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"echo_range","label":"残響の範囲","min":1,"max":5,"def":2,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1185,8 +1185,9 @@
                 if (anc) {
                     ctx.save();
                     ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.12);
-                    ctx.fillRect(padding + (anc.x - 2.5) * cellSize, padding + (anc.y - 2.5) * cellSize,
-                        cellSize * 5, cellSize * 5);
+                    const _er = P('echo_range') || 2;
+                    ctx.fillRect(padding + (anc.x - _er - 0.5) * cellSize, padding + (anc.y - _er - 0.5) * cellSize,
+                        cellSize * (_er * 2 + 1), cellSize * (_er * 2 + 1));
                     ctx.restore();
                 }
             }
@@ -1842,7 +1843,7 @@
                 if (anchor) {
                     for (const p of cells) {
                         const d = Math.max(Math.abs(p.x - anchor.x), Math.abs(p.y - anchor.y));
-                        if (d > 2) return false;
+                        if (d > (P('echo_range') || 2)) return false;
                     }
                 }
             }

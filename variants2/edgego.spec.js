@@ -9,6 +9,9 @@ module.exports = {
     kind: 'edge',
     spec: [
         ...K.rb('EDGEGO', '辺縁碁', 'edgego'),
+        K.params([
+            { key: 'edge_width', label: '着手可能な帯の幅', min: 1, max: 4, def: 2, unit: 'マス' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -18,14 +21,15 @@ module.exports = {
             {
                 for (const p of cells) {
                     const edge = Math.min(p.x, p.y, BOARD_SIZE - 1 - p.x, BOARD_SIZE - 1 - p.y);
-                    if (edge > 1) return false;
+                    if (edge > (P('edge_width') || 2) - 1) return false;
                 }
             }`],
         K.CUE_GRID(`            // 辺縁: 中央の死域を暗く沈める
             {
                 ctx.save();
                 ctx.fillStyle = alphaColor(shiftColor(currentTheme.boardBg, -0.5), 0.55);
-                const bx = padding + 1.5 * cellSize, bw = (BOARD_SIZE - 3) * cellSize;
+                const _ew = P('edge_width') || 2;
+                const bx = padding + (_ew - 0.5) * cellSize, bw = (BOARD_SIZE - 2 * _ew + 1) * cellSize;
                 if (bw > 0) ctx.fillRect(bx, bx, bw, bw);
                 ctx.restore();
             }`),
@@ -37,7 +41,8 @@ module.exports = {
             ctx2.lineDashOffset = -now / 55;
             ctx2.strokeStyle = 'rgba(235,90,70,0.55)';
             ctx2.lineWidth = Math.max(1.5, cs * 0.07);
-            ctx2.strokeRect(pad + 1.5 * cs, pad + 1.5 * cs, (BOARD_SIZE - 3) * cs, (BOARD_SIZE - 3) * cs);
+            const _ew = P('edge_width') || 2;
+            ctx2.strokeRect(pad + (_ew - 0.5) * cs, pad + (_ew - 0.5) * cs, (BOARD_SIZE - 2 * _ew + 1) * cs, (BOARD_SIZE - 2 * _ew + 1) * cs);
             ctx2.restore();
         });`],
         ...K.LEGAL_DOTS_SPEC,

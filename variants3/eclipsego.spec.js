@@ -10,11 +10,15 @@ module.exports = {
     icon: 'eclipsego',
     spec: [
         ...K.rb('ECLIPSEGO', '日食碁', 'eclipsego'),
+        K.params([
+            { key: 'eclipse_interval', label: '日食の間隔', min: 3, max: 48, def: 12, unit: '手' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 4, def: 1.1, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 日食: 12手ごとに全石の色が反転し、アゲハマ数も交換される (両者共通)
-            if (history.length % 12 === 0) {
+            if (history.length % Math.max(1, P('eclipse_interval') || 12) === 0) {
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] === 1) board[i] = 2;
                     else if (board[i] === 2) board[i] = 1;
@@ -29,7 +33,7 @@ module.exports = {
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -37,7 +41,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'日食まで ' + (12 - (history.length % 12)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'日食まで ' + ((P('eclipse_interval') || 12) - (history.length % (P('eclipse_interval') || 12))) + '手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '日食は12手ごとに訪れる: 盤上の全石の色が反転し、双方のアゲハマも入れ替わる。',
             '攻めの絶頂で色が入れ替わる。日食のカウントは両プレイヤー共通。',

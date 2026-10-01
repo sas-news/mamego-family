@@ -9,12 +9,15 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('FALLGO', '落下碁', 'fallgo'),
+        K.params([
+            { key: 'fall_interval', label: '落下の間隔', min: 1, max: 12, def: 3, unit: '手' },
+        ]),
         // 3手ごと、各列の石が底へ向かって落下し積み上がる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 落下ルール: 3手ごとに、各列の石は下へ落ち、順序を保ったまま底に積み上がる
-            if (history.length % 3 === 0) {
+            if (history.length % Math.max(1, P('fall_interval') || 3) === 0) {
                 const N = BOARD_SIZE;
                 for (let x = 0; x < N; x++) {
                     let w = N - 1;

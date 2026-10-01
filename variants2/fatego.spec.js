@@ -9,24 +9,29 @@ module.exports = {
     kind: 'fate',
     spec: [
         ...K.rb('FATEGO', '運命碁', 'fatego'),
+        K.params([
+            { key: 'fate_interval', label: '運命の間隔', min: 4, max: 40, def: 10, unit: '手' },
+            { key: 'fate_pts', label: '運命の加護', min: 0, max: 10, def: 2, unit: '目' },
+            { key: 'fate_notice', label: '告知の手前', min: 1, max: 10, def: 5, unit: '手' },
+        ]),
         // 運命イベント: 10の倍数手の着手者に加護+2 (アゲハマに加算)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 運命碁: 10の倍数手に運命の加護 — その手を打った側に+2目
-            if (history.length % 10 === 0) {
-                captures[player] += 2;
+            if (history.length % Math.max(1, P('fate_interval') || 10) === 0) {
+                captures[player] += (P('fate_pts') || 2);
                 // 運命降臨: 紫の光と飛沫
                 const fi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 fxGlow(fi, 'rgba(168,85,247,0.95)', 900);
                 fxBurst(fi, '#c084fc', 12, 1.6);
-                fxText(fi, '運命+2!', '#a855f7', 1200);
+                fxText(fi, '運命+' + (P('fate_pts') || 2) + '!', '#a855f7', 1200);
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`history.length % 10 === 0 ? '運命の加護 +2!' : ((10 - history.length % 10) <= 5 ? '運命まで ' + (10 - history.length % 10) + '手' : '')`),
+        ...K.EVENT_CHIP_SPEC(`history.length % Math.max(1, P('fate_interval') || 10) === 0 ? '運命の加護 +' + (P('fate_pts') || 2) + '!' : ((P('fate_interval') || 10) - history.length % (P('fate_interval') || 10)) <= (P('fate_notice') || 5) ? '運命まで ' + ((P('fate_interval') || 10) - history.length % (P('fate_interval') || 10)) + '手' : ''`),
         K.CUE_STARS(`            // 運命: 直前の手を打った位置に運命の輪 (イベント5手前から脈動)
-            if (lastMove && (10 - history.length % 10) <= 5) {
+            if (lastMove && ((P('fate_interval') || 10) - history.length % (P('fate_interval') || 10)) <= (P('fate_notice') || 5)) {
                 const lc = lastMove.cells[0];
                 const cx = padding + lc.x * cellSize, cy = padding + lc.y * cellSize;
                 ctx.save();

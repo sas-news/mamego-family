@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"fast_interval","label":"斎戒手番の間隔","min":3,"max":24,"def":6,"unit":"手"},{"key":"rim_width","label":"斎戒中に打てる縁の幅","min":1,"max":4,"def":2,"unit":"路"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":3,"def":0.9,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -640,12 +640,12 @@
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         // 斎戒手番: 6手ごと (historyの手数が6の倍数の次手)
         function isFastingTurn() {
-            return (history.length + 1) % 6 === 0;
+            return (history.length + 1) % Math.max(1, P('fast_interval') || 6) === 0;
         }
         // 縁点: 盤外周2路以内
         function isRimPoint(x, y) {
             const d = Math.min(x, y, BOARD_SIZE - 1 - x, BOARD_SIZE - 1 - y);
-            return d <= 1;
+            return d <= (P('rim_width') || 2) - 1;
         }
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
@@ -1164,11 +1164,12 @@
             // 斎戒手番: 中央域を白く祓って縁のみ残す
             if (isFastingTurn()) {
                 ctx.save();
+                const _rw = P('rim_width') || 2;
                 ctx.fillStyle = 'rgba(240,240,235,0.4)';
-                ctx.fillRect(padding + 1.5 * cellSize, padding + 1.5 * cellSize, (BOARD_SIZE - 3) * cellSize, (BOARD_SIZE - 3) * cellSize);
+                ctx.fillRect(padding + (_rw - 0.5) * cellSize, padding + (_rw - 0.5) * cellSize, (BOARD_SIZE - 2 * _rw + 1) * cellSize, (BOARD_SIZE - 2 * _rw + 1) * cellSize);
                 ctx.strokeStyle = 'rgba(180,160,90,0.5)';
                 ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
-                ctx.strokeRect(padding + 1.5 * cellSize, padding + 1.5 * cellSize, (BOARD_SIZE - 3) * cellSize, (BOARD_SIZE - 3) * cellSize);
+                ctx.strokeRect(padding + (_rw - 0.5) * cellSize, padding + (_rw - 0.5) * cellSize, (BOARD_SIZE - 2 * _rw + 1) * cellSize, (BOARD_SIZE - 2 * _rw + 1) * cellSize);
                 ctx.restore();
             }
 
@@ -1819,7 +1820,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -2742,7 +2743,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (isFastingTurn() ? '斎戒中: 縁のみ' : '斎戒まで' + (6 - ((history.length + 1) % 6)) + '手');
+                const et = gameOver ? '' : (isFastingTurn() ? '斎戒中: 縁のみ' : '斎戒まで' + ((P('fast_interval') || 6) - ((history.length + 1) % (P('fast_interval') || 6))) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

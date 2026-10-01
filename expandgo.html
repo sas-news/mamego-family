@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"expand_interval","label":"盤が拡大する間隔","min":2,"max":20,"def":5,"unit":"手"},{"key":"expand_max","label":"盤の最大サイズ","options":[{"v":15,"l":"15路"},{"v":17,"l":"17路"},{"v":19,"l":"19路"},{"v":21,"l":"21路"}],"def":19}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1852,7 +1852,7 @@
 
             // 拡大ルール: 5手ごとに盤が外周へ1マスずつ拡大する (最大19路)。
             //             既存の石は新盤面の1マス内側にそのまま残る。
-            if (history.length % 5 === 0 && BOARD_SIZE < 19) {
+            if (history.length % Math.max(1, P('expand_interval') || 5) === 0 && BOARD_SIZE < (P('expand_max') || 19)) {
                 const N0 = BOARD_SIZE, N2 = N0 + 2;
                 const nb = new Array(N2 * N2).fill(0);
                 for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) {
@@ -2742,7 +2742,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('拡大まで ' + (BOARD_SIZE >= 19 ? '上限' : (5 - history.length % 5) + ' 手'));
+                const et = gameOver ? '' : ('拡大まで ' + (BOARD_SIZE >= (P('expand_max') || 19) ? '上限' : ((P('expand_interval') || 5) - history.length % (P('expand_interval') || 5)) + ' 手'));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

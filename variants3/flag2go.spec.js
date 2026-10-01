@@ -10,6 +10,10 @@ module.exports = {
     icon: 'flag2go',
     spec: [
         ...K.rb('FLAG2GO', '旗揚碁', 'flag2go'),
+        K.params([
+            { key: 'flag_size', label: '旗の立つ連の大きさ', min: 2, max: 8, def: 3, unit: '石' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 600, def: 140, unit: '手' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         // 旗点: 黒は最下行 (自陣)、白は最上行の3点
         function flagPoints(player) {
@@ -33,7 +37,7 @@ module.exports = {
         }
         // 旗が立っている旗点の数
         function flagsUp(player) {
-            return flagPoints(player).filter(i => groupSizeAt(i, player) >= 3).length;
+            return flagPoints(player).filter(i => groupSizeAt(i, player) >= Math.max(2, P('flag_size') || 3)).length;
         }
 
         function endGameByScore() {`],
@@ -49,7 +53,7 @@ module.exports = {
                 winByRule(player, '旗揚勝ち', '自陣の3つの旗点すべてに旗を立てました'); return;
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         // 旗点の描画 (小旗の竿)
@@ -61,7 +65,7 @@ module.exports = {
                         const fx = fi % BOARD_SIZE, fy = Math.floor(fi / BOARD_SIZE);
                         const cx = padding + fx * cellSize;
                         const cy = padding + fy * cellSize;
-                        const up = groupSizeAt(fi, pl) >= 3;
+                        const up = groupSizeAt(fi, pl) >= Math.max(2, P('flag_size') || 3);
                         const dirY = pl === 1 ? -1 : 1;
                         ctx.strokeStyle = up ? '#facc15' : 'rgba(120,110,90,0.55)';
                         ctx.lineWidth = Math.max(1.2, cellSize * 0.05);

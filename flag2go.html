@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"flag_size","label":"旗の立つ連の大きさ","min":2,"max":8,"def":3,"unit":"石"},{"key":"ply_cap","label":"打ち切り手数","min":60,"max":600,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1183,7 +1183,7 @@
                         const fx = fi % BOARD_SIZE, fy = Math.floor(fi / BOARD_SIZE);
                         const cx = padding + fx * cellSize;
                         const cy = padding + fy * cellSize;
-                        const up = groupSizeAt(fi, pl) >= 3;
+                        const up = groupSizeAt(fi, pl) >= Math.max(2, P('flag_size') || 3);
                         const dirY = pl === 1 ? -1 : 1;
                         ctx.strokeStyle = up ? '#facc15' : 'rgba(120,110,90,0.55)';
                         ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
@@ -1873,7 +1873,7 @@
                 winByRule(player, '旗揚勝ち', '自陣の3つの旗点すべてに旗を立てました'); return;
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();
@@ -2255,7 +2255,7 @@
         }
         // 旗が立っている旗点の数
         function flagsUp(player) {
-            return flagPoints(player).filter(i => groupSizeAt(i, player) >= 3).length;
+            return flagPoints(player).filter(i => groupSizeAt(i, player) >= Math.max(2, P('flag_size') || 3)).length;
         }
 
         function endGameByScore() {

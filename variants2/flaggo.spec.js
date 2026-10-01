@@ -9,29 +9,40 @@ module.exports = {
     kind: 'flag',
     spec: [
         ...K.rb('FLAGGO', '旗碁', 'flaggo'),
+        K.params([
+            { key: 'flag_move', label: '旗になる着手', options: [{ v: 1, l: '1手目' }, { v: 2, l: '2手目' }, { v: 3, l: '3手目' }, { v: 5, l: '5手目' }], def: 1 },
+        ]),
         // 状態: 各プレイヤーの旗石の位置
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        let flagIdx = { 1: -1, 2: -1 }; // 各プレイヤーの旗石(初手)の位置`],
+        let flagIdx = { 1: -1, 2: -1 }; // 各プレイヤーの旗石の位置
+        let flagCnt = { 1: 0, 2: 0 };   // 各プレイヤーの着手数`],
         [K.ONE, K.RESET_HELD, `            heldPieces = { 1: null, 2: null };
-            flagIdx = { 1: -1, 2: -1 };`],
+            flagIdx = { 1: -1, 2: -1 };
+            flagCnt = { 1: 0, 2: 0 };`],
         [K.ONE, K.SNAP_PUSH, `                heldPieces: { ...heldPieces },
                 holdUsed,
-                flagIdx: { ...flagIdx }
+                flagIdx: { ...flagIdx },
+                flagCnt: { ...flagCnt }
             });`],
         [K.ONE, K.SNAP_POP, `            holdUsed = !!snap.holdUsed;
-            if (snap.flagIdx) flagIdx = { ...snap.flagIdx };`],
+            if (snap.flagIdx) flagIdx = { ...snap.flagIdx };
+            if (snap.flagCnt) flagCnt = { ...snap.flagCnt };`],
         [K.ONE, K.SAVE_TAIL, `                    heldPieces,
                     holdUsed,
                     flagIdx,
+                    flagCnt,
                     gameMode,`],
         [K.ONE, K.LOAD_HOLD, `            holdUsed = !!s.holdUsed;
-            if (s.flagIdx) flagIdx = s.flagIdx;`],
+            if (s.flagIdx) flagIdx = s.flagIdx;
+            if (s.flagCnt) flagCnt = s.flagCnt;`],
         [K.ONE, K.ONLINE_SEND, `                heldPieces,
                 holdUsed,
                 flagIdx,
+                flagCnt,
                 deadStones: [...deadStones],`],
         [K.ONE, K.ONLINE_RECV, `            holdUsed = !!data.holdUsed;
-            if (data.flagIdx) flagIdx = data.flagIdx;`],
+            if (data.flagIdx) flagIdx = data.flagIdx;
+            if (data.flagCnt) flagCnt = data.flagCnt;`],
         // winByRule + 旗連の端判定ヘルパー
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         // 旗の連が敵陣端(黒=最下行, 白=最上行)に到達したか
@@ -57,8 +68,9 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 旗碁ルール: 初手の石が旗になる
-            if (flagIdx[player] < 0) {
+            // 旗碁ルール: 設定手目の石が旗になる
+            flagCnt[player] = (flagCnt[player] || 0) + 1;
+            if (flagIdx[player] < 0 && flagCnt[player] === Math.max(1, P('flag_move') || 1)) {
                 flagIdx[player] = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 // 旗立て: 自軍の旗が立つ瞬間を告げる
                 fxGlow(flagIdx[player], '#f8fafc', 900);

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= Math.max(1, P('ply_cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'erosiongo',
     spec: [
         ...K.rb('EROSIONGO', '浸食碁', 'erosiongo'),
+        K.params([
+            { key: 'flood_interval', label: '増水の間隔', min: 6, max: 60, def: 25, unit: '手' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 600, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { lastFlood: 0 };`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -54,8 +58,9 @@ module.exports = {
 
             // 増水: 25手ごとに川岸(上下の辺)の石が流れに攫われる — アゲハマにならず海へ
             {
-                const flood = Math.floor(history.length / 25);
-                if (flood !== st.lastFlood && history.length % 25 === 0) {
+                const fi = Math.max(1, P('flood_interval') || 25);
+                const flood = Math.floor(history.length / fi);
+                if (flood !== st.lastFlood && history.length % fi === 0) {
                     st.lastFlood = flood;
                     let swept = 0;
                     for (let x = 0; x < BOARD_SIZE; x++) {
@@ -86,7 +91,7 @@ module.exports = {
                 ctx.fillRect(padding - cellSize / 2, padding + w - cellSize / 2, w, cellSize);
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'増水まで' + (25 - (history.length % 25)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'増水まで' + ((P('flood_interval') || 25) - (history.length % (P('flood_interval') || 25))) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            浸食碁: 25手ごとの増水で川岸の石が流される<br>
             PC: クリックで配置<br>

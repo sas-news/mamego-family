@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"flag_move","label":"旗になる着手","options":[{"v":1,"l":"1手目"},{"v":2,"l":"2手目"},{"v":3,"l":"3手目"},{"v":5,"l":"5手目"}],"def":1}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -637,7 +637,8 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        let flagIdx = { 1: -1, 2: -1 }; // 各プレイヤーの旗石(初手)の位置
+        let flagIdx = { 1: -1, 2: -1 }; // 各プレイヤーの旗石の位置
+        let flagCnt = { 1: 0, 2: 0 };   // 各プレイヤーの着手数
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -705,6 +706,7 @@
                     heldPieces,
                     holdUsed,
                     flagIdx,
+                    flagCnt,
                     gameMode,
                     aiPlayer,
                     myOnlineRole,
@@ -750,6 +752,7 @@
                 : { 1: null, 2: null };
             holdUsed = !!s.holdUsed;
             if (s.flagIdx) flagIdx = s.flagIdx;
+            if (s.flagCnt) flagCnt = s.flagCnt;
             gameMode = ['local', 'ai', 'online'].includes(s.gameMode) ? s.gameMode : 'local';
             aiPlayer = s.aiPlayer === 1 ? 1 : 2;
             myOnlineRole = s.myOnlineRole || null;
@@ -1829,7 +1832,8 @@
                 pieceQueue: [...pieceQueue],
                 heldPieces: { ...heldPieces },
                 holdUsed,
-                flagIdx: { ...flagIdx }
+                flagIdx: { ...flagIdx },
+                flagCnt: { ...flagCnt }
             });
 
             prevBoard = [...board]; // コウ判定用に着手前の盤面を保存
@@ -1865,8 +1869,9 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 旗碁ルール: 初手の石が旗になる
-            if (flagIdx[player] < 0) {
+            // 旗碁ルール: 設定手目の石が旗になる
+            flagCnt[player] = (flagCnt[player] || 0) + 1;
+            if (flagIdx[player] < 0 && flagCnt[player] === Math.max(1, P('flag_move') || 1)) {
                 flagIdx[player] = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 // 旗立て: 自軍の旗が立つ瞬間を告げる
                 fxGlow(flagIdx[player], '#f8fafc', 900);
@@ -2121,6 +2126,7 @@
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
             holdUsed = !!snap.holdUsed;
             if (snap.flagIdx) flagIdx = { ...snap.flagIdx };
+            if (snap.flagCnt) flagCnt = { ...snap.flagCnt };
             previewPos = null;
             updateUI();
 
@@ -2533,6 +2539,7 @@
             if (data.heldPieces) heldPieces = { ...data.heldPieces };
             holdUsed = !!data.holdUsed;
             if (data.flagIdx) flagIdx = data.flagIdx;
+            if (data.flagCnt) flagCnt = data.flagCnt;
             previewPos = null;
 
             if (gamePhase === 'dead_stone_selection') {
@@ -2572,6 +2579,7 @@
                 heldPieces,
                 holdUsed,
                 flagIdx,
+                flagCnt,
                 deadStones: [...deadStones],
                 history
             });
@@ -2812,6 +2820,7 @@
             currentRot = 0;
             heldPieces = { 1: null, 2: null };
             flagIdx = { 1: -1, 2: -1 };
+            flagCnt = { 1: 0, 2: 0 };
             holdUsed = false;
             if (pieceMode === 'next') {
                 pieceQueue = shuffledBag();

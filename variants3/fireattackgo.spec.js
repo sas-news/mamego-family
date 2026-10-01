@@ -19,7 +19,7 @@ const ST = (init) => [
                 deadStones: [...deadStones],`],
     [K.ONE, K.ONLINE_RECV, K.ONLINE_RECV + `\n            st = data.st ? JSON.parse(JSON.stringify(data.st)) : ${init};`],
 ];
-const ST_INIT = `{ used: { 1: false, 2: false }, arm: { 1: false, 2: false } }`;
+const ST_INIT = `{ used: { 1: false, 2: false }, arm: { 1: false, 2: false }, burns: { 1: 0, 2: 0 } }`;
 const GAME_OVER = [
     [K.ONE, `            if (consecutivePasses >= 2) {
                 startDeadStoneSelectionPhase();`,
@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'fireattackgo',
     spec: [
         ...K.rb('FIREATTACKGO', '火計碁', 'fireattackgo'),
+        K.params([
+            { key: 'fire_uses', label: '火計の使用回数', options: [{ v: 1, l: '1回' }, { v: 2, l: '2回' }, { v: 3, l: '3回' }], def: 1 },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 火計ルール: 構え中の着手で隣接する敵連を全て焼き払う (実際に燃やせたときのみ使用済)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -71,7 +75,8 @@ module.exports = {
                     });
                 });
                 if (burned > 0) {
-                    st.used[player] = true;
+                    st.burns[player] = (st.burns[player] || 0) + 1;
+                    if (st.burns[player] >= Math.max(1, P('fire_uses') || 1)) st.used[player] = true;
                     fxGlow(mi, '#fbbf24', 800);
                     fxShake(9, 420);
                     fxText(mi, '火計! +' + burned, '#fb923c', 1400);

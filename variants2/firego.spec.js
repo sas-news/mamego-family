@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('FIREGO', '燎原碁', 'firego'),
+        K.params([
+            { key: 'fire_speed', label: '燃え広がる速さ', min: 0.5, max: 3, def: 1, step: 0.5, hint: '1手あたり斜めマス' },
+        ]),
         // 火は左上隅から1手ごとに斜め1マスずつ燃え広がる (x+y<=手数が燃焼域)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -16,7 +19,7 @@ module.exports = {
             // 燎原ルール: 左上隅の火点から1手ごとに斜め1マスずつ燃え広がる。
             //             燃焼域 (x+y<=手数) の石は焼けて相手のアゲハマになる。
             {
-                const N = BOARD_SIZE, r = history.length;
+                const N = BOARD_SIZE, r = history.length * (P('fire_speed') || 1);
                 let burned = 0;
                 for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
                     if (x + y > r) continue;
@@ -35,7 +38,7 @@ module.exports = {
             }
 
             // 燃え尽きで強制終局: 火面が全盤を覆った時点で死に石確認フェーズへ
-            if (history.length >= 2 * (BOARD_SIZE - 1)) {
+            if (history.length >= Math.ceil(2 * (BOARD_SIZE - 1) / (P('fire_speed') || 1))) {
                 startDeadStoneSelectionPhase();
             }
 
@@ -43,7 +46,7 @@ module.exports = {
         // 燃焼域の描画
         K.CUE_GRID(`            // 燎原: 燃え広がる炎の帯 (炎線は揺らめく)
             {
-                const r = history.length, now = fxNow();
+                const r = history.length * (P('fire_speed') || 1), now = fxNow();
                 ctx.save();
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     if (x + y > r) continue;
@@ -66,7 +69,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'燃焼域 ' + Math.min(history.length, 2 * BOARD_SIZE - 2) + ' 歩'`),
+        ...K.EVENT_CHIP_SPEC(`'燃焼域 ' + Math.min(Math.floor(history.length * (P('fire_speed') || 1)), 2 * BOARD_SIZE - 2) + ' 歩'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '左上隅の火点から1手ごとに火が斜め1マスずつ燃え広がる (x+yが手数以下の領域)。',
             '燃焼域の石は焼けて相手のアゲハマになる。全盤が燃え尽きた時点で終局となる。',

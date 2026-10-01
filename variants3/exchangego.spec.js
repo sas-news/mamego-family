@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'exchangego',
     spec: [
         ...K.rb('EXCHANGEGO', '両替碁', 'exchangego'),
+        K.params([
+            { key: 'split_extra', label: '両替の追加石数', min: 1, max: 4, def: 2, unit: '個' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 「両替」ボタン → 自石クリックで分解 (1手を消費 = 着手として実行)
         [K.ONE, `            <button id="btnPass" class="flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold border rounded-xl hover:opacity-80 active:scale-95 transition-all shadow-sm">
@@ -76,7 +80,7 @@ module.exports = {
                     const free = getNeighbors(gi).filter(n => board[n] === 0);
                     if (free.length > 0) {
                         const cells = [{ x: gx, y: gy }]
-                            .concat(free.slice(0, 2).map(n => ({ x: n % BOARD_SIZE, y: Math.floor(n / BOARD_SIZE) })));
+                            .concat(free.slice(0, Math.max(1, P('split_extra') || 2)).map(n => ({ x: n % BOARD_SIZE, y: Math.floor(n / BOARD_SIZE) })));
                         executeMove({ cells: cells, type: currentPieceType, rot: 0 }, turn);
                         fxText(gi, '両替!', '#f59e0b', 1100);
                     } else {

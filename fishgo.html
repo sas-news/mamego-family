@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"fish_range","label":"釣れる最小間合い","min":1,"max":8,"def":2,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1827,7 +1827,7 @@
                         if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE) return;
                         const bi = board[ny * BOARD_SIZE + nx];
                         if (bi === 0) continue;         // 空点は飛び越す
-                        if (bi === opponent && d >= 2) { // 間合いがあれば釣れる
+                        if (bi === opponent && d >= Math.max(1, P('fish_range') || 2)) { // 間合いがあれば釣れる
                             const fi = ny * BOARD_SIZE + nx;
                             const ti = p.y * BOARD_SIZE + p.x;
                             board[fi] = 0;

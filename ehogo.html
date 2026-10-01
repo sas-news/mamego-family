@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"eho_interval","label":"恵方の回る間隔","min":1,"max":12,"def":3,"unit":"手"},{"key":"eho_width","label":"恵方帯の幅","min":1,"max":4,"def":2,"unit":"列"},{"key":"fortune_pts","label":"恵方ボーナス","min":0,"max":10,"def":2,"unit":"点"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":3,"def":0.75,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1807,7 +1807,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1865,9 +1865,9 @@
             {
                 const cell = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (ehoZoneCells().has(cell)) {
-                    st.fortune[player] += 2;
+                    st.fortune[player] += (P('fortune_pts') || 2);
                     fxGlow(cell, '#fb923c', 800);
-                    fxText(cell, '恵方 +2', '#fb923c', 1100);
+                    fxText(cell, '恵方 +' + (P('fortune_pts') || 2), '#fb923c', 1100);
                 }
                 st.ply++;
             }
@@ -2220,13 +2220,14 @@
         }
 
         // 恵方: 3手ごとに北→東→南→西の外2列帯が回る
-        function ehoSide() { return Math.floor(st.ply / 3) % 4; }
+        function ehoSide() { return Math.floor(st.ply / Math.max(1, P('eho_interval') || 3)) % 4; }
         function ehoZoneCells() {
             const s = ehoSide(), cells = new Set();
+            const w = Math.max(1, P('eho_width') || 2);
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 const inZone =
-                    (s === 0 && y < 2) || (s === 1 && x >= BOARD_SIZE - 2) ||
-                    (s === 2 && y >= BOARD_SIZE - 2) || (s === 3 && x < 2);
+                    (s === 0 && y < w) || (s === 1 && x >= BOARD_SIZE - w) ||
+                    (s === 2 && y >= BOARD_SIZE - w) || (s === 3 && x < w);
                 if (inZone) cells.add(y * BOARD_SIZE + x);
             }
             return cells;

@@ -322,7 +322,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"fire_uses","label":"火計の使用回数","options":[{"v":1,"l":"1回"},{"v":2,"l":"2回"},{"v":3,"l":"3回"}],"def":1},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":3,"def":0.8,"step":0.05,"hint":"交点数×倍率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -640,7 +640,7 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        let st = { used: { 1: false, 2: false }, arm: { 1: false, 2: false } };
+        let st = { used: { 1: false, 2: false }, arm: { 1: false, 2: false }, burns: { 1: 0, 2: 0 } };
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -752,7 +752,7 @@
                     2: PIECE_TYPES.includes(s.heldPieces[2]) ? s.heldPieces[2] : null }
                 : { 1: null, 2: null };
             holdUsed = !!s.holdUsed;
-            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { used: { 1: false, 2: false }, arm: { 1: false, 2: false } };
+            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { used: { 1: false, 2: false }, arm: { 1: false, 2: false }, burns: { 1: 0, 2: 0 } };
             gameMode = ['local', 'ai', 'online'].includes(s.gameMode) ? s.gameMode : 'local';
             aiPlayer = s.aiPlayer === 1 ? 1 : 2;
             myOnlineRole = s.myOnlineRole || null;
@@ -1814,7 +1814,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1887,7 +1887,8 @@
                     });
                 });
                 if (burned > 0) {
-                    st.used[player] = true;
+                    st.burns[player] = (st.burns[player] || 0) + 1;
+                    if (st.burns[player] >= Math.max(1, P('fire_uses') || 1)) st.used[player] = true;
                     fxGlow(mi, '#fbbf24', 800);
                     fxShake(9, 420);
                     fxText(mi, '火計! +' + burned, '#fb923c', 1400);
@@ -2139,7 +2140,7 @@
             if (snap.pieceQueue) pieceQueue = snap.pieceQueue;
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
             holdUsed = !!snap.holdUsed;
-            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { used: { 1: false, 2: false }, arm: { 1: false, 2: false } };
+            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { used: { 1: false, 2: false }, arm: { 1: false, 2: false }, burns: { 1: 0, 2: 0 } };
             previewPos = null;
             updateUI();
 
@@ -2521,7 +2522,7 @@
             if (data.pieceQueue) pieceQueue = data.pieceQueue;
             if (data.heldPieces) heldPieces = { ...data.heldPieces };
             holdUsed = !!data.holdUsed;
-            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { used: { 1: false, 2: false }, arm: { 1: false, 2: false } };
+            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { used: { 1: false, 2: false }, arm: { 1: false, 2: false }, burns: { 1: 0, 2: 0 } };
             previewPos = null;
 
             if (gamePhase === 'dead_stone_selection') {
@@ -2791,7 +2792,7 @@
         function resetGame() {
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            st = { used: { 1: false, 2: false }, arm: { 1: false, 2: false } };
+            st = { used: { 1: false, 2: false }, arm: { 1: false, 2: false }, burns: { 1: 0, 2: 0 } };
             pieces = [];
             turn = 1;
             captures = { 1: 0, 2: 0 };

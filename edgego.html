@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"edge_width","label":"着手可能な帯の幅","min":1,"max":4,"def":2,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -963,7 +963,8 @@
             ctx2.lineDashOffset = -now / 55;
             ctx2.strokeStyle = 'rgba(235,90,70,0.55)';
             ctx2.lineWidth = Math.max(1.5, cs * 0.07);
-            ctx2.strokeRect(pad + 1.5 * cs, pad + 1.5 * cs, (BOARD_SIZE - 3) * cs, (BOARD_SIZE - 3) * cs);
+            const _ew = P('edge_width') || 2;
+            ctx2.strokeRect(pad + (_ew - 0.5) * cs, pad + (_ew - 0.5) * cs, (BOARD_SIZE - 2 * _ew + 1) * cs, (BOARD_SIZE - 2 * _ew + 1) * cs);
             ctx2.restore();
         });
         // 静的層キャッシュ: エフェクトフレームでは全面再描画せずオフスクリーンを貼る
@@ -1162,7 +1163,8 @@
             {
                 ctx.save();
                 ctx.fillStyle = alphaColor(shiftColor(currentTheme.boardBg, -0.5), 0.55);
-                const bx = padding + 1.5 * cellSize, bw = (BOARD_SIZE - 3) * cellSize;
+                const _ew = P('edge_width') || 2;
+                const bx = padding + (_ew - 0.5) * cellSize, bw = (BOARD_SIZE - 2 * _ew + 1) * cellSize;
                 if (bw > 0) ctx.fillRect(bx, bx, bw, bw);
                 ctx.restore();
             }
@@ -1809,7 +1811,7 @@
             {
                 for (const p of cells) {
                     const edge = Math.min(p.x, p.y, BOARD_SIZE - 1 - p.x, BOARD_SIZE - 1 - p.y);
-                    if (edge > 1) return false;
+                    if (edge > (P('edge_width') || 2) - 1) return false;
                 }
             }
 

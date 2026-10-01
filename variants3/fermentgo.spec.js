@@ -10,6 +10,12 @@ module.exports = {
     icon: 'fermentgo',
     spec: [
         ...K.rb('FERMENTGO', '発酵碁', 'fermentgo'),
+        K.params([
+            { key: 'mature_age', label: '熟成までの手数', min: 5, max: 60, def: 15, unit: '手' },
+            { key: 'mature_pts', label: '熟成ボーナス', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'rot_age', label: '腐るまでの手数', min: 15, max: 120, def: 30, unit: '手' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let fermentDetail = { 1: 0, 2: 0 }; // 直近終局で計上した熟成の数`],
         [K.ONE, K.PIECES_PUSH, `            pieces.push({
@@ -26,7 +32,7 @@ module.exports = {
             // 発酵: 30手を超えた最古の自菌は腐って落ちる (各手番1個)
             {
                 const rotten = pieces.filter(pc => pc.player === player &&
-                    (history.length - (pc.at || 0)) >= 30 &&
+                    (history.length - (pc.at || 0)) >= Math.max(1, P('rot_age') || 30) &&
                     pc.cells.every(p => board[p.y * BOARD_SIZE + p.x] === pc.player));
                 if (rotten.length > 0) {
                     const pc = rotten[0];
@@ -41,7 +47,7 @@ module.exports = {
             }
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -56,21 +62,21 @@ module.exports = {
             pieces.forEach(pc => {
                 const alive = pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
                 if (!alive) return;
-                if (history.length - (pc.at || 0) < 15) return;
+                if (history.length - (pc.at || 0) < Math.max(1, P('mature_age') || 15)) return;
                 fermentDetail[pc.player]++;
-                if (pc.player === 1) territory.black++; else territory.white++;
+                if (pc.player === 1) territory.black += (P('mature_pts') || 1); else territory.white += (P('mature_pts') || 1);
             });`],
         ...K.STONE_MARKS_SPEC(`            // 熟成中の菌: 泡のドット
             {
                 ctx.save();
                 pieces.forEach(pc => {
                     const age = history.length - (pc.at || 0);
-                    if (age < 10 || age >= 30) return;
+                    if (age < Math.max(1, (P('mature_age') || 15) - 5) || age >= (P('rot_age') || 30)) return;
                     pc.cells.forEach(c => {
                         const i = c.y * BOARD_SIZE + c.x;
                         if (board[i] !== pc.player) return;
                         const cx = padding + c.x * cellSize, cy = padding + c.y * cellSize;
-                        ctx.fillStyle = age >= 15 ? 'rgba(163,230,53,0.85)' : 'rgba(217,249,157,0.6)';
+                        ctx.fillStyle = age >= (P('mature_age') || 15) ? 'rgba(163,230,53,0.85)' : 'rgba(217,249,157,0.6)';
                         ctx.beginPath();
                         ctx.arc(cx - cellSize * 0.12, cy - cellSize * 0.18, cellSize * 0.07, 0, Math.PI * 2);
                         ctx.fill();

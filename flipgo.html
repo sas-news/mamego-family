@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"flip_dirs","label":"挟撃の方向","options":[{"v":"hv","l":"縦横のみ"},{"v":"all","l":"縦横+斜め"}],"def":"hv"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1826,8 +1826,11 @@
                     const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
                     const at = (xx, yy) => (xx >= 0 && yy >= 0 && xx < BOARD_SIZE && yy < BOARD_SIZE)
                         ? board[yy * BOARD_SIZE + xx] : -1;
+                    const diag = (P('flip_dirs') || 'hv') === 'all';
                     if ((at(x - 1, y) === player && at(x + 1, y) === player)
-                        || (at(x, y - 1) === player && at(x, y + 1) === player)) {
+                        || (at(x, y - 1) === player && at(x, y + 1) === player)
+                        || (diag && ((at(x - 1, y - 1) === player && at(x + 1, y + 1) === player)
+                            || (at(x - 1, y + 1) === player && at(x + 1, y - 1) === player)))) {
                         flips.push(i);
                     }
                 }

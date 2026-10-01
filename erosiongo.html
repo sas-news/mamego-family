@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"flood_interval","label":"増水の間隔","min":6,"max":60,"def":25,"unit":"手"},{"key":"ply_cap","label":"打ち切り手数","min":60,"max":600,"def":150,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1806,7 +1806,7 @@
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= Math.max(1, P('ply_cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1862,8 +1862,9 @@
 
             // 増水: 25手ごとに川岸(上下の辺)の石が流れに攫われる — アゲハマにならず海へ
             {
-                const flood = Math.floor(history.length / 25);
-                if (flood !== st.lastFlood && history.length % 25 === 0) {
+                const fi = Math.max(1, P('flood_interval') || 25);
+                const flood = Math.floor(history.length / fi);
+                if (flood !== st.lastFlood && history.length % fi === 0) {
                     st.lastFlood = flood;
                     let swept = 0;
                     for (let x = 0; x < BOARD_SIZE; x++) {
@@ -2757,7 +2758,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('増水まで' + (25 - (history.length % 25)) + '手');
+                const et = gameOver ? '' : ('増水まで' + ((P('flood_interval') || 25) - (history.length % (P('flood_interval') || 25))) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

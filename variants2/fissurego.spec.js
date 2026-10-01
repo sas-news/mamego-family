@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('FISSUREGO', '断裂碁', 'fissurego'),
+        K.params([
+            { key: 'crack_len', label: '亀裂の届く石数', min: 1, max: 4, def: 2, unit: '石', hint: '取跡から直線状に' },
+        ]),
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => { board[idx] = 0; fxBurst(idx, '#78716c', 8, 1.4); });
@@ -21,11 +24,13 @@ module.exports = {
                         if (board[n] !== player) return;
                         const nx = n % BOARD_SIZE, ny = Math.floor(n / BOARD_SIZE);
                         const dx = nx - cx, dy = ny - cy;
-                        cracked.add(n);
-                        const n2 = (ny + dy) * BOARD_SIZE + (nx + dx);
-                        const nx2 = nx + dx, ny2 = ny + dy;
-                        if (nx2 >= 0 && nx2 < BOARD_SIZE && ny2 >= 0 && ny2 < BOARD_SIZE
-                            && board[n2] === player) cracked.add(n2);
+                        for (let k = 1; k <= Math.max(1, P('crack_len') || 2); k++) {
+                            const xx = cx + dx * k, yy = cy + dy * k;
+                            if (xx < 0 || xx >= BOARD_SIZE || yy < 0 || yy >= BOARD_SIZE) break;
+                            const ii = yy * BOARD_SIZE + xx;
+                            if (board[ii] !== player) break;
+                            cracked.add(ii);
+                        }
                     });
                 });
                 if (cracked.size > 0) {

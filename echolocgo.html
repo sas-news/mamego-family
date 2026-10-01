@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"sonar_range","label":"反響の届く範囲","min":1,"max":6,"def":2,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1303,7 +1303,7 @@
             for (let j = 0; j < board.length; j++) {
                 if (board[j] !== viewer) continue;
                 const jx = j % BOARD_SIZE, jy = Math.floor(j / BOARD_SIZE);
-                if (Math.max(Math.abs(jx - x), Math.abs(jy - y)) <= 2) return true;
+                if (Math.max(Math.abs(jx - x), Math.abs(jy - y)) <= (P('sonar_range') || 2)) return true;
             }
             return false;
         }
@@ -2762,7 +2762,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('反響: 自石の2マス以内のみ可視');
+                const et = gameOver ? '' : ('反響: 自石の' + (P('sonar_range') || 2) + 'マス以内のみ可視');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

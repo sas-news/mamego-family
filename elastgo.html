@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"max_len","label":"ピースの最大の長さ","min":1,"max":5,"def":3,"unit":"連"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -621,7 +621,17 @@
         });
 
         // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
-        ORIENTATIONS.STONE = [[[0,0]],[[0,0],[1,0]],[[0,0],[0,1]],[[0,0],[1,0],[2,0]],[[0,0],[0,1],[0,2]]];
+        function buildElastOris() {
+            const L = Math.max(1, P('max_len') || 3);
+            ORIENTATIONS.STONE = [];
+            for (let l = 1; l <= L; l++) {
+                ORIENTATIONS.STONE.push(Array.from({ length: l }, (_, k) => [k, 0]));
+                if (l > 1) ORIENTATIONS.STONE.push(Array.from({ length: l }, (_, k) => [0, k]));
+            }
+        }
+        buildElastOris();
+        // 設定変更でピース形を即時再構成
+        function onVariantParam(p) { if (p.key === 'max_len') buildElastOris(); }
 
         // 全7種1巡バッグ (テトリス方式) のシャッフル
         function shuffledBag() {

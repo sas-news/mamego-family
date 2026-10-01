@@ -9,6 +9,9 @@ module.exports = {
     kind: 'echo',
     spec: [
         ...K.rb('ECHOGO', '残響碁', 'echogo'),
+        K.params([
+            { key: 'echo_range', label: '残響の範囲', min: 1, max: 5, def: 2, unit: 'マス' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -27,7 +30,7 @@ module.exports = {
                 if (anchor) {
                     for (const p of cells) {
                         const d = Math.max(Math.abs(p.x - anchor.x), Math.abs(p.y - anchor.y));
-                        if (d > 2) return false;
+                        if (d > (P('echo_range') || 2)) return false;
                     }
                 }
             }`],
@@ -44,8 +47,9 @@ module.exports = {
                 if (anc) {
                     ctx.save();
                     ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.12);
-                    ctx.fillRect(padding + (anc.x - 2.5) * cellSize, padding + (anc.y - 2.5) * cellSize,
-                        cellSize * 5, cellSize * 5);
+                    const _er = P('echo_range') || 2;
+                    ctx.fillRect(padding + (anc.x - _er - 0.5) * cellSize, padding + (anc.y - _er - 0.5) * cellSize,
+                        cellSize * (_er * 2 + 1), cellSize * (_er * 2 + 1));
                     ctx.restore();
                 }
             }`),

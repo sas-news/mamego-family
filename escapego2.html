@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"span_dir","label":"縦断の方向","options":[{"v":"v","l":"縦断のみ"},{"v":"h","l":"横断のみ"},{"v":"any","l":"縦横どちらでも"}],"def":"v"},{"key":"ply_cap","label":"打ち切り手数","min":60,"max":600,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1847,7 +1847,7 @@
                 }
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();
@@ -2216,17 +2216,24 @@
                 const queue = [i];
                 visited[i] = true;
                 let top = false, bottom = false;
+                let left = false, right = false;
                 while (queue.length > 0) {
                     const cur = queue.shift();
                     group.push(cur);
-                    const cy = Math.floor(cur / BOARD_SIZE);
+                    const cx = cur % BOARD_SIZE, cy = Math.floor(cur / BOARD_SIZE);
                     if (cy === 0) top = true;
                     if (cy === BOARD_SIZE - 1) bottom = true;
+                    if (cx === 0) left = true;
+                    if (cx === BOARD_SIZE - 1) right = true;
                     getNeighbors(cur).forEach(n => {
                         if (board[n] === player && !visited[n]) { visited[n] = true; queue.push(n); }
                     });
                 }
-                if (top && bottom) return group[0];
+                const dir = P('span_dir') || 'v';
+                const spanned = dir === 'v' ? (top && bottom)
+                    : dir === 'h' ? (left && right)
+                    : ((top && bottom) || (left && right));
+                if (spanned) return group[0];
             }
             return -1;
         }

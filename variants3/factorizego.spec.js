@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'factorizego',
     spec: [
         ...K.rb('FACTORIZEGO', '素因数碁', 'factorizego'),
+        K.params([
+            { key: 'prime_pts', label: '素点ボーナス', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 素数番地の着手は +1目 (両者対象・対称)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -66,8 +70,8 @@ module.exports = {
                     st.primes = __isp;
                 }
                 if (__isp[__pi]) {
-                    st.bonus[player] = (st.bonus[player] || 0) + 1;
-                    fxText(__pi, '+1 素点', '#a78bfa', 900);
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('prime_pts') || 1);
+                    fxText(__pi, '+' + (P('prime_pts') || 1) + ' 素点', '#a78bfa', 900);
                     fxGlow(__pi, '#a78bfa', 700);
                 }
             }

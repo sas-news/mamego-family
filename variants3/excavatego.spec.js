@@ -10,6 +10,10 @@ module.exports = {
     icon: 'excavatego',
     spec: [
         ...K.rb('EXCAVATEGO', '発掘碁', 'excavatego'),
+        K.params([
+            { key: 'win_digs', label: '発掘勝ちに必要な数', options: [{ v: 2, l: '2個' }, { v: 3, l: '3個' }, { v: 4, l: '4個' }, { v: 5, l: '5個 (全部)' }], def: 3 },
+            { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 600, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { buried: [], found: { 1: 0, 2: 0 } }; // 埋蔵品の位置と発掘数`],
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
@@ -53,13 +57,13 @@ module.exports = {
                     fxGlow(li, '#eab308', 900);
                     fxText(li, '埋蔵品!', '#eab308', 1300);
                 }
-                if (st.found[player] >= 3) {
-                    winByRule(player, '発掘勝ち', '埋蔵品を3つ掘り当てました'); return;
+                if (st.found[player] >= Math.min(5, Math.max(1, P('win_digs') || 3))) {
+                    winByRule(player, '発掘勝ち', '埋蔵品を' + Math.min(5, Math.max(1, P('win_digs') || 3)) + 'つ掘り当てました'); return;
                 }
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

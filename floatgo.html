@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"float_interval","label":"浮上の間隔","min":1,"max":12,"def":3,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1865,7 +1865,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 浮遊ルール: 3手ごとに、各連について全セルの真上が空(または連内)なら連ごと1マス浮く
-            if (history.length % 3 === 0) {
+            if (history.length % Math.max(1, P('float_interval') || 3) === 0) {
                 const N = BOARD_SIZE;
                 const seen = new Uint8Array(N * N);
                 for (let s = 0; s < board.length; s++) {

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"escal_interval","label":"エスカレーターの間隔","min":1,"max":12,"def":3,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1869,7 +1869,7 @@
 
             // 昇降ルール: 中央列は3手ごとに循環するエスカレーター。列の全セルが1マス上へ動き、
             //             最上段の内容は最下段へ回る。
-            if (history.length % 3 === 0) {
+            if (history.length % Math.max(1, P('escal_interval') || 3) === 0) {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
                 const first = board[c];
                 for (let y = 0; y < N - 1; y++) {

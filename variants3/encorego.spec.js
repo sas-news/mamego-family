@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'encorego',
     spec: [
         ...K.rb('ENCOREGO', '完奏碁', 'encorego'),
+        K.params([
+            { key: 'note_pts', label: '1音ごとの得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'win_notes', label: '完奏に必要な音数', options: [{ v: 4, l: '4音' }, { v: 6, l: '6音' }, { v: 8, l: '8音 (全曲)' }], def: 8 },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 補助関数をページスコープへ注入
         [K.ONE, `        function executeMove(move, player) {`, `        // 楽譜: 盤に描かれた8音 (ドレミのメロディ)
@@ -93,19 +98,19 @@ const melodyIdx = (k) => MELODY[k][1] * BOARD_SIZE + MELODY[k][0];
             // 完奏碁: 自分の次の音符点に自石がある限り演奏が進む
             while (st.pos[player] < MELODY.length && board[melodyIdx(st.pos[player])] === player) {
                 const ni = melodyIdx(st.pos[player]);
-                captures[player]++;
+                captures[player] += (P('note_pts') || 1);
                 st.pos[player]++;
                 fxText(ni, '♪', '#e879f9', 1000);
                 fxGlow(ni, '#e879f9', 700);
             }
-            if (st.pos[player] >= MELODY.length) {
+            if (st.pos[player] >= Math.min(MELODY.length, Math.max(1, P('win_notes') || 8))) {
                 fxShake(6, 360);
                 winByRule(player, '完奏勝ち', 'メロディを一曲演奏し切りました');
                 return;
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'次の音符 ' + ((st.pos[turn] || 0) + 1) + '/8'`),
+        ...K.EVENT_CHIP_SPEC(`'次の音符 ' + ((st.pos[turn] || 0) + 1) + '/' + Math.min(8, Math.max(1, P('win_notes') || 8))`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            完奏碁: 盤の音符点を1番から順に自石で埋める。8音を完奏した側が即勝ち (1音ごと+1目)<br>
             PC: クリックで配置<br>
