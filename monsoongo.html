@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"season","label":"季節の周期","min":4,"max":30,"def":12,"unit":"手","hint":"N手で雨季と乾季が交互に来る"},{"key":"flood_rows","label":"冠水行数","min":1,"max":6,"def":2,"unit":"行"},{"key":"cap_factor","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":1.1,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1327,10 +1327,10 @@
 
         function drawStoneMarks(padding, cellSize) {
             // 雨季: 下2段を水面で覆う
-            if (Math.floor(history.length / 12) % 2 === 1) {
+            if (Math.floor(history.length / Math.max(1, P('season') || 12)) % 2 === 1) {
                 ctx.save();
                 ctx.fillStyle = 'rgba(59,130,246,0.35)';
-                for (let x = 0; x < BOARD_SIZE; x++) for (let y = BOARD_SIZE - 2; y < BOARD_SIZE; y++) {
+                for (let x = 0; x < BOARD_SIZE; x++) for (let y = BOARD_SIZE - (P('flood_rows') || 2); y < BOARD_SIZE; y++) {
                     ctx.fillRect(padding + x * cellSize - cellSize / 2, padding + y * cellSize - cellSize / 2, cellSize, cellSize);
                 }
                 // 水面の波線
@@ -1338,7 +1338,7 @@
                 ctx.lineWidth = Math.max(1, cellSize * 0.05);
                 for (let x = 0; x < BOARD_SIZE - 1; x++) {
                     const cx = padding + (x + 0.5) * cellSize;
-                    const cy = padding + (BOARD_SIZE - 2) * cellSize - cellSize / 2;
+                    const cy = padding + (BOARD_SIZE - (P('flood_rows') || 2)) * cellSize - cellSize / 2;
                     ctx.beginPath();
                     ctx.arc(cx, cy, cellSize * 0.4, 0, Math.PI);
                     ctx.stroke();
@@ -1787,11 +1787,11 @@
         }
 
         function isValidPlacement(cells, player) {
-            const wet = Math.floor(history.length / 12) % 2 === 1;
+            const wet = Math.floor(history.length / Math.max(1, P('season') || 12)) % 2 === 1;
             for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
-                if (wet && p.y >= BOARD_SIZE - 2) return false; // 雨季の低地は水没
+                if (wet && p.y >= BOARD_SIZE - (P('flood_rows') || 2)) return false; // 雨季の低地は水没
             }
 
             // 仮配置
@@ -1865,14 +1865,14 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 季節: 12手ごとに雨季/乾季が巡る (両者共通)
-            if (history.length % 12 === 0) {
-                const nowWet = Math.floor(history.length / 12) % 2 === 1;
+            if (history.length % Math.max(1, P('season') || 12) === 0) {
+                const nowWet = Math.floor(history.length / Math.max(1, P('season') || 12)) % 2 === 1;
                 if (nowWet) {
                     // 雨季: 下2段が水没 — その帯の石は全て流される (アゲハマにはならない)。全滅はさせない
                     const washed = [];
                     for (let i = 0; i < board.length; i++) {
                         const ty = Math.floor(i / BOARD_SIZE);
-                        if (ty >= BOARD_SIZE - 2 && (board[i] === 1 || board[i] === 2)) washed.push(i);
+                        if (ty >= BOARD_SIZE - (P('flood_rows') || 2) && (board[i] === 1 || board[i] === 2)) washed.push(i);
                     }
                     if (washed.length < board.filter(v => v === 1 || v === 2).length) {
                         washed.forEach(i => { board[i] = 0; fxSplash(i, '#3b82f6', 6); });
@@ -1885,7 +1885,7 @@
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -2762,7 +2762,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (Math.floor(history.length / 12) % 2 === 1 ? '雨季' : '乾季');
+                const et = gameOver ? '' : (Math.floor(history.length / Math.max(1, P('season') || 12)) % 2 === 1 ? '雨季' : '乾季');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

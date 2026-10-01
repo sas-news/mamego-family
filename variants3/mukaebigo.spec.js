@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'mukaebigo',
     spec: [
         ...K.rb('MUKAEBIGO', '迎火碁', 'mukaebigo'),
+        K.params([
+            { key: 'spirit_pts', label: '迎え火1箇所の得点', min: 0, max: 12, def: 4, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 精霊を四隅の星に配置 (中立障害 board=4)
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             // 彷徨う精霊を四隅の星に置く (中立: 置けず呼吸も通らない)
@@ -46,7 +50,7 @@ module.exports = {
                 });
                 if (a > 0 && a > b) n++;
             }
-            return n * 4;
+            return n * (P('spirit_pts') ?? 4);
         }
 
         function endGameByScore() {`],

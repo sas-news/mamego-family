@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"feed_goal","label":"養分の目標数","min":1,"max":8,"def":3,"unit":"個","hint":"菌糸が収穫で得られる栄養数"},{"key":"cap","label":"打ち切り手数","min":50,"max":300,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1898,7 +1898,7 @@
                             st.fed[player]++;
                             fxBurst(ni, '#84cc16', 10, 1.6);
                             fxText(ni, '吸収!', '#84cc16', 1200);
-                            if (st.fed[player] >= 3) {
+                            if (st.fed[player] >= Math.max(1, P('feed_goal') || 3)) {
                                 winByRule(player, '菌糸支配', '栄養源を3つ吸収しました'); return;
                             }
                         }
@@ -1907,7 +1907,7 @@
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

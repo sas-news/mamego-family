@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= Math.max(1, P('cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'migrationgo',
     spec: [
         ...K.rb('MIGRATIONGO', '渡り碁', 'migrationgo'),
+        K.params([
+            { key: 'season', label: '季節の周期', min: 10, max: 60, def: 30, unit: '手' },
+            { key: 'mig_dist', label: '渡りの距離', min: 1, max: 6, def: 2, unit: '列' },
+            { key: 'cap', label: '打ち切り手数', min: 60, max: 400, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { south: true, lastSeason: 0 }; // 渡り方向と最終季節`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -52,10 +57,11 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 渡り: 30手ごとの季節の変わり目に、全石が2列分 南→北→…と移動する
+            // 渡り: N手ごとの季節の変わり目に、全石がK列分 南→北→…と移動する
             {
-                const season = Math.floor(history.length / 30);
-                if (season !== st.lastSeason && history.length % 30 === 0) {
+                const __si = Math.max(1, P('season') || 30);
+                const season = Math.floor(history.length / __si);
+                if (season !== st.lastSeason && history.length % __si === 0) {
                     st.lastSeason = season;
                     const dir = st.south ? 1 : -1; // 交互に南/北へ
                     st.south = !st.south;
@@ -66,7 +72,7 @@ module.exports = {
                     let moved = 0;
                     order.forEach(i => {
                         const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
-                        const ny = y + dir * 2;
+                        const ny = y + dir * (P('mig_dist') || 2);
                         if (ny < 0 || ny >= BOARD_SIZE) return; // 端に押し止められる
                         const ni = ny * BOARD_SIZE + x;
                         if (board[ni] !== 0) return; // 渡り先が塞がっている
@@ -86,7 +92,7 @@ module.exports = {
 
             turn = opponent;`],
         // 渡りの季節までのカウントを表示
-        ...K.EVENT_CHIP_SPEC(`'渡りまで' + (30 - (history.length % 30)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'渡りまで' + (Math.max(1, P('season') || 30) - (history.length % Math.max(1, P('season') || 30))) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            渡り碁: 30手ごとに全石が季節方向へ2列渡る<br>
             PC: クリックで配置<br>

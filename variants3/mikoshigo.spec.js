@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,12 +27,17 @@ module.exports = {
     icon: 'mikoshigo',
     spec: [
         ...K.rb('MIKOSHIGO', '神輿碁', 'mikoshigo'),
+        K.params([
+            { key: 'interval', label: '揺れの間隔', min: 2, max: 18, def: 6, unit: '手' },
+            { key: 'min_group', label: 'こぼれる連の最小サイズ', min: 2, max: 8, def: 3, unit: '石' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 神輿の揺れ: 6手ごとに各側の最大連 (3石以上) の先端石がこぼれ落ちる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 神輿の揺れ: 6手ごとに各側の最大連の先端 (最も薄い繋がりの石) が1つこぼれる
-            if (history.length % 6 === 0) {
+            // 神輿の揺れ: N手ごとに各側の最大連の先端 (最も薄い繋がりの石) が1つこぼれる
+            if (history.length % Math.max(1, P('interval') || 6) === 0) {
                 fxShake(6, 400);
                 [1, 2].forEach(pl => {
                     const seen = new Set();
@@ -43,7 +48,7 @@ module.exports = {
                         grp.forEach(g => seen.add(g));
                         if (grp.length > biggest.length) biggest = grp;
                     }
-                    if (biggest.length < 3) return;
+                    if (biggest.length < (P('min_group') || 3)) return;
                     // 先端 = 連内の味方近傍が最も少ない石
                     let minBond = Infinity;
                     biggest.forEach(g => {
@@ -69,7 +74,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'神輿の揺れまで ' + (6 - history.length % 6) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'神輿の揺れまで ' + (Math.max(1, P('interval') || 6) - history.length % Math.max(1, P('interval') || 6)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            神輿碁: 6手ごとの揺れで各側の最大連 (3石以上) の先端石がこぼれ落ちる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

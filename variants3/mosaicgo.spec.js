@@ -10,13 +10,19 @@ module.exports = {
     icon: 'mosaicgo',
     spec: [
         ...K.rb('MOSAICGO', '嵌像碁', 'mosaicgo'),
+        K.params([
+            { key: 'crane_span', label: '鶴紋の大きさ', min: 1, max: 5, def: 2, unit: 'マス', hint: '斜めに並ぶ羽根のマス数' },
+            { key: 'cap', label: '打ち切り手数', min: 50, max: 300, def: 140, unit: '手' },
+        ]),
         [K.ONE, '        function endGameByScore() {', K.WIN_BY_RULE_FN + `
         function endGameByScore() {`],
         // 鶴判定関数 + 手番終了時の模様チェック
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        // 鶴模様: 頂点から翼へ広がるV字5連を4方向で検査
         function craneHit(player) {
-            const base = [[0, 0], [-1, 1], [1, 1], [-2, 2], [2, 2]];
+            const __sp = Math.max(1, P('crane_span') || 2);
+            const base = [[0, 0]];
+            for (let k = 1; k <= __sp; k++) { base.push([-k, k], [k, k]); }
             const rots = [
                 base,
                 base.map(([x, y]) => [y, -x]),
@@ -56,7 +62,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

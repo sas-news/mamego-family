@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'mochitsukigo',
     spec: [
         ...K.rb('MOCHITSUKIGO', '餅搗碁', 'mochitsukigo'),
+        K.params([
+            { key: 'min_libs', label: '伸びる条件の呼吸点', min: 1, max: 6, def: 2, hint: '連の呼吸点がこの数以上の時だけ餅が伸びる' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 餅搗き: 着手した連が呼吸点2以上なら、連が1つ空点へ伸びる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -50,7 +54,7 @@ module.exports = {
                 grp.forEach(c => getNeighbors(c).forEach(n => {
                     if (board[n] === 0) libs.add(n);
                 }));
-                if (libs.size >= 2) {
+                if (libs.size >= (P('min_libs') || 2)) {
                     // 最も盤中央寄りの呼吸点へ1石伸びる (ランダムではなく決定的)
                     const cc = (BOARD_SIZE - 1) / 2;
                     const grow = [...libs].sort((a, b) =>

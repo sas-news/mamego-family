@@ -10,6 +10,10 @@ module.exports = {
     icon: 'myceliumgo',
     spec: [
         ...K.rb('MYCELIUMGO', '菌糸碁', 'myceliumgo'),
+        K.params([
+            { key: 'feed_goal', label: '養分の目標数', min: 1, max: 8, def: 3, unit: '個', hint: '菌糸が収穫で得られる栄養数' },
+            { key: 'cap', label: '打ち切り手数', min: 50, max: 300, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { fed: { 1: 0, 2: 0 } }; // 吸収した栄養源の数`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -78,7 +82,7 @@ module.exports = {
                             st.fed[player]++;
                             fxBurst(ni, '#84cc16', 10, 1.6);
                             fxText(ni, '吸収!', '#84cc16', 1200);
-                            if (st.fed[player] >= 3) {
+                            if (st.fed[player] >= Math.max(1, P('feed_goal') || 3)) {
                                 winByRule(player, '菌糸支配', '栄養源を3つ吸収しました'); return;
                             }
                         }
@@ -87,7 +91,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

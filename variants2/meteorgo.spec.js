@@ -9,13 +9,16 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('METEORGO', '隕石碁', 'meteorgo'),
+        K.params([
+            { key: 'interval', label: '隕石の間隔', min: 2, max: 20, def: 7, unit: '手' },
+        ]),
         // 7手ごとに隕石落下: 十字形のクレーター(壁)が穿たれ、直撃した石は消滅
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 隕石ルール: 7手ごとに隕石が落ち、十字形のクレーター(壁)ができる。
+            // 隕石ルール: N手ごとに隕石が落ち、十字形のクレーター(壁)ができる。
             //             直撃した石は相手のアゲハマになる。
-            if (history.length % 7 === 0) {
+            if (history.length % Math.max(1, P('interval') || 7) === 0) {
                 const N = BOARD_SIZE, n = history.length;
                 const mx = (n * 5 + 2) % N, my = (n * 7 + 3) % N;
                 const crater = [[mx, my], [mx - 1, my], [mx + 1, my], [mx, my - 1], [mx, my + 1]];
@@ -71,7 +74,7 @@ module.exports = {
                 ctx.restore();
             }`],
         ...K.WALL_GUARD_SPEC,
-        ...K.EVENT_CHIP_SPEC(`'隕石まで ' + (7 - history.length % 7) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`'隕石まで ' + (Math.max(1, P('interval') || 7) - history.length % Math.max(1, P('interval') || 7)) + ' 手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '7手ごとに隕石が落下し、十字形のクレーター(壁)が穿たれる。直撃した石は消滅する。',
             'クレーターは壁となり、呼吸点も地も失う。落下位置は手数で決まり読める。',

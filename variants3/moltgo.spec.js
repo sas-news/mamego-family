@@ -10,6 +10,10 @@ module.exports = {
     icon: 'moltgo',
     spec: [
         ...K.rb('MOLTGO', '脱皮碁', 'moltgo'),
+        K.params([
+            { key: 'shell_pts', label: '抜殻1個の得点', min: 0, max: 4, def: 1, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { shell: {} }; // 殻: idx -> 抜け殻の持ち主 (1|2)
         let moltDetail = { 1: 0, 2: 0 };`],
@@ -54,14 +58,14 @@ module.exports = {
             Object.keys(st.shell).forEach(k => {
                 const i = +k, ow = st.shell[i];
                 if (board[i] === (ow === 1 ? 2 : 1)) return; // 敵に踏まれた殻は無効
-                moltDetail[ow]++;
-                if (ow === 1) territory.black++; else territory.white++;
+                moltDetail[ow] += (P('shell_pts') ?? 1);
+                if (ow === 1) territory.black += (P('shell_pts') ?? 1); else territory.white += (P('shell_pts') ?? 1);
             });`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 endGameByScore();
                 return;
             }

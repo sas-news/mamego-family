@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"revenge","label":"道連れの数","min":0,"max":3,"def":1,"unit":"石","hint":"取られた連1つにつき砕ける敵石の数"},{"key":"cap_factor","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":1.1,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1841,7 +1841,7 @@
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
                 soundManager.playCapture();
-                // 鏡面石: 取られた連1つにつき、接する敵石1個が鏡の反撃で砕ける (アゲハマにはならない)
+                // 鏡面石: 取られた連1つにつき、接する敵石N個が鏡の反撃で砕ける (アゲハマにはならない)
                 {
                     const capSet = new Set(captured);
                     const seen = new Set();
@@ -1857,17 +1857,16 @@
                                 if (capSet.has(n) && !seen.has(n)) { seen.add(n); q.push(n); }
                             });
                         }
-                        let revenged = false;
                         // 自分の最後の石は道連れにしない (全滅防止)
-                        if (board.filter(v => v === player).length <= 1) revenged = true;
+                        let revLeft = Math.min(P('revenge') ?? 1, board.filter(v => v === player).length - 1);
                         for (const gIdx of group) {
-                            if (revenged) break;
+                            if (revLeft <= 0) break;
                             for (const n of getNeighbors(gIdx)) {
                                 if (board[n] === player) {
                                     board[n] = 0;
                                     fxBurst(n, '#bae6fd', 8, 1.4);
                                     fxText(n, '鏡砕', '#38bdf8', 900);
-                                    revenged = true;
+                                    revLeft--;
                                     break;
                                 }
                             }
@@ -1887,8 +1886,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            // 打ち切り: 交点数x係数を超えた長期戦は死に石選択へ (終局不能の防止)
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"spread_prob","label":"増殖確率","min":0.25,"max":1,"def":1,"step":0.05,"hint":"孤立石1個につき増殖する確率"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1878,6 +1878,7 @@
                 }
                 let spread = 0;
                 loners.forEach(l => {
+                    if (Math.random() >= (P('spread_prob') ?? 1)) return;
                     const spot = getNeighbors(l).find(n => board[n] === 0);
                     if (spot !== undefined) {
                         board[spot] = player; spread++;

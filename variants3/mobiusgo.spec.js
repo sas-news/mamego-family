@@ -9,8 +9,8 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
                 endGameByScore();`];
 
 const CAP = `
-            // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            // 打ち切り: 交点数x係数を超えた長期戦は採点終局 (終局不能の防止)
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -26,6 +26,9 @@ module.exports = {
     icon: 'mobiusgo',
     spec: [
         ...K.rb('MOBIUSGO', '帯環碁', 'mobiusgo'),
+        K.params([
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 1.1, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // メビウス接続: 左端の外は右端の反転位置、右端の外は左端の反転位置
         [K.ONE, `        function getNeighbors(idx) {
             const x = idx % BOARD_SIZE;

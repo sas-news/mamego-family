@@ -10,6 +10,10 @@ module.exports = {
     icon: 'monolithgo',
     spec: [
         ...K.rb('MONOLITHGO', '碑石碁', 'monolithgo'),
+        K.params([
+            { key: 'blast_r', label: '崩壊の範囲', min: 1, max: 5, def: 2, hint: '碑を囲んだ時に吹き飛ぶ距離 (マンハッタン距離)' },
+            { key: 'cap', label: '打ち切り手数', min: 50, max: 300, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { mowner: 0 }; // 石碑の覚醒者 (0:未覚醒)。持ち主が代わると再覚醒する`],
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
@@ -56,7 +60,7 @@ module.exports = {
                         let blasted = 0;
                         for (let y = 0; y < BOARD_SIZE; y++) {
                             for (let x = 0; x < BOARD_SIZE; x++) {
-                                if (Math.abs(x - mid) + Math.abs(y - mid) <= 2 && board[y * BOARD_SIZE + x] === foe) {
+                                if (Math.abs(x - mid) + Math.abs(y - mid) <= (P('blast_r') || 2) && board[y * BOARD_SIZE + x] === foe) {
                                     board[y * BOARD_SIZE + x] = 0;
                                     captures[owner]++;
                                     blasted++;
@@ -75,7 +79,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,
@@ -91,7 +95,7 @@ module.exports = {
                 ctx.setLineDash([cellSize * 0.12, cellSize * 0.12]);
                 ctx.lineWidth = Math.max(1, cellSize * 0.04);
                 ctx.beginPath();
-                const rr = 2.55;
+                const rr = (P('blast_r') || 2) + 0.55;
                 ctx.moveTo(padding + (mid - rr) * cellSize, padding + mid * cellSize);
                 ctx.lineTo(padding + mid * cellSize, padding + (mid - rr) * cellSize);
                 ctx.lineTo(padding + (mid + rr) * cellSize, padding + mid * cellSize);

@@ -10,6 +10,9 @@ module.exports = {
     icon: 'missiongo',
     spec: [
         ...K.rb('MISSIONGO', '布教碁', 'missiongo'),
+        K.params([
+            { key: 'cap', label: '打ち切り手数', min: 50, max: 300, def: 140, unit: '手' },
+        ]),
         // 捕獲を「改宗」に置き換え: 取られた敵石は player 色に変わる
         [K.ONE, K.CAPTURE_BLOCK, `            // 布教: 取られた敵石は盤を離れず、player色に改宗する
             const captured = getCapturedStones(board, opponent);
@@ -31,7 +34,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

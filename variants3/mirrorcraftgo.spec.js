@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'mirrorcraftgo',
     spec: [
         ...K.rb('MIRRORCRAFTGO', '鏡磨碁', 'mirrorcraftgo'),
+        K.params([
+            { key: 'mirror_bonus', label: '写りの呼吸ボーナス', min: 0, max: 3, def: 1, hint: '敵石に接した石の連に加算される呼吸点' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 鏡の写り: 敵石に隣接する石は「写って」連の呼吸を共有する (グループ呼吸に+1)
         [K.ONE, `                    let hasLiberty = false;`, `                    let liberties = 0;`],
         [K.ONE, `                                hasLiberty = true;`, `                                liberties++;`],
@@ -36,7 +40,7 @@ module.exports = {
                     if (!hasLiberty) {`,
 `                        });
                         // 鏡: 敵石に接する自軍石は敵を写して守られる
-                        if (getNeighbors(curr).some(n => boardState[n] !== 0 && boardState[n] !== player && boardState[n] !== 3)) liberties++;
+                        if (getNeighbors(curr).some(n => boardState[n] !== 0 && boardState[n] !== player && boardState[n] !== 3)) liberties += (P('mirror_bonus') ?? 1);
                     }
 
                     if (liberties <= 0) {`],
@@ -45,7 +49,7 @@ module.exports = {
             return liberties;`,
 `                });
                 // 鏡: 敵石に接する自軍石は敵を写して守られる
-                if (getNeighbors(curr).some(n => boardState[n] !== 0 && boardState[n] !== player && boardState[n] !== 3)) liberties++;
+                if (getNeighbors(curr).some(n => boardState[n] !== 0 && boardState[n] !== player && boardState[n] !== 3)) liberties += (P('mirror_bonus') ?? 1);
             }
             return liberties;`],
         // 鏡の印: 敵に接した石は銀色の縁を帯びる

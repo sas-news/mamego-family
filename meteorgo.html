@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"interval","label":"隕石の間隔","min":2,"max":20,"def":7,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1881,9 +1881,9 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 隕石ルール: 7手ごとに隕石が落ち、十字形のクレーター(壁)ができる。
+            // 隕石ルール: N手ごとに隕石が落ち、十字形のクレーター(壁)ができる。
             //             直撃した石は相手のアゲハマになる。
-            if (history.length % 7 === 0) {
+            if (history.length % Math.max(1, P('interval') || 7) === 0) {
                 const N = BOARD_SIZE, n = history.length;
                 const mx = (n * 5 + 2) % N, my = (n * 7 + 3) % N;
                 const crater = [[mx, my], [mx - 1, my], [mx + 1, my], [mx, my - 1], [mx, my + 1]];
@@ -2773,7 +2773,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('隕石まで ' + (7 - history.length % 7) + ' 手');
+                const et = gameOver ? '' : ('隕石まで ' + (Math.max(1, P('interval') || 7) - history.length % Math.max(1, P('interval') || 7)) + ' 手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

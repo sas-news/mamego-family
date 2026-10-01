@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'mokugyogo',
     spec: [
         ...K.rb('MOKUGYOGO', '木魚碁', 'mokugyogo'),
+        K.params([
+            { key: 'beat', label: '読経までの拍数', min: 2, max: 8, def: 4, unit: '拍' },
+            { key: 'sutra', label: '読経の得点', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 木魚のリズム: 前の着手点に隣接なら拍が進む。4拍ごとに読経+2アゲハマ
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -59,9 +64,9 @@ module.exports = {
                 if (prev >= 0 && getNeighbors(mi).includes(prev)) {
                     st.beat[player]++;
                     fxGlow(mi, '#fbbf24', 500);
-                    if (st.beat[player] % 4 === 0) {
-                        captures[player] += 2;
-                        fxText(mi, '読経 +2', '#f59e0b', 1200);
+                    if (st.beat[player] % Math.max(1, P('beat') || 4) === 0) {
+                        captures[player] += (P('sutra') ?? 2);
+                        fxText(mi, '読経 +' + (P('sutra') ?? 2), '#f59e0b', 1200);
                         fxShake(3, 240);
                     }
                 } else {
@@ -86,7 +91,7 @@ module.exports = {
                     ctx.restore();
                 }
             }`),
-        ...K.EVENT_CHIP_SPEC(`'拍 ' + st.beat[turn] + '/4'`),
+        ...K.EVENT_CHIP_SPEC(`'拍 ' + (st.beat[turn] % Math.max(1, P('beat') || 4)) + '/' + Math.max(1, P('beat') || 4)`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            木魚碁: 自分の前の石に隣接して打ち続けると木魚の拍。4拍ごとに読経+2目<br>
             PC: クリックで配置<br>

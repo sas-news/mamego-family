@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"bite_pts","label":"吸血1箇所の得点","min":0,"max":5,"def":1,"unit":"目"},{"key":"cap","label":"打ち切り手数","min":60,"max":400,"def":150,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1817,7 +1817,7 @@
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= Math.max(1, P('cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1883,7 +1883,7 @@
                     }
                 });
                 if (sucked) {
-                    st.bonus[player] += sucked;
+                    st.bonus[player] += sucked * (P('bite_pts') ?? 1);
                     fxText(li, '吸血 +' + sucked + '目', '#ef4444', 1100);
                 }
             }

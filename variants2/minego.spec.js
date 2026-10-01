@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('MINEGO', '採掘碁', 'minego'),
+        K.params([
+            { key: 'ore_pts', label: '鉱石1個の得点', min: 0, max: 4, def: 1, unit: '目' },
+        ]),
         // 鉱石 oreCells (Set) と採掘得点 oreScore の状態登録
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let oreCells = new Set(); // 鉱石が出ている空点 (idx)
@@ -47,11 +50,11 @@ module.exports = {
             move.cells.forEach(p => {
                 const oi = p.y * BOARD_SIZE + p.x;
                 if (oreCells.has(oi)) {
-                    oreCells.delete(oi); oreScore[player]++;
+                    oreCells.delete(oi); oreScore[player] += (P('ore_pts') ?? 1);
                     // 採掘演出: 金の粒が飛び散り得点が浮かぶ
                     fxBurst(oi, '#fbbf24', 9, 1.3);
                     fxBurst(oi, '#fde68a', 5, 0.9);
-                    fxText(oi, '+1目', '#fbbf24', 1000);
+                    fxText(oi, '+' + (P('ore_pts') ?? 1) + '目', '#fbbf24', 1000);
                 }
             });`],
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);

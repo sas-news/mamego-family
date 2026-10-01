@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= Math.max(1, P('cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'mimicrygo',
     spec: [
         ...K.rb('MIMICRYGO', '擬態碁', 'mimicrygo'),
+        K.params([
+            { key: 'interval', label: '擬態石の間隔', min: 2, max: 15, def: 5, unit: '手' },
+            { key: 'cap', label: '打ち切り手数', min: 60, max: 400, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { cnt: { 1: 0, 2: 0 }, mimic: {} }; // 着手数・擬態石`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -68,10 +72,10 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 擬態供給: 5手ごとの着手は擬態石になる
+            // 擬態供給: N手ごとの着手は擬態石になる (間隔は設定で調整)
             {
                 st.cnt[player]++;
-                if (st.cnt[player] % 5 === 0) {
+                if (st.cnt[player] % Math.max(1, P('interval') || 5) === 0) {
                     const li = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                     st.mimic[li] = true;
                     fxText(li, '擬態石', '#a78bfa', 900);
@@ -99,7 +103,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`(st.cnt[turn] || 0) % 5 === 4 ? '次は擬態石' : '擬態まで' + (5 - ((st.cnt[turn] || 0) % 5)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`(st.cnt[turn] || 0) % Math.max(1, P('interval') || 5) === Math.max(1, P('interval') || 5) - 1 ? '次は擬態石' : '擬態まで' + (Math.max(1, P('interval') || 5) - ((st.cnt[turn] || 0) % Math.max(1, P('interval') || 5))) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            擬態碁: 5手ごとの石は擬態し、一度だけ取りを免れる<br>
             PC: クリックで配置<br>

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"fire_interval","label":"火事の間隔","min":5,"max":40,"def":15,"unit":"手"},{"key":"fire_proof","label":"耐火の連サイズ","min":1,"max":8,"def":3,"unit":"石","hint":"この数以上の連は火事で焼けない"},{"key":"cap_factor","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":0.9,"step":0.05,"hint":"交点数×この係数で強制終局"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -639,7 +639,7 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        let st = { score: { 1: 0, 2: 0 }, _end: false, nextFire: 15 };
+        let st = { score: { 1: 0, 2: 0 }, _end: false, nextFire: (P('fire_interval') || 15) };
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -751,7 +751,7 @@
                     2: PIECE_TYPES.includes(s.heldPieces[2]) ? s.heldPieces[2] : null }
                 : { 1: null, 2: null };
             holdUsed = !!s.holdUsed;
-            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { score: { 1: 0, 2: 0 }, _end: false, nextFire: 15 };
+            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { score: { 1: 0, 2: 0 }, _end: false, nextFire: (P('fire_interval') || 15) };
             gameMode = ['local', 'ai', 'online'].includes(s.gameMode) ? s.gameMode : 'local';
             aiPlayer = s.aiPlayer === 1 ? 1 : 2;
             myOnlineRole = s.myOnlineRole || null;
@@ -1807,7 +1807,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1863,7 +1863,7 @@
 
             // 鼠壁火事: nextFire手ごとに3x3区域に火が入る。小連(2石以下)は焼失
             if (history.length === st.nextFire) {
-                st.nextFire += 15;
+                st.nextFire += (P('fire_interval') || 15);
                 const fx = 1 + Math.floor(Math.random() * (BOARD_SIZE - 2));
                 const fy = 1 + Math.floor(Math.random() * (BOARD_SIZE - 2));
                 for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
@@ -1871,7 +1871,7 @@
                     const v = board[idx];
                     if (v === 0) continue;
                     const g = getConnectedGroup(idx, v);
-                    if (g.length <= 2) {
+                    if (g.length < (P('fire_proof') || 3)) {
                         g.forEach(i => { if (board[i] === v) board[i] = 0; });
                         captures[v === 1 ? 2 : 1] += g.length;
                     }
@@ -2113,7 +2113,7 @@
             if (snap.pieceQueue) pieceQueue = snap.pieceQueue;
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
             holdUsed = !!snap.holdUsed;
-            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { score: { 1: 0, 2: 0 }, _end: false, nextFire: 15 };
+            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { score: { 1: 0, 2: 0 }, _end: false, nextFire: (P('fire_interval') || 15) };
             previewPos = null;
             updateUI();
 
@@ -2503,7 +2503,7 @@
             if (data.pieceQueue) pieceQueue = data.pieceQueue;
             if (data.heldPieces) heldPieces = { ...data.heldPieces };
             holdUsed = !!data.holdUsed;
-            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { score: { 1: 0, 2: 0 }, _end: false, nextFire: 15 };
+            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { score: { 1: 0, 2: 0 }, _end: false, nextFire: (P('fire_interval') || 15) };
             previewPos = null;
 
             if (gamePhase === 'dead_stone_selection') {
@@ -2773,7 +2773,7 @@
         function resetGame() {
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            st = { score: { 1: 0, 2: 0 }, _end: false, nextFire: 15 };
+            st = { score: { 1: 0, 2: 0 }, _end: false, nextFire: (P('fire_interval') || 15) };
             pieces = [];
             turn = 1;
             captures = { 1: 0, 2: 0 };
