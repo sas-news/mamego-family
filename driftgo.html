@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"interval","label":"漂流間隔","min":2,"max":30,"def":8,"unit":"手"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1837,10 +1837,10 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
-            // 漂流: 8手ごとに全石が流れる
-            if (history.length % 8 === 0) applyDrift();
-            // 手数上限: 200手で自動終局
-            if (history.length >= 200) { endGameByScore(); return; }
+            // 漂流: N手ごとに全石が流れる (間隔は設定で調整)
+            if (history.length % (P('interval') || 8) === 0) applyDrift();
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
@@ -2749,7 +2749,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('漂流' + (8 - history.length % 8) + '手');
+                const et = gameOver ? '' : ('漂流' + ((P('interval') || 8) - history.length % (P('interval') || 8)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

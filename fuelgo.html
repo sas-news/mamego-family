@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"init_fuel","label":"初期燃料","min":5,"max":99,"def":25}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -640,7 +640,7 @@
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
         let komi = 6.5;
-        let fuel = { 1: 25, 2: 25 }; // 燃料ルール
+        let fuel = { 1: (P('init_fuel') || 25), 2: (P('init_fuel') || 25) }; // 燃料ルール
         function fuelCost(player, cells) {
             // 着手セル自身は距離0の自石として数えない
             const placed = new Set(cells.map(p => p.y * BOARD_SIZE + p.x));
@@ -2778,7 +2778,7 @@
             history = [];
             currentRot = 0;
             heldPieces = { 1: null, 2: null };
-            fuel = { 1: 25, 2: 25 };
+            fuel = { 1: (P('init_fuel') || 25), 2: (P('init_fuel') || 25) };
             holdUsed = false;
             if (pieceMode === 'next') {
                 pieceQueue = shuffledBag();

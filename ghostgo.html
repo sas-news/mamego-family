@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"ghost_life","label":"幽霊の残存","min":2,"max":20,"def":6,"unit":"手"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1312,7 +1312,7 @@
                         const bob = Math.sin(now / 420 + gi * 1.9) * cellSize * 0.04;
                         const gw = cellSize * 0.30;
                         ctx.save();
-                        ctx.globalAlpha = 0.22 + 0.55 * (remain / 6);
+                        ctx.globalAlpha = 0.22 + 0.55 * (remain / (P('ghost_life') || 6));
                         // 丸い頭と波打つ裾のシルエット
                         const g2 = ctx.createLinearGradient(bx, by - gw, bx, by + gw * 1.4);
                         g2.addColorStop(0, 'rgba(196,210,240,0.95)');
@@ -1886,7 +1886,7 @@
             const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 // 幽霊: 取られたマスは幽霊(4)として6手間残る
-                captured.forEach(idx => { board[idx] = 4; ghostTimer[idx] = 6; fxGlow(idx, 'rgba(165,190,235,0.9)', 650); });
+                captured.forEach(idx => { board[idx] = 4; ghostTimer[idx] = (P('ghost_life') || 6); fxGlow(idx, 'rgba(165,190,235,0.9)', 650); });
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -1909,6 +1909,8 @@
                     fxSplash(gi, '#aabde0', 7);
                 }
             }
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

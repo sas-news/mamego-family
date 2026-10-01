@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"phase_len","label":"昼/夜の長さ","min":2,"max":12,"def":6,"unit":"手"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1900,8 +1900,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 黄昏碁: 6手ごとの昼夜切替を盤上の表示で発火
-            if (history.length % 6 === 0 && history.length > 0) {
+            // 黄昏碁: N手ごとの昼夜切替を盤上の表示で発火
+            if (history.length % (P('phase_len') || 6) === 0 && history.length > 0) {
                 const tc = move.cells[0];
                 if (tc) {
                     const ti = tc.y * BOARD_SIZE + tc.x;
@@ -1911,6 +1911,8 @@
             }
 
             turn = opponent;
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
@@ -2255,9 +2257,9 @@
             saveState();
         }
 
-        // 黄昏: 12手周期の後半6手が「夜」
+        // 黄昏: 2周期の後半が「夜」(周期長は設定で調整)
         function isNight() {
-            return Math.floor(history.length / 6) % 2 === 1;
+            return Math.floor(history.length / (P('phase_len') || 6)) % 2 === 1;
         }
 
         function endGameByScore() {

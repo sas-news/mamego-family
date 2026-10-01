@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"max_group","label":"連の最大サイズ","min":2,"max":8,"def":3,"unit":"石"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1357,7 +1357,7 @@
                     const g = getConnectedGroup(i, v);
                     g.forEach(j => seen.add(j));
                     const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + ((i / BOARD_SIZE) | 0) * cellSize;
-                    const full = g.length >= 3;
+                    const full = g.length >= (P('max_group') || 3);
                     ctx.fillStyle = full ? '#ef4444' : (v === 1 ? 'rgba(240,235,220,0.9)' : 'rgba(50,40,25,0.85)');
                     ctx.fillText(String(g.length), cx + cellSize * 0.30, cy - cellSize * 0.30);
                 }
@@ -1839,7 +1839,7 @@
                         if (after[n] === player && !grp.has(n)) { grp.add(n); q.push(n); }
                     });
                 }
-                if (grp.size > 3) return false;
+                if (grp.size > (P('max_group') || 3)) return false;
             }
             return true;
         }
@@ -1893,6 +1893,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

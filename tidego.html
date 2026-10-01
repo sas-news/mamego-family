@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"interval","label":"潮汐間隔","min":4,"max":30,"def":10,"unit":"手"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1897,10 +1897,10 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
-            // 潮汐: 10手ごとに満ち干交代
-            if (history.length % 10 === 0) applyTide();
-            // 手数上限: 200手で自動終局
-            if (history.length >= 200) { endGameByScore(); return; }
+            // 潮汐: N手ごとに満ち干交代 (間隔は設定で調整)
+            if (history.length % (P('interval') || 10) === 0) applyTide();
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
@@ -2793,7 +2793,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('潮汐' + (10 - history.length % 10) + '手');
+                const et = gameOver ? '' : ('潮汐' + ((P('interval') || 10) - history.length % (P('interval') || 10)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

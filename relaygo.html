@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"max_dist","label":"追撃範囲","min":1,"max":10,"def":4,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1153,7 +1153,7 @@
                 ctx.save();
                 lastMove.cells.forEach(lp => {
                     const cx = padding + lp.x * cellSize, cy = padding + lp.y * cellSize;
-                    const r = 4.4 * cellSize;
+                    const r = (P('max_dist') || 4) * 1.1 * cellSize;
                     ctx.fillStyle = 'rgba(251,146,60,0.06)';
                     ctx.strokeStyle = 'rgba(251,146,60,0.5)';
                     ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
@@ -1811,7 +1811,7 @@
             // 追撃ルール: 相手の直前着手から距離4以内
             if (lastMove && lastMove.player !== player) {
                 const ok = cells.some(p => lastMove.cells.some(lp =>
-                    Math.abs(lp.x - p.x) + Math.abs(lp.y - p.y) <= 4));
+                    Math.abs(lp.x - p.x) + Math.abs(lp.y - p.y) <= (P('max_dist') || 4)));
                 if (!ok) return false;
             }
 

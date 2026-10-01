@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"max_stones","label":"石の最大数","min":4,"max":40,"def":12,"unit":"個"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1329,7 +1329,7 @@
             // 有限: 上限に達した自連の最古石 (次に消える石) に時限刻印
             {
                 const mine = pieces.filter(pc => pc.player === turn && pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] === turn));
-                if (mine.length >= 12) {
+                if (mine.length >= (P('max_stones') || 12)) {
                     const p = mine[0].cells[0];
                     const cx = padding + p.x * cellSize, cy = padding + p.y * cellSize;
                     ctx.save();
@@ -1843,7 +1843,7 @@
             // 有限: 自石は最大12個 — 超過分は最古から消える
             {
                 const mine = pieces.filter(pc => pc.player === player);
-                if (mine.length > 12) {
+                if (mine.length > (P('max_stones') || 12)) {
                     const old = mine[0];
                     old.cells.forEach(p => {
                         board[p.y * BOARD_SIZE + p.x] = 0;
@@ -1874,8 +1874,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
-            // 手数上限: 200手で自動終局
-            if (history.length >= 200) { endGameByScore(); return; }
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
@@ -2745,7 +2745,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('石数 ' + board.filter(v => v === turn).length + '/12');
+                const et = gameOver ? '' : ('石数 ' + board.filter(v => v === turn).length + '/' + (P('max_stones') || 12));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

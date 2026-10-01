@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"interval","label":"落雷間隔","min":3,"max":30,"def":10,"unit":"手"},{"key":"max_size","label":"対象の最大連サイズ","min":1,"max":20,"def":6,"unit":"石"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1860,10 +1860,10 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
-            // 雷: 10手ごとにランダムな連が消滅
-            if (history.length % 10 === 0) applyThunder();
-            // 手数上限: 200手で自動終局
-            if (history.length >= 200) { endGameByScore(); return; }
+            // 雷: N手ごとにランダムな連が消滅 (間隔は設定で調整)
+            if (history.length % (P('interval') || 10) === 0) applyThunder();
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
@@ -2216,7 +2216,7 @@
                 if ((v !== 1 && v !== 2) || seen.has(i)) continue;
                 const g = getConnectedGroup(i, v);
                 g.forEach(x => seen.add(x));
-                if (g.length <= 6) groups.push(g);
+                if (g.length <= (P('max_size') || 6)) groups.push(g);
             }
             if (!groups.length) return;
             const group = groups[(Math.random() * groups.length) | 0];
@@ -2759,7 +2759,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('落雷' + (10 - history.length % 10) + '手');
+                const et = gameOver ? '' : ('落雷' + ((P('interval') || 10) - history.length % (P('interval') || 10)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

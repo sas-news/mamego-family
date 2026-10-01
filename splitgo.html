@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"split_min","label":"分裂する最小連サイズ","min":4,"max":15,"def":7,"unit":"石"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1834,7 +1834,7 @@
                     if (board[i] !== player || seenS.has(i)) continue;
                     const grp = getConnectedGroup(i, player);
                     grp.forEach(g => seenS.add(g));
-                    if (grp.length >= 7) {
+                    if (grp.length >= (P('split_min') || 7)) {
                         grp.slice(Math.ceil(grp.length / 2)).forEach(g => { board[g] = opponent; });
                         // 分裂演出: 連が割れる衝撃
                         fxShake(3, 200);
@@ -1853,8 +1853,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
-            // 手数上限: 200手で自動終局
-            if (history.length >= 200) { endGameByScore(); return; }
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

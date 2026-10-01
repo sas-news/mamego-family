@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"tax","label":"関税","min":0,"max":5,"def":1,"unit":"目"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1844,11 +1844,11 @@
             {
                 const mid = Math.ceil(BOARD_SIZE / 2);
                 if (move.cells.some(p => player === 1 ? p.y >= mid : p.y < BOARD_SIZE - mid)) {
-                    toll[player]++;
+                    toll[player] += (P('tax') ?? 1);
                     // 課税: 金の飛沫と関税告知
                     const ti = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                     fxBurst(ti, '#facc15', 6, 1.1);
-                    fxText(ti, '関税+1', '#eab308', 1000);
+                    fxText(ti, '関税+' + (P('tax') ?? 1), '#eab308', 1000);
                 }
             }
 
@@ -1872,6 +1872,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

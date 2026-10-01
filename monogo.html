@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"max_group","label":"取れる連の最大サイズ","min":1,"max":4,"def":1,"unit":"石"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -965,7 +965,7 @@
                 if ((v !== 1 && v !== 2) || seen.has(i)) continue;
                 const g = getConnectedGroup(i, v);
                 g.forEach(j => seen.add(j));
-                if (g.length !== 1) continue;
+                if (g.length > (P('max_group') || 1)) continue;
                 if (getLiberties(board, i) > 1) continue;
                 const cx = pad + (i % n) * cs, cy = pad + ((i / n) | 0) * cs;
                 const pulse = 0.5 + 0.5 * Math.sin(now / 200);
@@ -1353,7 +1353,7 @@
                     if (v !== 1 && v !== 2 || seen.has(i)) continue;
                     const g = getConnectedGroup(i, v);
                     g.forEach(j => seen.add(j));
-                    if (g.length !== 1) continue;
+                    if (g.length > (P('max_group') || 1)) continue;
                     const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + ((i / BOARD_SIZE) | 0) * cellSize, s = cellSize * 0.09;
                     ctx.strokeStyle = v === 1 ? 'rgba(240,235,220,0.85)' : 'rgba(50,40,25,0.8)';
                     ctx.strokeRect(cx - s, cy - s, s * 2, s * 2);
@@ -1925,8 +1925,8 @@
                         });
                     }
 
-                    // 単石ルール: 2石以上の連は取られない
-                    if (!hasLiberty && group.length === 1) {
+                    // 単石ルール: 上限より大きな連は取られない (上限は設定で調整)
+                    if (!hasLiberty && group.length <= (P('max_group') || 1)) {
                         captured.push(...group);
                     }
                 }

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"init_radius","label":"初期半径","min":1,"max":8,"def":2},{"key":"grow_interval","label":"拡大間隔","min":2,"max":24,"def":6,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1858,8 +1858,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
-            // 中心: 6手ごとに許可領域が拡大する瞬間を可視化
-            if (history.length % 6 === 0) {
+            // 中心: N手ごとに許可領域が拡大する瞬間を可視化
+            if (history.length % (P('grow_interval') || 6) === 0) {
                 const cc = ((BOARD_SIZE - 1) / 2) | 0;
                 const ci = cc * BOARD_SIZE + cc;
                 fxText(ci, '領域拡大', '#3b82f6', 1100);
@@ -2212,7 +2212,7 @@
 
         // 中心ルール: 許可半径は総手数とともに拡大
         function centRadius() {
-            return Math.min((BOARD_SIZE - 1) / 2, 2 + Math.floor(history.length / 6));
+            return Math.min((BOARD_SIZE - 1) / 2, (P('init_radius') || 2) + Math.floor(history.length / (P('grow_interval') || 6)));
         }
 
         function endGameByScore() {
@@ -2740,7 +2740,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('拡大' + (6 - history.length % 6) + '手');
+                const et = gameOver ? '' : ('拡大' + ((P('grow_interval') || 6) - history.length % (P('grow_interval') || 6)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

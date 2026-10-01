@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"jump_dist","label":"跳躍距離","min":1,"max":4,"def":2,"unit":"マス"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1787,9 +1787,15 @@
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
             }
 
-            // 跳躍ルール: 自石から距離ちょうど2のみ (自石が無い、または距離2の空点が無ければ自由)
+            // 跳躍ルール: 自石からマンハッタン距離ちょうどNのみ (自石が無い、または該当距離の空点が無ければ自由)
             {
-                const JOFF = [[2,0],[-2,0],[0,2],[0,-2],[1,1],[1,-1],[-1,1],[-1,-1]];
+                const jd = P('jump_dist') || 2;
+                const JOFF = [];
+                for (let ja = -jd; ja <= jd; ja++) {
+                    const jb = jd - Math.abs(ja);
+                    JOFF.push([ja, jb]);
+                    if (jb) JOFF.push([ja, -jb]);
+                }
                 let hasOwn = false, best = Infinity, anyJump = false;
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] !== player) continue;
@@ -1804,7 +1810,7 @@
                             anyJump = true;
                     });
                 }
-                if (hasOwn && anyJump && best !== 2) return false;
+                if (hasOwn && anyJump && best !== jd) return false;
             }
 
             // 仮配置
@@ -1877,9 +1883,15 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
-            // 跳躍の軌跡: 距離2の自石から今の着地点へ石が跳ぶ
+            // 跳躍の軌跡: 距離Nの自石から今の着地点へ石が跳ぶ
             if (lastMove && lastMove.cells.length > 0) {
-                const JOFF2 = [[2,0],[-2,0],[0,2],[0,-2],[1,1],[1,-1],[-1,1],[-1,-1]];
+                const jd2 = P('jump_dist') || 2;
+                const JOFF2 = [];
+                for (let ja = -jd2; ja <= jd2; ja++) {
+                    const jb = jd2 - Math.abs(ja);
+                    JOFF2.push([ja, jb]);
+                    if (jb) JOFF2.push([ja, -jb]);
+                }
                 for (const p of lastMove.cells) {
                     for (const [dx, dy] of JOFF2) {
                         const sx2 = p.x - dx, sy2 = p.y - dy;
@@ -1892,8 +1904,8 @@
                     }
                 }
             }
-            // 手数上限: 200手で自動終局
-            if (history.length >= 200) { endGameByScore(); return; }
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"armor_turns","label":"装甲の持続","min":1,"max":15,"def":5,"unit":"手"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1845,7 +1845,7 @@
                 passCharge[player] = false;
                 move.cells.forEach(p => {
                     const ai = p.y * BOARD_SIZE + p.x;
-                    armorUntil[ai] = history.length + 5;
+                    armorUntil[ai] = history.length + (P('armor_turns') || 5);
                     fxGlow(ai, '#60a5fa', 900);
                     fxBurst(ai, '#93c5fd', 8, 1.1);
                     fxText(ai, '装甲!', '#bfdbfe', 1000);
@@ -1874,6 +1874,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期

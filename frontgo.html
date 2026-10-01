@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"interval","label":"前線前進間隔","min":1,"max":12,"def":4,"unit":"手"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1859,16 +1859,16 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;
-            // 前線の前進 (4手ごと): 確定した行を光らせ前線降下を告げる
-            if (history.length % 4 === 0 && frontRow() > 0) {
+            // 前線の前進 (N手ごと): 確定した行を光らせ前線降下を告げる
+            if (history.length % (P('interval') || 4) === 0 && frontRow() > 0) {
                 const sr = frontRow() - 1;
                 for (let x = 0; x < BOARD_SIZE; x++) {
                     fxGlow(sr * BOARD_SIZE + x, 'rgba(230,180,80,0.75)', 750);
                 }
                 fxText(sr * BOARD_SIZE + Math.floor(BOARD_SIZE / 2), '前線↓', 'rgba(230,190,90,0.95)', 1000);
             }
-            // 手数上限: 200手で自動終局 (最下行での追跡膠着を防ぐ)
-            if (history.length >= 200) { endGameByScore(); return; }
+            // 手数上限で自動終局 (最下行での追跡膠着を防ぐ)
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
@@ -2213,7 +2213,7 @@
             saveState();
         }
 
-        const frontRow = () => Math.min(((history.length / 4) | 0), BOARD_SIZE - 1);
+        const frontRow = () => Math.min(((history.length / (P('interval') || 4)) | 0), BOARD_SIZE - 1);
         function endGameByScore() {
             gameOver = true;
             const territory = calculateTerritory();

@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"swamp_count","label":"沼の数","min":1,"max":20,"def":6,"unit":"個"},{"key":"sink_turns","label":"沈むまでの手数","min":2,"max":20,"def":6,"unit":"手"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1874,7 +1874,7 @@
 
             move.cells.forEach(p => {
                 const i = p.y * BOARD_SIZE + p.x;
-                if (swamp.has(i)) swampSink[i] = history.length + 6;
+                if (swamp.has(i)) swampSink[i] = history.length + (P('sink_turns') || 6);
             });
 
             // 捕獲処理
@@ -1910,8 +1910,8 @@
             });
             pieces.forEach(pc => { pc.cells = pc.cells.filter(p => board[p.y * BOARD_SIZE + p.x] === pc.player); });
             cleanUpPieces();
-            // 手数上限: 200手で自動終局
-            if (history.length >= 200) { endGameByScore(); return; }
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
@@ -2795,7 +2795,7 @@
             swamp = new Set();
             swampSink = {};
             // 内側エリアに6個の沼をランダム配置
-            while (swamp.size < 6) {
+            while (swamp.size < (P('swamp_count') || 6)) {
                 const x = 1 + ((Math.random() * (BOARD_SIZE - 2)) | 0);
                 const y = 1 + ((Math.random() * (BOARD_SIZE - 2)) | 0);
                 swamp.add(y * BOARD_SIZE + x);

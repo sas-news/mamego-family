@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"revive_delay","label":"復活までの手数","min":3,"max":30,"def":10,"unit":"手"},{"key":"max_moves","label":"手数上限","min":60,"max":600,"def":200,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1833,7 +1833,7 @@
                     board[idx] = 0;
                     // 再生: 10手後に元の持ち主の色で復活 (各石1回だけ)
                     if (revivedUsed.has(idx)) revivedUsed.delete(idx);
-                    else returnQueue.push({ player: opponent, due: history.length + 10 });
+                    else returnQueue.push({ player: opponent, due: history.length + (P('revive_delay') || 10) });
                 });
                 captures[player] += captured.length;
                 soundManager.playCapture();
@@ -1869,8 +1869,8 @@
                 });
                 return false;
             });
-            // 手数上限: 200手で自動終局
-            if (history.length >= 200) { endGameByScore(); return; }
+            // 手数上限で自動終局
+            if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }
             updateUI();
 
             // オンライン同期
