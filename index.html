@@ -82,6 +82,16 @@
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-6px); } 75% { transform: translateX(6px); }
         }
+        /* お気に入り */
+        .fav-star {
+            font-size: 17px; line-height: 1; align-self: flex-start;
+            color: #cbb07a; opacity: .45; padding: 3px 2px;
+            transition: transform .15s, opacity .15s, color .15s;
+        }
+        .fav-star:hover { opacity: 1; transform: scale(1.3); }
+        .fav-star.faved { color: #f59e0b; opacity: 1; text-shadow: 0 0 9px rgba(251, 191, 36, .85); }
+        #favFilterBtn.fav-on { background: #f59e0b; color: #fff7ed; border-color: #d97706; }
+        #favFilterBtn.fav-on > span:first-child { color: #fff7ed; }
         .roulette-dice { display: inline-block; }
         #spinBtn.spinning .roulette-dice { animation: diceShake .5s linear infinite; }
         @keyframes diceShake {
@@ -109,11 +119,17 @@
             </span>
         </button>
 
-        <!-- 囲碁検索 -->
-        <div class="w-full relative">
-            <input id="gameSearch" type="search" placeholder="囲碁を検索… (例: 引力, GO, 壁)" autocomplete="off"
-                class="w-full rounded-xl border border-[#cbb07a] bg-white/80 px-4 py-2.5 text-sm font-bold placeholder:font-normal placeholder:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#a8842f]/60" />
-            <button id="gameSearchClear" type="button" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-lg opacity-40 hover:opacity-80">✕</button>
+        <!-- 囲碁検索 + お気に入りフィルタ -->
+        <div class="w-full flex gap-2">
+            <div class="flex-1 relative">
+                <input id="gameSearch" type="search" placeholder="囲碁を検索… (例: 引力, GO, 壁)" autocomplete="off"
+                    class="w-full rounded-xl border border-[#cbb07a] bg-white/80 px-4 py-2.5 text-sm font-bold placeholder:font-normal placeholder:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#a8842f]/60" />
+                <button id="gameSearchClear" type="button" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-lg opacity-40 hover:opacity-80">✕</button>
+            </div>
+            <button id="favFilterBtn" type="button" title="お気に入りだけ表示"
+                class="shrink-0 rounded-xl border border-[#cbb07a] bg-white/80 px-3 text-sm font-bold hover:bg-white transition-all flex items-center gap-1">
+                <span class="text-[#f59e0b]">★</span>お気に入り<span id="favCount" class="text-[11px] opacity-60"></span>
+            </button>
         </div>
 
         <!-- 全ゲーム一覧 -->
@@ -1256,7 +1272,25 @@
         const noResultsEl = document.getElementById('gameNoResults');
         const searchInput = document.getElementById('gameSearch');
         const searchClear = document.getElementById('gameSearchClear');
+        const favFilterBtn = document.getElementById('favFilterBtn');
+        const favCountEl = document.getElementById('favCount');
         gameCountEl.textContent = `全${GAMES.length}種`;
+
+        // お気に入り (localStorage永続化。ゲームのfile名を保持)
+        const FAV_KEY = 'mamego-favs';
+        let favs = new Set();
+        try { favs = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch (e) { /* private mode等 */ }
+        let favOnly = false;
+        function saveFavs() {
+            try { localStorage.setItem(FAV_KEY, JSON.stringify([...favs])); } catch (e) {}
+        }
+        function updateFavCount() { favCountEl.textContent = favs.size ? `(${favs.size})` : ''; }
+        updateFavCount();
+        favFilterBtn.addEventListener('click', () => {
+            favOnly = !favOnly;
+            favFilterBtn.classList.toggle('fav-on', favOnly);
+            applyGameFilter(searchInput.value);
+        });
         // 曖昧検索: NFKC正規化(全角→半角・大小統一) + カタカナ→ひらがな + 空白区切り複数語AND + 各語は部分一致 or 部分列(文字飛ばし順序一致)でヒット
         function normSearch(s) {
             return (s || '').normalize('NFKC').toLowerCase()
@@ -1271,14 +1305,19 @@
             const terms = normSearch(q).split(/\s+/).filter(Boolean);
             let shown = 0;
             tiles.forEach(t => {
-                const hit = !terms.length || terms.every(term => t._hay.includes(term) || subseqHit(term, t._hay));
+                const hit = (!favOnly || favs.has(t._game.file)) &&
+                    (!terms.length || terms.every(term => t._hay.includes(term) || subseqHit(term, t._hay)));
                 t.style.display = hit ? '' : 'none';
                 if (hit) shown++;
             });
             const hasQuery = terms.length > 0;
+            noResultsEl.textContent = (favOnly && !favs.size)
+                ? 'お気に入りはまだありません — 各タイルの ★ で登録できます'
+                : '該当する囲碁がありません';
             noResultsEl.classList.toggle('hidden', shown > 0);
             searchClear.classList.toggle('hidden', !hasQuery);
-            gameCountEl.textContent = hasQuery ? `${shown}件 / 全${GAMES.length}種` : `全${GAMES.length}種`;
+            gameCountEl.textContent = favOnly ? `★${shown}件 / 全${GAMES.length}種`
+                : (hasQuery ? `${shown}件 / 全${GAMES.length}種` : `全${GAMES.length}種`);
         }
         searchInput.addEventListener('input', e => applyGameFilter(e.target.value));
         searchClear.addEventListener('click', () => { searchInput.value = ''; applyGameFilter(''); searchInput.focus(); });
@@ -1300,7 +1339,21 @@
             const arrow = document.createElement('span');
             arrow.className = 'text-lg opacity-25 group-hover:opacity-70 transition-all';
             arrow.textContent = '▶';
-            a.appendChild(cv); a.appendChild(body); a.appendChild(arrow);
+            const star = document.createElement('button');
+            star.type = 'button';
+            star.className = 'fav-star' + (favs.has(v.file) ? ' faved' : '');
+            star.textContent = '★';
+            star.title = 'お気に入り登録';
+            star.addEventListener('click', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (favs.has(v.file)) favs.delete(v.file); else favs.add(v.file);
+                saveFavs();
+                star.classList.toggle('faved', favs.has(v.file));
+                updateFavCount();
+                if (favOnly) applyGameFilter(searchInput.value);
+            });
+            a.appendChild(cv); a.appendChild(body); a.appendChild(arrow); a.appendChild(star);
             grid.appendChild(a);
             a._icon = v.icon || v.kind;
             a._iconCv = cv;
