@@ -59,6 +59,29 @@
         @keyframes confettiFly {
             to { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(.25); opacity: 0; }
         }
+        /* ルーレット中央スロット (個数に関係なく必ず視界中央で回る) */
+        .roul-ghost {
+            opacity: .55; transform: scale(.85); max-width: 70vw;
+            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        #roulCard.roul-tick { animation: roulTick .09s linear; }
+        @keyframes roulTick {
+            0% { transform: translateY(-7px) scale(.99); }
+            100% { transform: translateY(0) scale(1); }
+        }
+        #roulCard.roul-final {
+            animation: roulFinal .45s cubic-bezier(.2, 1.6, .35, 1);
+            box-shadow: 0 0 0 4px #f59e0b, 0 0 44px 14px rgba(251, 191, 36, .95);
+        }
+        @keyframes roulFinal {
+            0% { transform: scale(1.14); }
+            100% { transform: scale(1); }
+        }
+        .search-shake { animation: shakeX .4s; }
+        @keyframes shakeX {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); } 75% { transform: translateX(6px); }
+        }
         .roulette-dice { display: inline-block; }
         #spinBtn.spinning .roulette-dice { animation: diceShake .5s linear infinite; }
         @keyframes diceShake {
@@ -118,6 +141,21 @@
             共通ルール: 連で呼吸点を確保 / 囲まれると取り / コウ・自殺手禁止 / パス×2で終局→地集計+コミ<br>
             ローカル・AI・オンライン対戦対応
         </footer>
+    </div>
+
+    <!-- ルーレット演出オーバーレイ (視界中央のスロット) -->
+    <div id="roulOverlay" class="fixed inset-0 z-40 hidden items-center justify-center pointer-events-none">
+        <div class="flex flex-col items-center gap-1.5">
+            <div id="roulPrev" class="roul-ghost text-xs sm:text-sm font-bold px-4 py-1 rounded-full bg-white/60 border border-[#cbb07a]"></div>
+            <div id="roulCard" class="bg-[#fdf6e3] border-4 border-[#f59e0b] rounded-2xl shadow-2xl px-6 py-4 flex items-center gap-4 min-w-[16rem] max-w-[86vw]">
+                <canvas id="roulIcon" width="64" height="64" class="rounded-xl bg-[#e4bb70] w-14 h-14 shrink-0"></canvas>
+                <div class="min-w-0">
+                    <div id="roulName" class="text-xl font-extrabold tracking-wide truncate"></div>
+                    <div id="roulJp" class="text-xs font-bold opacity-60 truncate"></div>
+                </div>
+            </div>
+            <div id="roulNext" class="roul-ghost text-xs sm:text-sm font-bold px-4 py-1 rounded-full bg-white/60 border border-[#cbb07a]"></div>
+        </div>
     </div>
 
     <!-- ルーレット結果モーダル -->
@@ -1266,6 +1304,7 @@
             grid.appendChild(a);
             a._icon = v.icon || v.kind;
             a._iconCv = cv;
+            a._game = v;
             iconIO.observe(a);
             a._hay = normSearch(`${v.name} ${v.jp} ${v.desc}`);
             tiles.push(a);
@@ -9528,8 +9567,14 @@ seg(5,0.8,4.5,2.4,'#60a5fa',1.5);
         }
 
         function spawnTwinkle() {
-            const t = tiles[Math.floor(Math.random() * tiles.length)];
-            if (!t || t.classList.contains('lit') || t.classList.contains('winner')) return;
+            // 画面内に見えているタイルだけに出す (外のタイルに出しても誰も見ていない)
+            const vis = tiles.filter(t => {
+                if (t.style.display === 'none' || t.classList.contains('lit') || t.classList.contains('winner')) return false;
+                const r = t.getBoundingClientRect();
+                return r.bottom > 0 && r.top < innerHeight;
+            });
+            const t = vis[Math.floor(Math.random() * vis.length)];
+            if (!t) return;
             const s = document.createElement('span');
             s.className = 'twinkle-star';
             s.textContent = Math.random() < 0.5 ? '✦' : '✧';
@@ -9562,7 +9607,10 @@ seg(5,0.8,4.5,2.4,'#60a5fa',1.5);
         }
 
         function showResult(v) {
-            drawIcon(document.getElementById('resultIcon').getContext('2d'), v.kind, 112);
+            const rcv = document.getElementById('resultIcon');
+            const rcx = rcv.getContext('2d');
+            rcx.clearRect(0, 0, rcv.width, rcv.height);
+            drawIcon(rcx, v.icon || v.kind, 112);
             document.getElementById('resultName').textContent = v.name;
             document.getElementById('resultJp').textContent = v.jp;
             document.getElementById('resultDesc').textContent = v.desc;
@@ -9575,49 +9623,84 @@ seg(5,0.8,4.5,2.4,'#60a5fa',1.5);
             resultModal.classList.remove('flex');
         }
 
+        const roulOverlay = document.getElementById('roulOverlay');
+        const roulCard = document.getElementById('roulCard');
+        const roulIcon = document.getElementById('roulIcon');
+        const roulName = document.getElementById('roulName');
+        const roulJp = document.getElementById('roulJp');
+        const roulPrev = document.getElementById('roulPrev');
+        const roulNext = document.getElementById('roulNext');
+        const roulIconCtx = roulIcon.getContext('2d');
+
+        function setRoul(g) {
+            roulIconCtx.clearRect(0, 0, roulIcon.width, roulIcon.height);
+            drawIcon(roulIconCtx, g.icon || g.kind, 64);
+            roulName.textContent = g.name;
+            roulJp.textContent = g.jp;
+        }
+
         function spin() {
             if (spinning) return;
+            // 検索で絞り込まれているタイル (=表示中) の中からだけ選ぶ
+            const pool = tiles.filter(t => t.style.display !== 'none');
+            if (!pool.length) {
+                gameCountEl.classList.add('search-shake');
+                setTimeout(() => gameCountEl.classList.remove('search-shake'), 450);
+                return;
+            }
             spinning = true;
             spinBtn.disabled = true;
             spinBtn.classList.add('spinning');
             grid.classList.add('spinning');
             tiles.forEach(t => t.classList.remove('winner', 'lit', 'sparkle'));
+            roulOverlay.classList.remove('hidden');
+            roulOverlay.classList.add('flex');
+            roulCard.classList.remove('roul-final');
 
-            const N = tiles.length;
-            const winner = Math.floor(Math.random() * N);
-            const start = Math.floor(Math.random() * N);
-            const total = N * 2 + ((winner - start) % N + N) % N;
-            const T = 3400 + Math.random() * 700;
-            const t0 = performance.now();
-            let lastIdx = -1, sparkleAt = 0;
+            const winIdx = Math.floor(Math.random() * pool.length);
+            // 候補列は個数非依存: 26〜34ステップで減速し、最後に勝者で止まる
+            const steps = 26 + Math.floor(Math.random() * 8);
+            const seq = [];
+            for (let i = 0; i < steps - 1; i++) seq.push(Math.floor(Math.random() * pool.length));
+            seq.push(winIdx);
 
-            function frame(now) {
-                const t = Math.min(1, (now - t0) / T);
-                const f = 1 - Math.pow(1 - t, 3); // easeOutCubic で減速
-                const idx = Math.floor(start + total * f) % N;
-                if (idx !== lastIdx) {
-                    if (lastIdx >= 0) tiles[lastIdx].classList.remove('lit');
-                    tiles[idx].classList.add('lit');
-                    tick(720, 0.04, 0.045);
-                    lastIdx = idx;
-                }
-                if (now - sparkleAt > 75) { sparkleAt = now; spawnTwinkle(); }
-                if (t < 1) requestAnimationFrame(frame);
-                else finish(idx);
+            let i = 0, sparkleAt = 0;
+            function step() {
+                const g = pool[seq[i]]._game;
+                setRoul(g);
+                roulPrev.textContent = pool[seq[(i - 1 + seq.length) % seq.length]]._game.name;
+                roulNext.textContent = pool[seq[(i + 1) % seq.length]]._game.name;
+                roulCard.classList.remove('roul-tick');
+                void roulCard.offsetWidth;
+                roulCard.classList.add('roul-tick');
+                tick(700 + i * 8, 0.04, 0.05);
+                const now = performance.now();
+                if (now - sparkleAt > 90) { sparkleAt = now; spawnTwinkle(); }
+                i++;
+                if (i < seq.length) {
+                    const f = i / seq.length;
+                    setTimeout(step, 45 + Math.pow(f, 2.6) * 430); // 45ms → ~475ms に減速
+                } else finish();
             }
-            requestAnimationFrame(frame);
+            step();
 
-            function finish(idx) {
-                tiles[idx].classList.remove('lit');
-                tiles[idx].classList.add('winner');
-                grid.classList.remove('spinning');
-                tiles[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                confettiBurst(tiles[idx]);
+            function finish() {
+                const winnerT = pool[winIdx], g = winnerT._game;
+                roulCard.classList.remove('roul-tick');
+                roulCard.classList.add('roul-final');
                 jingle();
-                spinning = false;
-                spinBtn.disabled = false;
-                spinBtn.classList.remove('spinning');
-                setTimeout(() => showResult(GAMES[idx]), 900);
+                setTimeout(() => {
+                    roulOverlay.classList.add('hidden');
+                    roulOverlay.classList.remove('flex');
+                    grid.classList.remove('spinning');
+                    winnerT.classList.add('winner');
+                    winnerT.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    confettiBurst(winnerT);
+                    spinning = false;
+                    spinBtn.disabled = false;
+                    spinBtn.classList.remove('spinning');
+                    setTimeout(() => showResult(g), 650);
+                }, 550);
             }
         }
 
