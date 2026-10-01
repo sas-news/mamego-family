@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"rect_mul","label":"測量ボーナス倍率","min":0,"max":4,"def":1,"step":0.5}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2230,8 +2230,8 @@
             gameOver = true;
             const territory = calculateTerritory();
 
-            const blackTotal = territory.black + captures[1] + surveyRect(1);
-            const whiteTotal = territory.white + captures[2] + komi + surveyRect(2);
+            const blackTotal = territory.black + captures[1] + Math.round(surveyRect(1) * (P('rect_mul') ?? 1));
+            const whiteTotal = territory.white + captures[2] + komi + Math.round(surveyRect(2) * (P('rect_mul') ?? 1));
             const diff = Math.abs(blackTotal - whiteTotal);
 
             let winnerTitle = '';

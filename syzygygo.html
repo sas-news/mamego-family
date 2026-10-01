@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"eclipse_interval","label":"交食の間隔","min":5,"max":40,"def":15,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1157,7 +1157,7 @@
             ctx.restore();
 
             // 交食: 15の倍数手では盤が薄暗くなる
-            if (history.length > 0 && history.length % 15 === 0) {
+            if (history.length > 0 && history.length % (P('eclipse_interval') || 15) === 0) {
                 ctx.fillStyle = 'rgba(15,23,42,0.22)';
                 ctx.fillRect(padding - cellSize / 2, padding - cellSize / 2, cellSize * BOARD_SIZE, cellSize * BOARD_SIZE);
             }
@@ -1844,7 +1844,7 @@
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
                 // 交食: 15の倍数手の取りは石1つにつき追加+1
-                if (history.length > 0 && history.length % 15 === 0) {
+                if (history.length > 0 && history.length % (P('eclipse_interval') || 15) === 0) {
                     st.score[player] += captured.length;
                 }
                 soundManager.playCapture();
@@ -2742,7 +2742,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('交食まで ' + (15 - (history.length % 15)) + '手');
+                const et = gameOver ? '' : ('交食まで ' + ((P('eclipse_interval') || 15) - (history.length % (P('eclipse_interval') || 15))) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

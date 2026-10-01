@@ -34,14 +34,17 @@ module.exports = {
     icon: 'spotgo',
     spec: [
         ...K.rb('SPOTGO', '勘所碁', 'spotgo'),
+        K.params([
+            { key: 'spot_pts', label: '勘所1点あたりの得点', min: 0, max: 6, def: 2, unit: '点' },
+        ]),
         [K.ONE, '        function updateUI() {', SPOT_FN + `
         function updateUI() {`],
         // 終局時: 勘どころを占める石ごとに+2
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const spots = spotCells();
-            const spotB = spots.filter(i => board[i] === 1).length * 2;
-            const spotW = spots.filter(i => board[i] === 2).length * 2;
+            const spotB = spots.filter(i => board[i] === 1).length * (P('spot_pts') ?? 2);
+            const spotW = spots.filter(i => board[i] === 2).length * (P('spot_pts') ?? 2);
             const blackTotal = territory.black + captures[1] + spotB;
             const whiteTotal = territory.white + captures[2] + komi + spotW;`],
         [K.ONE, `                    <div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>`,

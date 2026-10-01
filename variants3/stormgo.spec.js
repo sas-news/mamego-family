@@ -36,9 +36,12 @@ module.exports = {
     icon: 'stormgo',
     spec: [
         ...K.rb('STORMGO', '嵐碁', 'stormgo'),
+        K.params([
+            { key: 'storm_interval', label: '嵐の間隔', min: 5, max: 40, def: 15, unit: '手' },
+        ]),
         ...K.WALL_SPEC,
         // 嵐手番 (15の倍数手) は壁を置く: 呼吸点を残す置き場のみ合法
-        [K.ONE, K.VALID_BOUNDS, `            const isStormTurn = (history.length + 1) % 15 === 0;
+        [K.ONE, K.VALID_BOUNDS, `            const isStormTurn = (history.length + 1) % (P('storm_interval') || 15) === 0;
             for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -57,7 +60,7 @@ module.exports = {
             }`],
         // 嵐手番は壁(3)を置く
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
-`            const stormWall = history.length % 15 === 0;
+`            const stormWall = history.length % (P('storm_interval') || 15) === 0;
             if (stormWall) {
                 move.cells.forEach(p => {
                     const idx = p.y * BOARD_SIZE + p.x;
@@ -91,7 +94,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`(history.length + 1) % 15 === 0 ? '嵐手番!' : '次の嵐まで ' + (15 - ((history.length + 1) % 15)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`(history.length + 1) % (P('storm_interval') || 15) === 0 ? '嵐手番!' : '次の嵐まで ' + ((P('storm_interval') || 15) - ((history.length + 1) % (P('storm_interval') || 15))) + '手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '嵐: 15手ごとの手番は、石ではなく灰色の壁を1個置く (壁は取れず地にもならない)。',
             '壁は相手の連の呼吸点を残す場所にのみ置ける。嵐手番の巡りは両プレイヤー共通。',

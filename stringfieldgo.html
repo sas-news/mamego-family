@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"string_len","label":"絃に必要な石数","min":2,"max":6,"def":3,"unit":"石"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1855,7 +1855,7 @@
                     const line = [y0 * BOARD_SIZE + x0];
                     for (let s = 1; ; s++) { const x = x0 + dx * s, y = y0 + dy * s; if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE || board[y * BOARD_SIZE + x] !== player) break; line.push(y * BOARD_SIZE + x); }
                     for (let s = 1; ; s++) { const x = x0 - dx * s, y = y0 - dy * s; if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE || board[y * BOARD_SIZE + x] !== player) break; line.push(y * BOARD_SIZE + x); }
-                    if (line.length < 3) continue; // 3石未満は絃にならない
+                    if (line.length < (P('string_len') || 3)) continue; // 規定数未満は絃にならない
                     // 絃の両端の外側のマスを調べる
                     const coords = line.map(i => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)]);
                     const minD = Math.min.apply(null, coords.map(c => dx ? c[0] : c[1]));
@@ -1874,7 +1874,7 @@
                             fxText(ei, '弦が弾いた!', '#f0abfc', 1100);
                         }
                     }
-                    if (line.length >= 3) line.forEach(j => fxGlow(j, '#e879f9', 600));
+                    if (line.length >= (P('string_len') || 3)) line.forEach(j => fxGlow(j, '#e879f9', 600));
                 }
                 if (dropped) { fxShake(5, 320); cleanUpPieces(); }
             }

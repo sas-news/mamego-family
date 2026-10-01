@@ -9,6 +9,9 @@ module.exports = {
     kind: 'survey',
     spec: [
         ...K.rb('SURVEYGO', '測量碁', 'surveygo'),
+        K.params([
+            { key: 'rect_mul', label: '測量ボーナス倍率', min: 0, max: 4, def: 1, step: 0.5 },
+        ]),
         // 測量矩形ヘルパー (終局時加算)
         [K.ONE, `        function endGameByScore() {`, `
         // 自石の辺で囲まれた最大矩形 (外周の石が全て同色) — 面積と座標を返す
@@ -32,8 +35,8 @@ module.exports = {
         function endGameByScore() {`],
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
-`            const blackTotal = territory.black + captures[1] + surveyRect(1);
-            const whiteTotal = territory.white + captures[2] + komi + surveyRect(2);`],
+`            const blackTotal = territory.black + captures[1] + Math.round(surveyRect(1) * (P('rect_mul') ?? 1));
+            const whiteTotal = territory.white + captures[2] + komi + Math.round(surveyRect(2) * (P('rect_mul') ?? 1));`],
         [K.ONE, `                    <div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>`,
 `                    <div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>
                     <div class="flex justify-between"><span>黒の測量矩形:</span> <strong>\${surveyRect(1)}</strong></div>`],

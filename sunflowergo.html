@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"sun_period","label":"太陽が巡る間隔","min":2,"max":20,"def":8,"unit":"手"},{"key":"sun_pts","label":"光を浴びた石の得点","min":0,"max":5,"def":1,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1330,7 +1330,7 @@
             // 向日葵: 太陽の方角に向く石に橙の花冠
             {
                 const SDIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-                const sd = SDIRS[Math.floor(history.length / 8) % 4];
+                const sd = SDIRS[Math.floor(history.length / (P('sun_period') || 8)) % 4];
                 ctx.save();
                 for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
                     if (board[i] !== 1 && board[i] !== 2) continue;
@@ -2227,7 +2227,7 @@
             const territory = calculateTerritory();
             {
                 const SDIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-                const sd = SDIRS[Math.floor(history.length / 8) % 4];
+                const sd = SDIRS[Math.floor(history.length / (P('sun_period') || 8)) % 4];
                 for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
                     if (board[i] !== 1 && board[i] !== 2) continue;
                     const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
@@ -2235,8 +2235,8 @@
                     const lit = nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE ||
                         board[ny * BOARD_SIZE + nx] === 0 || board[ny * BOARD_SIZE + nx] === board[i];
                     if (!lit) continue;
-                    if (board[i] === 1) territory.black += 1;
-                    else territory.white += 1;
+                    if (board[i] === 1) territory.black += (P('sun_pts') ?? 1);
+                    else territory.white += (P('sun_pts') ?? 1);
                 }
             }
 
@@ -2761,7 +2761,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ("太陽 " + ["北","東","南","西"][Math.floor(history.length / 8) % 4]);
+                const et = gameOver ? '' : ("太陽 " + ["北","東","南","西"][Math.floor(history.length / (P("sun_period") || 8)) % 4]);
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"pillar_len","label":"光柱に必要な石数","min":2,"max":8,"def":4,"unit":"石"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1158,7 +1158,7 @@
                     for (const pl of [1, 2]) {
                         let n = 0;
                         for (let y = 0; y < BOARD_SIZE; y++) if (board[y * BOARD_SIZE + x] === pl) n++;
-                        if (n >= 4) { lit = true; break; }
+                        if (n >= (P('pillar_len') || 4)) { lit = true; break; }
                     }
                     if (!lit) continue;
                     const px = padding + x * cellSize;
@@ -1868,7 +1868,7 @@
                 for (let y = 0; y < BOARD_SIZE; y++) if (board[y * BOARD_SIZE + x] === pl) n++;
                 return n;
             };
-            const captured = getCapturedStones(board, opponent).filter(i => colCount(i % BOARD_SIZE, opponent) < 4);
+            const captured = getCapturedStones(board, opponent).filter(i => colCount(i % BOARD_SIZE, opponent) < (P('pillar_len') || 4));
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;

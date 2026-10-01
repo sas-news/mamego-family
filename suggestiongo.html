@@ -322,7 +322,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"sug_pts","label":"暗示ボーナス","min":0,"max":5,"def":1,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1890,7 +1890,7 @@
             const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             if (st.sug[opponent] === pi) {
                 st.sug[opponent] = -1;
-                captures[opponent]++;
+                captures[opponent] += (P('sug_pts') ?? 1);
                 fxText(pi, '暗示が効いた!', '#c084fc', 1400);
             }
             turn = opponent;

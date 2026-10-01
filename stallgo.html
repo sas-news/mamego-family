@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"stall_pts","label":"屋台の得点","min":0,"max":6,"def":2,"unit":"点"},{"key":"guest_pts","label":"客1人あたりの得点","min":0,"max":3,"def":1,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2242,8 +2242,8 @@
                 getStarPoints(BOARD_SIZE).forEach(sp => {
                     const si = sp.y * BOARD_SIZE + sp.x;
                     if (board[si] !== p) return;
-                    pts += 2;
-                    getNeighbors(si).forEach(n => { if (board[n] === p) pts += 1; });
+                    pts += (P('stall_pts') ?? 2);
+                    getNeighbors(si).forEach(n => { if (board[n] === p) pts += (P('guest_pts') ?? 1); });
                 });
                 return pts;
             };

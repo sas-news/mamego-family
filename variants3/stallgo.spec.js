@@ -25,6 +25,10 @@ module.exports = {
     icon: 'stallgo',
     spec: [
         ...K.rb('STALLGO', '夜店碁', 'stallgo'),
+        K.params([
+            { key: 'stall_pts', label: '屋台の得点', min: 0, max: 6, def: 2, unit: '点' },
+            { key: 'guest_pts', label: '客1人あたりの得点', min: 0, max: 3, def: 1, unit: '点' },
+        ]),
         // 屋台得点: 星の点を占めると+2、隣接する自石(客)1つごとにさらに+1
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
@@ -34,8 +38,8 @@ module.exports = {
                 getStarPoints(BOARD_SIZE).forEach(sp => {
                     const si = sp.y * BOARD_SIZE + sp.x;
                     if (board[si] !== p) return;
-                    pts += 2;
-                    getNeighbors(si).forEach(n => { if (board[n] === p) pts += 1; });
+                    pts += (P('stall_pts') ?? 2);
+                    getNeighbors(si).forEach(n => { if (board[n] === p) pts += (P('guest_pts') ?? 1); });
                 });
                 return pts;
             };

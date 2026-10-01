@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"ration_init","label":"初期兵糧","min":8,"max":60,"def":24,"unit":"石分"},{"key":"ration_resupply","label":"補給船の兵糧","min":4,"max":40,"def":12,"unit":"石分"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -638,7 +638,7 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        let st = { ration: { 1: 24, 2: 24 } };
+        let st = { ration: { 1: (P('ration_init') || 24), 2: (P('ration_init') || 24) } };
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -750,7 +750,7 @@
                     2: PIECE_TYPES.includes(s.heldPieces[2]) ? s.heldPieces[2] : null }
                 : { 1: null, 2: null };
             holdUsed = !!s.holdUsed;
-            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { ration: { 1: 24, 2: 24 } };
+            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { ration: { 1: (P('ration_init') || 24), 2: (P('ration_init') || 24) } };
             gameMode = ['local', 'ai', 'online'].includes(s.gameMode) ? s.gameMode : 'local';
             aiPlayer = s.aiPlayer === 1 ? 1 : 2;
             myOnlineRole = s.myOnlineRole || null;
@@ -1866,7 +1866,7 @@
                 if (st.ration[player] < 0 && biggest) {
                     const deserter = Math.max.apply(null, biggest);
                     board[deserter] = 0;
-                    st.ration[player] = 12; // 補給船が再出港
+                    st.ration[player] = (P('ration_resupply') || 12); // 補給船が再出港
                     fxBurst(deserter, '#78716c', 10, 1.5);
                     fxText(deserter, '兵糧切れ脱走!', '#a8a29e', 1400);
                     fxShake(4, 300);
@@ -2108,7 +2108,7 @@
             if (snap.pieceQueue) pieceQueue = snap.pieceQueue;
             if (snap.heldPieces) heldPieces = { ...snap.heldPieces };
             holdUsed = !!snap.holdUsed;
-            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { ration: { 1: 24, 2: 24 } };
+            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { ration: { 1: (P('ration_init') || 24), 2: (P('ration_init') || 24) } };
             previewPos = null;
             updateUI();
 
@@ -2490,7 +2490,7 @@
             if (data.pieceQueue) pieceQueue = data.pieceQueue;
             if (data.heldPieces) heldPieces = { ...data.heldPieces };
             holdUsed = !!data.holdUsed;
-            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { ration: { 1: 24, 2: 24 } };
+            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { ration: { 1: (P('ration_init') || 24), 2: (P('ration_init') || 24) } };
             previewPos = null;
 
             if (gamePhase === 'dead_stone_selection') {
@@ -2760,7 +2760,7 @@
         function resetGame() {
             BOARD_SIZE = pendingBoardSize; // 選択済みの盤サイズをここで適用
             board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            st = { ration: { 1: 24, 2: 24 } };
+            st = { ration: { 1: (P('ration_init') || 24), 2: (P('ration_init') || 24) } };
             pieces = [];
             turn = 1;
             captures = { 1: 0, 2: 0 };

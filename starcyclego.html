@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"luck_pts","label":"星の加護ボーナス","min":0,"max":5,"def":1,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1874,7 +1874,7 @@
             const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             // 吉方の恵み: 現在表示の吉方への着手で1アゲハマ
             if (st.luck === pi) {
-                captures[player]++;
+                captures[player] += (P('luck_pts') ?? 1);
                 fxText(pi, '吉方!', '#fbbf24', 1300);
             }
             // 星霜: 吉方の星が一手ごとに一巡する

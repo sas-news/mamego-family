@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"kick_len","label":"石を蹴る距離","min":1,"max":3,"def":1,"unit":"マス"},{"key":"goal_pts","label":"盤端ゴールの得点","min":0,"max":5,"def":1,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1856,7 +1856,7 @@
                 const kicks = [];
                 for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
                     const fx2 = bc.x + dx, fy = bc.y + dy;
-                    const tx = bc.x + dx * 2, ty = bc.y + dy * 2;
+                    const tx = bc.x + dx * (1 + (P('kick_len') || 1)), ty = bc.y + dy * (1 + (P('kick_len') || 1));
                     if (fx2 < 0 || fy < 0 || fx2 >= BOARD_SIZE || fy >= BOARD_SIZE) continue;
                     const fi = fy * BOARD_SIZE + fx2;
                     if (board[fi] !== player) continue;
@@ -1872,7 +1872,7 @@
                     // 盤端まで運べたら得点
                     const tx = ti % BOARD_SIZE, ty = Math.floor(ti / BOARD_SIZE);
                     if (tx === 0 || ty === 0 || tx === BOARD_SIZE - 1 || ty === BOARD_SIZE - 1) {
-                        st.pts[player]++;
+                        st.pts[player] += (P('goal_pts') ?? 1);
                         fxText(ti, 'ゴール!', '#22c55e', 1000);
                     }
                 });

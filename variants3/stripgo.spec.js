@@ -10,11 +10,21 @@ module.exports = {
     icon: 'stripgo',
     spec: [
         ...K.rb('STRIPGO', '帯碁', 'stripgo'),
+        K.params([
+            { key: 'strip_w', label: '帯の幅', min: 3, max: 9, def: 5, unit: '列', hint: '新しい対局で反映' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 幅5の帯: 中央の5列のみ着手可能、上下はループ
-        const STRIP_W = 5;
-        const STRIP_L = Math.max(0, ((BOARD_SIZE - STRIP_W) / 2) | 0); // 帯の左端x
-        const STRIP_R = STRIP_L + STRIP_W - 1;                          // 帯の右端x
+        // 幅Nの帯: 中央のN列のみ着手可能、上下はループ
+        let STRIP_W = 5;
+        let STRIP_L = Math.max(0, ((BOARD_SIZE - STRIP_W) / 2) | 0); // 帯の左端x
+        let STRIP_R = STRIP_L + STRIP_W - 1;                          // 帯の右端x
+        function rebuildStrip() {
+            STRIP_W = Math.max(1, Math.min(BOARD_SIZE, P('strip_w') || 5));
+            STRIP_L = Math.max(0, ((BOARD_SIZE - STRIP_W) / 2) | 0);
+            STRIP_R = STRIP_L + STRIP_W - 1;
+        }
+        rebuildStrip();
+        function onVariantParam(p) { if (p.key === 'strip_w') rebuildStrip(); }
         function isStripCell(x) { return x >= STRIP_L && x <= STRIP_R; }`],
         // 帯の外側は切り立った崖
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `

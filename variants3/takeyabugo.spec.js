@@ -46,6 +46,9 @@ module.exports = {
     icon: 'takeyabugo',
     spec: [
         ...K.rb('TAKEYABUGO', '竹藪碁', 'takeyabugo'),
+        K.params([
+            { key: 'bamboo_shots', label: '竹1本の筍の回数', min: 1, max: 4, def: 1, unit: '回' },
+        ]),
         ...ST('{ bamboo: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -55,7 +58,7 @@ module.exports = {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 for (const k in st.bamboo) {
                     const bi = +k, bc = st.bamboo[k];
-                    if (board[bi] !== player || bc.shot) continue;
+                    if (board[bi] !== player || bc.shot) continue; // bc.shot=筍を出し切った
                     const bx = bi % BOARD_SIZE, by = (bi / BOARD_SIZE) | 0;
                     for (let dy = -1; dy <= 1 && !bc.shot; dy++) for (let dx = -1; dx <= 1; dx++) {
                         if (!dx && !dy) continue;
@@ -70,7 +73,8 @@ module.exports = {
                             board[n] !== opponent || getLiberties(board, n).length > 0);
                         if (safe) {
                             pieces.push({ id: Date.now() + Math.random(), player, type: 'STONE', rot: 0, cells: [{ x: nx, y: ny }] });
-                            bc.shot = true;
+                            bc.shots = (bc.shots || 0) + 1;
+                            bc.shot = bc.shots >= (P('bamboo_shots') || 1);
                             fxBurst(cand, '#4ade80', 10);
                             fxText(cand, '筍', '#22c55e', 900);
                             break;

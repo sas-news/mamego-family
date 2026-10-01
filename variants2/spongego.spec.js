@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('SPONGEGO', '海綿碁', 'spongego'),
+        K.params([
+            { key: 'bonus_moves', label: '追打ち権の回数', min: 1, max: 3, def: 1, unit: '手' },
+        ]),
         // 追打ち権 spongeBonus[player] の状態登録
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let spongeBonus = { 1: 0, 2: 0 }; // 取りで得た追打ち権`],
@@ -36,7 +39,7 @@ module.exports = {
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
-                spongeBonus[player] = 1; // 海綿: 取ったらもう1手
+                spongeBonus[player] = Math.max(1, P('bonus_moves') || 1); // 海綿: 取ったら追打ち権
                 captured.forEach(idx => fxGlow(idx, '#2dd4bf', 550));
                 fxText(captured[0], 'もう1手!', '#5eead4', 1000);
                 soundManager.playCapture();

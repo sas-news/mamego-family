@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"sym_pts","label":"対称ボーナス","min":0,"max":6,"def":2,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1867,7 +1867,7 @@
                 const p = move.cells[0];
                 const mi = p.y * BOARD_SIZE + (BOARD_SIZE - 1 - p.x);
                 if (mi !== p.y * BOARD_SIZE + p.x && board[mi] === player) {
-                    st.bonus[player] += 2;
+                    st.bonus[player] += (P('sym_pts') ?? 2);
                     const ci = p.y * BOARD_SIZE + p.x;
                     fxGlow(ci, '#38bdf8', 700);
                     fxGlow(mi, '#38bdf8', 700);

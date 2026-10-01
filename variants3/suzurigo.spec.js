@@ -64,6 +64,11 @@ module.exports = {
     icon: 'suzurigo',
     spec: [
         ...K.rb('SUZURIGO', '硯相碁', 'suzurigo'),
+        K.params([
+            { key: 'ink_star', label: '星で摺れる墨の量', min: 1, max: 6, def: 2, unit: '墨' },
+            { key: 'kigo_min', label: '季語に必要な墨', min: 2, max: 12, def: 5, unit: '墨' },
+            { key: 'kigo_pts', label: '季語の得点', min: 1, max: 10, def: 4, unit: '点' },
+        ]),
         ...ST(ST_INIT, `
         // 4つの硯: 四分区の星を中心とする3x3の墨池
         const SUZU = new Set();
@@ -85,12 +90,12 @@ module.exports = {
                 const sx = sIdx % BOARD_SIZE, sy = (sIdx / BOARD_SIZE) | 0;
                 const q = Math.floor(BOARD_SIZE / 3);
                 const isCenter = (sx === q || sx === BOARD_SIZE - q - 1) && (sy === q || sy === BOARD_SIZE - q - 1);
-                st.ink[player] += isCenter ? 2 : 1;
+                st.ink[player] += isCenter ? (P('ink_star') || 2) : 1;
             }
             // 墨が5以上溜まっていれば、硯の外への着手で一度だけ揮毫+4
-            if (!st.ground[player] && st.ink[player] >= 5 && !SUZU.has(sIdx)) {
+            if (!st.ground[player] && st.ink[player] >= (P('kigo_min') || 5) && !SUZU.has(sIdx)) {
                 st.ground[player] = true;
-                st.score[player] += 4;
+                st.score[player] += (P('kigo_pts') || 4);
             }`],
         K.CUE_GRID(`            // 硯: 四分区の3x3墨池を描く
             {

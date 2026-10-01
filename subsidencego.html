@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"sink_interval","label":"沈降の間隔","min":5,"max":50,"def":20,"unit":"手"},{"key":"keep_size","label":"残る中央列の幅","min":1,"max":9,"def":3,"unit":"列"},{"key":"cap_moves","label":"打ち切り手数","min":60,"max":400,"def":150,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1816,7 +1816,7 @@
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap_moves') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1872,9 +1872,9 @@
 
             // 沈降: 20手ごとに外周が1列沈む (石ごと海へ — アゲハマにならない)
             {
-                const sink = Math.floor(history.length / 20);
-                const maxRing = Math.floor((BOARD_SIZE - 3) / 2); // 中央3列は残す
-                if (sink !== st.lastSink && history.length % 20 === 0 && st.ring < maxRing) {
+                const sink = Math.floor(history.length / (P('sink_interval') || 20));
+                const maxRing = Math.floor((BOARD_SIZE - (P('keep_size') || 3)) / 2); // 中央N列は残す
+                if (sink !== st.lastSink && history.length % (P('sink_interval') || 20) === 0 && st.ring < maxRing) {
                     st.lastSink = sink;
                     st.ring++;
                     const r = st.ring - 1; // 今回沈む輪 (0=最外周)
@@ -2767,7 +2767,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('沈降まで' + (20 - (history.length % 20)) + '手');
+                const et = gameOver ? '' : ('沈降まで' + ((P('sink_interval') || 20) - (history.length % (P('sink_interval') || 20))) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

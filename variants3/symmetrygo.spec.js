@@ -27,6 +27,9 @@ module.exports = {
     icon: 'symmetrygo',
     spec: [
         ...K.rb('SYMMETRYGO', '対称碁', 'symmetrygo'),
+        K.params([
+            { key: 'sym_pts', label: '対称ボーナス', min: 0, max: 6, def: 2, unit: '目' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { bonus: { 1: 0, 2: 0 } }; // 対称美ボーナス`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -57,7 +60,7 @@ module.exports = {
                 const p = move.cells[0];
                 const mi = p.y * BOARD_SIZE + (BOARD_SIZE - 1 - p.x);
                 if (mi !== p.y * BOARD_SIZE + p.x && board[mi] === player) {
-                    st.bonus[player] += 2;
+                    st.bonus[player] += (P('sym_pts') ?? 2);
                     const ci = p.y * BOARD_SIZE + p.x;
                     fxGlow(ci, '#38bdf8', 700);
                     fxGlow(mi, '#38bdf8', 700);

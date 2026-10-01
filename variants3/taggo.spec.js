@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,9 @@ module.exports = {
     icon: 'taggo',
     spec: [
         ...K.rb('TAGGO', '組手碁', 'taggo'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2, def: 0.75, step: 0.1, hint: '交点数の倍率' },
+        ]),
         ...ST(ST_INIT),
         // 組手: 現在の「手」で打てる範囲が決まる (L→左半分・R→右半分・中央列は共用)
         [K.ONE, `        function isValidPlacement(cells, player) {`,

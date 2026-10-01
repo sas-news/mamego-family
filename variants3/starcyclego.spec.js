@@ -47,6 +47,9 @@ module.exports = {
     icon: 'starcyclego',
     spec: [
         ...K.rb('STARCYCLEGO', '星霜碁', 'starcyclego'),
+        K.params([
+            { key: 'luck_pts', label: '星の加護ボーナス', min: 0, max: 5, def: 1, unit: '点' },
+        ]),
         ...ST(ST_INIT),
         // 星の巡り: 星の座標列のインデックスが手数とともに循環し、その点が吉方になる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -55,7 +58,7 @@ module.exports = {
             const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             // 吉方の恵み: 現在表示の吉方への着手で1アゲハマ
             if (st.luck === pi) {
-                captures[player]++;
+                captures[player] += (P('luck_pts') ?? 1);
                 fxText(pi, '吉方!', '#fbbf24', 1300);
             }
             // 星霜: 吉方の星が一手ごとに一巡する

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"fossil_age","label":"化石になるまでの手数","min":8,"max":60,"def":28,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1329,7 +1329,7 @@
             {
                 ctx.save();
                 pieces.forEach(pc => {
-                    if (history.length - (pc.at || 0) < 28) return;
+                    if (history.length - (pc.at || 0) < (P('fossil_age') || 28)) return;
                     pc.cells.forEach(c => {
                         const i = c.y * BOARD_SIZE + c.x;
                         if (board[i] !== pc.player) return;
@@ -2223,7 +2223,7 @@
             pieces.forEach(pc => {
                 const alive = pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
                 if (!alive) return;
-                if (history.length - (pc.at || 0) < 28) return;
+                if (history.length - (pc.at || 0) < (P('fossil_age') || 28)) return;
                 strataDetail[pc.player]++;
                 if (pc.player === 1) territory.black++; else territory.white++;
             });

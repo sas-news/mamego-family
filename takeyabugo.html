@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"bamboo_shots","label":"竹1本の筍の回数","min":1,"max":4,"def":1,"unit":"回"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1877,7 +1877,7 @@
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 for (const k in st.bamboo) {
                     const bi = +k, bc = st.bamboo[k];
-                    if (board[bi] !== player || bc.shot) continue;
+                    if (board[bi] !== player || bc.shot) continue; // bc.shot=筍を出し切った
                     const bx = bi % BOARD_SIZE, by = (bi / BOARD_SIZE) | 0;
                     for (let dy = -1; dy <= 1 && !bc.shot; dy++) for (let dx = -1; dx <= 1; dx++) {
                         if (!dx && !dy) continue;
@@ -1892,7 +1892,8 @@
                             board[n] !== opponent || getLiberties(board, n).length > 0);
                         if (safe) {
                             pieces.push({ id: Date.now() + Math.random(), player, type: 'STONE', rot: 0, cells: [{ x: nx, y: ny }] });
-                            bc.shot = true;
+                            bc.shots = (bc.shots || 0) + 1;
+                            bc.shot = bc.shots >= (P('bamboo_shots') || 1);
                             fxBurst(cand, '#4ade80', 10);
                             fxText(cand, '筍', '#22c55e', 900);
                             break;

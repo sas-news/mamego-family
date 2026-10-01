@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"hold_turns","label":"旗を立て続ける手数","min":1,"max":6,"def":2,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1886,7 +1886,7 @@
                 const top = c * BOARD_SIZE + c;
                 if (board[top] === player) {
                     st.flag[player]++;
-                    if (st.flag[player] >= 2) {
+                    if (st.flag[player] >= (P('hold_turns') || 2)) {
                         fxGlow(top, '#facc15', 950);
                         fxText(top, '登頂!', '#facc15', 1400);
                         fxShake(6, 360);

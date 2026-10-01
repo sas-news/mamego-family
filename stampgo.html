@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"stamp_pts","label":"印1つあたりの得点","min":0,"max":5,"def":1,"unit":"目"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2226,8 +2226,8 @@
             Object.keys(st.stamp).forEach(k => {
                 const i = +k, ow = st.stamp[i];
                 if (board[i] === (ow === 1 ? 2 : 1)) return; // 敵に踏まれた印は無効
-                stampDetail[ow]++;
-                if (ow === 1) territory.black++; else territory.white++;
+                stampDetail[ow] += (P('stamp_pts') ?? 1);
+                if (ow === 1) territory.black += (P('stamp_pts') ?? 1); else territory.white += (P('stamp_pts') ?? 1);
             });
 
             const blackTotal = territory.black + captures[1];

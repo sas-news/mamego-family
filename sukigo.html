@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"suki_pts","label":"孤石の風流点","min":0,"max":6,"def":2,"unit":"目"},{"key":"garden_size","label":"庭の一辺のサイズ","min":2,"max":6,"def":4,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -637,17 +637,21 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        // 数寄屋の庭: 左上隅と右下隅の4x4区域
+        // 数寄屋の庭: 左上隅と右下隅の区域
         const SUKI_C = 1;
-        const SUKI_SET = (function () {
+        let SUKI_SET = new Set();
+        function rebuildSuki() {
+            const n = P('garden_size') || 4;
             const s = new Set();
-            for (let dy = 0; dy < 4; dy++)
-                for (let dx = 0; dx < 4; dx++) {
+            for (let dy = 0; dy < n; dy++)
+                for (let dx = 0; dx < n; dx++) {
                     s.add((SUKI_C + dy) * BOARD_SIZE + (SUKI_C + dx));
-                    s.add((BOARD_SIZE - 2 - SUKI_C + dy) * BOARD_SIZE + (BOARD_SIZE - 2 - SUKI_C + dx));
+                    s.add((BOARD_SIZE - 1 - SUKI_C - n + dy + 1) * BOARD_SIZE + (BOARD_SIZE - 1 - SUKI_C - n + dx + 1));
                 }
-            return s;
-        })();
+            SUKI_SET = s;
+        }
+        rebuildSuki();
+        function onVariantParam(p) { if (p.key === 'garden_size') rebuildSuki(); }
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
         let turn = 1; // 1:黒, 2:白
         let captures = { 1: 0, 2: 0 };
@@ -1171,7 +1175,7 @@
                 const edge = (x0, y0) => ctx.strokeRect(
                     padding + x0 * cellSize - cellSize * 0.5,
                     padding + y0 * cellSize - cellSize * 0.5,
-                    cellSize * 4, cellSize * 4);
+                    cellSize * (P('garden_size') || 4), cellSize * (P('garden_size') || 4));
                 edge(SUKI_C, SUKI_C);
                 edge(BOARD_SIZE - 2 - SUKI_C, BOARD_SIZE - 2 - SUKI_C);
                 ctx.restore();
@@ -2251,7 +2255,7 @@
                 const v = board[i];
                 if (v !== 1 && v !== 2) continue;
                 const lonely = !getNeighbors(i).some(n => board[n] === v);
-                if (lonely) b[v] += 2;
+                if (lonely) b[v] += (P('suki_pts') ?? 2);
             }
             return b;
         }

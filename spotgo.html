@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"spot_pts","label":"勘所1点あたりの得点","min":0,"max":6,"def":2,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2222,8 +2222,8 @@
             const territory = calculateTerritory();
 
             const spots = spotCells();
-            const spotB = spots.filter(i => board[i] === 1).length * 2;
-            const spotW = spots.filter(i => board[i] === 2).length * 2;
+            const spotB = spots.filter(i => board[i] === 1).length * (P('spot_pts') ?? 2);
+            const spotW = spots.filter(i => board[i] === 2).length * (P('spot_pts') ?? 2);
             const blackTotal = territory.black + captures[1] + spotB;
             const whiteTotal = territory.white + captures[2] + komi + spotW;
             const diff = Math.abs(blackTotal - whiteTotal);

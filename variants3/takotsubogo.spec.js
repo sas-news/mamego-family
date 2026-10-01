@@ -27,6 +27,9 @@ module.exports = {
     icon: 'takotsubogo',
     spec: [
         ...K.rb('TAKOTSUBOGO', '蛸壺碁', 'takotsubogo'),
+        K.params([
+            { key: 'pot_interval', label: '壺上げの間隔', min: 3, max: 25, def: 9, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 蛸壺: 4つの壺の点
         const TSUBO_PTS = (() => {
@@ -40,7 +43,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 蛸壺: 9手ごとの壺上げ — 壺の中の石は獲られ相手のアゲハマに
-            if (history.length > 0 && history.length % 9 === 0) {
+            if (history.length > 0 && history.length % (P('pot_interval') || 9) === 0) {
                 let caught = 0;
                 TSUBO_PTS.forEach(i => {
                     const v = board[i];
@@ -77,7 +80,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'壺上げまで ' + (9 - (history.length % 9)) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`'壺上げまで ' + ((P('pot_interval') || 9) - (history.length % (P('pot_interval') || 9))) + ' 手'`),
         [K.ONE, K.INFO_ALGO, `            蛸壺碁: 壺の点の石は9手ごとの壺上げで獲られる (相手のアゲハマに)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

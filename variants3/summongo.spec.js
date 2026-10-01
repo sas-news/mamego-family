@@ -86,6 +86,10 @@ module.exports = {
     icon: 'summongo',
     spec: [
         ...K.rb('SUMMONGO', '召喚碁', 'summongo'),
+        K.params([
+            { key: 'sacrifice_min', label: '召喚に必要な犠牲', min: 2, max: 6, def: 2, unit: '石' },
+            { key: 'beast_life', label: '幻獣の寿命', min: 4, max: 40, def: 16, unit: '手' },
+        ]),
         ...PERSIST('{ summon: { 1: 0, 2: 0 }, arm: { 1: false, 2: false }, beast: null }'),
         // 召喚獣を含む連は生きている (無敵)
         [K.ONE, GETCAP, `        function getCapturedStones(boardState, player) {
@@ -131,7 +135,7 @@ module.exports = {
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
-                if (captured.length >= 2) {
+                if (captured.length >= (P('sacrifice_min') || 2)) {
                     st.summon[opponent]++;
                     const c0 = captured[0];
                     fxText(c0, '生贄+1', '#a78bfa', 1100);
@@ -190,7 +194,7 @@ module.exports = {
                 st.arm[player] = false;
                 st.summon[player]--;
                 const bi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                st.beast = { idx: bi, until: history.length + 16, player: player };
+                st.beast = { idx: bi, until: history.length + (P('beast_life') || 16), player: player };
                 fxGlow(bi, '#8b5cf6', 1100);
                 fxText(bi, '召喚獣!', '#a78bfa', 1400);
                 fxShake(5, 300);

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"dice_max","label":"駒の進み幅の上限","min":1,"max":6,"def":3,"unit":"マス"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1872,7 +1872,7 @@
             {
                 if (sugoPath.length !== board.length) sugoPath = buildSugoPath(BOARD_SIZE);
                 const prevPos = sugoPos[player];
-                const step = 1 + Math.floor(Math.random() * 3);
+                const step = 1 + Math.floor(Math.random() * (P('dice_max') || 3));
                 sugoPos[player] += step;
                 // 駒の進み: 旧升目から新升目へ滑らせる
                 const fromIdx = sugoPath[Math.min(prevPos, sugoPath.length - 1)];

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"spring_dist","label":"トランポリンの位置","min":1,"max":4,"def":2,"unit":"マス","hint":"中央からの距離"},{"key":"jump_dist","label":"跳ねる距離","min":1,"max":5,"def":2,"unit":"マス"},{"key":"cap_moves","label":"打ち切り手数","min":60,"max":400,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1177,8 +1177,9 @@
             // トランポリン: 中央斜め4ヶ所
             {
                 const cc = Math.floor(BOARD_SIZE / 2);
+                const sd = P('spring_dist') || 2;
                 ctx.save();
-                [[-2, -2], [2, -2], [-2, 2], [2, 2]].forEach(([dx, dy]) => {
+                [[-sd, -sd], [sd, -sd], [-sd, sd], [sd, sd]].forEach(([dx, dy]) => {
                     const sx = cc + dx, sy = cc + dy;
                     if (sx < 0 || sy < 0 || sx >= BOARD_SIZE || sy >= BOARD_SIZE) return;
                     const cx = padding + sx * cellSize, cy = padding + sy * cellSize;
@@ -1783,8 +1784,10 @@
             const N = BOARD_SIZE, c = Math.floor(N / 2);
             const x = i % N, y = Math.floor(i / N);
             const dx = x - c, dy = y - c;
-            if (Math.abs(dx) !== 2 || Math.abs(dy) !== 2) return -1;
-            const nx = x + (dx > 0 ? 2 : -2), ny = y + (dy > 0 ? 2 : -2);
+            const sd = P('spring_dist') || 2;
+            if (Math.abs(dx) !== sd || Math.abs(dy) !== sd) return -1;
+            const jd = P('jump_dist') || 2;
+            const nx = x + (dx > 0 ? jd : -jd), ny = y + (dy > 0 ? jd : -jd);
             if (nx < 0 || ny < 0 || nx >= N || ny >= N) return -1;
             return ny * N + nx;
         }
@@ -1880,7 +1883,7 @@
                 }
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

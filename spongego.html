@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"bonus_moves","label":"追打ち権の回数","min":1,"max":3,"def":1,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1828,7 +1828,7 @@
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
-                spongeBonus[player] = 1; // 海綿: 取ったらもう1手
+                spongeBonus[player] = Math.max(1, P('bonus_moves') || 1); // 海綿: 取ったら追打ち権
                 captured.forEach(idx => fxGlow(idx, '#2dd4bf', 550));
                 fxText(captured[0], 'もう1手!', '#5eead4', 1000);
                 soundManager.playCapture();

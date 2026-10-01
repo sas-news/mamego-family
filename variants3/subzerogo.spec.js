@@ -47,14 +47,18 @@ module.exports = {
     icon: 'subzerogo',
     spec: [
         ...K.rb('SUBZEROGO', '氷点碁', 'subzerogo'),
+        K.params([
+            { key: 'zone_size', label: '氷点区域のサイズ', min: 2, max: 8, def: 4, unit: 'マス' },
+        ]),
         ...ST(ST_INIT),
         // 氷点区域の判定と凍結処理 (helpers は関数宣言より先に挿入)
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        const frozenZone = (i) => {
             const mid = BOARD_SIZE / 2;
-            const lo = Math.floor(mid) - 2;
-            return (i % BOARD_SIZE) >= lo && (i % BOARD_SIZE) < lo + 4
-                && ((i / BOARD_SIZE) | 0) >= lo && ((i / BOARD_SIZE) | 0) < lo + 4;
+            const z = P('zone_size') || 4;
+            const lo = Math.floor(mid) - Math.floor(z / 2);
+            return (i % BOARD_SIZE) >= lo && (i % BOARD_SIZE) < lo + z
+                && ((i / BOARD_SIZE) | 0) >= lo && ((i / BOARD_SIZE) | 0) < lo + z;
         };
         const refreshFreeze = () => {
             st.frz.clear();
@@ -96,10 +100,11 @@ module.exports = {
             });`),
         // 氷点区域を淡い青で塗る
         K.CUE_GRID(`            {
-                const lo = Math.floor(BOARD_SIZE / 2) - 2;
+                const z = P('zone_size') || 4;
+                const lo = Math.floor(BOARD_SIZE / 2) - Math.floor(z / 2);
                 ctx.save();
                 ctx.fillStyle = 'rgba(125,211,252,0.10)';
-                ctx.fillRect(padding + lo * cellSize, padding + lo * cellSize, cellSize * 4, cellSize * 4);
+                ctx.fillRect(padding + lo * cellSize, padding + lo * cellSize, cellSize * z, cellSize * z);
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'氷結石 ' + st.frz.size + '個'`),

@@ -322,7 +322,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"sute_lib","label":"捨駒の呼吸点上限","min":0,"max":3,"def":1,"hint":"この呼吸点数以下の連が根付く"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1876,7 +1876,7 @@
                                 if (board[__m] === player && !__seen.has(__m)) { __seen.add(__m); __q.push(__m); }
                             });
                         }
-                        if (getLiberties(board, __root) <= 1) __seen.forEach(__c => __dead.add(__c));
+                        if (getLiberties(board, __root) <= (P('sute_lib') ?? 1)) __seen.forEach(__c => __dead.add(__c));
                     });
                     if (__dead.size > 0) {
                         __dead.forEach(__c => { if (board[__c] === player) { board[__c] = 0; captures[opponent]++; } });
