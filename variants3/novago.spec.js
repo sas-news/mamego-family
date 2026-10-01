@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,12 @@ module.exports = {
     icon: 'novago',
     spec: [
         ...K.rb('NOVAGO', '客星碁', 'novago'),
+        K.params([
+            { key: 'nova_interval', label: '客星の出現間隔', min: 5, max: 30, def: 15, unit: '手' },
+            { key: 'nova_ttl', label: '客星の存続時間', min: 3, max: 15, def: 6, unit: '手' },
+            { key: 'nova_bonus', label: '客星ボーナス', min: 0, max: 10, def: 5, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST(ST_INIT, `
         // 客星: 突如現れる新星点。現れてから6手以内に置くと+5
         const trySpawnNova = () => {
@@ -71,19 +77,22 @@ module.exports = {
             for (let i = 0; i < board.length; i++) if (board[i] === 0) empties.push(i);
             if (!empties.length) { st.nova = null; return; }
             const idx = empties[Math.floor(Math.random() * empties.length)];
-            st.nova = { idx, until: history.length + 6 };
+            st.nova = { idx, until: history.length + (P('nova_ttl') || 6) };
         };`, ''),
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
             turn = opponent;`, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 客星: 8手目・23手目…と15手ごとに出現。期限を過ぎると消える
-            if (history.length % 15 === 8) trySpawnNova();
+            // 客星: 間隔ごとに出現 (最初は8手目)。期限を過ぎると消える
+            {
+                const __iv = Math.max(2, P('nova_interval') || 15);
+                if (history.length % __iv === Math.min(8, __iv - 1)) trySpawnNova();
+            }
             if (st.nova && history.length > st.nova.until) st.nova = null;
             const nIdx = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             if (st.nova && st.nova.idx === nIdx) {
-                st.score[player] += 5;
+                st.score[player] += (P('nova_bonus') || 5);
                 st.nova = null;
             }
 

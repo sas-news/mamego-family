@@ -9,9 +9,9 @@ const GAME_OVER = [
     [K.ONE, `        function executeMove(move, player) {`,
 `        let capFired = false;
         function executeMove(move, player) {
-            // 打ち切り: 150手を超えたら即採点終局
+            // 打ち切り: 設定手数を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('move_cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'peelgo',
     spec: [
         ...K.rb('PEELGO', '剥落碁', 'peelgo'),
+        K.params([
+            { key: 'peel_age', label: '剥落までの手数', min: 10, max: 80, def: 35, unit: '手' },
+            { key: 'move_cap', label: '打ち切り手数', min: 50, max: 400, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { age: {} }; // 石の誕生手数`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -60,7 +64,7 @@ module.exports = {
                 Object.keys(st.age).forEach(k => {
                     const i = +k;
                     if (board[i] !== 1 && board[i] !== 2) { delete st.age[i]; return; }
-                    if (history.length - st.age[i] >= 35) {
+                    if (history.length - st.age[i] >= (P('peel_age') || 35)) {
                         board[i] = 4; // 色が剥落して殻になる
                         delete st.age[i];
                         peeled++;
@@ -103,7 +107,7 @@ module.exports = {
                 Object.keys(st.age || {}).forEach(k => {
                     const i = +k;
                     if (board[i] !== 1 && board[i] !== 2) return;
-                    if (history.length - st.age[i] < 25) return;
+                    if (history.length - st.age[i] < Math.max(0, (P('peel_age') || 35) - 10)) return;
                     const cx = padding + (i % BOARD_SIZE) * cellSize;
                     const cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
                     ctx.beginPath();

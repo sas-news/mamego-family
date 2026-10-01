@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,11 @@ module.exports = {
     icon: 'oreveingo',
     spec: [
         ...K.rb('OREVEINGO', '鉱脈碁', 'oreveingo'),
+        K.params([
+            { key: 'vein_len', label: '鉱脈に必要な連の長さ', min: 3, max: 7, def: 4, unit: '連' },
+            { key: 'ore_bonus', label: '鉱石1個の得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST('{ dug: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -60,7 +65,7 @@ module.exports = {
                         let x = move.cells[0].x + d[0] * s, y = move.cells[0].y + d[1] * s;
                         while (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && board[y * BOARD_SIZE + x] === player) { run++; x += d[0] * s; y += d[1] * s; }
                     }
-                    if (run >= 4 && !st.dug[mi]) {
+                    if (run >= (P('vein_len') || 4) && !st.dug[mi]) {
                         st.dug[mi] = 1;
                         fxBurst(mi, '#fbbf24', 14);
                         fxText(mi, '鉱石+1', '#f59e0b', 1100);
@@ -90,8 +95,8 @@ module.exports = {
         [K.ONE, `            const territory = calculateTerritory();`,
 `            const territory = calculateTerritory();
             for (const k in st.dug) {
-                if (board[k] === 1) territory.black += 1;
-                else if (board[k] === 2) territory.white += 1;
+                if (board[k] === 1) territory.black += (P('ore_bonus') || 1);
+                else if (board[k] === 2) territory.white += (P('ore_bonus') || 1);
             }`],
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            鉱脈碁: 着手で自分の石の4連以上の直線を完成させると鉱石+1目 (終局時盤上に残っていること)<br>

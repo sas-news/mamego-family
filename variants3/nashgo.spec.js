@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -77,6 +77,10 @@ module.exports = {
     icon: 'nashgo',
     spec: [
         ...K.rb('NASHGO', 'ナッシュ碁', 'nashgo'),
+        K.params([
+            { key: 'nash_bonus', label: '均衡点ボーナス', min: 0, max: 6, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 均衡点に置いたら+2。その後、次の手番の均衡点を再計算して公開
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -86,8 +90,8 @@ module.exports = {
             {
                 const __pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (__pi === st.nash && st.nashFor === player) {
-                    st.bonus[player] = (st.bonus[player] || 0) + 2;
-                    fxText(__pi, '均衡点 +2', '#fbbf24', 1100);
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('nash_bonus') || 2);
+                    fxText(__pi, '均衡点 +' + (P('nash_bonus') || 2), '#fbbf24', 1100);
                     fxGlow(__pi, '#fbbf24', 900);
                 }
             }

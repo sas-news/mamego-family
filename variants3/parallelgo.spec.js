@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -28,10 +28,15 @@ module.exports = {
     icon: "parallelgo",
     spec: [
         ...K.rb("Parallel-Go", "並列碁", "parallelgo"),
+        K.params([
+            { key: 'chain_min', label: '冗長となる連の最小サイズ', min: 2, max: 5, def: 3, unit: '石' },
+            { key: 'chains_needed', label: '冗長に必要な連の数', min: 2, max: 4, def: 2 },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         [K.ONE, '            if (getCapturedStones(after, player).length > 0) return false;',
             "            // 変則: 取り残された死に連が残り得るため、着手した石の連だけを窒息判定する\n            const placedSuicide = cells.some(p => {\n                const pi = p.y * BOARD_SIZE + p.x;\n                const seen = new Set([pi]), q = [pi];\n                while (q.length) {\n                    const cur = q.pop();\n                    for (const n of getNeighbors(cur)) if (after[n] === player && !seen.has(n)) { seen.add(n); q.push(n); }\n                }\n                return getCapturedStones(after, player).some(d => seen.has(d));\n            });\n            if (placedSuicide) return false;"],
         [K.ONE, K.NBRS_GRID, K.NBRS_GRID + "\n\n        // 指定色の全連を返す\n        function vChains(b, p) {\n            const seen = new Uint8Array(b.length), out = [];\n            for (let i = 0; i < b.length; i++) {\n                if (b[i] !== p || seen[i]) continue;\n                const g = [], q = [i]; seen[i] = 1;\n                while (q.length) {\n                    const cur = q.pop(); g.push(cur);\n                    getNeighbors(cur).forEach(n => { if (b[n] === p && !seen[n]) { seen[n] = 1; q.push(n); } });\n                }\n                out.push(g);\n            }\n            return out;\n        }\n        // 取りリストを連結成分に分割する\n        function vGroups(cells) {\n            const set = new Set(cells), out = [];\n            for (const s of cells) {\n                if (!set.has(s)) continue;\n                const g = [], q = [s]; set.delete(s);\n                while (q.length) {\n                    const cur = q.pop(); g.push(cur);\n                    getNeighbors(cur).forEach(n => { if (set.has(n)) { set.delete(n); q.push(n); } });\n                }\n                out.push(g);\n            }\n            return out;\n        }"],
-        [K.ONE, K.CAPTURE_BLOCK, "            // 並列碁: 3石以上の連を2つ以上持つ側は冗長回路 — 長連の取りを免れる\n            const strong = vChains(board, opponent).filter(g => g.length >= 3).length;\n            const captured = [];\n            vGroups(getCapturedStones(board, opponent)).forEach(g => {\n                if (!(strong >= 2 && g.length >= 3)) captured.push(...g);\n            });\n            if (captured.length > 0) {\n                captured.forEach(idx => board[idx] = 0);\n                captures[player] += captured.length;\n                soundManager.playCapture();\n                cleanUpPieces();\n            } else {\n                soundManager.playPlace();\n            }"],
+        [K.ONE, K.CAPTURE_BLOCK, "            // 並列碁: 3石以上の連を2つ以上持つ側は冗長回路 — 長連の取りを免れる\n            const strong = vChains(board, opponent).filter(g => g.length >= (P('chain_min') || 3)).length;\n            const captured = [];\n            vGroups(getCapturedStones(board, opponent)).forEach(g => {\n                if (!(strong >= (P('chains_needed') || 2) && g.length >= (P('chain_min') || 3))) captured.push(...g);\n            });\n            if (captured.length > 0) {\n                captured.forEach(idx => board[idx] = 0);\n                captures[player] += captured.length;\n                soundManager.playCapture();\n                cleanUpPieces();\n            } else {\n                soundManager.playPlace();\n            }"],
         ...K.EVENT_CHIP_SPEC("'並列: 3連を2つ持てば冗長'"),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, "3石以上の連を2つ以上並走させると並列回路 — 片方が断線 (包囲) されてももう片方が電流を通し、長い連は取られない。単石・小連には効かない。"],

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"peace_cap","label":"平和とみなす取り数上限","min":0,"max":5,"def":0,"unit":"個"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2204,7 +2204,7 @@
             const diff = Math.abs(blackTotal - whiteTotal);
 
             let winnerTitle = '';
-            const bPeace = captures[1] === 0, wPeace = captures[2] === 0;
+            const bPeace = captures[1] <= (P('peace_cap') || 0), wPeace = captures[2] <= (P('peace_cap') || 0);
             if (bPeace !== wPeace) {
                 // 平和ルール: 一度も取らなかった側が無条件勝ち
                 winnerTitle = (bPeace ? '黒' : '白') + 'の平和勝ち';

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,10 @@ module.exports = {
     icon: 'nucleationgo',
     spec: [
         ...K.rb('NUCLEATIONGO', '結晶碁', 'nucleationgo'),
+        K.params([
+            { key: 'spr_max', label: '1核が育てる結晶の上限', min: 1, max: 5, def: 2, unit: '個' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST('{ nuc: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -55,7 +59,7 @@ module.exports = {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 for (const k in st.nuc) {
                     const ni = +k, nc = st.nuc[k];
-                    if (board[ni] !== player || nc.spr >= 2) continue;
+                    if (board[ni] !== player || nc.spr >= (P('spr_max') || 2)) continue;
                     for (const cand of getNeighbors(ni)) {
                         if (board[cand] !== 0) continue;
                         if (!isValidPlacement([{ x: cand % BOARD_SIZE, y: (cand / BOARD_SIZE) | 0 }], player)) continue;

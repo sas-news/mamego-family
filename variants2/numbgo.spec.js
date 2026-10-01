@@ -9,6 +9,9 @@ module.exports = {
     kind: 'number',
     spec: [
         ...K.rb('NUMBGO', '数読碁', 'numbgo'),
+        K.params([
+            { key: 'warn_libs', label: '警告が出る呼吸数', min: 1, max: 4, def: 1, unit: '以下' },
+        ]),
         ...K.STONE_MARKS_SPEC(`            // 各連の呼吸点数を石の上に数字で表示 (同色連は同じ数)
             {
                 ctx.save();
@@ -21,10 +24,10 @@ module.exports = {
                     const cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
                     const libs = getLiberties(board, i);
                     // 呼吸1は警告色で強調
-                    ctx.fillStyle = libs <= 1 ? '#ef4444' : (v === 1 ? '#ffffff' : '#111827');
+                    ctx.fillStyle = libs <= (P('warn_libs') || 1) ? '#ef4444' : (v === 1 ? '#ffffff' : '#111827');
                     ctx.fillText(String(libs), cx, cy);
                     // 呼吸1は赤い警告リングでも強調
-                    if (libs <= 1) {
+                    if (libs <= (P('warn_libs') || 1)) {
                         ctx.strokeStyle = 'rgba(239,68,68,' + (0.55 + 0.3 * Math.sin(fxNow() / 280)) + ')';
                         ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
                         ctx.beginPath();

@@ -10,6 +10,11 @@ module.exports = {
     icon: 'paintergo',
     spec: [
         ...K.rb('PAINTERGO', '絵画碁', 'paintergo'),
+        K.params([
+            { key: 'brush_dist', label: '筆が繋がる距離', min: 1, max: 3, def: 1, unit: 'マス' },
+            { key: 'brush_bonus', label: '連続筆ボーナス', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         // 連続筆ボーナス: 自分の直前の着手と8近傍で繋がれば+1
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -20,17 +25,18 @@ module.exports = {
                 const cur = move.cells[0];
                 if (own.length >= 2) {
                     const prev = own[own.length - 2].cells[0];
-                    if (Math.abs(cur.x - prev.x) <= 1 && Math.abs(cur.y - prev.y) <= 1) {
-                        captures[player] += 1;
+                    const __bd = P('brush_dist') || 1;
+                    if (Math.abs(cur.x - prev.x) <= __bd && Math.abs(cur.y - prev.y) <= __bd) {
+                        captures[player] += (P('brush_bonus') || 1);
                         const ci = cur.y * BOARD_SIZE + cur.x;
-                        fxText(ci, '連続筆 +1', '#7c3aed', 1100);
+                        fxText(ci, '連続筆 +' + (P('brush_bonus') || 1), '#7c3aed', 1100);
                         fxGlow(ci, '#a78bfa', 700);
                     }
                 }
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 endGameByScore();
                 return;
             }

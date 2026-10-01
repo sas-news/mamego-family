@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"diff","label":"決着となる勢力差","min":4,"max":30,"def":10,"unit":"点"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -961,7 +961,7 @@
         let obstaclePainter = null;
         fxAmbient((ctx2, now, pad, cs) => {
             const d = Math.abs(scoreDiff());
-            if (d < 7) return;
+            if (d < (P('diff') || 10) - 3) return;
             const ph = (Math.sin(now / 420) + 1) / 2;
             const w = pad * 2 + (BOARD_SIZE - 1) * cs;
             ctx2.save();
@@ -1848,10 +1848,10 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 大差ルール: 勢力差が10以上なら即決着
+            // 大差ルール: 勢力差が設定値以上なら即決着
             {
                 const d = scoreDiff();
-                if (Math.abs(d) >= 10) {
+                if (Math.abs(d) >= (P('diff') || 10)) {
                     const w = d > 0 ? 1 : 2;
                     fxShake(8, 420);
                     if (lastMove && lastMove.cells[0]) {
@@ -1859,7 +1859,7 @@
                         fxGlow(oi, '#facc15', 900);
                         fxText(oi, '大差決着!', '#facc15', 1400);
                     }
-                    winByRule(w, '大差勝ち', '勢力差が10以上開きました (' + Math.abs(d) + ')'); return;
+                    winByRule(w, '大差勝ち', '勢力差が' + (P('diff') || 10) + '以上開きました (' + Math.abs(d) + ')'); return;
                 }
             }
 

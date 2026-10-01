@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('NEXUSGO', '結節碁', 'nexusgo'),
+        K.params([
+            { key: 'nexus_open', label: '中央の結節点', options: [{ v: 'open', l: 'あり (4小盤を結ぶ)' }, { v: 'closed', l: 'なし (完全分断)' }], def: 'open' },
+        ]),
         [K.ONE, K.NBRS_GRID, `        function getNeighbors(idx) {
             const x = idx % BOARD_SIZE;
             const y = Math.floor(idx / BOARD_SIZE);
@@ -16,6 +19,7 @@ module.exports = {
             const nexus = c * BOARD_SIZE + c;
             // ネクサスは斜め4点 (各小盤の角) にだけ繋がる
             if (idx === nexus) {
+                if (P('nexus_open') === 'closed') return [];
                 return [nexus - BOARD_SIZE - 1, nexus - BOARD_SIZE + 1,
                         nexus + BOARD_SIZE - 1, nexus + BOARD_SIZE + 1];
             }
@@ -25,8 +29,12 @@ module.exports = {
             if (y > 0) neighbors.push(idx - BOARD_SIZE);
             if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
             // ネクサスに接する斜め4点はネクサスにも繋がる
-            if (Math.abs(x - c) === 1 && Math.abs(y - c) === 1) neighbors.push(nexus);
+            if (Math.abs(x - c) === 1 && Math.abs(y - c) === 1 && P('nexus_open') !== 'closed') neighbors.push(nexus);
             return neighbors;
+        }
+        // 結節点の有無を変えたら溝を含め盤面を作り直す
+        function onVariantParam(p) {
+            if (p.key === 'nexus_open') resetGame();
         }`],
         // 十字の溝 (ネクサスだけ残す)
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
@@ -36,7 +44,7 @@ module.exports = {
                     board[c * BOARD_SIZE + i] = 3;
                     board[i * BOARD_SIZE + c] = 3;
                 }
-                board[c * BOARD_SIZE + c] = 0;
+                board[c * BOARD_SIZE + c] = P('nexus_open') === 'closed' ? 3 : 0;
             }`],
         // ネクサスに金環
         K.CUE_STARS(`            {

@@ -9,12 +9,15 @@ module.exports = {
     kind: 'peak',
     spec: [
         ...K.rb('PEAKGO', '高峰碁', 'peakgo'),
+        K.params([
+            { key: 'peak_weight', label: '標高の得点重み', min: 0, max: 4, def: 1, step: 0.5 },
+        ]),
         [K.ONE, `        function endGameByScore() {`, `
         // 標高得点: 上端ほど高い (y=0で最大 BOARD_SIZE-1)
         function peakScore(player) {
             let s = 0;
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                if (board[y * BOARD_SIZE + x] === player) s += BOARD_SIZE - 1 - y;
+                if (board[y * BOARD_SIZE + x] === player) s += (BOARD_SIZE - 1 - y) * (P('peak_weight') || 1);
             }
             return s;
         }

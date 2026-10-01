@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"bone_life","label":"白骨の風化までの手数","min":1,"max":9,"def":3,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1845,7 +1845,7 @@
             const opponent = player === 1 ? 2 : 1;
             const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
-                captured.forEach(idx => { board[idx] = 4; boneMap[idx] = 3; fxGlow(idx, '#e7e5d4', 650); }); // 白骨化 (置けない障害物)
+                captured.forEach(idx => { board[idx] = 4; boneMap[idx] = Math.max(1, P('bone_life') || 3); fxGlow(idx, '#e7e5d4', 650); }); // 白骨化 (置けない障害物)
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();

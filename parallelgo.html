@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"chain_min","label":"冗長となる連の最小サイズ","min":2,"max":5,"def":3,"unit":"石"},{"key":"chains_needed","label":"冗長に必要な連の数","min":2,"max":4,"def":2},{"key":"cap_ratio","label":"打ち切り手数 (交点比)","min":0.4,"max":1.5,"def":0.75,"step":0.05}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1801,7 +1801,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1837,10 +1837,10 @@
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;
             // 並列碁: 3石以上の連を2つ以上持つ側は冗長回路 — 長連の取りを免れる
-            const strong = vChains(board, opponent).filter(g => g.length >= 3).length;
+            const strong = vChains(board, opponent).filter(g => g.length >= (P('chain_min') || 3)).length;
             const captured = [];
             vGroups(getCapturedStones(board, opponent)).forEach(g => {
-                if (!(strong >= 2 && g.length >= 3)) captured.push(...g);
+                if (!(strong >= (P('chains_needed') || 2) && g.length >= (P('chain_min') || 3))) captured.push(...g);
             });
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);

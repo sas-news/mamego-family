@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'nurikabego',
     spec: [
         ...K.rb('NURIKABEGO', '塗壁碁', 'nurikabego'),
+        K.params([
+            { key: 'wall_interval', label: '壁になる手数周期', min: 3, max: 12, def: 6, unit: '手ごと' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.8, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
 `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
@@ -56,7 +60,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 塗壁碁: 6手ごとの石は塗り壁になる
-            if (st.cnt[player] % 6 === 0) {
+            if (st.cnt[player] % Math.max(2, P('wall_interval') || 6) === 0) {
                 const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (board[ci] === player) {
                     board[ci] = 3;

@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'netgraphgo',
     spec: [
         ...K.rb('NETGRAPHGO', 'グラフ碁', 'netgraphgo'),
+        K.params([
+            { key: 'hub_deg', label: 'ハブに必要な次数', min: 2, max: 4, def: 3, unit: '方向' },
+            { key: 'hub_bonus', label: 'ハブボーナス', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 次数3以上のハブ石 → +1目 (石ごとに1回)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -59,10 +64,10 @@ module.exports = {
                 __targets.forEach(__i => {
                     if (st.hub[__i]) return;
                     const __deg = getNeighbors(__i).filter(__n => board[__n] === player).length;
-                    if (__deg >= 3) {
+                    if (__deg >= (P('hub_deg') || 3)) {
                         st.hub[__i] = 1;
-                        st.bonus[player] = (st.bonus[player] || 0) + 1;
-                        fxText(__i, 'ハブ +1', '#60a5fa', 1000);
+                        st.bonus[player] = (st.bonus[player] || 0) + (P('hub_bonus') || 1);
+                        fxText(__i, 'ハブ +' + (P('hub_bonus') || 1), '#60a5fa', 1000);
                         fxGlow(__i, '#60a5fa', 700);
                     }
                 });

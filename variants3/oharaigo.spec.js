@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'oharaigo',
     spec: [
         ...K.rb('OHARAIGO', '大祓碁', 'oharaigo'),
+        K.params([
+            { key: 'oharai_interval', label: '大祓の間隔', min: 6, max: 40, def: 18, unit: '手' },
+            { key: 'lib_max', label: '祓われる呼吸数', min: 1, max: 3, def: 1, unit: '以下' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 大祓: 呼吸点1以下の連を全て取り除く
         function oharae() {
@@ -38,7 +43,7 @@ module.exports = {
                     if (board[i] !== pl || seen.has(i)) continue;
                     const grp = getConnectedGroup(i, pl);
                     grp.forEach(g => seen.add(g));
-                    if (getLiberties(board, i) <= 1) {
+                    if (getLiberties(board, i) <= (P('lib_max') || 1)) {
                         grp.forEach(g => { board[g] = 0; captures[pl === 1 ? 2 : 1]++; });
                         purged += grp.length;
                     }
@@ -51,7 +56,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length > 0 && history.length % 18 === 0) {
+            if (history.length > 0 && history.length % Math.max(2, P('oharai_interval') || 18) === 0) {
                 const p = oharae();
                 if (p > 0) {
                     fxShake(5, 400);
@@ -60,7 +65,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'大祓まで' + (18 - (history.length % 18)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'大祓まで' + ((P('oharai_interval') || 18) - (history.length % (P('oharai_interval') || 18))) + '手'`),
         [K.ONE, K.INFO_ALGO, `            大祓碁: 18手ごとの大祓 — 呼吸点1以下の連は全て穢れとして祓われる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"stride_off","label":"パックマンの歩幅オフセット","min":1,"max":5,"def":2}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1874,7 +1874,7 @@
             // 喰碁: パックマンが斜めに巡回し、止まった点の石を色問わず食べる
             {
                 const prev = pacPos;
-                pacPos = (pacPos + BOARD_SIZE + 2) % board.length;
+                pacPos = (pacPos + BOARD_SIZE + Math.max(1, P('stride_off') || 2)) % board.length;
                 fxSlide(prev, pacPos, 360); // ワカワカ進む経路
                 if (board[pacPos] === 1 || board[pacPos] === 2) {
                     fxBurst(pacPos, '#ffd23f', 10, 1.5);

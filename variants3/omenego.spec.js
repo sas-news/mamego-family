@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'omenego',
     spec: [
         ...K.rb('OMENEGO', '面隠碁', 'omenego'),
+        K.params([
+            { key: 'mask_interval', label: 'お面石の周期', min: 2, max: 10, def: 4, unit: '手ごと' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
 
         // お面石: 各側4手ごとの着手は正体隠し (終局で敵色に化ける)
@@ -57,7 +61,7 @@ module.exports = {
             st.pcnt[player]++;
             {
                 const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                if (st.pcnt[player] % 4 === 0) {
+                if (st.pcnt[player] % Math.max(2, P('mask_interval') || 4) === 0) {
                     st.masks[player].push(pi);
                     fxText(pi, 'お面?', '#a78bfa', 1000);
                     fxGlow(pi, '#a78bfa', 700);
@@ -100,7 +104,7 @@ module.exports = {
                     ctx.restore();
                 });
             });`),
-        ...K.EVENT_CHIP_SPEC(`'お面まで ' + (4 - (st.pcnt[turn] || 0) % 4) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'お面まで ' + ((P('mask_interval') || 4) - (st.pcnt[turn] || 0) % (P('mask_interval') || 4)) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            面隠碁: 各側4手ごとの着手はお面石 — 盤上は自分の石だが終局時に敵色へ化ける<br>
             PC: クリックで配置<br>

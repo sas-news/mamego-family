@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"collision","label":"敵との衝突","options":[{"v":"die","l":"衝突すると消滅"},{"v":"bounce","l":"衝突しても跳ね返る"}],"def":"die"},{"key":"move_cap","label":"打ち切り手数","min":40,"max":400,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1880,7 +1880,7 @@
                 const to = new Map();
                 moving.forEach(([f, t]) => {
                     if (board[t] !== 0) {
-                        if (board[t] !== board[f]) killed.add(f); // 敵に衝突→消滅
+                        if (board[t] !== board[f] && P('collision') !== 'bounce') killed.add(f); // 敵に衝突→消滅
                         // 味方の先には進まない (跳ね返り)
                     } else {
                         to.set(f, t);
@@ -1901,7 +1901,7 @@
                 if (moved || killed.size) cleanUpPieces();
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('move_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

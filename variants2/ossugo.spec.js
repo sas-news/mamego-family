@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('OSSUGO', '白骨碁', 'ossugo'),
+        K.params([
+            { key: 'bone_life', label: '白骨の風化までの手数', min: 1, max: 9, def: 3, unit: '手' },
+        ]),
         // 白骨の風化カウンタ boneMap (idx → 残り手数) の状態登録
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let boneMap = {}; // 白骨の残り風化手数 (idx → n手)`],
@@ -34,7 +37,7 @@ module.exports = {
             boneMap = (data.boneMap && typeof data.boneMap === 'object') ? { ...data.boneMap } : {};`],
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
-                captured.forEach(idx => { board[idx] = 4; boneMap[idx] = 3; fxGlow(idx, '#e7e5d4', 650); }); // 白骨化 (置けない障害物)
+                captured.forEach(idx => { board[idx] = 4; boneMap[idx] = Math.max(1, P('bone_life') || 3); fxGlow(idx, '#e7e5d4', 650); }); // 白骨化 (置けない障害物)
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();

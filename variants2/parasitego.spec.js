@@ -9,10 +9,13 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('PARASITEGO', '寄生碁', 'parasitego'),
+        K.params([
+            { key: 'bite_max', label: '1手で寄生できる敵石数', min: 1, max: 4, def: 4, unit: '個' },
+        ]),
         [K.ONE, K.CAPTURE_BLOCK, `            // 寄生: 着手点に接する敵石を自色に変える (連から削り取る)
             {
                 const anchor = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                const bitten = getNeighbors(anchor).filter(n => board[n] === opponent);
+                const bitten = getNeighbors(anchor).filter(n => board[n] === opponent).slice(0, P('bite_max') || 4);
                 if (bitten.length > 0) {
                     bitten.forEach(i => {
                         board[i] = player;

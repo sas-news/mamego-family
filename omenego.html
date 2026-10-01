@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"mask_interval","label":"お面石の周期","min":2,"max":10,"def":4,"unit":"手ごと"},{"key":"cap_ratio","label":"打ち切り手数 (交点比)","min":0.4,"max":1.5,"def":0.75,"step":0.05}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1821,7 +1821,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1879,7 +1879,7 @@
             st.pcnt[player]++;
             {
                 const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                if (st.pcnt[player] % 4 === 0) {
+                if (st.pcnt[player] % Math.max(2, P('mask_interval') || 4) === 0) {
                     st.masks[player].push(pi);
                     fxText(pi, 'お面?', '#a78bfa', 1000);
                     fxGlow(pi, '#a78bfa', 700);
@@ -2770,7 +2770,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('お面まで ' + (4 - (st.pcnt[turn] || 0) % 4) + '手');
+                const et = gameOver ? '' : ('お面まで ' + ((P('mask_interval') || 4) - (st.pcnt[turn] || 0) % (P('mask_interval') || 4)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"oracle_interval","label":"神託の周期","min":2,"max":15,"def":5,"unit":"手"},{"key":"oracle_range","label":"ご利益の範囲","min":1,"max":3,"def":1,"unit":"マス"},{"key":"oracle_bonus","label":"ご利益ボーナス","min":0,"max":5,"def":2,"unit":"目"},{"key":"cap_ratio","label":"打ち切り手数 (交点比)","min":0.4,"max":1.5,"def":0.75,"step":0.05}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1819,7 +1819,7 @@
 
         // 神託碁: 5手ウィンドウごとに決定論的な神託の点が示される
         function oracleIdx() {
-            const w = Math.floor(history.length / 5) + 3;
+            const w = Math.floor(history.length / Math.max(1, P('oracle_interval') || 5)) + 3;
             const s1 = Math.sin(w * 127.1 + 11.3) * 43758.5453;
             const s2 = Math.sin(w * 269.7 + 41.9) * 43758.5453;
             const r1 = s1 - Math.floor(s1), r2 = s2 - Math.floor(s2);
@@ -1880,15 +1880,16 @@
                 const oi = oracleIdx();
                 const ox = oi % BOARD_SIZE, oy = Math.floor(oi / BOARD_SIZE);
                 const p = move.cells[0];
-                if (Math.abs(p.x - ox) <= 1 && Math.abs(p.y - oy) <= 1) {
-                    captures[player] += 2;
+                const __r = P('oracle_range') || 1;
+                if (Math.abs(p.x - ox) <= __r && Math.abs(p.y - oy) <= __r) {
+                    captures[player] += (P('oracle_bonus') || 2);
                     fxGlow(oi, '#a5f3fc', 900);
-                    fxText(oi, '神託成就 +2', '#22d3ee', 1300);
+                    fxText(oi, '神託成就 +' + (P('oracle_bonus') || 2), '#22d3ee', 1300);
                 }
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 endGameByScore();
                 return;
             }

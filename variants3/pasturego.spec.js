@@ -10,6 +10,10 @@ module.exports = {
     icon: 'pasturego',
     spec: [
         ...K.rb('PASTUREGO', '放牧碁', 'pasturego'),
+        K.params([
+            { key: 'sheep_bonus', label: '柵の中の羊1匹の得点', min: 0, max: 3, def: 1, step: 0.5, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.8, step: 0.05 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let pastureDetail = { 1: 0, 2: 0 }; // 直近終局で計上した羊の数`],
         [K.ONE, `            const territory = calculateTerritory();`,
@@ -43,14 +47,14 @@ module.exports = {
                 if (p !== 1 && p !== 2) continue;
                 if (getNeighbors(i).some(n => ownTerr[p].has(n))) {
                     pastureDetail[p]++;
-                    if (p === 1) territory.black++; else territory.white++;
+                    if (p === 1) territory.black += (P('sheep_bonus') || 1); else territory.white += (P('sheep_bonus') || 1);
                 }
             }`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

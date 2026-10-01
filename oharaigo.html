@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"oharai_interval","label":"大祓の間隔","min":6,"max":40,"def":18,"unit":"手"},{"key":"lib_max","label":"祓われる呼吸数","min":1,"max":3,"def":1,"unit":"以下"},{"key":"cap_ratio","label":"打ち切り手数 (交点比)","min":0.4,"max":1.5,"def":0.9,"step":0.05}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -648,7 +648,7 @@
                     if (board[i] !== pl || seen.has(i)) continue;
                     const grp = getConnectedGroup(i, pl);
                     grp.forEach(g => seen.add(g));
-                    if (getLiberties(board, i) <= 1) {
+                    if (getLiberties(board, i) <= (P('lib_max') || 1)) {
                         grp.forEach(g => { board[g] = 0; captures[pl === 1 ? 2 : 1]++; });
                         purged += grp.length;
                     }
@@ -1812,7 +1812,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -1865,7 +1865,7 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length > 0 && history.length % 18 === 0) {
+            if (history.length > 0 && history.length % Math.max(2, P('oharai_interval') || 18) === 0) {
                 const p = oharae();
                 if (p > 0) {
                     fxShake(5, 400);
@@ -2744,7 +2744,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('大祓まで' + (18 - (history.length % 18)) + '手');
+                const et = gameOver ? '' : ('大祓まで' + ((P('oharai_interval') || 18) - (history.length % (P('oharai_interval') || 18))) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

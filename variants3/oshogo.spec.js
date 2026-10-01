@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,15 +47,23 @@ module.exports = {
     icon: 'oshogo',
     spec: [
         ...K.rb('OSHOGO', '王将碁', 'oshogo'),
+        K.params([
+            { key: 'king_move', label: '王将になる手数', min: 1, max: 5, def: 1, unit: '手目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         function endGameByScore() {`],
         ...ST(ST_INIT),
         // 最初の着手が王将
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
 `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
-            // 王将碁: 各軍の最初の石が王将
+            // 王将碁: 各軍の設定手数目の石が王将
             if (st.king[player] < 0) {
-                st.king[player] = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                st.kcnt = st.kcnt || { 1: 0, 2: 0 };
+                st.kcnt[player]++;
+                if (st.kcnt[player] === Math.max(1, P('king_move') || 1)) {
+                    st.king[player] = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+                }
             }`],
         // 王将が取られたら即敗北 (capture 後に判定)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;

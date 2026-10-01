@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('PACGO', '喰碁', 'pacgo'),
+        K.params([
+            { key: 'stride_off', label: 'パックマンの歩幅オフセット', min: 1, max: 5, def: 2 },
+        ]),
         [K.ONE, K.BOARD_DECL, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         let pacPos = 0; // パックマンの現在位置 (idx)`],
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
@@ -19,7 +22,7 @@ module.exports = {
             // 喰碁: パックマンが斜めに巡回し、止まった点の石を色問わず食べる
             {
                 const prev = pacPos;
-                pacPos = (pacPos + BOARD_SIZE + 2) % board.length;
+                pacPos = (pacPos + BOARD_SIZE + Math.max(1, P('stride_off') || 2)) % board.length;
                 fxSlide(prev, pacPos, 360); // ワカワカ進む経路
                 if (board[pacPos] === 1 || board[pacPos] === 2) {
                     fxBurst(pacPos, '#ffd23f', 10, 1.5);

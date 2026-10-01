@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"general_interval","label":"大将石の周期","min":3,"max":12,"def":5,"unit":"手ごと"},{"key":"move_cap","label":"打ち切り手数","min":40,"max":400,"def":140,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1884,7 +1884,7 @@
             // 歩兵碁: 各軍5手ごとの着手は大将石になる
             {
                 const movesMade = history.filter(h => h.turn === player).length;
-                if (movesMade % 5 === 0) {
+                if (movesMade % Math.max(2, P('general_interval') || 5) === 0) {
                     const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                     if (board[mi] === player && !st.big[mi]) {
                         st.big[mi] = player;
@@ -1897,7 +1897,7 @@
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('move_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();
@@ -2785,7 +2785,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('次の大将まで ' + (5 - (history.filter(h => h.turn === turn).length % 5)) + '手');
+                const et = gameOver ? '' : ('次の大将まで ' + ((P('general_interval') || 5) - (history.filter(h => h.turn === turn).length % (P('general_interval') || 5))) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

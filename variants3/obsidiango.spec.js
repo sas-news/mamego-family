@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,10 @@ module.exports = {
     icon: 'obsidiango',
     spec: [
         ...K.rb('OBSIDIANGO', '玻璃碁', 'obsidiango'),
+        K.params([
+            { key: 'wound_max', label: '砕けるまでの傷の数', min: 1, max: 4, def: 2, unit: '傷' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST('{ wound: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -56,7 +60,7 @@ module.exports = {
                 getNeighbors(mi).forEach(n => {
                     if (board[n] !== opponent) return;
                     st.wound[n] = (st.wound[n] || 0) + 1;
-                    if (st.wound[n] >= 2) {
+                    if (st.wound[n] >= (P('wound_max') || 2)) {
                         board[n] = 0;
                         captures[player]++;
                         delete st.wound[n];

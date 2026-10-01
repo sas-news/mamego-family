@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"nexus_open","label":"中央の結節点","options":[{"v":"open","l":"あり (4小盤を結ぶ)"},{"v":"closed","l":"なし (完全分断)"}],"def":"open"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -2008,6 +2008,7 @@
             const nexus = c * BOARD_SIZE + c;
             // ネクサスは斜め4点 (各小盤の角) にだけ繋がる
             if (idx === nexus) {
+                if (P('nexus_open') === 'closed') return [];
                 return [nexus - BOARD_SIZE - 1, nexus - BOARD_SIZE + 1,
                         nexus + BOARD_SIZE - 1, nexus + BOARD_SIZE + 1];
             }
@@ -2017,8 +2018,12 @@
             if (y > 0) neighbors.push(idx - BOARD_SIZE);
             if (y < BOARD_SIZE - 1) neighbors.push(idx + BOARD_SIZE);
             // ネクサスに接する斜め4点はネクサスにも繋がる
-            if (Math.abs(x - c) === 1 && Math.abs(y - c) === 1) neighbors.push(nexus);
+            if (Math.abs(x - c) === 1 && Math.abs(y - c) === 1 && P('nexus_open') !== 'closed') neighbors.push(nexus);
             return neighbors;
+        }
+        // 結節点の有無を変えたら溝を含め盤面を作り直す
+        function onVariantParam(p) {
+            if (p.key === 'nexus_open') resetGame();
         }
 
         // ==========================================
@@ -2809,7 +2814,7 @@
                     board[c * BOARD_SIZE + i] = 3;
                     board[i * BOARD_SIZE + c] = 3;
                 }
-                board[c * BOARD_SIZE + c] = 0;
+                board[c * BOARD_SIZE + c] = P('nexus_open') === 'closed' ? 3 : 0;
             }
             pieces = [];
             turn = 1;

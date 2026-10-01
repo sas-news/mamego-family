@@ -9,6 +9,9 @@ module.exports = {
     kind: 'star',
     spec: [
         ...K.rb('OUTGO', '前哨碁', 'outgo'),
+        K.params([
+            { key: 'outpost_pts', label: '星点1個の累積点', min: 0, max: 5, def: 1, step: 0.5, unit: '点/手' },
+        ]),
         // 状態: 前哨得点の累積
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let outpostScore = { 1: 0, 2: 0 }; // 星点保持の累積得点`],
@@ -39,11 +42,12 @@ module.exports = {
             // 前哨ルール: 着手した側が現在占拠している星点数を累積
             {
                 const held = getStarPoints(BOARD_SIZE).filter(pt => board[pt.y * BOARD_SIZE + pt.x] === player);
-                outpostScore[player] += held.length;
-                if (held.length > 0) {
+                const __pts = (P('outpost_pts') === 0 ? 0 : (P('outpost_pts') || 1));
+                outpostScore[player] += held.length * __pts;
+                if (held.length > 0 && __pts > 0) {
                     held.forEach(pt => fxGlow(pt.y * BOARD_SIZE + pt.x, '#fbbf24', 600));
                     if (lastMove && lastMove.cells[0]) {
-                        fxText(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, '前哨+' + held.length, '#fbbf24', 1100);
+                        fxText(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, '前哨+' + (held.length * __pts), '#fbbf24', 1100);
                     }
                 }
             }

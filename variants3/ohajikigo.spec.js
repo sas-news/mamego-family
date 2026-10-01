@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'ohajikigo',
     spec: [
         ...K.rb('OHAJIKIGO', '御碁碁', 'ohajikigo'),
+        K.params([
+            { key: 'flick_dist', label: '弾き飛ばす距離', min: 1, max: 3, def: 1, unit: 'マス' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // おはじき: 着手点に隣接する敵石を直線に弾く。
         // 弾かれた敵石は盤外または行き止まりで取れ、空へ飛ぶと1つずれる
@@ -38,12 +42,17 @@ module.exports = {
                 if (x < 0 || y < 0 || x >= BOARD_SIZE || y >= BOARD_SIZE) return;
                 const j = y * BOARD_SIZE + x;
                 if (board[j] !== opponent) return; // 隣が敵石の時だけ弾ける
-                const lx = x + dx, ly = y + dy;
-                if (lx < 0 || ly < 0 || lx >= BOARD_SIZE || ly >= BOARD_SIZE) {
-                    hits.push({ from: j, to: null }); // 盤外へ飛んで取れる
+                const dist = Math.max(1, P('flick_dist') || 1);
+                let lx = x, ly = y, dead = false;
+                for (let s = 0; s < dist; s++) {
+                    lx += dx; ly += dy;
+                    if (lx < 0 || ly < 0 || lx >= BOARD_SIZE || ly >= BOARD_SIZE) { dead = true; break; }
+                    if (board[ly * BOARD_SIZE + lx] !== 0) { dead = true; break; }
+                }
+                if (dead) {
+                    hits.push({ from: j, to: null }); // 盤外または行き止まりで取れる
                 } else {
-                    const tj = ly * BOARD_SIZE + lx;
-                    hits.push({ from: j, to: board[tj] === 0 ? tj : null }); // 空=ずれる, 埋まり=取れる
+                    hits.push({ from: j, to: ly * BOARD_SIZE + lx }); // 空=ずれる
                 }
             });
             return hits;

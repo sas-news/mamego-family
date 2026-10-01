@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"event_interval","label":"イベント襲来の間隔","min":3,"max":15,"def":6,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -962,7 +962,7 @@
         let fxShakeUntil = 0, fxShakeMag = 0;
         let obstaclePainter = null;
         fxAmbient((ctx2, now, pad, cs) => {
-            if (moveCount % 6 < 4) return;
+            if (moveCount % (P('event_interval') || 6) < (P('event_interval') || 6) - 2) return;
             const ph = (Math.sin(now / 300) + 1) / 2;
             const w = pad * 2 + (BOARD_SIZE - 1) * cs;
             ctx2.save();
@@ -1887,8 +1887,9 @@
 
             // 全能碁: 6手ごとにイベント襲来 (侵攻石→流星→全反転の周期)
             moveCount++;
-            if (moveCount % 6 === 0) {
-                const ev = Math.floor(moveCount / 6) % 3;
+            const __iv = Math.max(2, P('event_interval') || 6);
+            if (moveCount % __iv === 0) {
+                const ev = Math.floor(moveCount / __iv) % 3;
                 if (ev === 0) {
                     // 侵攻: 上端の空点に敵ブロックが出現
                     const tops = [];
@@ -2799,7 +2800,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (moveCount % 6 >= 4 ? "イベント接近" : "");
+                const et = gameOver ? '' : (moveCount % (P('event_interval') || 6) >= (P('event_interval') || 6) - 2 ? "イベント接近" : "");
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

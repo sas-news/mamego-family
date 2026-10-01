@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,9 @@ module.exports = {
     icon: 'opticalgo',
     spec: [
         ...K.rb('OPTICALGO', '錯視碁', 'opticalgo'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         // 錯視の盤: グリッドに放射状の収束線と同心円を重ねて描き、距離感を狂わせる
         K.CUE_GRID(`            // 錯視: 中央からの放射線と同心円 (エビングハウス風)
             {

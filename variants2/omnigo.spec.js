@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('OMNIGO', '全能碁', 'omnigo'),
+        K.params([
+            { key: 'event_interval', label: 'イベント襲来の間隔', min: 3, max: 15, def: 6, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白, 3:侵攻ブロック
         let moveCount = 0;`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -16,8 +19,9 @@ module.exports = {
 
             // 全能碁: 6手ごとにイベント襲来 (侵攻石→流星→全反転の周期)
             moveCount++;
-            if (moveCount % 6 === 0) {
-                const ev = Math.floor(moveCount / 6) % 3;
+            const __iv = Math.max(2, P('event_interval') || 6);
+            if (moveCount % __iv === 0) {
+                const ev = Math.floor(moveCount / __iv) % 3;
                 if (ev === 0) {
                     // 侵攻: 上端の空点に敵ブロックが出現
                     const tops = [];
@@ -59,7 +63,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC('moveCount % 6 >= 4 ? "イベント接近" : ""'),
+        ...K.EVENT_CHIP_SPEC('moveCount % (P(\'event_interval\') || 6) >= (P(\'event_interval\') || 6) - 2 ? "イベント接近" : ""'),
         // 侵攻ブロック: 暗赤の軍事ブロックで自前描画
         [K.ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`, `            const covered = new Set(); // ピース描画でカバー済みのマス
 
@@ -98,7 +102,7 @@ module.exports = {
         // イベント接近: 盤の縁が赤く脈動する
         [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
         fxAmbient((ctx2, now, pad, cs) => {
-            if (moveCount % 6 < 4) return;
+            if (moveCount % (P('event_interval') || 6) < (P('event_interval') || 6) - 2) return;
             const ph = (Math.sin(now / 300) + 1) / 2;
             const w = pad * 2 + (BOARD_SIZE - 1) * cs;
             ctx2.save();

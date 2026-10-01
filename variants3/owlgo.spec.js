@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'owlgo',
     spec: [
         ...K.rb('OWLGO', '梟碁', 'owlgo'),
+        K.params([
+            { key: 'night_interval', label: '夜の周期', min: 2, max: 10, def: 4, unit: '手ごと' },
+            { key: 'prey_max', label: '1夜に狩れる敵石数', min: 1, max: 4, def: 1, unit: '個' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.8, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 梟ルール: 各プレイヤーの4手ごとの着手は夜。梟が隣の敵石を1つ狩る
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -56,16 +61,19 @@ module.exports = {
             {
                 st.pcnt[player] = (st.pcnt[player] || 0) + 1;
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                if (st.pcnt[player] % 4 === 0) {
+                if (st.pcnt[player] % Math.max(2, P('night_interval') || 4) === 0) {
                     // 夜の狩り: 隣の敵石 (孤立した獲物を優先)
                     const foes = getNeighbors(mi).filter(i => board[i] === opponent);
                     const lone = foes.filter(i => getNeighbors(i).every(n => board[n] !== opponent));
-                    const prey = lone.length ? lone[0] : foes[0];
-                    if (prey !== undefined) {
-                        board[prey] = 0;
-                        captures[player]++;
+                    const pool = lone.length ? lone : foes;
+                    const preyList = pool.slice(0, Math.max(1, P('prey_max') || 1));
+                    if (preyList.length) {
+                        preyList.forEach(prey => {
+                            board[prey] = 0;
+                            captures[player]++;
+                            fxBurst(prey, '#6366f1', 12, 1.6);
+                        });
                         fxGlow(mi, '#818cf8', 800);
-                        fxBurst(prey, '#6366f1', 12, 1.6);
                         fxText(mi, '夜の狩り!', '#a5b4fc', 1200);
                         cleanUpPieces();
                     } else {
@@ -86,7 +94,7 @@ module.exports = {
             ctx2.fillRect(0, 0, w, w);
             ctx2.restore();
         });`],
-        ...K.EVENT_CHIP_SPEC(`st.pcnt[turn] % 4 === 3 ? '今晩は夜! 梟が狩る' : '夜まで ' + (4 - (st.pcnt[turn] || 0) % 4) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`st.pcnt[turn] % (P('night_interval') || 4) === (P('night_interval') || 4) - 1 ? '今晩は夜! 梟が狩る' : '夜まで ' + ((P('night_interval') || 4) - (st.pcnt[turn] || 0) % (P('night_interval') || 4)) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            梟碁: 自分の4手ごとの着手は「夜」。その手に置いた梟は隣の敵石を1つ狩る<br>
             PC: クリックで配置<br>

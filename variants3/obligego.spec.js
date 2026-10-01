@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,13 +47,17 @@ module.exports = {
     icon: 'obligego',
     spec: [
         ...K.rb('OBLIGEGO', '返礼碁', 'obligego'),
+        K.params([
+            { key: 'gift_per', label: '捕獲ごとの返礼権', min: 1, max: 3, def: 1, unit: '個' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 取られた側に返礼権が発生 (捕獲イベントごとに1権)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
-                st.gift[opponent]++; // 返礼権: 取られた側に付与
+                st.gift[opponent] += (P('gift_per') || 1); // 返礼権: 取られた側に付与
                 fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '返礼権+1', '#fb7185', 1100);
                 soundManager.playCapture();
                 cleanUpPieces();
