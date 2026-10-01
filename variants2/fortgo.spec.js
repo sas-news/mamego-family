@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('FORTGO', '城塞碁', 'fortgo'),
+        K.params([
+            { key: 'wall_pts', label: '城壁1つの得点', min: 1, max: 4, def: 1, unit: '目' },
+        ]),
         // 城壁の持ち主 fortMap (idx → player) の状態登録
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let fortMap = {}; // 城壁の持ち主 (idx → player)`],
@@ -82,8 +85,8 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const fortBlack = Object.keys(fortMap).filter(k => fortMap[k] === 1).length;
             const fortWhite = Object.keys(fortMap).filter(k => fortMap[k] === 2).length;
-            const blackTotal = territory.black + captures[1] + fortBlack;
-            const whiteTotal = territory.white + captures[2] + komi + fortWhite;`],
+            const blackTotal = territory.black + captures[1] + fortBlack * (P('wall_pts') || 1);
+            const whiteTotal = territory.white + captures[2] + komi + fortWhite * (P('wall_pts') || 1);`],
         [K.ONE, `                    <div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>`,
 `                    <div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>
                     <div class="flex justify-between"><span>黒の城壁:</span> <strong>\${fortBlack}</strong></div>`],

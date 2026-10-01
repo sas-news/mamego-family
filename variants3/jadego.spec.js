@@ -46,6 +46,10 @@ module.exports = {
     icon: 'jadego',
     spec: [
         ...K.rb('JADEGO', '翡翠碁', 'jadego'),
+        K.params([
+            { key: 'jade_age1', label: '磨き1級の齢', min: 2, max: 20, def: 8, unit: '手' },
+            { key: 'jade_age2', label: '磨き2級の齢', min: 6, max: 40, def: 16, unit: '手' },
+        ]),
         ...ST('{ born: {} }'),
         // 着手時に石の生成手を記録する
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -67,13 +71,13 @@ module.exports = {
                     const idx = +k;
                     if (board[idx] !== 1 && board[idx] !== 2) continue;
                     const age = history.length - st.born[k];
-                    if (age < 8) continue;
+                    if (age < (P('jade_age1') || 8)) continue;
                     const x = idx % BOARD_SIZE, y = (idx / BOARD_SIZE) | 0;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
-                    ctx.strokeStyle = age >= 16 ? 'rgba(16,185,129,0.95)' : 'rgba(52,211,153,0.65)';
+                    ctx.strokeStyle = age >= (P('jade_age2') || 16) ? 'rgba(16,185,129,0.95)' : 'rgba(52,211,153,0.65)';
                     ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
                     ctx.beginPath();
-                    ctx.arc(cx, cy, cellSize * (age >= 16 ? 0.34 : 0.27), 0, Math.PI * 2);
+                    ctx.arc(cx, cy, cellSize * (age >= (P('jade_age2') || 16) ? 0.34 : 0.27), 0, Math.PI * 2);
                     ctx.stroke();
                 }
                 ctx.restore();
@@ -86,7 +90,7 @@ module.exports = {
             for (const k in st.born) {
                 if (board[k] !== p) continue;
                 const age = history.length - st.born[k];
-                if (age >= 16) b += 2; else if (age >= 8) b += 1;
+                if (age >= (P('jade_age2') || 16)) b += 2; else if (age >= (P('jade_age1') || 8)) b += 1;
             }
             return b;
         }

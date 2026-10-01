@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'henrogo',
     spec: [
         ...K.rb('HENROGO', '遍路碁', 'henrogo'),
+        K.params([
+            { key: 'win_sites', label: '満願に必要な札所数', min: 2, max: 8, def: 8, unit: 'か所' },
+            { key: 'step_bonus', label: '札所1か所の得点', min: 0, max: 5, def: 1, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.3, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 札所一覧ヘルパー + winByRule
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `        // 札所: 盤周を時計回りに巡る8か所
@@ -63,8 +68,8 @@ module.exports = {
         // 採点に納札点を加算
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
-`            const blackTotal = territory.black + captures[1] + st.step[1];
-            const whiteTotal = territory.white + captures[2] + komi + st.step[2];`],
+`            const blackTotal = territory.black + captures[1] + st.step[1] * (P('step_bonus') || 1);
+            const whiteTotal = territory.white + captures[2] + komi + st.step[2] * (P('step_bonus') || 1);`],
         // 遍路: 次の札所に打つと1つ進む。8か所で満願勝ち
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -73,14 +78,14 @@ module.exports = {
             {
                 const sites = henroSites();
                 const cell = move.cells[0];
-                if (st.step[player] < 8) {
+                if (st.step[player] < Math.min(8, P('win_sites') || 8)) {
                     const nxt = sites[st.step[player]];
                     if (cell.x === nxt.x && cell.y === nxt.y) {
                         st.step[player]++;
                         const i = cell.y * BOARD_SIZE + cell.x;
                         fxGlow(i, '#fda4af', 900);
                         fxText(i, '第' + st.step[player] + '番', '#fb7185', 1200);
-                        if (st.step[player] >= 8) {
+                        if (st.step[player] >= Math.min(8, P('win_sites') || 8)) {
                             winByRule(player, '満願勝ち', '8札所を全て巡り満願しました');
                             return;
                         }
@@ -109,7 +114,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'札所: 黒' + st.step[1] + '/8 白' + st.step[2] + '/8'`),
+        ...K.EVENT_CHIP_SPEC(`'札所: 黒' + st.step[1] + '/' + Math.min(8, P('win_sites') || 8) + ' 白' + st.step[2] + '/' + Math.min(8, P('win_sites') || 8)`),
         [K.ONE, K.INFO_ALGO, `            遍路碁: 盤周の8札所を1番から順に巡る。8か所制覇で満願即勝ち<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

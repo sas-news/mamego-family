@@ -27,10 +27,13 @@ module.exports = {
     icon: 'shiomachigo',
     spec: [
         ...K.rb('SHIOMACHIGO', '潮待碁', 'shiomachigo'),
+        K.params([
+            { key: 'stride', label: '潮の引き方 (毎手進む行数)', min: 1, max: 4, def: 1, unit: '行' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 干上がり行: 手数に応じて1行ずつ潮が引く (双方同じ潮)
         function dryRow() {
-            return history.length % BOARD_SIZE;
+            return (history.length * (P('stride') || 1)) % BOARD_SIZE;
         }`],
         // 着手禁止: 干上がった行には打てない
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `

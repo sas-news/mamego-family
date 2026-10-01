@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('GOMOKUGO', '五目碁', 'gomokugo'),
+        K.params([
+            { key: 'run_len', label: '勝利に必要な連の長さ', min: 3, max: 7, def: 5, unit: '連' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         function endGameByScore() {`],
         // 手番交代直前に5連判定
@@ -24,18 +27,18 @@ module.exports = {
                     const bx = i % BOARD_SIZE, by = Math.floor(i / BOARD_SIZE);
                     for (const [dx, dy] of gdirs) {
                         let n = 0; const cells = [];
-                        for (let k = 0; k < 5; k++) {
+                        for (let k = 0; k < (P('run_len') || 5); k++) {
                             const nx = bx + dx * k, ny = by + dy * k;
                             if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE) break;
                             if (board[ny * BOARD_SIZE + nx] !== player) break;
                             cells.push(ny * BOARD_SIZE + nx); n++;
                         }
-                        if (n >= 5) { fiveCells = cells; break gcheck; }
+                        if (n >= (P('run_len') || 5)) { fiveCells = cells; break gcheck; }
                     }
                 }
                 if (fiveCells) {
                     fiveCells.forEach(i => fxGlow(i, '#facc15', 1000));
-                    fxText(fiveCells[Math.floor(fiveCells.length / 2)], '五目!', '#facc15', 1500);
+                    fxText(fiveCells[Math.floor(fiveCells.length / 2)], (P('run_len') || 5) + '連!', '#facc15', 1500);
                     fxShake(6, 380);
                     winByRule(player, '五目勝ち', '自分の石を5つ以上連続で並べました'); return;
                 }
@@ -58,8 +61,8 @@ module.exports = {
                             if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE || board[ny * BOARD_SIZE + nx] !== v) break;
                             run++;
                         }
-                        if (run !== 4) continue;
-                        [[x - dx, y - dy], [x + dx * 4, y + dy * 4]].forEach(([ex, ey]) => {
+                        if (run !== (P('run_len') || 5) - 1) continue;
+                        [[x - dx, y - dy], [x + dx * ((P('run_len') || 5) - 1), y + dy * ((P('run_len') || 5) - 1)]].forEach(([ex, ey]) => {
                             if (ex < 0 || ey < 0 || ex >= BOARD_SIZE || ey >= BOARD_SIZE) return;
                             if (board[ey * BOARD_SIZE + ex] !== 0) return;
                             ctx.fillStyle = 'rgba(239,68,68,0.85)';

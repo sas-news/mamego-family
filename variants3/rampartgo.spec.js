@@ -19,7 +19,7 @@ const ST = (init) => [
                 deadStones: [...deadStones],`],
     [K.ONE, K.ONLINE_RECV, K.ONLINE_RECV + `\n            st = data.st ? JSON.parse(JSON.stringify(data.st)) : ${init};`],
 ];
-const ST_INIT = `{ ladder: { 1: 2, 2: 2 } }`; // 各側2個の梯子石
+const ST_INIT = `{ ladder: { 1: (P('ladder_count') ?? 2), 2: (P('ladder_count') ?? 2) } }`; // 各側の梯子石
 const GAME_OVER = [
     [K.ONE, `            if (consecutivePasses >= 2) {
                 startDeadStoneSelectionPhase();`,
@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,15 +47,24 @@ module.exports = {
     icon: 'rampartgo',
     spec: [
         ...K.rb('RAMPARTGO', '石垣碁', 'rampartgo'),
+        K.params([
+            { key: 'wall_rows', label: '石垣の行数', min: 1, max: 4, def: 2, unit: '行' },
+            { key: 'ladder_count', label: '梯子石の数 (各側)', min: 0, max: 6, def: 2, unit: '個' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 石垣: 中央2行が盤を南北に分断する城壁
         const RAMP_Y0 = Math.floor(BOARD_SIZE / 2) - 1;
-        function isRampart(x, y) { return y === RAMP_Y0 || y === RAMP_Y0 + 1; }`],
+        function isRampart(x, y) { const wr = Math.max(1, P('wall_rows') || 2); return y >= RAMP_Y0 && y < RAMP_Y0 + wr; }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             for (let x = 0; x < BOARD_SIZE; x++) {
-                board[RAMP_Y0 * BOARD_SIZE + x] = 3;
-                board[(RAMP_Y0 + 1) * BOARD_SIZE + x] = 3;
+                const wr = Math.max(1, P('wall_rows') || 2);
+                for (let w = 0; w < wr; w++) {
+                    const ry = RAMP_Y0 + w;
+                    if (ry >= BOARD_SIZE) break;
+                    board[ry * BOARD_SIZE + x] = 3;
+                }
             }`],
         // 梯子石: 梯子が残っていれば垣の点にも着手できる (着手の度に1個消費)
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
@@ -79,7 +88,8 @@ module.exports = {
                 ctx.save();
                 ctx.strokeStyle = 'rgba(30, 26, 22, 0.7)';
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
-                [RAMP_Y0, RAMP_Y0 + 1].forEach(ry => {
+                const wr = Math.max(1, P('wall_rows') || 2);
+                Array.from({ length: wr }, (_, w) => RAMP_Y0 + w).filter(ry => ry < BOARD_SIZE).forEach(ry => {
                     const cy = padding + ry * cellSize;
                     ctx.beginPath();
                     for (let x = 0; x < BOARD_SIZE; x++) {

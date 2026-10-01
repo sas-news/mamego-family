@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'fuhyogo',
     spec: [
         ...K.rb('FUHYOGO', '歩兵碁', 'fuhyogo'),
+        K.params([
+            { key: 'promo_depth', label: '成れる敵陣の深さ', min: 1, max: 6, def: 2, unit: '列' },
+            { key: 'promo_pts', label: '成のボーナス', min: 1, max: 4, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT),
         // 成駒は最初の取りで死なない (成りが剥がれて盤に残る)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent).filter(__i => {
@@ -70,11 +75,11 @@ module.exports = {
             {
                 const __p = move.cells[0];
                 const __pi = __p.y * BOARD_SIZE + __p.x;
-                const __zone = player === 1 ? (__p.y >= BOARD_SIZE - 2) : (__p.y <= 1);
+                const __zone = player === 1 ? (__p.y >= BOARD_SIZE - (P('promo_depth') || 2)) : (__p.y <= (P('promo_depth') || 2) - 1);
                 if (__zone && !st.promo[__pi]) {
                     st.promo[__pi] = 1;
-                    st.bonus[player] = (st.bonus[player] || 0) + 1;
-                    fxText(__pi, '成 +1', '#fbbf24', 1000);
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('promo_pts') || 1);
+                    fxText(__pi, '成 +' + (P('promo_pts') || 1), '#fbbf24', 1000);
                     fxGlow(__pi, '#fbbf24', 700);
                 }
             }

@@ -251,6 +251,12 @@
                 <div id="onlineRoomStatus" class="text-center font-bold text-neutral-600 pt-1"></div>
             </div>
 
+            <!-- バリアント固有設定 (VPARAMSがあるゲームのみ表示) -->
+            <div id="variantParamsBox" class="hidden p-3 bg-amber-50 rounded-xl border border-amber-200 flex flex-col gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-neutral-500">このゲームの設定</span>
+                <div id="variantParams" class="flex flex-col gap-3"></div>
+            </div>
+
             <!-- 4. サウンド設定 -->
             <div class="flex items-center justify-between pt-1">
                 <span class="text-sm font-bold text-neutral-700">効果音 (SE)</span>
@@ -309,6 +315,77 @@
     </div>
 
     <script>
+        // === バリアント固有パラメータ ===
+        // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
+        // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
+        const VPARAMS = [{"key":"zone_div","label":"区域の分割数","min":1,"max":5,"def":3,"hint":"3=3x3の区域"},{"key":"cap_moves","label":"打ち切り手数","min":40,"max":300,"def":140,"unit":"手"}];
+        const VPAR_MAP = {};
+        const VPAR_SAVED = (() => {
+            try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
+            catch (e) { return {}; }
+        })();
+        VPARAMS.forEach(p => {
+            if (p.val === undefined) p.val = VPAR_SAVED[p.key] !== undefined ? VPAR_SAVED[p.key] : p.def;
+            VPAR_MAP[p.key] = p;
+        });
+        const P = k => (VPAR_MAP[k] ? VPAR_MAP[k].val : undefined);
+        function saveVpar() {
+            try {
+                const o = {};
+                VPARAMS.forEach(p => { if (p.val !== p.def) o[p.key] = p.val; });
+                localStorage.setItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : ''), JSON.stringify(o));
+            } catch (e) {}
+        }
+        // 設定モーダルの「このゲームの設定」に VPARAMS 分のUIを生成
+        function initVariantParams() {
+            const box = document.getElementById('variantParamsBox');
+            const list = document.getElementById('variantParams');
+            if (!box || !list || !VPARAMS.length) return;
+            box.classList.remove('hidden');
+            const fmt = (p, v) => (p.step && p.step < 1 ? Number(v).toFixed(1) : String(v)) + (p.unit || '');
+            VPARAMS.forEach(p => {
+                const wrap = document.createElement('div');
+                wrap.className = 'flex flex-col gap-1';
+                const head = document.createElement('div');
+                head.className = 'flex justify-between text-xs font-bold text-neutral-600';
+                const lab = document.createElement('span');
+                lab.textContent = p.label + (p.hint ? ` (${p.hint})` : '');
+                const valEl = document.createElement('span');
+                valEl.className = 'text-amber-700';
+                valEl.textContent = fmt(p, p.val);
+                head.appendChild(lab); head.appendChild(valEl);
+                wrap.appendChild(head);
+                const applyVal = v => {
+                    p.val = v;
+                    valEl.textContent = fmt(p, p.val);
+                    saveVpar();
+                    if (typeof onVariantParam === 'function') onVariantParam(p);
+                };
+                if (p.options) {
+                    const sel = document.createElement('select');
+                    sel.className = 'w-full border border-neutral-300 rounded-lg py-1.5 text-sm font-bold bg-white';
+                    p.options.forEach(o => {
+                        const op = document.createElement('option');
+                        op.value = o.v; op.textContent = o.l;
+                        sel.appendChild(op);
+                    });
+                    sel.value = p.val;
+                    sel.addEventListener('change', () => {
+                        const num = parseFloat(sel.value);
+                        applyVal(isNaN(num) ? sel.value : num);
+                    });
+                    wrap.appendChild(sel);
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'range'; inp.min = p.min; inp.max = p.max; inp.step = p.step || 1; inp.value = p.val;
+                    inp.className = 'w-full accent-amber-600';
+                    inp.addEventListener('input', () => applyVal(parseFloat(inp.value)));
+                    wrap.appendChild(inp);
+                }
+                list.appendChild(wrap);
+            });
+        }
+        initVariantParams();
         // ==========================================
         // 1. カラーテーマ定義
         // ==========================================
@@ -1101,12 +1178,13 @@
 
             // 植民区域の境界線 (3x3マクロ区域)
             {
-                const zw = Math.ceil(BOARD_SIZE / 3);
+                const _zd = Math.max(1, P('zone_div') || 3);
+                const zw = Math.ceil(BOARD_SIZE / _zd);
                 ctx.save();
                 ctx.strokeStyle = 'rgba(180,120,40,0.5)';
                 ctx.lineWidth = Math.max(1.5, cellSize * 0.06);
                 ctx.setLineDash([cellSize * 0.18, cellSize * 0.12]);
-                for (let i = 1; i < 3; i++) {
+                for (let i = 1; i < _zd; i++) {
                     const p = padding + i * zw * cellSize - cellSize * 0.5;
                     ctx.beginPath(); ctx.moveTo(padding - cellSize * 0.5, p); ctx.lineTo(padding + (BOARD_SIZE - 0.5) * cellSize, p); ctx.stroke();
                     ctx.beginPath(); ctx.moveTo(p, padding - cellSize * 0.5); ctx.lineTo(p, padding + (BOARD_SIZE - 0.5) * cellSize); ctx.stroke();
@@ -1776,8 +1854,8 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 長期戦防止: 既定の手数経過でその時点の地数判定
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();
@@ -2130,9 +2208,10 @@
             // 植民ルール: 各区域で石数多数を握った側が区域全域を領地とする
             colonyDetail = { 1: 0, 2: 0 };
             {
-                const zw = Math.ceil(BOARD_SIZE / 3);
-                for (let zy = 0; zy < 3; zy++) {
-                    for (let zx = 0; zx < 3; zx++) {
+                const _zd = Math.max(1, P('zone_div') || 3);
+                const zw = Math.ceil(BOARD_SIZE / _zd);
+                for (let zy = 0; zy < _zd; zy++) {
+                    for (let zx = 0; zx < _zd; zx++) {
                         let b = 0, w = 0, area = 0;
                         for (let y = zy * zw; y < Math.min(BOARD_SIZE, (zy + 1) * zw); y++) {
                             for (let x = zx * zw; x < Math.min(BOARD_SIZE, (zx + 1) * zw); x++) {

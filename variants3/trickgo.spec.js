@@ -10,6 +10,11 @@ module.exports = {
     icon: 'trickgo',
     spec: [
         ...K.rb('TRICKGO', '悪戯碁', 'trickgo'),
+        K.params([
+            { key: 'ink_interval', label: 'インクの間隔', min: 2, max: 16, def: 8, unit: '手' },
+            { key: 'ink_span', label: 'インクの効果持続', min: 1, max: 4, def: 1, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { trap: -1, trapUntil: -1, trapFor: 0 }; // 悪戯インク`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -45,20 +50,20 @@ module.exports = {
 
             // 悪戯ルール: 8手ごとに、打った点の隣の空点へ相手の次の1手だけ効く悪戯インク
             st.trap = -1;
-            if (history.length % 8 === 0) {
+            if (history.length % Math.max(1, P('ink_interval') || 8) === 0) {
                 const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const emp = getNeighbors(pi).filter(q => board[q] === 0);
                 if (emp.length > 0) {
                     st.trap = emp[0];
                     st.trapFor = opponent;
-                    st.trapUntil = history.length + 1; // 相手の次の手番のみ有効
+                    st.trapUntil = history.length + Math.max(1, P('ink_span') || 1); // 対象側の次のN手だけ有効
                     fxText(emp[0], '悪戯インク!', '#f472b6', 1200);
                     fxGlow(emp[0], '#f472b6', 700);
                 }
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 endGameByScore();
                 return;
             }

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,13 +47,18 @@ module.exports = {
     icon: 'tsunatorigo',
     spec: [
         ...K.rb('TSUNATORIGO', '綱取碁', 'tsunatorigo'),
+        K.params([
+            { key: 'oichii_min', label: '大一番に必要な取り数', min: 2, max: 12, def: 5, unit: '個' },
+            { key: 'yoko_bonus', label: '横綱の終局ボーナス', min: 1, max: 10, def: 3, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         ...ST(ST_INIT),
         // 綱取り: 1手5個取りの大一番で横綱昇進
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 綱取碁: 大一番 (1手で5個以上取り) に勝つと横綱の称号
-            if (!st.yoko[player] && captured.length >= 5) {
+            if (!st.yoko[player] && captured.length >= (P('oichii_min') || 5)) {
                 st.yoko[player] = true;
                 fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '横綱!', '#fbbf24', 1600);
                 fxBurst(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '#fbbf24', 18, 2.4);
@@ -63,7 +68,7 @@ module.exports = {
         [K.ONE, `        function endGameByScore() {`,
 `        // 綱取の称号: 横綱は終局時+3目
         function yokoBonus(player) {
-            return st.yoko[player] ? 3 : 0;
+            return st.yoko[player] ? (P('yoko_bonus') || 3) : 0;
         }
 
         function endGameByScore() {`],

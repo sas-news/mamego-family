@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'fukango',
     spec: [
         ...K.rb('FUKANGO', '封緘碁', 'fukango'),
+        K.params([
+            { key: 'seal_interval', label: '蝋印の間隔', min: 2, max: 30, def: 8, unit: '手' },
+            { key: 'seal_pts', label: '封印点1つの得点', min: 0.1, max: 2, step: 0.1, def: 0.5, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
 `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
@@ -56,7 +61,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 封緘碁: 8手ごとの石は蝋印 — 印が取られたら封も解ける
-            if (st.cnt[player] % 8 === 0) {
+            if (st.cnt[player] % Math.max(1, P('seal_interval') || 8) === 0) {
                 const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (board[ci] === player) {
                     st.seals[ci] = player;
@@ -83,8 +88,8 @@ module.exports = {
                 getNeighbors(i).forEach(n => {
                     if (st.seals[n] !== undefined && board[n] === st.seals[n]) owners.add(st.seals[n]);
                 });
-                if (owners.size === 1 && owners.has(player)) b += 0.5;
-                else if (owners.size === 2) b += 0.25;
+                if (owners.size === 1 && owners.has(player)) b += (P('seal_pts') || 0.5);
+                else if (owners.size === 2) b += (P('seal_pts') || 0.5) / 2;
             }
             return b;
         }

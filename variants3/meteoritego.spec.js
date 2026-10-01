@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,14 +46,19 @@ module.exports = {
     icon: 'meteoritego',
     spec: [
         ...K.rb('METEORITEGO', '隕鉄碁', 'meteoritego'),
+        K.params([
+            { key: 'iron_interval', label: '隕鉄になる手の間隔', min: 2, max: 15, def: 5, unit: '手' },
+            { key: 'iron_pts', label: '隕鉄1個の終局得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST('{ iron: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 隕鉄碁: 各手番5手ごと (historyの5の倍数) に置いた石は隕鉄になる
+            // 隕鉄碁: N手ごと (historyの倍数) に置いた石は隕鉄になる (間隔は設定で調整)
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                if (history.length % 5 === 0) {
+                if (history.length % Math.max(1, P('iron_interval') || 5) === 0) {
                     st.iron[mi] = 1;
                     fxBurst(mi, '#94a3b8', 12);
                     fxText(mi, '隕鉄', '#cbd5e1', 1000);
@@ -96,8 +101,8 @@ module.exports = {
         [K.ONE, `            const territory = calculateTerritory();`,
 `            const territory = calculateTerritory();
             for (const k in st.iron) {
-                if (board[k] === 1) territory.black += 1;
-                else if (board[k] === 2) territory.white += 1;
+                if (board[k] === 1) territory.black += (P('iron_pts') ?? 1);
+                else if (board[k] === 2) territory.white += (P('iron_pts') ?? 1);
             }`],
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            隕鉄碁: 5手ごとの着手は隕鉄 — 硬くて取れない。盤上の隕鉄は終局時+1目<br>

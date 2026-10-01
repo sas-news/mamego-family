@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'magnifygo',
     spec: [
         ...K.rb('MAGNIFYGO', '拡大碁', 'magnifygo'),
+        K.params([
+            { key: 'lens_reward', label: '拡大読みの報酬', min: 0, max: 4, def: 1, hint: '拡大区域への着手で得るアゲハマ' },
+            { key: 'lens_range', label: '拡大区域の半径', min: 1, max: 3, def: 1, hint: '虫眼鏡の届く範囲 (チェビシェフ距離)' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 虫眼鏡: 星の点を順に巡る拡大区域。その内部への着手で1アゲハマ
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -54,10 +59,11 @@ module.exports = {
             st.ply++;
             const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             // 拡大読み: 現在表示の虫眼鏡区域内への着手で1アゲハマ
+            const LR = Math.max(1, P('lens_range') || 1);
             if (st.lens >= 0
-                && Math.abs((pi % BOARD_SIZE) - (st.lens % BOARD_SIZE)) <= 1
-                && Math.abs(((pi / BOARD_SIZE) | 0) - ((st.lens / BOARD_SIZE) | 0)) <= 1) {
-                captures[player]++;
+                && Math.abs((pi % BOARD_SIZE) - (st.lens % BOARD_SIZE)) <= LR
+                && Math.abs(((pi / BOARD_SIZE) | 0) - ((st.lens / BOARD_SIZE) | 0)) <= LR) {
+                captures[player] += (P('lens_reward') ?? 1);
                 fxText(pi, '拡大読み!', '#38bdf8', 1200);
             }
             {
@@ -73,7 +79,7 @@ module.exports = {
                 ctx.strokeStyle = 'rgba(56,189,248,0.75)';
                 ctx.lineWidth = Math.max(1.5, cellSize * 0.06);
                 ctx.beginPath();
-                ctx.arc(cx, cy, cellSize * 1.55, 0, Math.PI * 2);
+                ctx.arc(cx, cy, cellSize * (Math.max(1, P('lens_range') || 1) + 0.55), 0, Math.PI * 2);
                 ctx.stroke();
                 ctx.beginPath();
                 ctx.moveTo(cx + cellSize * 1.1, cy + cellSize * 1.1);

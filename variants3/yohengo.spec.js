@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,10 +27,14 @@ module.exports = {
     icon: 'yohengo',
     spec: [
         ...K.rb('YOHENGO', '窯変碁', 'yohengo'),
+        K.params([
+            { key: 'mutation_rate', label: '窯変の確率', min: 0, max: 0.5, step: 0.01, def: 0.12 },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         // 窯変: 着手直後、置いた石が12%で色反転 (置いた本人にも起きる)
-        [K.ONE, `            // ネクストモードでは次のピースを供給`, `            // 窯変: 置いた石が12%で相手の色に焼き変わる
+        [K.ONE, `            // ネクストモードでは次のピースを供給`, `            // 窯変: 置いた石が一定確率で相手の色に焼き変わる
             let mutated = false;
-            if (Math.random() < 0.12) {
+            if (Math.random() < (P('mutation_rate') ?? 0.12)) {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (board[mi] === player) {
                     board[mi] = opponent;

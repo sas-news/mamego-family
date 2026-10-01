@@ -35,7 +35,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -51,10 +51,15 @@ module.exports = {
     icon: 'elementgo',
     spec: [
         ...K.rb('ELEMENTGO', '周期碁', 'elementgo'),
+        K.params([
+            { key: 'bond_pts', label: '結合ボーナス', min: 0, max: 8, def: 2, unit: '点' },
+            { key: 'element_count', label: '元素の種類数', options: [{ v: 4, l: '4元素' }, { v: 6, l: '6元素' }, { v: 8, l: '8元素' }], def: 8 },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 4, def: 1.1, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...PERSIST('{ bondPts: { 1: 0, 2: 0 }, bonds: {} }'),
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        // 周期表盤: 交点ごとの元素と反応表
-        const EL_AT = (i) => ['H', 'O', 'C', 'N', 'Na', 'Cl', 'S', 'Fe'][i % 8];
+        const EL_AT = (i) => ['H', 'O', 'C', 'N', 'Na', 'Cl', 'S', 'Fe'][i % (P('element_count') || 8)];
         const BOND_PAIRS = ['H-O', 'C-O', 'N-H', 'Na-Cl', 'S-O', 'Fe-O'];
         const REACT_PAIRS = ['Na-O', 'Na-H'];
         const pairOf = (a, b) => [a + '-' + b, b + '-' + a];
@@ -88,8 +93,8 @@ module.exports = {
                         if (st.bonds[key]) return;
                         if (isBond(EL_AT(i0), EL_AT(n))) {
                             st.bonds[key] = 1;
-                            st.bondPts[player] += 2;
-                            fxText(n, EL_AT(n) + '−' + EL_AT(i0) + ' +2', '#22d3ee', 1200);
+                            st.bondPts[player] += (P('bond_pts') || 2);
+                            fxText(n, EL_AT(n) + '−' + EL_AT(i0) + ' +' + (P('bond_pts') || 2), '#22d3ee', 1200);
                         }
                     });
                 }

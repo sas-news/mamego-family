@@ -9,6 +9,9 @@ module.exports = {
     kind: 'flank',
     spec: [
         ...K.rb('FLANKGO', '側面碁', 'flankgo'),
+        K.params([
+            { key: 'flank_dist', label: '着手できる敵石からの距離', min: 1, max: 4, def: 1, unit: 'マス', hint: 'マンハッタン距離' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -24,7 +27,7 @@ module.exports = {
                     const ex = i % BOARD_SIZE, ey = Math.floor(i / BOARD_SIZE);
                     for (const p of cells) {
                         const dx = Math.abs(p.x - ex), dy = Math.abs(p.y - ey);
-                        if (dx + dy === 1) { beside = true; break; }
+                        if (dx + dy <= Math.max(1, P('flank_dist') || 1)) { beside = true; break; }
                     }
                 }
                 if (hasEnemy && !beside) return false;

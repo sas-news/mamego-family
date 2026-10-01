@@ -35,7 +35,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -51,6 +51,12 @@ module.exports = {
     icon: 'galaxygo',
     spec: [
         ...K.rb('GALAXYGO', '銀河碁', 'galaxygo'),
+        K.params([
+            { key: 'pulse_interval', label: '重力パルスの周期', min: 2, max: 30, def: 8, unit: '手' },
+            { key: 'core_radius', label: 'コアの範囲', min: 1, max: 6, def: 2, unit: 'マス' },
+            { key: 'core_pts', label: 'コア質量1石の得点', min: 1, max: 8, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.5, max: 2, step: 0.05, def: 1.1 },
+        ]),
         ...PERSIST('{ pulse: 0 }'),
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        // 銀河の重力: 中心への距離 (チェビシェフ距離)
@@ -65,7 +71,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 重力ルール: 8手ごとの銀河パルス
-            if (history.length % 8 === 0) {
+            if (history.length % Math.max(1, P('pulse_interval') || 8) === 0) {
                 st.pulse++;
                 // 外側から順に中心へ1歩移動
                 const stones = [];
@@ -110,9 +116,9 @@ ${CAP}
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            let coreB = 0, coreW = 0;
             for (let i = 0; i < board.length; i++) {
-                if (distCore(i) <= 2) {
-                    if (board[i] === 1) coreB += 2;
-                    else if (board[i] === 2) coreW += 2;
+                if (distCore(i) <= (P('core_radius') || 2)) {
+                    if (board[i] === 1) coreB += (P('core_pts') || 2);
+                    else if (board[i] === 2) coreW += (P('core_pts') || 2);
                 }
             }
             const blackTotal = territory.black + captures[1] + coreB;
@@ -142,7 +148,7 @@ ${CAP}
                 ctx.fill();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'パルス ' + st.pulse + '回 次の重力 ' + (8 - history.length % 8) + '手後'`),
+        ...K.EVENT_CHIP_SPEC(`'パルス ' + st.pulse + '回 次の重力 ' + ((P('pulse_interval') || 8) - history.length % (P('pulse_interval') || 8)) + '手後'`),
         [K.ONE, K.INFO_ALGO, `            銀河碁: 8手ごとに重力パルスで全石が中心へ1歩動く。コアの石は終局時+2/石<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

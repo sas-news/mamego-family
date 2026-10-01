@@ -10,6 +10,9 @@ module.exports = {
     icon: 'sparrgo',
     spec: [
         ...K.rb('SPARRGO', '対打碁', 'sparrgo'),
+        K.params([
+            { key: 'move_cap', label: '打ち切り手数', min: 60, max: 280, def: 140, step: 10, unit: '手' },
+        ]),
         // 連取得ヘルパー
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        // idx を含む同色連の idx 列 (BFS, 先頭=最小idxで一意化に使う)
@@ -66,7 +69,7 @@ module.exports = {
                 }
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('move_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, K.RV_ALGO, K.rv([

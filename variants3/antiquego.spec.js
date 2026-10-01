@@ -10,6 +10,10 @@ module.exports = {
     icon: 'antiquego',
     spec: [
         ...K.rb('ANTIQUEGO', '骨董碁', 'antiquego'),
+        K.params([
+            { key: 'antique_interval', label: '価値が上がる間隔', min: 2, max: 12, def: 4, unit: '手' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.6, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let antiqueDetail = { 1: 0, 2: 0 }; // 直近の終局で計上した骨董価値`],
         // 配置手数を記録 (経年で価値が上がる)
@@ -29,7 +33,7 @@ module.exports = {
             pieces.forEach(pc => {
                 const alive = pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
                 if (!alive) return; // 取られた骨董は価値0
-                const bonus = Math.floor(Math.max(0, history.length - (pc.at || 0)) / 4);
+                const bonus = Math.floor(Math.max(0, history.length - (pc.at || 0)) / (P('antique_interval') || 4));
                 if (pc.player === 1) { territory.black += bonus; antiqueDetail[1] += bonus; }
                 else { territory.white += bonus; antiqueDetail[2] += bonus; }
             });`],
@@ -43,7 +47,7 @@ module.exports = {
             {
                 ctx.save();
                 pieces.forEach(pc => {
-                    const age = Math.floor(Math.max(0, history.length - (pc.at || 0)) / 4);
+                    const age = Math.floor(Math.max(0, history.length - (pc.at || 0)) / (P('antique_interval') || 4));
                     if (age < 1) return;
                     pc.cells.forEach(c => {
                         const i = c.y * BOARD_SIZE + c.x;
@@ -68,7 +72,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 endGameByScore();
                 return;
             }

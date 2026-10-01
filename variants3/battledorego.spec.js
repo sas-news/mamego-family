@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'battledorego',
     spec: [
         ...K.rb('BATTLEDOREGO', '羽根碁', 'battledorego'),
+        K.params([
+            { key: 'rally_pts', label: 'ラリー1回の得点', min: 1, max: 8, def: 2, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 相手のバックライン到達でラリー点 (黒は最上段、白は最下段)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -68,14 +72,14 @@ module.exports = {
         // ラリー点を採点に加算
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
-`            const blackTotal = territory.black + captures[1] + st.rally[1] * 2;
-            const whiteTotal = territory.white + captures[2] + komi + st.rally[2] * 2;`],
+`            const blackTotal = territory.black + captures[1] + st.rally[1] * (P('rally_pts') || 2);
+            const whiteTotal = territory.white + captures[2] + komi + st.rally[2] * (P('rally_pts') || 2);`],
         [K.ONE, `                    <div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>`,
 `                    <div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>
-                    <div class="flex justify-between"><span>黒のラリー:</span> <strong>+\${st.rally[1] * 2}</strong></div>`],
+                    <div class="flex justify-between"><span>黒のラリー:</span> <strong>+\${st.rally[1] * (P('rally_pts') || 2)}</strong></div>`],
         [K.ONE, `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
-                    <div class="flex justify-between"><span>白のラリー:</span> <strong>+\${st.rally[2] * 2}</strong></div>`],
+                    <div class="flex justify-between"><span>白のラリー:</span> <strong>+\${st.rally[2] * (P('rally_pts') || 2)}</strong></div>`],
         // バックラインを羽根のゴール帯として描く
         K.CUE_GRID(`            // 羽根のゴール帯: 最上段 (黒のゴール) と最下段 (白のゴール)
             {

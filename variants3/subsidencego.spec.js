@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap_moves') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'subsidencego',
     spec: [
         ...K.rb('SUBSIDENCEGO', '沈降碁', 'subsidencego'),
+        K.params([
+            { key: 'sink_interval', label: '沈降の間隔', min: 5, max: 50, def: 20, unit: '手' },
+            { key: 'keep_size', label: '残る中央列の幅', min: 1, max: 9, def: 3, unit: '列' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 60, max: 400, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { ring: 0, lastSink: 0 }; // 沈んだ輪の数`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -54,9 +59,9 @@ module.exports = {
 
             // 沈降: 20手ごとに外周が1列沈む (石ごと海へ — アゲハマにならない)
             {
-                const sink = Math.floor(history.length / 20);
-                const maxRing = Math.floor((BOARD_SIZE - 3) / 2); // 中央3列は残す
-                if (sink !== st.lastSink && history.length % 20 === 0 && st.ring < maxRing) {
+                const sink = Math.floor(history.length / (P('sink_interval') || 20));
+                const maxRing = Math.floor((BOARD_SIZE - (P('keep_size') || 3)) / 2); // 中央N列は残す
+                if (sink !== st.lastSink && history.length % (P('sink_interval') || 20) === 0 && st.ring < maxRing) {
                     st.lastSink = sink;
                     st.ring++;
                     const r = st.ring - 1; // 今回沈む輪 (0=最外周)
@@ -98,7 +103,7 @@ module.exports = {
             ctx.restore();
             return true;
         };`],
-        ...K.EVENT_CHIP_SPEC(`'沈降まで' + (20 - (history.length % 20)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'沈降まで' + ((P('sink_interval') || 20) - (history.length % (P('sink_interval') || 20))) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            沈降碁: 20手ごとに外周が海に沈み、盤が縮む<br>
             PC: クリックで配置<br>

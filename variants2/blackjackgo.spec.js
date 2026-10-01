@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('BLACKJACKGO', '廿一碁', 'blackjackgo'),
+        K.params([
+            { key: 'card_max', label: 'カード最大値', min: 3, max: 21, def: 11 },
+            { key: 'bust_line', label: 'バースト上限', min: 10, max: 40, def: 21 },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         function endGameByScore() {`],
         [K.ONE, K.BOARD_DECL, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
@@ -18,12 +22,13 @@ module.exports = {
 
             // 廿一碁: 着手ごとに1〜11を引き、21を超えたらバースト負け
             {
-                const card = 1 + Math.floor(Math.random() * 11);
+                const bustLine = P('bust_line') || 21;
+                const card = 1 + Math.floor(Math.random() * (P('card_max') || 11));
                 cardTotal[player] += card;
                 const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 fxText(ci, '+' + card, '#93c5fd', 1000); // 引いた札を開示
-                if (cardTotal[player] === 21) fxGlow(ci, '#facc15', 1000); // 21は金色
-                if (cardTotal[player] > 21) {
+                if (cardTotal[player] === bustLine) fxGlow(ci, '#facc15', 1000); // 丁度は金色
+                if (cardTotal[player] > bustLine) {
                     fxBurst(ci, '#ef4444', 16, 2.0);
                     fxShake(8, 420);
                     fxText(ci, 'バースト!', '#ef4444', 1400);

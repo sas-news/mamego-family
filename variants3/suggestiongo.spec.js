@@ -47,6 +47,9 @@ module.exports = {
     icon: 'suggestiongo',
     spec: [
         ...K.rb('SUGGESTIONGO', '暗示碁', 'suggestiongo'),
+        K.params([
+            { key: 'sug_pts', label: '暗示ボーナス', min: 0, max: 5, def: 1, unit: '点' },
+        ]),
         ...ST(ST_INIT),
         // 暗示の成就: 相手が自分の暗示の点に打つと、宣言者に1アゲハマ
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -54,7 +57,7 @@ module.exports = {
             const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             if (st.sug[opponent] === pi) {
                 st.sug[opponent] = -1;
-                captures[opponent]++;
+                captures[opponent] += (P('sug_pts') ?? 1);
                 fxText(pi, '暗示が効いた!', '#c084fc', 1400);
             }
             turn = opponent;`],

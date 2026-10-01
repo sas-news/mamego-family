@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('MAGNETGO', '磁石碁', 'magnetgo'),
+        K.params([
+            { key: 'attract_dist', label: '引寄の距離', min: 2, max: 5, def: 2, hint: '同色から何マス離れた石が引き寄せられるか' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.7, max: 2.5, def: 1.4, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // 着手ごと磁力解決: 異色隣接は反発、同色距離2は引寄
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -41,13 +45,14 @@ module.exports = {
                     }
                 }
                 // 引寄
+                const ad = Math.max(2, P('attract_dist') || 2);
                 for (let i = 0; i < board.length; i++) {
                     const v = board[i];
                     if (v !== 1 && v !== 2) continue;
                     const x = i % N, y = Math.floor(i / N);
                     for (const [dx, dy] of dirs) {
-                        const mx = x + dx, my = y + dy;
-                        const fx = x + dx * 2, fy = y + dy * 2;
+                        const mx = x + dx * (ad - 1), my = y + dy * (ad - 1);
+                        const fx = x + dx * ad, fy = y + dy * ad;
                         if (fx < 0 || fx >= N || fy < 0 || fy >= N) continue;
                         const mid = my * N + mx, far = fy * N + fx;
                         if (board[mid] === 0 && board[far] === v && !moved.has(far)) {
@@ -101,7 +106,21 @@ module.exports = {
             '同色からちょうど2マス離れた石は1マス引き寄せられる。磁力で連が伸縮する。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
-        ...K.MOVE_CAP_SPEC,
+        // 打ち切り手数は設定で調整可能
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 新規対局 (履歴空) で打ち切りを再武装
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            // (1局につき1回のみ発火。死に石選択を取り消して続行する場合は再発火しない)
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.4))) {
+                moveCapFired = true;
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

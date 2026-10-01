@@ -10,11 +10,15 @@ module.exports = {
     icon: 'pyramid2go',
     spec: [
         ...K.rb('PYRAMID2GO', '三角碁', 'pyramid2go'),
+        K.params([
+            { key: 'min_leg', label: '三角の最小脚長', min: 1, max: 6, def: 2, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 400, def: 140, step: 10, unit: '手' },
+        ]),
         // 三角形検出: 着手石が3頂点のいずれかになる直角二等辺三角形 (脚長d>=2, 軸平行)
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        // (px,py) の石を頂点の1つとする自分色の直角二等辺三角形を探す
         function findTriangle(px, py, player) {
-            for (let d = 2; d < BOARD_SIZE; d++) {
+            for (let d = Math.max(1, P('min_leg') || 2); d < BOARD_SIZE; d++) {
                 for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
                     const cands = [
                         [px, py],          // 直角頂点が着手石
@@ -67,7 +71,7 @@ module.exports = {
                 }
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(10, P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, K.RV_ALGO, K.rv([

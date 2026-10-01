@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'otedamago',
     spec: [
         ...K.rb('OTEDAMAGO', '手玉碁', 'otedamago'),
+        K.params([
+            { key: 'link_dist', label: '連続とみなす距離', min: 1, max: 3, def: 1, unit: 'マス' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 投げ上げ: 前回の自分の着手点に接していれば連続回数+1、離れればリセット
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -57,8 +61,9 @@ module.exports = {
                 const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const px = pi % BOARD_SIZE, py = (pi / BOARD_SIZE) | 0;
                 const lx = st.last[player] % BOARD_SIZE, ly = (st.last[player] / BOARD_SIZE) | 0;
+                const __ld = P('link_dist') || 1;
                 const near = st.last[player] >= 0
-                    && Math.abs(px - lx) <= 1 && Math.abs(py - ly) <= 1 && !(px === lx && py === ly);
+                    && Math.abs(px - lx) <= __ld && Math.abs(py - ly) <= __ld && !(px === lx && py === ly);
                 st.streak[player] = near ? st.streak[player] + 1 : 1;
                 if (st.streak[player] > st.best[player]) {
                     st.best[player] = st.streak[player];

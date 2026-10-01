@@ -45,9 +45,13 @@ module.exports = {
     icon: 'regressgo',
     spec: [
         ...K.rb('REGRESSGO', '後退碁', 'regressgo'),
+        K.params([
+            { key: 'stage_period', label: '崩壊段階の間隔', min: 10, max: 90, def: 30, unit: '手' },
+            { key: 'cap_mult', label: '崩壊時のアゲハマ倍率', min: 1, max: 4, def: 2, unit: '倍' },
+        ]),
         // 後退ルール: 段階に応じて自殺手・コウの禁止が外れる
         [K.ONE, VALID, `        function isValidPlacement(cells, player) {
-            const stage = Math.floor(history.length / 30);
+            const stage = Math.floor(history.length / Math.max(1, P('stage_period') || 30));
             for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -77,7 +81,7 @@ module.exports = {
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
-                const mult = Math.floor(history.length / 30) >= 3 ? 2 : 1;
+                const mult = Math.floor(history.length / Math.max(1, P('stage_period') || 30)) >= 3 ? Math.max(1, P('cap_mult') || 2) : 1;
                 captures[player] += captured.length * mult;
                 if (mult > 1) fxText(captured[0], '崩壊x' + mult, '#ef4444', 1100);
                 soundManager.playCapture();
@@ -90,15 +94,15 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 崩壊段階4: 盤そのものが崩壊して強制終局
-            if (Math.floor(history.length / 30) >= 4) {
+            if (Math.floor(history.length / Math.max(1, P('stage_period') || 30)) >= 4) {
                 fxShake(10, 700);
                 endGameByScore();
                 return;
             }
             // 段階が上がった瞬間の報せ
             {
-                const stage = Math.floor(history.length / 30);
-                if (stage > 0 && history.length % 30 === 0) {
+                const stage = Math.floor(history.length / Math.max(1, P('stage_period') || 30));
+                if (stage > 0 && history.length % Math.max(1, P('stage_period') || 30) === 0) {
                     const names = ['', 'コウの戒律が崩れた', '自殺手の禁忌が崩れた', 'アゲハマの価値が倍増した', ''];
                     if (names[stage]) {
                         fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, names[stage], '#ef4444', 1600);
@@ -107,10 +111,10 @@ module.exports = {
                 }
             }
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`(() => { const s = Math.floor(history.length / 30); const left = 30 - history.length % 30; const nm = ['通常','コウ解禁','自殺手解禁','アゲハマx2','崩壊']; return s >= 4 ? '崩壊' : '段階' + s + ' ' + nm[s] + ' 崩壊まで' + left + '手'; })()`),
+        ...K.EVENT_CHIP_SPEC(`(() => { const per = Math.max(1, P('stage_period') || 30); const s = Math.floor(history.length / per); const left = per - history.length % per; const nm = ['通常','コウ解禁','自殺手解禁','アゲハマx2','崩壊']; return s >= 4 ? '崩壊' : '段階' + s + ' ' + nm[s] + ' 崩壊まで' + left + '手'; })()`),
         // 盤の段階に応じた危険色の縁
         ...K.STONE_MARKS_SPEC(`            {
-                const stage = Math.floor(history.length / 30);
+                const stage = Math.floor(history.length / Math.max(1, P('stage_period') || 30));
                 if (stage > 0) {
                     const now = fxNow();
                     const a = 0.10 + stage * 0.05 + 0.05 * Math.sin(now / 300);

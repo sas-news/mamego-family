@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'targetgo',
     spec: [
         ...K.rb('TARGETGO', '的当碁', 'targetgo'),
+        K.params([
+            { key: 'range', label: '弾の射程', min: 1, max: 19, def: 19, hint: '盤端まで' },
+            { key: 'hits_per_dir', label: '方角ごとの撃墜数', min: 1, max: 3, def: 1, unit: '個' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.75, hint: '交点数比' },
+        ]),
         // 的当て: 天元への着手で十字方向に弾を発射 — 各方角最初の敵石を撃墜
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -41,7 +46,8 @@ module.exports = {
                     fxGlow(ti, '#fde047', 900);
                     fxShake(5, 300);
                     for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
-                        for (let d = 1; d < BOARD_SIZE; d++) {
+                        let dirHits = 0;
+                        for (let d = 1; d < (P('range') || BOARD_SIZE); d++) {
                             const nx = cc + dx * d, ny = cc + dy * d;
                             if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) break;
                             const ni = ny * BOARD_SIZE + nx;
@@ -50,9 +56,10 @@ module.exports = {
                                 board[ni] = 0;
                                 captures[player]++;
                                 hits++;
+                                dirHits++;
                                 fxBurst(ni, '#ef4444', 12, 1.8);
                                 fxText(ni, '命中!', '#f87171', 900);
-                                break;
+                                if (dirHits >= (P('hits_per_dir') || 1)) break;
                             }
                         }
                     }

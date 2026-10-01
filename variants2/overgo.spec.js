@@ -9,6 +9,9 @@ module.exports = {
     kind: 'over',
     spec: [
         ...K.rb('OVERGO', '大差碁', 'overgo'),
+        K.params([
+            { key: 'diff', label: '決着となる勢力差', min: 4, max: 30, def: 10, unit: '点' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         // 勢力値: 盤上の自石数 + アゲハマ (終局を待たない大まかな強さの指標)
         function forceScore(player) {
@@ -22,10 +25,10 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 大差ルール: 勢力差が10以上なら即決着
+            // 大差ルール: 勢力差が設定値以上なら即決着
             {
                 const d = scoreDiff();
-                if (Math.abs(d) >= 10) {
+                if (Math.abs(d) >= (P('diff') || 10)) {
                     const w = d > 0 ? 1 : 2;
                     fxShake(8, 420);
                     if (lastMove && lastMove.cells[0]) {
@@ -33,7 +36,7 @@ module.exports = {
                         fxGlow(oi, '#facc15', 900);
                         fxText(oi, '大差決着!', '#facc15', 1400);
                     }
-                    winByRule(w, '大差勝ち', '勢力差が10以上開きました (' + Math.abs(d) + ')'); return;
+                    winByRule(w, '大差勝ち', '勢力差が' + (P('diff') || 10) + '以上開きました (' + Math.abs(d) + ')'); return;
                 }
             }
 
@@ -47,7 +50,7 @@ module.exports = {
         [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
         fxAmbient((ctx2, now, pad, cs) => {
             const d = Math.abs(scoreDiff());
-            if (d < 7) return;
+            if (d < (P('diff') || 10) - 3) return;
             const ph = (Math.sin(now / 420) + 1) / 2;
             const w = pad * 2 + (BOARD_SIZE - 1) * cs;
             ctx2.save();

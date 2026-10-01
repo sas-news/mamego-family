@@ -9,6 +9,10 @@ module.exports = {
     kind: 'trap',
     spec: [
         ...K.rb('TRAPGO', '罠碁', 'trapgo'),
+        K.params([
+            { key: 'trap_interval', label: '罠の間隔', min: 2, max: 15, def: 6, unit: '手', hint: 'この手数ごとに罠石' },
+            { key: 'cap_rows', label: '打ち切り手数', min: 0, max: 8, def: 2, unit: '行', hint: '盤面+この行数' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { pcnt: { 1: 0, 2: 0 } }; // 罠碁: 各側の着手数 (6手ごとに罠)`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -39,7 +43,7 @@ module.exports = {
                 rot: move.rot,
                 cells: move.cells,
                 at: history.length,
-                trap: st.pcnt[player] % 6 === 0
+                trap: st.pcnt[player] % (P('trap_interval') || 6) === 0
             });`],
         // 罠は敵石が直交隣に置かれた瞬間に発動: その敵石1個を道連れにして姿を現す
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -70,7 +74,7 @@ module.exports = {
 
 
             // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_rows') ?? 2))) {
                 endGameByScore();
                 return;
             }
@@ -103,7 +107,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'次の罠 ' + (6 - st.pcnt[turn] % 6) + '手後'`),
+        ...K.EVENT_CHIP_SPEC(`'次の罠 ' + ((P('trap_interval') || 6) - st.pcnt[turn] % (P('trap_interval') || 6)) + '手後'`),
         [K.ONE, K.INFO_ALGO, `            罠碁: 各側6手ごとの石は空点のように見える罠。敵石が隣に来ると発動する<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

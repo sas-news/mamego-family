@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'chickengo',
     spec: [
         ...K.rb('CHICKENGO', '養鶏碁', 'chickengo'),
+        K.params([
+            { key: 'sit_turns', label: '産卵までの滞留', min: 2, max: 10, def: 5, unit: '手' },
+            { key: 'hatch_turns', label: '孵化までの手数', min: 2, max: 12, def: 6, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         ...ST(ST_INIT),
         // 卵のある空点への着手: 卵は食べられる (相手の卵なら+1取り)
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -72,7 +77,7 @@ module.exports = {
                 if (p === 1 || p === 2) {
                     const s = st.sit[fi];
                     st.sit[fi] = { p, n: (s && s.p === p ? s.n + 1 : 1) };
-                    if (st.sit[fi].n >= 5) {
+                    if (st.sit[fi].n >= (P('sit_turns') || 5)) {
                         const free = getNeighbors(fi).filter(n => board[n] === 0 && !st.eggs[n]);
                         if (free.length > 0) {
                             st.eggs[free[0]] = { p, at: history.length };
@@ -89,7 +94,7 @@ module.exports = {
             Object.keys(st.eggs).forEach(k => {
                 const ei = +k;
                 if (board[ei] !== 0) { delete st.eggs[k]; return; }
-                if (history.length - st.eggs[k].at >= 6) {
+                if (history.length - st.eggs[k].at >= (P('hatch_turns') || 6)) {
                     board[ei] = st.eggs[k].p;
                     fxBurst(ei, '#fbbf24', 10, 1.6);
                     delete st.eggs[k];

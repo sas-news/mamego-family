@@ -10,6 +10,10 @@ module.exports = {
     icon: 'emergego',
     spec: [
         ...K.rb('EMERGEGO', '羽化碁', 'emergego'),
+        K.params([
+            { key: 'emerge_age', label: '羽化するまでの手数', min: 8, max: 60, def: 22, unit: '手' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.PIECES_PUSH, `            pieces.push({
                 id: Date.now() + Math.random(),
                 player: player,
@@ -24,7 +28,7 @@ module.exports = {
             // 羽化: 22手以上経った最古の自石が別の空点へ飛び移る (各手番1匹)
             {
                 const aged = pieces.filter(pc => pc.player === player &&
-                    (history.length - (pc.at || 0)) >= 22 &&
+                    (history.length - (pc.at || 0)) >= Math.max(1, P('emerge_age') || 22) &&
                     pc.cells.every(p => board[p.y * BOARD_SIZE + p.x] === pc.player));
                 if (aged.length > 0) {
                     const pc = aged[0];
@@ -45,7 +49,7 @@ module.exports = {
             }
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -58,7 +62,7 @@ module.exports = {
                 ctx.save();
                 pieces.forEach(pc => {
                     const age = history.length - (pc.at || 0);
-                    if (age < 18) return;
+                    if (age < Math.max(1, P('emerge_age') || 22) - 4) return;
                     pc.cells.forEach(c => {
                         const i = c.y * BOARD_SIZE + c.x;
                         if (board[i] !== pc.player) return;

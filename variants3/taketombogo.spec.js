@@ -47,6 +47,10 @@ module.exports = {
     icon: 'taketombogo',
     spec: [
         ...K.rb('TAKETOMBOGO', '竹蜻碁', 'taketombogo'),
+        K.params([
+            { key: 'fly_interval', label: '飛行の間隔', min: 4, max: 30, def: 12, unit: '手' },
+            { key: 'fly_dist', label: '飛ぶ距離', min: 1, max: 4, def: 2, unit: 'マス' },
+        ]),
         ...ST(ST_INIT),
         // 竹とんぼの飛行: 12手ごとに置いた石が2つ先の空点へ飛ぶ (方向は回転)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -54,11 +58,12 @@ module.exports = {
 
             // 竹とんぼ: 12手ごとに置いた石が回転方向へ2マス飛ぶ
             st.ply++;
-            if (st.ply % 12 === 0) {
+            if (st.ply % (P('fly_interval') || 12) === 0) {
                 const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-                const [dx, dy] = dirs[Math.floor((st.ply - 12) / 12) % 4];
+                const [dx, dy] = dirs[Math.floor((st.ply - (P('fly_interval') || 12)) / (P('fly_interval') || 12)) % 4];
                 const c0 = move.cells[0];
-                const tx = c0.x + dx * 2, ty = c0.y + dy * 2;
+                const fd = P('fly_dist') || 2;
+                const tx = c0.x + dx * fd, ty = c0.y + dy * fd;
                 const mx = c0.x + dx, my = c0.y + dy;
                 const from = c0.y * BOARD_SIZE + c0.x;
                 if (tx >= 0 && ty >= 0 && tx < BOARD_SIZE && ty < BOARD_SIZE
@@ -81,7 +86,7 @@ module.exports = {
             {
                 ctx.save();
                 const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-                const [dx, dy] = dirs[Math.floor(st.ply / 12) % 4];
+                const [dx, dy] = dirs[Math.floor(st.ply / (P('fly_interval') || 12)) % 4];
                 const cx = padding + (BOARD_SIZE - 1) / 2 * cellSize, cy = padding - cellSize * 0.9;
                 ctx.strokeStyle = 'rgba(56,189,248,0.8)';
                 ctx.lineWidth = Math.max(1.6, cellSize * 0.07);
@@ -99,7 +104,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'飛行まで ' + (12 - (st.ply % 12)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'飛行まで ' + ((P('fly_interval') || 12) - (st.ply % (P('fly_interval') || 12))) + '手'`),
         [K.ONE, K.INFO_ALGO, `            竹蜻碁: 12手ごとに置いた石が回転方向へ2マス飛ぶ (空いていれば)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

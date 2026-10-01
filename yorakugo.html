@@ -252,6 +252,12 @@
                 <div id="onlineRoomStatus" class="text-center font-bold text-neutral-600 pt-1"></div>
             </div>
 
+            <!-- バリアント固有設定 (VPARAMSがあるゲームのみ表示) -->
+            <div id="variantParamsBox" class="hidden p-3 bg-amber-50 rounded-xl border border-amber-200 flex flex-col gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-neutral-500">このゲームの設定</span>
+                <div id="variantParams" class="flex flex-col gap-3"></div>
+            </div>
+
             <!-- 4. サウンド設定 -->
             <div class="flex items-center justify-between pt-1">
                 <span class="text-sm font-bold text-neutral-700">効果音 (SE)</span>
@@ -310,6 +316,77 @@
     </div>
 
     <script>
+        // === バリアント固有パラメータ ===
+        // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
+        // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
+        const VPARAMS = [{"key":"hall_rad","label":"堂の半径","min":1,"max":4,"def":1,"hint":"中央からの距離 (1=3x3)"},{"key":"hall_pts","label":"連の石1個の点","min":0,"max":5,"def":1,"unit":"目"},{"key":"cap_ratio","label":"打ち切り手数 (交点数比)","min":0.3,"max":1.5,"step":0.05,"def":0.8}];
+        const VPAR_MAP = {};
+        const VPAR_SAVED = (() => {
+            try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
+            catch (e) { return {}; }
+        })();
+        VPARAMS.forEach(p => {
+            if (p.val === undefined) p.val = VPAR_SAVED[p.key] !== undefined ? VPAR_SAVED[p.key] : p.def;
+            VPAR_MAP[p.key] = p;
+        });
+        const P = k => (VPAR_MAP[k] ? VPAR_MAP[k].val : undefined);
+        function saveVpar() {
+            try {
+                const o = {};
+                VPARAMS.forEach(p => { if (p.val !== p.def) o[p.key] = p.val; });
+                localStorage.setItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : ''), JSON.stringify(o));
+            } catch (e) {}
+        }
+        // 設定モーダルの「このゲームの設定」に VPARAMS 分のUIを生成
+        function initVariantParams() {
+            const box = document.getElementById('variantParamsBox');
+            const list = document.getElementById('variantParams');
+            if (!box || !list || !VPARAMS.length) return;
+            box.classList.remove('hidden');
+            const fmt = (p, v) => (p.step && p.step < 1 ? Number(v).toFixed(1) : String(v)) + (p.unit || '');
+            VPARAMS.forEach(p => {
+                const wrap = document.createElement('div');
+                wrap.className = 'flex flex-col gap-1';
+                const head = document.createElement('div');
+                head.className = 'flex justify-between text-xs font-bold text-neutral-600';
+                const lab = document.createElement('span');
+                lab.textContent = p.label + (p.hint ? ` (${p.hint})` : '');
+                const valEl = document.createElement('span');
+                valEl.className = 'text-amber-700';
+                valEl.textContent = fmt(p, p.val);
+                head.appendChild(lab); head.appendChild(valEl);
+                wrap.appendChild(head);
+                const applyVal = v => {
+                    p.val = v;
+                    valEl.textContent = fmt(p, p.val);
+                    saveVpar();
+                    if (typeof onVariantParam === 'function') onVariantParam(p);
+                };
+                if (p.options) {
+                    const sel = document.createElement('select');
+                    sel.className = 'w-full border border-neutral-300 rounded-lg py-1.5 text-sm font-bold bg-white';
+                    p.options.forEach(o => {
+                        const op = document.createElement('option');
+                        op.value = o.v; op.textContent = o.l;
+                        sel.appendChild(op);
+                    });
+                    sel.value = p.val;
+                    sel.addEventListener('change', () => {
+                        const num = parseFloat(sel.value);
+                        applyVal(isNaN(num) ? sel.value : num);
+                    });
+                    wrap.appendChild(sel);
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'range'; inp.min = p.min; inp.max = p.max; inp.step = p.step || 1; inp.value = p.val;
+                    inp.className = 'w-full accent-amber-600';
+                    inp.addEventListener('input', () => applyVal(parseFloat(inp.value)));
+                    wrap.appendChild(inp);
+                }
+                list.appendChild(wrap);
+            });
+        }
+        initVariantParams();
         // ==========================================
         // 1. カラーテーマ定義
         // ==========================================
@@ -1102,14 +1179,16 @@
             // 堂区域: 中央3x3に朱の堂枠と瓔珞飾り
             {
                 const c0 = Math.floor(BOARD_SIZE / 2);
-                const zx = padding + (c0 - 1) * cellSize - cellSize / 2;
-                const zy = padding + (c0 - 1) * cellSize - cellSize / 2;
+                const hr = P('hall_rad') || 1;
+                const zx = padding + (c0 - hr) * cellSize - cellSize / 2;
+                const zy = padding + (c0 - hr) * cellSize - cellSize / 2;
+                const hs = cellSize * (hr * 2 + 1);
                 ctx.save();
                 ctx.fillStyle = 'rgba(185,60,45,0.12)';
-                ctx.fillRect(zx, zy, cellSize * 3, cellSize * 3);
+                ctx.fillRect(zx, zy, hs, hs);
                 ctx.strokeStyle = 'rgba(160,50,40,0.75)';
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.06);
-                ctx.strokeRect(zx, zy, cellSize * 3, cellSize * 3);
+                ctx.strokeRect(zx, zy, hs, hs);
                 // 瓔珞の弧
                 ctx.strokeStyle = 'rgba(212,175,55,0.65)';
                 ctx.lineWidth = Math.max(1.2, cellSize * 0.04);
@@ -1735,7 +1814,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -2136,8 +2215,9 @@
         // 堂区域: 中央3x3
         function hallIdxs() {
             const c = Math.floor(BOARD_SIZE / 2);
+            const hr = P('hall_rad') || 1;
             const idx = [];
-            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++)
+            for (let dy = -hr; dy <= hr; dy++) for (let dx = -hr; dx <= hr; dx++)
                 idx.push((c + dy) * BOARD_SIZE + c + dx);
             return new Set(idx);
         }
@@ -2157,7 +2237,7 @@
                 }
                 const touches = grp.some(g => hall.has(g) ||
                     getNeighbors(g).some(n => hall.has(n)));
-                if (touches) bonus += grp.length;
+                if (touches) bonus += grp.length * (P('hall_pts') ?? 1);
             }
             return bonus;
         }

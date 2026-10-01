@@ -27,6 +27,9 @@ module.exports = {
     icon: 'indivisiblego',
     spec: [
         ...K.rb('INDIVISIBLEGO', '素数碁', 'indivisiblego'),
+        K.params([
+            { key: 'guard_mode', label: '分割不能の連', options: [{ v: 'prime', l: '素数連' }, { v: 'odd', l: '奇数連' }], def: 'prime' },
+        ]),
         // 素数判定ヘルパー
         [K.ONE, `        function getCapturedStones(boardState, player) {`,
 `        function isPrimeNum(n) {
@@ -41,7 +44,7 @@ module.exports = {
                         captured.push(...group);
                     }`,
 `                    if (!hasLiberty) {
-                        if (isPrimeNum(group.length)) {
+                        if ((P('guard_mode') || 'prime') === 'odd' ? group.length % 2 === 1 : isPrimeNum(group.length)) {
                             let worst = group[0], worstScore = -1;
                             group.forEach(g => {
                                 let s = 0;

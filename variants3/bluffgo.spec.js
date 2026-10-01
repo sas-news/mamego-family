@@ -10,6 +10,10 @@ module.exports = {
     icon: 'bluffgo',
     spec: [
         ...K.rb('BLUFFGO', '詐称碁', 'bluffgo'),
+        K.params([
+            { key: 'bluff_penalty', label: '虚勢の罰則', min: 1, max: 6, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { bluff: -1 }; // 虚勢判定用: 直前に取った石の位置`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -41,10 +45,11 @@ module.exports = {
                 {
                     const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                     const linked = getNeighbors(pi).some(n => board[n] === player);
+                    const pen = P('bluff_penalty') || 2;
                     if (!linked) {
-                        captures[player] -= 2;
-                        captures[opponent] += 2;
-                        fxText(pi, '虚勢見抜き -2', '#f87171', 1400);
+                        captures[player] -= pen;
+                        captures[opponent] += pen;
+                        fxText(pi, '虚勢見抜き -' + pen, '#f87171', 1400);
                     }
                     st.bluff = pi;
                 }
@@ -57,7 +62,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 endGameByScore();
                 return;
             }

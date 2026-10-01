@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,10 @@ module.exports = {
     icon: 'agatego',
     spec: [
         ...K.rb('AGATEGO', '瑪瑙碁', 'agatego'),
+        K.params([
+            { key: 'band_min', label: '縞になる囲み数', min: 2, max: 4, def: 3, unit: '石' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST('{ banded: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -54,7 +58,7 @@ module.exports = {
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const adj = getNeighbors(mi).filter(n => board[n] === player).length;
-                if (adj >= 3) {
+                if (adj >= (P('band_min') || 3)) {
                     st.banded[mi] = 1;
                     fxGlow(mi, '#f0abfc', 900);
                     fxText(mi, '縞!', '#e879f9', 1000);

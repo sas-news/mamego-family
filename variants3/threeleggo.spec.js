@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,9 @@ module.exports = {
     icon: 'threeleggo',
     spec: [
         ...K.rb('THREELEGGO', '二人三碁', 'threeleggo'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.75, hint: '交点数比' },
+        ]),
         // 連動着手: 盤上に自分の石がある限り、新しい石は既存の石に隣接必須
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
             // 二人三碁: 自分の石が1つでもあれば、新しい着手は既存の石に隣接必須

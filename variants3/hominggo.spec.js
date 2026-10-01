@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= Math.max(10, P('cap_moves') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'hominggo',
     spec: [
         ...K.rb('HOMINGGO', '帰巣碁', 'hominggo'),
+        K.params([
+            { key: 'nest_dist', label: '遠巣になる巣からの距離', min: 3, max: 12, def: 7, unit: '点' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 50, max: 400, def: 150, step: 10, unit: '手' },
+        ]),
         // 遠巣の石は弱い: 呼吸スコア <= 遠巣の石数 で取られる
         [K.ONE, `                    let hasLiberty = false;`, `                    let libScore = 0;`],
         [K.ONE, `                                hasLiberty = true;`, `                                libScore++;`],
@@ -39,7 +43,7 @@ module.exports = {
                         const C = Math.floor(BOARD_SIZE / 2);
                         group.forEach(g => {
                             const gx = g % BOARD_SIZE, gy = Math.floor(g / BOARD_SIZE);
-                            if (Math.abs(gx - C) + Math.abs(gy - C) >= 7) weak++;
+                            if (Math.abs(gx - C) + Math.abs(gy - C) >= (P('nest_dist') || 7)) weak++;
                         });
                     }
                     if (libScore <= weak) {
@@ -54,7 +58,7 @@ module.exports = {
                 board.forEach((v, i) => {
                     if (v !== 1 && v !== 2) return;
                     const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
-                    if (Math.abs(x - C) + Math.abs(y - C) < 7) return;
+                    if (Math.abs(x - C) + Math.abs(y - C) < (P('nest_dist') || 7)) return;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
                     ctx.beginPath();
                     ctx.arc(cx + cellSize * 0.16, cy - cellSize * 0.16, cellSize * 0.06, 0, Math.PI * 2);

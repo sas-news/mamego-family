@@ -10,6 +10,10 @@ module.exports = {
     icon: 'wafergo',
     spec: [
         ...K.rb('WAFERGO', '薄板碁', 'wafergo'),
+        K.params([
+            { key: 'flip_interval', label: '裏返しの間隔', min: 2, max: 15, def: 5, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { other: null, side: 0 }; // other=裏面の盤, side=0表/1裏
         function mirrorX(bd) {
@@ -54,7 +58,7 @@ module.exports = {
         // 5手ごとに薄板を裏返す
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            if (history.length % 5 === 0) flipWafer();
+            if (history.length % Math.max(1, P('flip_interval') || 5) === 0) flipWafer();
             turn = opponent;`],
         // 裏面の地も集計する
         [K.ONE, `            const territory = calculateTerritory();`,
@@ -66,7 +70,7 @@ module.exports = {
             territory.black += t2.black;
             territory.white += t2.white;`],
         // 表/裏チップ
-        ...K.EVENT_CHIP_SPEC(`(st.side ? '裏面' : '表面') + ' 反転まで ' + (5 - (history.length % 5)) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`(st.side ? '裏面' : '表面') + ' 反転まで ' + (Math.max(1, P('flip_interval') || 5) - (history.length % Math.max(1, P('flip_interval') || 5))) + ' 手'`),
         [K.ONE, K.INFO_ALGO, `            薄板碁: 盤は表と裏の2面。5手ごとに裏返って別盤として進行する (左右反転)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
@@ -81,7 +85,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

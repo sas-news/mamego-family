@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('CENTRIFUGO', '遠心碁', 'centrifugo'),
+        K.params([
+            { key: 'cap_moves', label: '打ち切り手数', min: 60, max: 480, def: 240, unit: '手' },
+        ]),
         // 着手ごと、全石が中心から外へ1マス放たれ、盤外の石は飛び散る
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -49,8 +52,8 @@ module.exports = {
                 cleanUpPieces();
             }
 
-            // 遠心渋滞で盤が埋まるのが遅いため、240手で自動的に点数計算して終局
-            if (history.length >= 240 && !gameOver) {
+            // 遠心渋滞で盤が埋まるのが遅いため、既定の手数で自動的に点数計算して終局
+            if (history.length >= (P('cap_moves') || 240) && !gameOver) {
                 endGameByScore();
                 return;
             }

@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('MERGEGO', '併合碁', 'mergego'),
+        K.params([
+            { key: 'merge_pts', label: '併合の得点係数', min: 0, max: 4, def: 1, step: 0.25, hint: '併合した石×この係数が得点に' },
+        ]),
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => { board[idx] = player; }); // 併合: 取った敵連は自分色になる
@@ -16,7 +19,7 @@ module.exports = {
                 captured.forEach(idx => fxBurst(idx, '#a78bfa', 4, 0.9));
                 fxText(captured[0], '併合+' + captured.length, '#8b5cf6', 1100);
                 fxShake(3, 180);
-                captures[player] += captured.length;
+                captures[player] += Math.round(captured.length * (P('merge_pts') ?? 1));
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {

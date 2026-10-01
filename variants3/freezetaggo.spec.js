@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'freezetaggo',
     spec: [
         ...K.rb('FREEZETAGGO', '氷鬼碁', 'freezetaggo'),
+        K.params([
+            { key: 'demon_interval', label: '氷鬼の移動間隔', min: 2, max: 30, def: 9, unit: '手' },
+            { key: 'freeze_turns', label: '凍結の持続', min: 4, max: 60, def: 16, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         // st 初期化より前に配置: 後続の ST() の st=... が直後に続き、initDemons は st 確定後に走る
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             initDemons();
@@ -65,7 +70,7 @@ module.exports = {
             st.demons.forEach(d => {
                 getNeighbors(d).forEach(n => {
                     const v = board[n];
-                    if (v === 1 || v === 2) st.frozen[n] = st.ply + 16;
+                    if (v === 1 || v === 2) st.frozen[n] = st.ply + (P('freeze_turns') || 16);
                 });
             });
         }
@@ -110,7 +115,7 @@ module.exports = {
 
             // 氷鬼の徘徊: 9手ごとに1歩進み、触れた石が16手凍る
             st.ply++;
-            if (st.ply % 9 === 0) {
+            if (st.ply % Math.max(1, P('demon_interval') || 9) === 0) {
                 stepDemons();
                 st.demons.forEach(d => fxGlow(d, '#7dd3fc', 700));
             }
@@ -160,7 +165,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'氷鬼移動まで ' + (9 - (st.ply % 9)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'氷鬼移動まで ' + ((P('demon_interval') || 9) - (st.ply % (P('demon_interval') || 9))) + '手'`),
         [K.ONE, K.INFO_ALGO, `            氷鬼碁: 2体の氷鬼が9手ごとに徘徊。触れた石は16手凍り、連の呼吸+1<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

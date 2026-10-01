@@ -9,6 +9,9 @@ module.exports = {
     kind: 'jump',
     spec: [
         ...K.rb('LONGGO', '長跳碁', 'longgo'),
+        K.params([
+            { key: 'jump_min', label: '最小跳躍距離', min: 1, max: 8, def: 3, hint: '前の自石からのチェビシェフ距離' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -25,9 +28,10 @@ module.exports = {
                     }
                 }
                 if (anchor) {
+                    const jm = P('jump_min') || 3;
                     for (const p of cells) {
                         const d = Math.max(Math.abs(p.x - anchor.x), Math.abs(p.y - anchor.y));
-                        if (d < 3) return false;
+                        if (d < jm) return false;
                     }
                 }
             }`],
@@ -43,7 +47,7 @@ module.exports = {
                 }
                 if (anchor && lastMove && lastMove.cells.length > 0) {
                     const d = Math.max(Math.abs(lastMove.cells[0].x - anchor.x), Math.abs(lastMove.cells[0].y - anchor.y));
-                    if (d >= 3) {
+                    if (d >= (P('jump_min') || 3)) {
                         fxSlide(anchor.y * BOARD_SIZE + anchor.x, lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, 420); // 長跳の軌跡
                     }
                 }

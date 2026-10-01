@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'caromgo',
     spec: [
         ...K.rb('CAROMGO', '撞球碁', 'caromgo'),
+        K.params([
+            { key: 'pocket_zone', label: 'ポケットの幅', min: 1, max: 3, def: 1, hint: '盤端からこの幅に達すればポケットイン' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         // 衝突: 隣の敵球を直線に転がし、盤端 (ポケット) に落とす
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -48,7 +52,8 @@ module.exports = {
                         if (board[ny * BOARD_SIZE + nx] !== 0) { stopped = true; break; } // クッション (石) で停止
                         tx = nx; ty = ny;
                     }
-                    const reachedEdge = tx === 0 || ty === 0 || tx === BOARD_SIZE - 1 || ty === BOARD_SIZE - 1;
+                    const pz = Math.max(1, P('pocket_zone') || 1);
+                    const reachedEdge = tx < pz || ty < pz || tx >= BOARD_SIZE - pz || ty >= BOARD_SIZE - pz;
                     if (reachedEdge && !stopped) {
                         board[ei] = 0;
                         captures[player]++;

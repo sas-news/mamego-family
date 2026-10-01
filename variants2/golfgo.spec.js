@@ -9,13 +9,17 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('GOLFGO', '球碁', 'golfgo'),
+        K.params([
+            { key: 'hole_edge', label: 'ホールの端からの距離', min: 0, max: 0.45, def: 0.2, step: 0.05, hint: '盤面に対する割合' },
+            { key: 'hole_band', label: 'ホール出現範囲の広さ', min: 0.1, max: 1, def: 0.6, step: 0.05, hint: '盤面に対する割合' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         function endGameByScore() {`],
         [K.ONE, K.BOARD_DECL, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         let holeIdx = -1; // 旗(ホール)の位置`],
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             // 球碁: ホールは盤の中腹あたりに毎回立つ
-            holeIdx = Math.floor(board.length * 0.2) + Math.floor(Math.random() * Math.floor(board.length * 0.6));`],
+            holeIdx = Math.floor(board.length * (P('hole_edge') || 0.2)) + Math.floor(Math.random() * Math.floor(board.length * (P('hole_band') || 0.6)));`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 

@@ -10,6 +10,10 @@ module.exports = {
     icon: 'tanzakugo',
     spec: [
         ...K.rb('TANZAKUGO', '短冊碁', 'tanzakugo'),
+        K.params([
+            { key: 'wrap', label: '上下端の折り返し', options: [{ v: 1, l: 'あり (輪環)' }, { v: 0, l: 'なし' }], def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.8, hint: '交点数比' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 短冊: 中央2列だけが盤面
         const TAN_COL0 = Math.floor(BOARD_SIZE / 2) - 1;
@@ -28,9 +32,14 @@ module.exports = {
             // 横は帯の反対側のみ
             if (x === TAN_COL0) neighbors.push(y * BOARD_SIZE + TAN_COL1);
             else if (x === TAN_COL1) neighbors.push(y * BOARD_SIZE + TAN_COL0);
-            // 縦は折り返し (輪環)
-            neighbors.push(((y - 1 + BOARD_SIZE) % BOARD_SIZE) * BOARD_SIZE + x);
-            neighbors.push(((y + 1) % BOARD_SIZE) * BOARD_SIZE + x);
+            // 縦は折り返し (輪環) — 設定で折り返しなしにもできる
+            if (P('wrap') ?? 1) {
+                neighbors.push(((y - 1 + BOARD_SIZE) % BOARD_SIZE) * BOARD_SIZE + x);
+                neighbors.push(((y + 1) % BOARD_SIZE) * BOARD_SIZE + x);
+            } else {
+                if (y > 0) neighbors.push((y - 1) * BOARD_SIZE + x);
+                if (y < BOARD_SIZE - 1) neighbors.push((y + 1) * BOARD_SIZE + x);
+            }
 
             return neighbors;
         }`],
@@ -53,7 +62,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

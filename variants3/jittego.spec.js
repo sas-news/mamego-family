@@ -27,6 +27,9 @@ module.exports = {
     icon: 'jittego',
     spec: [
         ...K.rb('JITTEGO', '十手碁', 'jittego'),
+        K.params([
+            { key: 'blade_mode', label: '十手の挟み方', options: [{ v: 'ortho', l: '直交のみ' }, { v: 'diag', l: '直交+斜め' }], def: 'ortho' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 十手捕の刃: 対向 (左右/上下) 両側が敵石の空点 — その両石が捕らえられる
         function jitteBlades(b, idx, pl) {
@@ -35,6 +38,11 @@ module.exports = {
             const caught = [];
             if (x > 0 && x < BOARD_SIZE - 1 && b[idx - 1] === opp && b[idx + 1] === opp) caught.push(idx - 1, idx + 1);
             if (y > 0 && y < BOARD_SIZE - 1 && b[idx - BOARD_SIZE] === opp && b[idx + BOARD_SIZE] === opp) caught.push(idx - BOARD_SIZE, idx + BOARD_SIZE);
+            // 設定: 斜めの対向も刃にする
+            if ((P('blade_mode') || 'ortho') === 'diag' && x > 0 && y > 0 && x < BOARD_SIZE - 1 && y < BOARD_SIZE - 1) {
+                if (b[idx - BOARD_SIZE - 1] === opp && b[idx + BOARD_SIZE + 1] === opp) caught.push(idx - BOARD_SIZE - 1, idx + BOARD_SIZE + 1);
+                if (b[idx - BOARD_SIZE + 1] === opp && b[idx + BOARD_SIZE - 1] === opp) caught.push(idx - BOARD_SIZE + 1, idx + BOARD_SIZE - 1);
+            }
             return caught;
         }`],
         // 自殺手免除: 十手捕の刃がある空点への着手は禁止されない (捕らえるから)

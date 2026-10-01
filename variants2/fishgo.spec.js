@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('FISHGO', '釣碁', 'fishgo'),
+        K.params([
+            { key: 'fish_range', label: '釣れる最小間合い', min: 1, max: 8, def: 2, unit: 'マス' },
+        ]),
         // 釣り処理を通常捕獲の前に挿入
         [K.ONE, K.CAPTURE_BLOCK, `            // 釣碁: 打った石から4方向に伸ばした先にある敵石を釣り上げる
             move.cells.forEach(p => {
@@ -20,7 +23,7 @@ module.exports = {
                         if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE) return;
                         const bi = board[ny * BOARD_SIZE + nx];
                         if (bi === 0) continue;         // 空点は飛び越す
-                        if (bi === opponent && d >= 2) { // 間合いがあれば釣れる
+                        if (bi === opponent && d >= Math.max(1, P('fish_range') || 2)) { // 間合いがあれば釣れる
                             const fi = ny * BOARD_SIZE + nx;
                             const ti = p.y * BOARD_SIZE + p.x;
                             board[fi] = 0;

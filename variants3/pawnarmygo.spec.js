@@ -10,6 +10,10 @@ module.exports = {
     icon: 'pawnarmygo',
     spec: [
         ...K.rb('PAWNARMYGO', '歩兵碁', 'pawnarmygo'),
+        K.params([
+            { key: 'general_interval', label: '大将石の周期', min: 3, max: 12, def: 5, unit: '手ごと' },
+            { key: 'move_cap', label: '打ち切り手数', min: 40, max: 400, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { big: {} }; // 大将石: idx → 色。甲冑で最初の捕獲を耐える`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -60,7 +64,7 @@ module.exports = {
             // 歩兵碁: 各軍5手ごとの着手は大将石になる
             {
                 const movesMade = history.filter(h => h.turn === player).length;
-                if (movesMade % 5 === 0) {
+                if (movesMade % Math.max(2, P('general_interval') || 5) === 0) {
                     const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                     if (board[mi] === player && !st.big[mi]) {
                         st.big[mi] = player;
@@ -73,7 +77,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('move_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,
@@ -101,7 +105,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'次の大将まで ' + (5 - (history.filter(h => h.turn === turn).length % 5)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'次の大将まで ' + ((P('general_interval') || 5) - (history.filter(h => h.turn === turn).length % (P('general_interval') || 5))) + '手'`),
         [K.ONE, K.INFO_ALGO, `            歩兵碁: 5手ごとの着手は大将石。大将は最初の捕獲を甲冑で1度耐える<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

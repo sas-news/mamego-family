@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,10 @@ module.exports = {
     icon: 'camelliago',
     spec: [
         ...K.rb('CAMELLIAGO', '椿碁', 'camelliago'),
+        K.params([
+            { key: 'flower_pt', label: '落花1個の得点', min: 1, max: 3, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.9, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         ...ST('{ fallen: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -85,8 +89,8 @@ module.exports = {
 `            const territory = calculateTerritory();
             for (const k in st.fallen) {
                 if (board[k] !== 0) continue;
-                if (st.fallen[k] === 1) territory.black += 1;
-                else territory.white += 1;
+                if (st.fallen[k] === 1) territory.black += (P('flower_pt') || 1);
+                else territory.white += (P('flower_pt') || 1);
             }`],
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            椿碁: 取られた石は散り際に花を残す — 空点のままなら所有者に終局時+1目<br>

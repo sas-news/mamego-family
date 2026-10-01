@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('SNATCHGO', '横取碁', 'snatchgo'),
+        K.params([
+            { key: 'ply_extra', label: '打ち切りの余分', min: 0, max: 6, def: 2, step: 1, unit: '行', hint: '交点数+この行数で打ち切り' },
+        ]),
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
@@ -54,7 +57,7 @@ module.exports = {
         // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('ply_extra') || 2))) {
                 endGameByScore();
                 return;
             }

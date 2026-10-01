@@ -9,6 +9,20 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('HARBORGO', '港碁', 'harborgo'),
+        K.params([
+            { key: 'edge_depth', label: '再入港する辺の深さ', min: 0, max: 3, def: 0, unit: '列', hint: '0=最外周のみ' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0, max: 400, def: 0, unit: '手', hint: '0=制限なし' },
+        ]),
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }`],
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
@@ -20,7 +34,8 @@ module.exports = {
                                    hc * BOARD_SIZE + (BOARD_SIZE - 1), (BOARD_SIZE - 1) * BOARD_SIZE + hc];
                     captured.forEach(ci => {
                         const cx = ci % BOARD_SIZE, cy = Math.floor(ci / BOARD_SIZE);
-                        const onEdge = cx === 0 || cx === BOARD_SIZE - 1 || cy === 0 || cy === BOARD_SIZE - 1;
+                        const ed = Math.max(0, P('edge_depth') ?? 0);
+                        const onEdge = cx <= ed || cx >= BOARD_SIZE - 1 - ed || cy <= ed || cy >= BOARD_SIZE - 1 - ed;
                         if (!onEdge) return;
                         const port = ports.find(p => board[p] === 0);
                         if (port !== undefined) {

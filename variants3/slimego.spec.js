@@ -10,6 +10,10 @@ module.exports = {
     icon: 'slimego',
     spec: [
         ...K.rb('SLIMEGO', '粘体碁', 'slimego'),
+        K.params([
+            { key: 'slime_turns', label: '粘液の持続', min: 1, max: 6, def: 2, unit: '手' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { slime: {} }; // 粘液マス idx -> 残り手数`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -41,7 +45,7 @@ module.exports = {
         // 取った石は粘液を残す
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
-                captured.forEach(idx => { board[idx] = 0; st.slime[idx] = 2; fxSplash(idx, '#4ade80', 6); });
+                captured.forEach(idx => { board[idx] = 0; st.slime[idx] = (P('slime_turns') || 2); fxSplash(idx, '#4ade80', 6); });
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -85,7 +89,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

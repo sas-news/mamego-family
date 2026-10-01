@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'kitsunego',
     spec: [
         ...K.rb('KITSUNEGO', '狐化碁', 'kitsunego'),
+        K.params([
+            { key: 'fox_interval', label: '狐になる間隔', min: 2, max: 15, def: 7, unit: '手' },
+            { key: 'fox_back', label: '逃走で持ち主に返る点', min: 0, max: 4, def: 1, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 捕獲改変: 狐石は取られても化けて逃げる (相手のアゲハマにならず持ち主に+1返る)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured0 = getCapturedStones(board, opponent);
@@ -55,7 +60,7 @@ module.exports = {
             // 狐は化けて逃走: 盤からは消えるが相手のアゲハマにならず、持ち主に+1
             fledFoxes.forEach(i => {
                 board[i] = 0;
-                captures[opponent]++;
+                captures[opponent] += (P('fox_back') ?? 1);
                 fxBurst(i, '#fb923c', 12, 1.6);
                 fxText(i, '化けて逃走', '#fb923c', 1200);
             });
@@ -76,7 +81,7 @@ module.exports = {
             {
                 st.pcnt[player] = (st.pcnt[player] || 0) + 1;
                 st.fox = st.fox.filter(i => board[i] !== 0);
-                if (st.pcnt[player] % 7 === 0) {
+                if (st.pcnt[player] % Math.max(1, P('fox_interval') || 7) === 0) {
                     const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                     st.fox.push(mi);
                     fxGlow(mi, '#fb923c', 800);
@@ -108,7 +113,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'狐まで ' + (7 - (st.pcnt[turn] || 0) % 7) + '手 / 盤上の狐 ' + st.fox.filter(i => board[i] !== 0).length`),
+        ...K.EVENT_CHIP_SPEC(`'狐まで ' + (Math.max(1, P('fox_interval') || 7) - (st.pcnt[turn] || 0) % Math.max(1, P('fox_interval') || 7)) + '手 / 盤上の狐 ' + st.fox.filter(i => board[i] !== 0).length`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            狐化碁: 各側7手目の着手は狐石。取られても化けて逃げて相手のアゲハマにならない (持ち主に+1)<br>
             PC: クリックで配置<br>

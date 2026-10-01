@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,12 @@ module.exports = {
     icon: 'armillarygo',
     spec: [
         ...K.rb('ARMILLARYGO', '渾天碁', 'armillarygo'),
+        K.params([
+            { key: 'ring_pts', label: '環上の得点', min: 1, max: 4, def: 1, unit: '点' },
+            { key: 'node_pts', label: '交点の得点', min: 1, max: 6, def: 2, unit: '点' },
+            { key: 'ring_width', label: '環の太さ', min: 0.15, max: 0.9, def: 0.45, step: 0.05, hint: '中心線からの許容距離' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT, `
         // 渾天儀: 中心を跨ぐ2重の環と経緯の交点
         const ringR1 = () => (BOARD_SIZE - 1) / 3;
@@ -71,7 +77,7 @@ module.exports = {
         const ringCell = (x, y) => {
             const c = (BOARD_SIZE - 1) / 2;
             const d = Math.sqrt((x - c) * (x - c) + (y - c) * (y - c));
-            return Math.abs(d - ringR1()) < 0.45 || Math.abs(d - ringR2()) < 0.45;
+            return Math.abs(d - ringR1()) < (P('ring_width') || 0.45) || Math.abs(d - ringR2()) < (P('ring_width') || 0.45);
         };
         const nodeCell = (x, y) => {
             const c = (BOARD_SIZE - 1) / 2;
@@ -79,8 +85,8 @@ module.exports = {
         };`, ''),
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
             // 環上+1、経緯との交点なら+2
-            if (nodeCell(move.cells[0].x, move.cells[0].y)) st.score[player] += 2;
-            else if (ringCell(move.cells[0].x, move.cells[0].y)) st.score[player] += 1;`],
+            if (nodeCell(move.cells[0].x, move.cells[0].y)) st.score[player] += (P('node_pts') || 2);
+            else if (ringCell(move.cells[0].x, move.cells[0].y)) st.score[player] += (P('ring_pts') || 1);`],
         K.CUE_GRID(`            // 渾天儀の2環と経緯線
             {
                 const c_ = (BOARD_SIZE - 1) / 2;

@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,20 +47,35 @@ module.exports = {
     icon: 'floatislego',
     spec: [
         ...K.rb('FLOATISLEGO', '浮島碁', 'floatislego'),
+        K.params([
+            { key: 'tide_interval', label: '潮汐の周期', min: 3, max: 30, def: 9, unit: '手' },
+            { key: 'isle_radius', label: '浮島の半径', min: 0.08, max: 0.4, step: 0.01, def: 0.19 },
+            { key: 'strait_width', label: '海峡の幅', min: 1, max: 3, def: 1, unit: '列' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 浮島: 4つの島 (四隅) と中央の海峡
         const ISLE_F = [[0.27, 0.27], [0.73, 0.27], [0.27, 0.73], [0.73, 0.73]];
         function isIsle(x, y) {
-            const r = BOARD_SIZE * 0.19;
+            const r = BOARD_SIZE * (P('isle_radius') || 0.19);
             return ISLE_F.some(([fx, fy]) =>
                 Math.hypot(x - fx * (BOARD_SIZE - 1), y - fy * (BOARD_SIZE - 1)) <= r);
         }
-        const STRAIT_SET = new Set();
-        for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-            const m = (BOARD_SIZE - 1) / 2;
-            if (isIsle(x, y)) continue;
-            if (Math.abs(x - m) <= 1 || Math.abs(y - m) <= 1) STRAIT_SET.add(y * BOARD_SIZE + x);
+        let STRAIT_SET = new Set();
+        function rebuildStraitSet() {
+            STRAIT_SET = new Set();
+            const sw = P('strait_width') || 1;
+            for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                const m = (BOARD_SIZE - 1) / 2;
+                if (isIsle(x, y)) continue;
+                if (Math.abs(x - m) <= sw || Math.abs(y - m) <= sw) STRAIT_SET.add(y * BOARD_SIZE + x);
+            }
+        }
+        rebuildStraitSet();
+        // 設定変更で海峡を再構成
+        function onVariantParam(p) {
+            if (p.key === 'isle_radius' || p.key === 'strait_width') rebuildStraitSet();
         }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
@@ -71,7 +86,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 浮島の潮: 9手ごとに満ち引きが入れ替わる
-            if (history.length % 9 === 0) {
+            if (history.length % Math.max(1, P('tide_interval') || 9) === 0) {
                 st.tide = 1 - st.tide;
                 if (st.tide === 1) {
                     // 満潮: 海峡の石は流されて近くの陸に打ち上げられる。行き場がなければアゲハマ
@@ -135,7 +150,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`st.tide === 1 ? '満潮' : '満潮まで ' + (9 - (history.length % 9)) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`st.tide === 1 ? '満潮' : '満潮まで ' + ((P('tide_interval') || 9) - (history.length % (P('tide_interval') || 9))) + ' 手'`),
         [K.ONE, K.INFO_ALGO, `            浮島碁: 4つの浮き島。中央の海峡は9手ごとの潮の満ち干で開閉<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

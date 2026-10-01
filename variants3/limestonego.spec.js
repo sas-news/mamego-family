@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,10 @@ module.exports = {
     icon: 'limestonego',
     spec: [
         ...K.rb('LIMESTONEGO', '石灰碁', 'limestonego'),
+        K.params([
+            { key: 'melt_turns', label: '溶解までの手数', min: 1, max: 12, def: 4, hint: '濡れた石がこの手数で溶ける' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST('{ wet: {}, stal: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -56,7 +60,7 @@ module.exports = {
                     : [{x:2,y:2},{x:6,y:2},{x:2,y:6},{x:6,y:6},{x:4,y:4}]).map(p => p.y * BOARD_SIZE + p.x);
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (!st.wet[mi] && (SP.includes(mi) || SP.some(s => getNeighbors(mi).includes(s)))) {
-                    st.wet[mi] = history.length + 4;
+                    st.wet[mi] = history.length + Math.max(1, P('melt_turns') || 4);
                     fxSplash(mi, '#7dd3fc');
                     fxText(mi, '湿', '#38bdf8', 900);
                 }

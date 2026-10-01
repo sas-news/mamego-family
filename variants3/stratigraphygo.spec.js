@@ -10,6 +10,9 @@ module.exports = {
     icon: 'stratigraphygo',
     spec: [
         ...K.rb('STRATIGRAPHYGO', '層積碁', 'stratigraphygo'),
+        K.params([
+            { key: 'fossil_age', label: '化石になるまでの手数', min: 8, max: 60, def: 28, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let strataDetail = { 1: 0, 2: 0 }; // 直近終局で計上した化石ボーナス`],
         [K.ONE, K.PIECES_PUSH, `            pieces.push({
@@ -27,7 +30,7 @@ module.exports = {
             pieces.forEach(pc => {
                 const alive = pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
                 if (!alive) return;
-                if (history.length - (pc.at || 0) < 28) return;
+                if (history.length - (pc.at || 0) < (P('fossil_age') || 28)) return;
                 strataDetail[pc.player]++;
                 if (pc.player === 1) territory.black++; else territory.white++;
             });`],
@@ -47,7 +50,7 @@ module.exports = {
             {
                 ctx.save();
                 pieces.forEach(pc => {
-                    if (history.length - (pc.at || 0) < 28) return;
+                    if (history.length - (pc.at || 0) < (P('fossil_age') || 28)) return;
                     pc.cells.forEach(c => {
                         const i = c.y * BOARD_SIZE + c.x;
                         if (board[i] !== pc.player) return;

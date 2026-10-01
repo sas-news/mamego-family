@@ -27,9 +27,12 @@ module.exports = {
     icon: 'stairsgo',
     spec: [
         ...K.rb('STAIRSGO', '階段碁', 'stairsgo'),
+        K.params([
+            { key: 'stair_pitch', label: '階段の段数', min: 1, max: 5, def: 2, unit: '列' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 階段: 列ごとの踏み面の高さ (これより上は盤外の壁)
-        function stairTop(x) { return Math.max(0, Math.floor((BOARD_SIZE - 1 - x) / 2)); }`],
+        function stairTop(x) { return Math.max(0, Math.floor((BOARD_SIZE - 1 - x) / (P('stair_pitch') || 2))); }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 if (y < stairTop(x)) board[y * BOARD_SIZE + x] = 3;

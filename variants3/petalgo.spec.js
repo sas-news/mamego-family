@@ -10,6 +10,7 @@ module.exports = {
     icon: 'petalgo',
     spec: [
         ...K.rb('PETALGO', '花弁碁', 'petalgo'),
+        K.params([{ key: 'petal_n', label: '花弁の数', min: 3, max: 10, def: 6, unit: '弁' }, { key: 'slit_w', label: '切れ目の太さ', min: 0.1, max: 2, step: 0.05, def: 0.55 }, { key: 'heart_r', label: '花心の半径', min: 0.5, max: 4, step: 0.1, def: 1.5 }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' }]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 6弁の花: 中心円盤 + 弁。弁間は切れ目 (壁)
         const PETAL_C = (BOARD_SIZE - 1) / 2;
@@ -18,11 +19,11 @@ module.exports = {
             const dx = x - PETAL_C, dy = y - PETAL_C;
             const dist = Math.hypot(dx, dy);
             if (dist > PETAL_R) return false;
-            if (dist < 1.5) return true; // 花心は切れ目なし
+            if (dist < (P('heart_r') || 1.5)) return true; // 花心は切れ目なし
             const ang = Math.atan2(dy, dx);
-            const sec = Math.PI / 3;
+            const sec = Math.PI * 2 / Math.max(3, P('petal_n') || 6);
             const off = Math.abs(((ang % sec) + sec) % sec - sec / 2); // 弁中心からの角度距離
-            return (sec / 2 - off) * dist > 0.55; // 弁境界の切れ目は壁
+            return (sec / 2 - off) * dist > (P('slit_w') || 0.55); // 弁境界の切れ目は壁
         }`],
         // 切れ目と花の外は壁
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -36,8 +37,8 @@ module.exports = {
         ...K.STONE_MARKS_SPEC(`            {
                 const cc = padding + PETAL_C * cellSize;
                 ctx.save();
-                for (let k = 0; k < 6; k++) {
-                    const a0 = k * Math.PI / 3 + Math.PI / 6;
+                for (let k = 0; k < Math.max(3, P('petal_n') || 6); k++) {
+                    const a0 = k * (Math.PI * 2 / Math.max(3, P('petal_n') || 6)) + Math.PI / Math.max(3, P('petal_n') || 6);
                     ctx.fillStyle = k % 2 ? 'rgba(244,114,182,0.10)' : 'rgba(251,113,133,0.12)';
                     ctx.beginPath();
                     ctx.moveTo(cc, cc);
@@ -67,7 +68,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -84,7 +85,7 @@ module.exports = {
         assert('弁の中は打てる', isValidPlacement([{ x: c, y: c + 3 }], 1) === true);
         const slitFree = [];
         for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-            if (board[I(x, y)] === 3 && Math.hypot(x - c, y - c) > 1.5 && Math.hypot(x - c, y - c) < PETAL_R) slitFree.push([x, y]);
+            if (board[I(x, y)] === 3 && Math.hypot(x - c, y - c) > (P('heart_r') || 1.5) && Math.hypot(x - c, y - c) < PETAL_R) slitFree.push([x, y]);
         }
         assert('切れ目が存在する', slitFree.length > 0);
         assert('花の外は打てない', isValidPlacement([{ x: 0, y: 0 }], 1) === false);

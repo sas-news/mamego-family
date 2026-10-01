@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,11 +27,15 @@ module.exports = {
     icon: 'spirego',
     spec: [
         ...K.rb('SPIREGO', '塔頂碁', 'spirego'),
+        K.params([
+            { key: 'spire_slope', label: '塔の広がり (何行ごとに+1マス)', min: 1, max: 4, def: 2, unit: '行' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 塔: 底辺が最も広く、頂上 (y=0) は1点だけの尖塔断面
         const SPIRE_MID = Math.floor(BOARD_SIZE / 2);
         function isSpire(x, y) {
-            return Math.abs(x - SPIRE_MID) <= Math.floor((y + 1) / 2);
+            return Math.abs(x - SPIRE_MID) <= Math.floor((y + 1) / (P('spire_slope') || 2));
         }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {

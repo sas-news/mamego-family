@@ -9,10 +9,13 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('MOATSGO', '堀碁', 'moatsgo'),
+        K.params([
+            { key: 'moat_shift', label: '堀の位置補正', min: -2, max: 2, def: 0, hint: '中心からの距離 (標準は盤サイズ÷4) からのずれ' },
+        ]),
         // チェビシェフ距離 k の環状堀
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
-                const c = Math.floor(BOARD_SIZE / 2), k = Math.round(BOARD_SIZE / 4);
+                const c = Math.floor(BOARD_SIZE / 2), k = Math.max(1, Math.round(BOARD_SIZE / 4) + (P('moat_shift') ?? 0));
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     if (Math.max(Math.abs(x - c), Math.abs(y - c)) === k) board[y * BOARD_SIZE + x] = 3;
                 }

@@ -64,13 +64,17 @@ module.exports = {
     icon: 'ryoushigo',
     spec: [
         ...K.rb('RYOUSHIGO', '料紙碁', 'ryoushigo'),
+        K.params([
+            { key: 'thick_bonus', label: '厚料紙の追加呼吸', min: 0, max: 3, def: 1, unit: '点/石' },
+            { key: 'thin_bonus', label: '薄料紙の作字点', min: 0, max: 5, def: 1, unit: '点' },
+        ]),
         ...ST(ST_INIT, `
         // 料紙: 4行周期の帯。y%4<=1 が厚料紙、y%4>=2 が薄料紙
         const thickRow = (y) => (y % 4) <= 1;
         const thinRow = (y) => (y % 4) >= 2;`, ''),
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
             // 薄料紙への筆入れは作字点+1
-            if (thinRow(move.cells[0].y)) st.score[player] += 1;`],
+            if (thinRow(move.cells[0].y)) st.score[player] += (P('thin_bonus') ?? 1);`],
         [K.ONE, `                    let hasLiberty = false;`, `                    let liberties = 0;`],
         [K.ONE, `                                hasLiberty = true;`, `                                liberties++;`],
         [K.ONE, `                        });
@@ -78,7 +82,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                        });
-                        liberties += ((curr / BOARD_SIZE) | 0) % 4 <= 1 ? 1 : 0; // 厚料紙は破れにくい
+                        liberties += ((curr / BOARD_SIZE) | 0) % 4 <= 1 ? Math.max(0, P('thick_bonus') ?? 1) : 0; // 厚料紙は破れにくい
                     }
 
                     if (liberties <= 0) {`],
@@ -86,7 +90,7 @@ module.exports = {
             }
             return liberties;`,
 `                });
-                liberties += ((curr / BOARD_SIZE) | 0) % 4 <= 1 ? 1 : 0; // 厚料紙は破れにくい
+                liberties += ((curr / BOARD_SIZE) | 0) % 4 <= 1 ? Math.max(0, P('thick_bonus') ?? 1) : 0; // 厚料紙は破れにくい
             }
             return liberties;`],
         K.CUE_GRID(`            // 料紙の帯: 厚料紙は暖色、薄料紙は青みの帯

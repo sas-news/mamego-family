@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'yomigo',
     spec: [
         ...K.rb('YOMIGO', '黄泉碁', 'yomigo'),
+        K.params([
+            { key: 'rite_interval', label: '黄泉の境界の間隔', min: 5, max: 40, def: 15, unit: '手' },
+            { key: 'cap', label: '打ち切り手数', min: 60, max: 400, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { lastRite: 0 };`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -52,10 +56,10 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 黄泉の境界: 15手ごとに両者の石が盤の裏から1つずつ這い出す
+            // 黄泉の境界: N手ごとに両者の石が盤の裏から1つずつ這い出す
             {
-                const rite = Math.floor(history.length / 15);
-                if (rite !== st.lastRite && history.length % 15 === 0) {
+                const rite = Math.floor(history.length / (P('rite_interval') || 15));
+                if (rite !== st.lastRite && history.length % (P('rite_interval') || 15) === 0) {
                     st.lastRite = rite;
                     const T = BOARD_SIZE * BOARD_SIZE;
                     const spawned = [];
@@ -101,7 +105,7 @@ module.exports = {
                 ctx.fillRect(padding - cellSize / 2, padding + w - cellSize, w, cellSize * 1.5);
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'黄泉まで' + (15 - (history.length % 15)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'黄泉まで' + ((P('rite_interval') || 15) - (history.length % (P('rite_interval') || 15))) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            黄泉碁: 15手ごとに両者の石が1つずつ這い出す<br>
             PC: クリックで配置<br>

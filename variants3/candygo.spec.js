@@ -10,10 +10,15 @@ module.exports = {
     icon: 'candygo',
     spec: [
         ...K.rb('CANDYGO', '飴玉碁', 'candygo'),
+        K.params([
+            { key: 'match_len', label: 'ポップする連数', min: 3, max: 5, def: 3, unit: '連' },
+            { key: 'chain_max', label: '連鎖の上限', min: 2, max: 20, def: 8 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.8, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         // 飴玉: 3連以上の並びをポップ (通常の取りの後、連鎖あり)
         [K.ONE, K.TURN_FLIP, `            // 飴玉: 同色3連以上をポップして得点化 (持ち主のアゲハマ)
             {
-                for (let loop = 0; loop < 8; loop++) {
+                for (let loop = 0; loop < (P('chain_max') || 8); loop++) {
                     const pops = new Set();
                     const check = (line) => {
                         let run = [];
@@ -22,11 +27,11 @@ module.exports = {
                             if ((v === 1 || v === 2) && run.length && board[run[0]] === v) {
                                 run.push(i);
                             } else {
-                                if (run.length >= 3) run.forEach(r => pops.add(r));
+                                if (run.length >= (P('match_len') || 3)) run.forEach(r => pops.add(r));
                                 run = (v === 1 || v === 2) ? [i] : [];
                             }
                         });
-                        if (run.length >= 3) run.forEach(r => pops.add(r));
+                        if (run.length >= (P('match_len') || 3)) run.forEach(r => pops.add(r));
                     };
                     for (let r = 0; r < BOARD_SIZE; r++) {
                         const row = [], col = [];
@@ -65,7 +70,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

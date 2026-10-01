@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,11 @@ module.exports = {
     icon: 'tokyogo',
     spec: [
         ...K.rb('TOKYOGO', '組物碁', 'tokyogo'),
+        K.params([
+            { key: 'score', label: '斗栱の得点', min: 0, max: 8, def: 2, unit: '点' },
+            { key: 'tokyo_liberty', label: '斗栱の追加呼吸', min: 0, max: 4, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.9, hint: '交点数比' },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -74,7 +79,7 @@ module.exports = {
             const toIdx = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             if (toIdx >= BOARD_SIZE && toIdx < BOARD_SIZE * (BOARD_SIZE - 1)
                 && board[toIdx - BOARD_SIZE] === player && board[toIdx + BOARD_SIZE] === player) {
-                st.score[player] += 2;
+                st.score[player] += (P('score') ?? 2);
             }
 
             turn = opponent;`],
@@ -85,7 +90,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                        });
-                        liberties += (curr >= BOARD_SIZE && curr < BOARD_SIZE * (BOARD_SIZE - 1) && boardState[curr - BOARD_SIZE] === player && boardState[curr + BOARD_SIZE] === player) ? 1 : 0; // 斗栱が連を支える
+                        liberties += (curr >= BOARD_SIZE && curr < BOARD_SIZE * (BOARD_SIZE - 1) && boardState[curr - BOARD_SIZE] === player && boardState[curr + BOARD_SIZE] === player) ? (P('tokyo_liberty') ?? 1) : 0; // 斗栱が連を支える
                     }
 
                     if (liberties <= 0) {`],
@@ -93,7 +98,7 @@ module.exports = {
             }
             return liberties;`,
 `                });
-                liberties += (curr >= BOARD_SIZE && curr < BOARD_SIZE * (BOARD_SIZE - 1) && boardState[curr - BOARD_SIZE] === player && boardState[curr + BOARD_SIZE] === player) ? 1 : 0; // 斗栱が連を支える
+                liberties += (curr >= BOARD_SIZE && curr < BOARD_SIZE * (BOARD_SIZE - 1) && boardState[curr - BOARD_SIZE] === player && boardState[curr + BOARD_SIZE] === player) ? (P('tokyo_liberty') ?? 1) : 0; // 斗栱が連を支える
             }
             return liberties;`],
         ...K.STONE_MARKS_SPEC(`            // 斗栱: 上下に自石を持つ石に受け材の印

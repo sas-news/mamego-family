@@ -64,6 +64,9 @@ module.exports = {
     icon: 'inougo',
     spec: [
         ...K.rb('INOUGO', '伊能碁', 'inougo'),
+        K.params([
+            { key: 'full_pts', label: '全行制覇ボーナス', min: 5, max: 30, def: 15, unit: '目' },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -88,7 +91,7 @@ module.exports = {
             }
             if (!st.full[player] && inou.count === BOARD_SIZE) {
                 st.full[player] = true;
-                st.score[player] += 15;
+                st.score[player] += (P('full_pts') || 15);
             }
 
             turn = opponent;`],

@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('FRAGILEGO', '脆碁', 'fragilego'),
+        K.params([
+            { key: 'fragile_lib', label: '砕ける呼吸点 (以下)', min: 1, max: 4, def: 2 },
+        ]),
         [K.ONE, K.CAPTURE_BLOCK, `            // 脆碁: 呼吸点が2以下の敵連は全て砕ける (通常は0のみ)
             const seenGrp = new Set();
             const captured = [];
@@ -16,7 +19,7 @@ module.exports = {
                 if (board[i] === opponent && !seenGrp.has(i)) {
                     const grp = getConnectedGroup(i, opponent);
                     grp.forEach(g => seenGrp.add(g));
-                    if (getLiberties(board, i) <= 2) captured.push(...grp);
+                    if (getLiberties(board, i) <= (P('fragile_lib') || 2)) captured.push(...grp);
                 }
             }
             if (captured.length > 0) {
@@ -46,7 +49,7 @@ module.exports = {
                     if ((v !== 1 && v !== 2) || seenF.has(i)) continue;
                     const grp = getConnectedGroup(i, v);
                     grp.forEach(g => seenF.add(g));
-                    if (getLiberties(board, i) > 2) continue;
+                    if (getLiberties(board, i) > (P('fragile_lib') || 2)) continue;
                     for (const g of grp) {
                         const x = g % BOARD_SIZE, y = Math.floor(g / BOARD_SIZE);
                         const cx = padding + x * cellSize, cy = padding + y * cellSize;

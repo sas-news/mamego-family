@@ -47,6 +47,10 @@ module.exports = {
     icon: 'scrollmountgo',
     spec: [
         ...K.rb('SCROLLMOUNTGO', '表具碁', 'scrollmountgo'),
+        K.params([
+            { key: 'hang_min', label: '掛軸に必要な床の間の石数', min: 1, max: 6, def: 3, unit: '石' },
+            { key: 'hang_rate', label: '掛軸の石あたり得点', min: 1, max: 4, def: 1, unit: '点' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 床の間: 中央列 (天井から吊るす掛軸のレール)
@@ -64,7 +68,7 @@ module.exports = {
                     if (onTokonoma(c)) touch++;
                     getNeighbors(c).forEach(n => { if (board[n] === player && !seen.has(n)) { seen.add(n); q.push(n); } });
                 }
-                if (touch >= 3) out.push(g);
+                if (touch >= Math.max(1, P('hang_min') || 3)) out.push(g);
             }
             return out;
         }`],
@@ -77,9 +81,9 @@ module.exports = {
                 const key = g.slice().sort((a, b) => a - b).join(',');
                 if (st.hung[key]) return;
                 st.hung[key] = player;
-                st.score[player] += g.length;
+                st.score[player] += g.length * Math.max(1, P('hang_rate') || 1);
                 g.forEach(i => fxGlow(i, '#c084fc', 1100));
-                fxText(g[0], '掛軸 +' + g.length, '#c084fc', 1500);
+                fxText(g[0], '掛軸 +' + (g.length * Math.max(1, P('hang_rate') || 1)), '#c084fc', 1500);
             });
 
             turn = opponent;`],

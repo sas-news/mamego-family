@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'requiemgo',
     spec: [
         ...K.rb('REQUIEMGO', '鎮魂碁', 'requiemgo'),
+        K.params([
+            { key: 'merit', label: '回向点 (霊1体)', min: 0, max: 10, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 霊の状態 st.merit (両者の回向点)
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { merit: { 1: 0, 2: 0 } }; // 回向点`],
@@ -63,7 +67,7 @@ module.exports = {
                     });
                     if (nbrs.length > 0 && nbrs.every(n => board[n] === player)) {
                         board[i] = 0; // 霊は成仏して消える
-                        st.merit[player] += 2;
+                        st.merit[player] += (P('merit') ?? 2);
                         fxBurst(i, '#a5f3fc', 14, 1.4);
                         fxText(i, '回向', '#67e8f9', 1200);
                     }

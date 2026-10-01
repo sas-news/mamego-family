@@ -9,13 +9,16 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('FLOCKGO', '群行碁', 'flockgo'),
+        K.params([
+            { key: 'flock_interval', label: '群行の間隔', min: 1, max: 12, def: 3, unit: '手' },
+        ]),
         // 3手ごと、全連が重心の向きで中心へ1マスまとまって進む
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 群行ルール: 3手ごとに各連が重心を計算し、中心方向へ1マスまるごと平行移動する。
             //             行き先が塞がっていたらその連は動けない。
-            if (history.length % 3 === 0) {
+            if (history.length % Math.max(1, P('flock_interval') || 3) === 0) {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
                 const seen = new Uint8Array(N * N);
                 const groups = [];

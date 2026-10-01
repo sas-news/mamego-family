@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'pyroclasticgo',
     spec: [
         ...K.rb('PYROCLASTICGO', '火砕碁', 'pyroclasticgo'),
+        K.params([
+            { key: 'erupt_interval', label: '噴火の間隔', min: 5, max: 60, def: 20, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 火砕流の通路: 山頂(中央)から両裾野へ蛇行しながら下る1マス幅の道
@@ -71,7 +75,7 @@ module.exports = {
 
             // 噴火: 20手ごとに火砕流が斜面を駆け下りる
             st.ply++;
-            if (st.ply % 20 === 0) {
+            if (st.ply % Math.max(1, P('erupt_interval') || 20) === 0) {
                 let burnt = 0;
                 PYRO.forEach(i => {
                     const v = board[i];
@@ -110,7 +114,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'噴火まで ' + (20 - (st.ply % 20)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'噴火まで ' + (Math.max(1, P('erupt_interval') || 20) - (st.ply % Math.max(1, P('erupt_interval') || 20))) + '手'`),
         [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_MIST('249,115,22')],
         [K.ONE, K.INFO_ALGO, `            火砕碁: 中央の火山灰帯は火砕流の通路。20手ごとの噴火で通路上の石は全て焼かれる<br>
             PC: クリックで配置<br>

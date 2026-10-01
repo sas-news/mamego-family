@@ -10,16 +10,29 @@ module.exports = {
     icon: 'dungo',
     spec: [
         ...K.rb('DUNGO', '地下碁', 'dungo'),
+        K.params([
+            { key: 'burrow_f', label: '潜行点の位置', min: 1, max: 4, def: 1, hint: '隅からの距離' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 90, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 潜行点: 4隅の (f,f) 位置。ここに打った石は地下に潜って不滅になる
-        const BURROW_F = Math.max(1, Math.floor(BOARD_SIZE / 6));
-        const BURROW_CELLS = new Set([
-            BURROW_F * BOARD_SIZE + BURROW_F,
-            BURROW_F * BOARD_SIZE + (BOARD_SIZE - 1 - BURROW_F),
-            (BOARD_SIZE - 1 - BURROW_F) * BOARD_SIZE + BURROW_F,
-            (BOARD_SIZE - 1 - BURROW_F) * BOARD_SIZE + (BOARD_SIZE - 1 - BURROW_F),
-        ]);
-        function isBurrowCell(i) { return BURROW_CELLS.has(i); }`],
+        let BURROW_F = Math.max(1, P('burrow_f') || Math.floor(BOARD_SIZE / 6));
+        let BURROW_CELLS = new Set();
+        function rebuildBurrow() {
+            BURROW_F = Math.max(1, P('burrow_f') || Math.floor(BOARD_SIZE / 6));
+            BURROW_CELLS = new Set([
+                BURROW_F * BOARD_SIZE + BURROW_F,
+                BURROW_F * BOARD_SIZE + (BOARD_SIZE - 1 - BURROW_F),
+                (BOARD_SIZE - 1 - BURROW_F) * BOARD_SIZE + BURROW_F,
+                (BOARD_SIZE - 1 - BURROW_F) * BOARD_SIZE + (BOARD_SIZE - 1 - BURROW_F),
+            ]);
+        }
+        rebuildBurrow();
+        function isBurrowCell(i) { return BURROW_CELLS.has(i); }
+        // 設定変更で潜行点を即時再構成
+        function onVariantParam(p) {
+            if (p.key === 'burrow_f') rebuildBurrow();
+        }`],
         // 潜行石は取られず連にもならない
         [K.ONE, `            if (boardState[i] === player && !visited[i]) {`,
 `            if (boardState[i] === player && !visited[i] && !isBurrowCell(i)) {`],
@@ -65,7 +78,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 90) / 100))) {
                 capFired = true;
                 endGameByScore();
                 return;

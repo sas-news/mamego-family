@@ -27,6 +27,9 @@ module.exports = {
     icon: 'strathgo',
     spec: [
         ...K.rb('STRATHGO', '段丘2碁', 'strathgo'),
+        K.params([
+            { key: 'terr_bonus', label: '段の高さボーナス', min: 0, max: 4, def: 1, hint: '呼吸点への倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 河岸段丘: 盤を横3帯に分割。上段(古い段)=Lv2、中段=Lv1、下段=Lv0
         function terrLevel(y) {
@@ -41,7 +44,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                        });
-                        liberties += terrLevel(curr / BOARD_SIZE | 0); // 段の高さ分だけ硬い
+                        liberties += terrLevel(curr / BOARD_SIZE | 0) * (P('terr_bonus') ?? 1); // 段の高さ分だけ硬い
                     }
 
                     if (liberties <= 0) {`],
@@ -50,7 +53,7 @@ module.exports = {
             }
             return liberties;`,
 `                });
-                liberties += terrLevel(curr / BOARD_SIZE | 0); // 段の高さ分だけ硬い
+                liberties += terrLevel(curr / BOARD_SIZE | 0) * (P('terr_bonus') ?? 1); // 段の高さ分だけ硬い
             }
             return liberties;`],
         // 段丘の描画: 帯ごとの段差と崖線

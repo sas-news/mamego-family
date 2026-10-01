@@ -9,6 +9,10 @@ module.exports = {
     kind: 'goal',
     spec: [
         ...K.rb('GOALGO', '得点碁', 'goalgo'),
+        K.params([
+            { key: 'goal_radius', label: 'ゴールの広さ', min: 1, max: 4, def: 1, unit: 'マス' },
+            { key: 'goal_pts', label: 'ゴール1回の得点', min: 1, max: 5, def: 1, unit: '目' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let goals = { 1: 0, 2: 0 }; // ゴールに投入した累計得点`],
         [K.ONE, K.RESET_HELD, `            heldPieces = { 1: null, 2: null };
@@ -39,8 +43,8 @@ module.exports = {
             {
                 const c = Math.floor(BOARD_SIZE / 2);
                 const p = move.cells[0];
-                if (Math.abs(p.x - c) <= 1 && Math.abs(p.y - c) <= 1) {
-                    goals[player]++;
+                if (Math.abs(p.x - c) <= (P('goal_radius') || 1) && Math.abs(p.y - c) <= (P('goal_radius') || 1)) {
+                    goals[player] += (P('goal_pts') || 1);
                     const gi = p.y * BOARD_SIZE + p.x;
                     fxGlow(gi, '#4ade80', 900);
                     fxBurst(gi, '#4ade80', 10, 1.5);
@@ -67,9 +71,10 @@ module.exports = {
                 ctx.strokeStyle = alphaColor('#16a34a', 0.8);
                 ctx.lineWidth = Math.max(1.5, cellSize * 0.06);
                 ctx.setLineDash([cellSize * 0.15, cellSize * 0.10]);
-                const gx = padding + (c - 1) * cellSize - cellSize / 2;
-                const gy = padding + (c - 1) * cellSize - cellSize / 2;
-                ctx.strokeRect(gx, gy, cellSize * 3, cellSize * 3);
+                const _gr = P('goal_radius') || 1;
+                const gx = padding + (c - _gr) * cellSize - cellSize / 2;
+                const gy = padding + (c - _gr) * cellSize - cellSize / 2;
+                ctx.strokeRect(gx, gy, cellSize * (_gr * 2 + 1), cellSize * (_gr * 2 + 1));
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'G 黒:' + goals[1] + ' 白:' + goals[2]`),

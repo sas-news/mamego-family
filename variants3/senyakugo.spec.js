@@ -27,13 +27,16 @@ module.exports = {
     icon: 'senyakugo',
     spec: [
         ...K.rb('SENYAKUGO', '煎薬碁', 'senyakugo'),
+        K.params([
+            { key: 'herb_bonus', label: '単石の薬効ボーナス', min: 0, max: 10, def: 3, unit: '目' },
+        ]),
         // 煎薬ボーナス: 同色の隣を持たない単石ごとに+3
         [K.ONE, `        function endGameByScore() {`,
 `        function senyakuBonus(player) {
             let bonus = 0;
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== player) continue;
-                if (!getNeighbors(i).some(n => board[n] === player)) bonus += 3;
+                if (!getNeighbors(i).some(n => board[n] === player)) bonus += (P('herb_bonus') ?? 3);
             }
             return bonus;
         }

@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,12 @@ module.exports = {
     icon: 'rinshogo',
     spec: [
         ...K.rb('RINSHOGO', '臨書碁', 'rinshogo'),
+        K.params([
+            { key: 'rin_point', label: '手本1点の得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'rin_goal', label: '完成に必要な臨書数', min: 2, max: 8, def: 4, unit: '点' },
+            { key: 'rin_bonus', label: '完成ボーナス', min: 0, max: 16, def: 4, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT, `
         // 臨書の手本: 天元を囲む8点 (対称配置)
         const MODEL = new Set();
@@ -80,7 +86,7 @@ module.exports = {
             const rIdx = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             if (MODEL.has(rIdx)) {
                 st.rin[player]++;
-                st.score[player] += 1;
+                st.score[player] += (P('rin_point') ?? 1);
             }`],
         K.CUE_GRID(`            // 手本: 天元を囲む8点を淡い円で示す
             MODEL.forEach(i => {
@@ -96,9 +102,9 @@ module.exports = {
 `        function endGameByScore() {
             if (!st._end) {
                 st._end = true;
-                // 手本を4点以上写せば臨書完成 +4
-                if (st.rin[1] >= 4) st.score[1] += 4;
-                if (st.rin[2] >= 4) st.score[2] += 4;
+                // 手本を規定点以上写せば臨書完成でボーナス
+                if (st.rin[1] >= Math.max(1, P('rin_goal') || 4)) st.score[1] += (P('rin_bonus') ?? 4);
+                if (st.rin[2] >= Math.max(1, P('rin_goal') || 4)) st.score[2] += (P('rin_bonus') ?? 4);
                 captures[1] += st.score[1] || 0;
                 captures[2] += st.score[2] || 0;
             }

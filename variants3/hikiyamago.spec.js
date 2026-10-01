@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'hikiyamago',
     spec: [
         ...K.rb('HIKIYAMAGO', '山車碁', 'hikiyamago'),
+        K.params([
+            { key: 'dashi_min', label: '山車になる連の大きさ', min: 3, max: 9, def: 5, unit: '個' },
+            { key: 'dashi_bonus', label: '山車1台の賑わい点', min: 0, max: 12, def: 4, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.8, step: 0.05 },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 山車: 5個以上の連は練り歩く山車となり沿道が賑わう (1台につき+4目)
         function dashiBonus(player) {
@@ -41,7 +46,7 @@ module.exports = {
                         if (board[n] === player && !seen.has(n)) { seen.add(n); g.push(n); }
                     });
                 }
-                if (g.length >= 5) bonus += 4;
+                if (g.length >= (P('dashi_min') || 5)) bonus += (P('dashi_bonus') || 4);
             }
             return bonus;
         }

@@ -52,6 +52,12 @@ module.exports = {
     icon: 'shichiyago',
     spec: [
         ...K.rb('SHICHIYAGO', '質屋碁', 'shichiyago'),
+        K.params([
+            { key: 'pawn_deadline', label: '質の期限', min: 4, max: 30, def: 12, unit: '手' },
+            { key: 'pawn_fund', label: '期限内の下取り資金', min: 0, max: 8, def: 2, unit: '点' },
+            { key: 'auction_pts', label: '競売ボーナス', min: 0, max: 4, def: 1, unit: '点' },
+            { key: 'rim_pts', label: '外周利息 (1石)', min: 0, max: 4, def: 1, unit: '点' },
+        ]),
         ...PERSIST('{ placed: {}, funds: { 1: 0, 2: 0 } }'),
         // 着手ごとに配置手数を記録 (質期限の判定用)
         [K.ONE, K.PIECES_PUSH, `            move.cells.forEach(p => { st.placed[p.y * BOARD_SIZE + p.x] = history.length; });
@@ -70,12 +76,12 @@ module.exports = {
                     const cx = idx % BOARD_SIZE, cy = (idx / BOARD_SIZE) | 0;
                     if (cx === 0 || cy === 0 || cx === BOARD_SIZE - 1 || cy === BOARD_SIZE - 1) {
                         const held = history.length - (st.placed[idx] || 0);
-                        if (held <= 12) {
-                            st.funds[opponent] += 2; // 期限内: 所有者に下取り資金
-                            fxText(idx, '質流れ+2', '#fbbf24', 1000);
+                        if (held <= Math.max(1, P('pawn_deadline') || 12)) {
+                            st.funds[opponent] += Math.max(0, P('pawn_fund') ?? 2); // 期限内: 所有者に下取り資金
+                            fxText(idx, '質流れ+' + (P('pawn_fund') ?? 2), '#fbbf24', 1000);
                         } else {
-                            captures[player] += 1; // 期限切れ: 競売で取った側がボーナス
-                            fxText(idx, '競売+1', '#fb923c', 1000);
+                            captures[player] += Math.max(0, P('auction_pts') ?? 1); // 期限切れ: 競売で取った側がボーナス
+                            fxText(idx, '競売+' + (P('auction_pts') ?? 1), '#fb923c', 1000);
                         }
                     }
                     delete st.placed[idx];
@@ -98,7 +104,7 @@ ${CAP}
             for (let i = 0; i < board.length; i++) {
                 const cx = i % BOARD_SIZE, cy = (i / BOARD_SIZE) | 0;
                 if (cx !== 0 && cy !== 0 && cx !== BOARD_SIZE - 1 && cy !== BOARD_SIZE - 1) continue;
-                if (board[i] === 1) rimB++; else if (board[i] === 2) rimW++;
+                if (board[i] === 1) rimB += Math.max(0, P('rim_pts') ?? 1); else if (board[i] === 2) rimW += Math.max(0, P('rim_pts') ?? 1);
             }
             const pawnB = st.funds[1] + rimB, pawnW = st.funds[2] + rimW;
             const blackTotal = territory.black + captures[1] + pawnB;

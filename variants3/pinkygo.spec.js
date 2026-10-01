@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,7 @@ module.exports = {
     icon: 'pinkygo',
     spec: [
         ...K.rb('PINKYGO', '指切碁', 'pinkygo'),
+        K.params([{ key: 'rot_penalty', label: '指切り破りの代償', min: 1, max: 5, def: 1, unit: 'アゲハマ' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' }]),
         ...ST(ST_INIT),
         // 指切り破り: 自分が約束した点に打つと、その石が腐って相手のアゲハマになる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -57,7 +58,7 @@ module.exports = {
                 if (st.promise[player] === pi) {
                     st.promise[player] = -1;
                     board[pi] = 0;
-                    captures[opponent]++;
+                    captures[opponent] += (P('rot_penalty') || 1);
                     fxText(pi, '指切り破り!', '#f472b6', 1300);
                     fxBurst(pi, '#f472b6', 9, 1.5);
                     cleanUpPieces();

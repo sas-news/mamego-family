@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'faultgo',
     spec: [
         ...K.rb('FAULTGO', '断層碁', 'faultgo'),
+        K.params([
+            { key: 'quake_interval', label: '地震の間隔', min: 4, max: 40, def: 10, unit: '手' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 断層の位置
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
@@ -58,7 +62,7 @@ module.exports = {
 
             // 断層活動: 10手ごとの地震で右側の盤面が1段ずれる
             st.ply++;
-            if (st.ply % 10 === 0) {
+            if (st.ply % Math.max(1, P('quake_interval') || 10) === 0) {
                 const fx = faultX();
                 const moved = [];
                 let dropped = 0;
@@ -117,7 +121,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'地震まで ' + (10 - (st.ply % 10)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'地震まで ' + ((P('quake_interval') || 10) - (st.ply % (P('quake_interval') || 10))) + '手'`),
         [K.ONE, K.INFO_ALGO, `            断層碁: 中央に断層。10手ごとの地震で右側が1段ずれ、縁から落ちた石は呑まれる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

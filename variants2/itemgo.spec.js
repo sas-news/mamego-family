@@ -9,6 +9,10 @@ module.exports = {
     kind: 'item',
     spec: [
         ...K.rb('ITEMGO', '道具碁', 'itemgo'),
+        K.params([
+            { key: 'item_interval', label: 'アイテム出現間隔', min: 2, max: 15, def: 5, unit: '手' },
+            { key: 'pickup_dist', label: '拾得範囲', min: 0, max: 3, def: 1, hint: 'アイテムからの距離 (0は直上のみ)' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { item: -1 }; // 道具碁: 盤上のアイテム位置 (idx, -1=なし)`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -35,10 +39,10 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 道具碁: アイテムの1マス以内に置いたら拾得 — アゲハマ+1
+            // 道具碁: アイテムの近くに置いたら拾得 — アゲハマ+1 (範囲は設定で調整)
             if (st.item >= 0) {
                 const ic = move.cells[0];
-                if (Math.max(Math.abs(ic.x - st.item % BOARD_SIZE), Math.abs(ic.y - Math.floor(st.item / BOARD_SIZE))) <= 1) {
+                if (Math.max(Math.abs(ic.x - st.item % BOARD_SIZE), Math.abs(ic.y - Math.floor(st.item / BOARD_SIZE))) <= (P('pickup_dist') ?? 1)) {
                     captures[player] += 1;
                     // 拾得: 金の飛沫と +1目
                     fxBurst(st.item, '#facc15', 12, 1.7);
@@ -47,8 +51,8 @@ module.exports = {
                     st.item = -1;
                 }
             }
-            // 5の倍数手の後に空点へ新アイテムを出現させる
-            if (st.item < 0 && history.length % 5 === 0) {
+            // 一定手数ごとに空点へ新アイテムを出現させる (間隔は設定で調整)
+            if (st.item < 0 && history.length % Math.max(1, P('item_interval') || 5) === 0) {
                 const seed = (history.length * 11 + 7) % (BOARD_SIZE * BOARD_SIZE);
                 for (let k = 0; k < board.length; k++) {
                     const j = (seed + k) % board.length;
@@ -83,7 +87,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`st.item >= 0 ? 'アイテム出現中!' : 'アイテムまで ' + (history.length % 5 === 0 ? 5 : 5 - history.length % 5) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`st.item >= 0 ? 'アイテム出現中!' : 'アイテムまで ' + (history.length % Math.max(1, P('item_interval') || 5) === 0 ? Math.max(1, P('item_interval') || 5) : Math.max(1, P('item_interval') || 5) - history.length % Math.max(1, P('item_interval') || 5)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            道具碁: 5手ごとに盤上へ★アイテム出現。1マス以内に置いた側が拾って+1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

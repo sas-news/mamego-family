@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'rokkigo',
     spec: [
         ...K.rb('ROKKIGO', '六曜碁', 'rokkigo'),
+        K.params([
+            { key: 'taian_bonus', label: '大安の吉点', min: 0, max: 10, def: 2, unit: '目' },
+            { key: 'butsumetsu_penalty', label: '仏滅の凶点', min: 0, max: 10, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 六曜ヘルパー
         [K.ONE, `        function endGameByScore() {`, `        // 六曜: 先勝→友引→先負→仏滅→大安→赤口
@@ -57,8 +62,8 @@ module.exports = {
             for (const k in st.marks) {
                 const i = +k;
                 if (board[i] !== pl) continue;
-                if (st.marks[i] === 4) s += 2;      // 大安の石は吉
-                else if (st.marks[i] === 3) s -= 1; // 仏滅の石は凶
+                if (st.marks[i] === 4) s += (P('taian_bonus') ?? 2);      // 大安の石は吉
+                else if (st.marks[i] === 3) s -= (P('butsumetsu_penalty') ?? 1); // 仏滅の石は凶
             }
             return s;
         }

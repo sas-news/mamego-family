@@ -9,6 +9,10 @@ module.exports = {
     kind: 'xray',
     spec: [
         ...K.rb('XRAYGO', '透視碁', 'xraygo'),
+        K.params([
+            { key: 'xray_at', label: 'X線の手番', min: 1, max: 10, def: 2, unit: '手目' },
+            { key: 'cap_rows', label: '打ち切りの余裕', min: 0, max: 9, def: 2, hint: '交点数+N行分の着手で終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { pcnt: { 1: 0, 2: 0 }, seen: { 1: [], 2: [] } }; // 透視碁: 着手数とX線で記録済みの敵石`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -50,8 +54,8 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
 
-            // 透視碁: 各側2手目の着手でX線 — その時点の全敵石の位置を記録
-            if (st.pcnt[player] === 2) {
+            // 透視碁: 各側N手目の着手でX線 — その時点の全敵石の位置を記録
+            if (st.pcnt[player] === (P('xray_at') || 2)) {
                 board.forEach((v, i) => {
                     if (v === opponent && !st.seen[player].includes(i)) st.seen[player].push(i);
                 });
@@ -65,7 +69,7 @@ module.exports = {
 
 
             // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_rows') ?? 2))) {
                 endGameByScore();
                 return;
             }
@@ -95,7 +99,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`st.pcnt[turn] < 2 ? '透視まで あと' + (2 - st.pcnt[turn]) + '手' : '記録済敵石 ' + (st.seen[turn] || []).length + '個'`),
+        ...K.EVENT_CHIP_SPEC(`st.pcnt[turn] < (P('xray_at') || 2) ? '透視まで あと' + ((P('xray_at') || 2) - st.pcnt[turn]) + '手' : '記録済敵石 ' + (st.seen[turn] || []).length + '個'`),
         [K.ONE, K.INFO_ALGO, `            透視碁: 敵石は不可視。各側2手目のX線でその時点の敵石だけ永久に見える<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

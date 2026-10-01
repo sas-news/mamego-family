@@ -10,6 +10,11 @@ module.exports = {
     icon: 'detectivego',
     spec: [
         ...K.rb('DETECTIVEGO', '推理碁', 'detectivego'),
+        K.params([
+            { key: 'pred_pt', label: '読み的中の得点', min: 1, max: 6, def: 2, unit: '目' },
+            { key: 'pred_range', label: '的中とみなす範囲', min: 0, max: 2, def: 1, hint: '推理点からの距離' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 75, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { pred: -1 }; // 推理碁: 次の手番への推理点`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -53,16 +58,17 @@ module.exports = {
             if (st.pred >= 0) {
                 const px = st.pred % BOARD_SIZE, py = Math.floor(st.pred / BOARD_SIZE);
                 const p = move.cells[0];
-                if (Math.abs(p.x - px) <= 1 && Math.abs(p.y - py) <= 1) {
+                const pr = P('pred_range') ?? 1;
+                if (Math.abs(p.x - px) <= pr && Math.abs(p.y - py) <= pr) {
                     const predictor = player === 1 ? 2 : 1;
-                    captures[predictor] += 2;
+                    captures[predictor] += (P('pred_pt') || 2);
                     fxGlow(st.pred, '#34d399', 900);
-                    fxText(st.pred, '読み的中 +2', '#34d399', 1300);
+                    fxText(st.pred, '読み的中 +' + (P('pred_pt') || 2), '#34d399', 1300);
                 }
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 endGameByScore();
                 return;
             }

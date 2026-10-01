@@ -27,18 +27,26 @@ module.exports = {
     icon: 'sukigo',
     spec: [
         ...K.rb('SUKIGO', '数奇碁', 'sukigo'),
+        K.params([
+            { key: 'suki_pts', label: '孤石の風流点', min: 0, max: 6, def: 2, unit: '目' },
+            { key: 'garden_size', label: '庭の一辺のサイズ', min: 2, max: 6, def: 4, unit: 'マス' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 数寄屋の庭: 左上隅と右下隅の4x4区域
+        // 数寄屋の庭: 左上隅と右下隅の区域
         const SUKI_C = 1;
-        const SUKI_SET = (function () {
+        let SUKI_SET = new Set();
+        function rebuildSuki() {
+            const n = P('garden_size') || 4;
             const s = new Set();
-            for (let dy = 0; dy < 4; dy++)
-                for (let dx = 0; dx < 4; dx++) {
+            for (let dy = 0; dy < n; dy++)
+                for (let dx = 0; dx < n; dx++) {
                     s.add((SUKI_C + dy) * BOARD_SIZE + (SUKI_C + dx));
-                    s.add((BOARD_SIZE - 2 - SUKI_C + dy) * BOARD_SIZE + (BOARD_SIZE - 2 - SUKI_C + dx));
+                    s.add((BOARD_SIZE - 1 - SUKI_C - n + dy + 1) * BOARD_SIZE + (BOARD_SIZE - 1 - SUKI_C - n + dx + 1));
                 }
-            return s;
-        })();`],
+            SUKI_SET = s;
+        }
+        rebuildSuki();
+        function onVariantParam(p) { if (p.key === 'garden_size') rebuildSuki(); }`],
         // 風流点: 庭にいて同色と隣接しない石は+2目
         [K.ONE, `        function endGameByScore() {`, `        // 風流点: 庭にいる孤石 (同色の隣接なし) を数える
         function sukiBonus() {
@@ -47,7 +55,7 @@ module.exports = {
                 const v = board[i];
                 if (v !== 1 && v !== 2) continue;
                 const lonely = !getNeighbors(i).some(n => board[n] === v);
-                if (lonely) b[v] += 2;
+                if (lonely) b[v] += (P('suki_pts') ?? 2);
             }
             return b;
         }
@@ -71,7 +79,7 @@ module.exports = {
                 const edge = (x0, y0) => ctx.strokeRect(
                     padding + x0 * cellSize - cellSize * 0.5,
                     padding + y0 * cellSize - cellSize * 0.5,
-                    cellSize * 4, cellSize * 4);
+                    cellSize * (P('garden_size') || 4), cellSize * (P('garden_size') || 4));
                 edge(SUKI_C, SUKI_C);
                 edge(BOARD_SIZE - 2 - SUKI_C, BOARD_SIZE - 2 - SUKI_C);
                 ctx.restore();

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'toujigo',
     spec: [
         ...K.rb('TOUJIGO', '湯治碁', 'toujigo'),
+        K.params([
+            { key: 'bonus', label: '浸かった石1つあたりの得点', min: 0, max: 6, def: 2, unit: '目' },
+            { key: 'heal', label: '湯治で回復するアゲハマ', min: 0, max: 3, def: 1, unit: '個' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.8, hint: '交点数比' },
+        ]),
         // 湯治ボーナス: 湯治区域(行1-3 x 中央3列)の自石ごとに+2
         [K.ONE, `        function endGameByScore() {`,
 `        function onsenCells() {
@@ -37,7 +42,7 @@ module.exports = {
             return cells;
         }
         function onsenBonus(player) {
-            return onsenCells().filter(i => board[i] === player).length * 2;
+            return onsenCells().filter(i => board[i] === player).length * (P('bonus') ?? 2);
         }
 
         function endGameByScore() {`],
@@ -57,7 +62,7 @@ module.exports = {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (onsenCells().includes(mi)) {
                     if (captures[opponent] > 0) {
-                        captures[opponent] -= 1;
+                        captures[opponent] -= (P('heal') ?? 1);
                         fxText(mi, '湯治 +1回復', '#38bdf8', 1200);
                     }
                     fxGlow(mi, '#67e8f9', 700);
@@ -89,7 +94,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'湯治 黒' + (onsenBonus(1) / 2) + '/白' + (onsenBonus(2) / 2)`),
+        ...K.EVENT_CHIP_SPEC(`'湯治 黒' + (onsenBonus(1) / (P('bonus') ?? 2)) + '/白' + (onsenBonus(2) / (P('bonus') ?? 2))`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            湯治碁: 上段の湯治場に石を浸けるとアゲハマ1つ回復、浸かった石は終局時+2目<br>
             PC: クリックで配置<br>

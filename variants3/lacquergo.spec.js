@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,11 +47,16 @@ module.exports = {
     icon: 'lacquergo',
     spec: [
         ...K.rb('LACQUERGO', '漆器碁', 'lacquergo'),
+        K.params([
+            { key: 'coat_interval', label: '塗りが重なる間隔', min: 2, max: 20, def: 6, unit: '手' },
+            { key: 'lacq_max', label: '艶出になる塗り数', min: 2, max: 8, def: 3, unit: '重' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 漆の塗り: 6手ごとに全石が1重ずつ塗り重ねられる。3重で不動の堅さ
         const LACQ_MAX = 3;
-        function lacqArmored(i) { return (st.coat[i] || 0) >= LACQ_MAX; }`],
+        function lacqArmored(i) { return (st.coat[i] || 0) >= Math.max(1, P('lacq_max') || 3); }`],
         // 塗り上がった石は取り判定から外れる
         [K.ONE, `                if (boardState[i] === player && !visited[i]) {`,
 `                if (boardState[i] === player && !visited[i] && !lacqArmored(i)) {`],
@@ -62,7 +67,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 漆器碁: 6手ごとに全ての石が一塗りされる
-            if (history.length > 0 && history.length % 6 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('coat_interval') || 6) === 0) {
                 for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
                     if (board[i] === 1 || board[i] === 2) {
                         if (!lacqArmored(i)) {
@@ -79,11 +84,11 @@ module.exports = {
             Object.keys(st.coat).forEach(k => {
                 const i = +k;
                 if (board[i] !== 1 && board[i] !== 2) return;
-                const n = Math.min(LACQ_MAX, st.coat[i]);
+                const n = Math.min(Math.max(1, P('lacq_max') || 3), st.coat[i]);
                 const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
                 const cx = padding + x * cellSize, cy = padding + y * cellSize;
                 ctx.save();
-                ctx.strokeStyle = n >= LACQ_MAX ? 'rgba(251, 191, 36, 0.95)' : 'rgba(202, 138, 4, 0.7)';
+                ctx.strokeStyle = n >= Math.max(1, P('lacq_max') || 3) ? 'rgba(251, 191, 36, 0.95)' : 'rgba(202, 138, 4, 0.7)';
                 ctx.lineWidth = Math.max(1, cellSize * 0.04);
                 for (let r = 0; r < n; r++) {
                     ctx.beginPath();

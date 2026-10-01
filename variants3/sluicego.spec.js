@@ -27,6 +27,9 @@ module.exports = {
     icon: 'sluicego',
     spec: [
         ...K.rb('SLUICEGO', '水門碁', 'sluicego'),
+        K.params([
+            { key: 'flush_interval', label: '放水の間隔', min: 2, max: 20, def: 8, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 水路: 中央1行が西→東へ流れる用水路 (着手可・呼吸も通常)
         const SLUICE_Y = Math.floor(BOARD_SIZE / 2);`],
@@ -35,7 +38,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 水門碁: 8手ごとに放水 — 水路の石が下流へ流れる
-            if (history.length > 0 && history.length % 8 === 0) {
+            if (history.length > 0 && history.length % (P('flush_interval') || 8) === 0) {
                 let drifted = false;
                 for (let x = BOARD_SIZE - 1; x >= 0; x--) {
                     const i = SLUICE_Y * BOARD_SIZE + x;
@@ -84,7 +87,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'放水まで ' + (8 - history.length % 8) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'放水まで ' + ((P('flush_interval') || 8) - history.length % (P('flush_interval') || 8)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            水門碁: 中央の水路を8手ごとの放水が洗う。水路の石は下流へ流される<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

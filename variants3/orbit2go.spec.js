@@ -10,6 +10,10 @@ module.exports = {
     icon: 'orbit2go',
     spec: [
         ...K.rb('ORBIT2GO', '軌道碁', 'orbit2go'),
+        K.params([
+            { key: 'collision', label: '敵との衝突', options: [{ v: 'die', l: '衝突すると消滅' }, { v: 'bounce', l: '衝突しても跳ね返る' }], def: 'die' },
+            { key: 'move_cap', label: '打ち切り手数', min: 40, max: 400, def: 140, unit: '手' },
+        ]),
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        // 中央を囲む正方形軌道を1歩時計回りに進んだ先のidx
         function orbitNext(i) {
@@ -43,7 +47,7 @@ module.exports = {
                 const to = new Map();
                 moving.forEach(([f, t]) => {
                     if (board[t] !== 0) {
-                        if (board[t] !== board[f]) killed.add(f); // 敵に衝突→消滅
+                        if (board[t] !== board[f] && P('collision') !== 'bounce') killed.add(f); // 敵に衝突→消滅
                         // 味方の先には進まない (跳ね返り)
                     } else {
                         to.set(f, t);
@@ -64,7 +68,7 @@ module.exports = {
                 if (moved || killed.size) cleanUpPieces();
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('move_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         // 中央に軌道の輪を描画

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,11 @@ module.exports = {
     icon: 'catcradlego',
     spec: [
         ...K.rb('CATCRADLEGO', 'あやと碁', 'catcradlego'),
+        K.params([
+            { key: 'cradle_need', label: 'あやとりに必要な各石数', min: 2, max: 4, def: 2, hint: '自石・敵石それぞれこの数に触れる' },
+            { key: 'cradle_pt', label: 'あやとりの得点', min: 1, max: 3, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
 
         // あやとり: 2色の糸が交差する点に置くと形になる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -59,8 +64,9 @@ module.exports = {
                     if (board[n] === player) own++;
                     else if (board[n] === opponent) foe++;
                 });
-                if (own >= 2 && foe >= 2) {
-                    captures[player] += 1;
+                const need = Math.max(2, P('cradle_need') || 2);
+                if (own >= need && foe >= need) {
+                    captures[player] += (P('cradle_pt') || 1);
                     fxGlow(pi, '#e879f9', 800);
                     fxText(pi, 'あやとり!', '#e879f9', 1200);
                 }

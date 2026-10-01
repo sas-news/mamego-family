@@ -252,6 +252,12 @@
                 <div id="onlineRoomStatus" class="text-center font-bold text-neutral-600 pt-1"></div>
             </div>
 
+            <!-- バリアント固有設定 (VPARAMSがあるゲームのみ表示) -->
+            <div id="variantParamsBox" class="hidden p-3 bg-amber-50 rounded-xl border border-amber-200 flex flex-col gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-neutral-500">このゲームの設定</span>
+                <div id="variantParams" class="flex flex-col gap-3"></div>
+            </div>
+
             <!-- 4. サウンド設定 -->
             <div class="flex items-center justify-between pt-1">
                 <span class="text-sm font-bold text-neutral-700">効果音 (SE)</span>
@@ -310,6 +316,77 @@
     </div>
 
     <script>
+        // === バリアント固有パラメータ ===
+        // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
+        // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
+        const VPARAMS = [{"key":"cycle","label":"月の周期","min":10,"max":60,"def":29,"unit":"手","hint":"1周の手数。最初の7%が新月"},{"key":"new_mult","label":"新月の得点倍率","min":1,"max":5,"def":2,"hint":"新月に取った石の得点倍率"},{"key":"cap_factor","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":0.75,"step":0.05,"hint":"交点数×この係数で強制終局"}];
+        const VPAR_MAP = {};
+        const VPAR_SAVED = (() => {
+            try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
+            catch (e) { return {}; }
+        })();
+        VPARAMS.forEach(p => {
+            if (p.val === undefined) p.val = VPAR_SAVED[p.key] !== undefined ? VPAR_SAVED[p.key] : p.def;
+            VPAR_MAP[p.key] = p;
+        });
+        const P = k => (VPAR_MAP[k] ? VPAR_MAP[k].val : undefined);
+        function saveVpar() {
+            try {
+                const o = {};
+                VPARAMS.forEach(p => { if (p.val !== p.def) o[p.key] = p.val; });
+                localStorage.setItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : ''), JSON.stringify(o));
+            } catch (e) {}
+        }
+        // 設定モーダルの「このゲームの設定」に VPARAMS 分のUIを生成
+        function initVariantParams() {
+            const box = document.getElementById('variantParamsBox');
+            const list = document.getElementById('variantParams');
+            if (!box || !list || !VPARAMS.length) return;
+            box.classList.remove('hidden');
+            const fmt = (p, v) => (p.step && p.step < 1 ? Number(v).toFixed(1) : String(v)) + (p.unit || '');
+            VPARAMS.forEach(p => {
+                const wrap = document.createElement('div');
+                wrap.className = 'flex flex-col gap-1';
+                const head = document.createElement('div');
+                head.className = 'flex justify-between text-xs font-bold text-neutral-600';
+                const lab = document.createElement('span');
+                lab.textContent = p.label + (p.hint ? ` (${p.hint})` : '');
+                const valEl = document.createElement('span');
+                valEl.className = 'text-amber-700';
+                valEl.textContent = fmt(p, p.val);
+                head.appendChild(lab); head.appendChild(valEl);
+                wrap.appendChild(head);
+                const applyVal = v => {
+                    p.val = v;
+                    valEl.textContent = fmt(p, p.val);
+                    saveVpar();
+                    if (typeof onVariantParam === 'function') onVariantParam(p);
+                };
+                if (p.options) {
+                    const sel = document.createElement('select');
+                    sel.className = 'w-full border border-neutral-300 rounded-lg py-1.5 text-sm font-bold bg-white';
+                    p.options.forEach(o => {
+                        const op = document.createElement('option');
+                        op.value = o.v; op.textContent = o.l;
+                        sel.appendChild(op);
+                    });
+                    sel.value = p.val;
+                    sel.addEventListener('change', () => {
+                        const num = parseFloat(sel.value);
+                        applyVal(isNaN(num) ? sel.value : num);
+                    });
+                    wrap.appendChild(sel);
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'range'; inp.min = p.min; inp.max = p.max; inp.step = p.step || 1; inp.value = p.val;
+                    inp.className = 'w-full accent-amber-600';
+                    inp.addEventListener('input', () => applyVal(parseFloat(inp.value)));
+                    wrap.appendChild(inp);
+                }
+                list.appendChild(wrap);
+            });
+        }
+        initVariantParams();
         // ==========================================
         // 1. カラーテーマ定義
         // ==========================================
@@ -1105,17 +1182,19 @@
 
             // 月相の描画: 満月期は大きな月、新月期は細い月
             {
-                const ph = st.ply % 29;
+                const __cyc2 = Math.max(2, P('cycle') || 29);
+                const ph = st.ply % __cyc2;
+                const __fLo = Math.round(14 * __cyc2 / 29), __fHi = Math.round(19 * __cyc2 / 29) - 1, __nHi = Math.max(0, Math.round(5 * __cyc2 / 29) - 1);
                 const cc = (BOARD_SIZE - 1) / 2;
                 const cx = padding + cc * cellSize, cy = padding + cc * cellSize;
                 ctx.save();
-                if (ph >= 14 && ph <= 18) {
+                if (ph >= __fLo && ph <= __fHi) {
                     ctx.strokeStyle = 'rgba(254,240,138,0.55)';
                     ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
                     ctx.beginPath();
                     ctx.arc(cx, cy, cellSize * 1.4, 0, Math.PI * 2);
                     ctx.stroke();
-                } else if (ph <= 4) {
+                } else if (ph <= __nHi) {
                     ctx.strokeStyle = 'rgba(148,163,184,0.5)';
                     ctx.lineWidth = Math.max(1, cellSize * 0.04);
                     ctx.beginPath();
@@ -1741,7 +1820,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1778,13 +1857,14 @@
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;
             st.ply++;
-            const ph = st.ply % 29;
-            const newMoon = ph <= 4;
-            const fullMoon = ph >= 14 && ph <= 18;
+            const __cyc = Math.max(2, P('cycle') || 29);
+            const ph = st.ply % __cyc;
+            const newMoon = ph <= Math.max(0, Math.round(5 * __cyc / 29) - 1);
+            const fullMoon = ph >= Math.round(14 * __cyc / 29) && ph <= Math.round(19 * __cyc / 29) - 1;
             const captured = fullMoon ? [] : getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
-                captures[player] += newMoon ? captured.length * 2 : captured.length;
+                captures[player] += newMoon ? captured.length * (P('new_mult') || 2) : captured.length;
                 if (newMoon) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '新月の収穫!', '#94a3b8', 1300);
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -2674,7 +2754,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ((() => { const p = st.ply % 29; return p <= 4 ? '新月' : p >= 14 && p <= 18 ? '満月' : p < 14 ? '上弦' : '下弦'; })());
+                const et = gameOver ? '' : ((() => { const c = Math.max(2, P('cycle') || 29); const p = st.ply % c; return p <= Math.max(0, Math.round(5 * c / 29) - 1) ? '新月' : p >= Math.round(14 * c / 29) && p <= Math.round(19 * c / 29) - 1 ? '満月' : p < Math.round(14 * c / 29) ? '上弦' : '下弦'; })());
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

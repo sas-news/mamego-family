@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'mandalago',
     spec: [
         ...K.rb('MANDALAGO', '曼荼羅碁', 'mandalago'),
+        K.params([
+            { key: 'mandala_pts', label: '曼荼羅の得点', min: 0, max: 9, def: 3, hint: '完成した十字1つにつき終局加点' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 曼荼羅: 中心と四方が同色の十字は完成した宇宙 — 1つ+3目
         function mandalaBonus(player) {
@@ -34,7 +38,7 @@ module.exports = {
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== player) continue;
                 const nb = getNeighbors(i);
-                if (nb.length === 4 && nb.every(n => board[n] === player)) b += 3;
+                if (nb.length === 4 && nb.every(n => board[n] === player)) b += (P('mandala_pts') ?? 3);
             }
             return b;
         }

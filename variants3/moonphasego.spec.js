@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,16 +47,22 @@ module.exports = {
     icon: 'moonphasego',
     spec: [
         ...K.rb('MOONPHASEGO', '月相碁', 'moonphasego'),
+        K.params([
+            { key: 'cycle', label: '月の周期', min: 10, max: 60, def: 29, unit: '手', hint: '1周の手数。最初の7%が新月' },
+            { key: 'new_mult', label: '新月の得点倍率', min: 1, max: 5, def: 2, hint: '新月に取った石の得点倍率' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 月相: ply%29 が 0-4=新月 (取り2倍) / 14-18=満月 (取れない) / 他=通常
         [K.ONE, K.CAPTURE_BLOCK, `            st.ply++;
-            const ph = st.ply % 29;
-            const newMoon = ph <= 4;
-            const fullMoon = ph >= 14 && ph <= 18;
+            const __cyc = Math.max(2, P('cycle') || 29);
+            const ph = st.ply % __cyc;
+            const newMoon = ph <= Math.max(0, Math.round(5 * __cyc / 29) - 1);
+            const fullMoon = ph >= Math.round(14 * __cyc / 29) && ph <= Math.round(19 * __cyc / 29) - 1;
             const captured = fullMoon ? [] : getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
-                captures[player] += newMoon ? captured.length * 2 : captured.length;
+                captures[player] += newMoon ? captured.length * (P('new_mult') || 2) : captured.length;
                 if (newMoon) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '新月の収穫!', '#94a3b8', 1300);
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -67,17 +73,19 @@ module.exports = {
         // 満月期は盤の中央に淡い月の輪を描く
         K.CUE_STARS(`            // 月相の描画: 満月期は大きな月、新月期は細い月
             {
-                const ph = st.ply % 29;
+                const __cyc2 = Math.max(2, P('cycle') || 29);
+                const ph = st.ply % __cyc2;
+                const __fLo = Math.round(14 * __cyc2 / 29), __fHi = Math.round(19 * __cyc2 / 29) - 1, __nHi = Math.max(0, Math.round(5 * __cyc2 / 29) - 1);
                 const cc = (BOARD_SIZE - 1) / 2;
                 const cx = padding + cc * cellSize, cy = padding + cc * cellSize;
                 ctx.save();
-                if (ph >= 14 && ph <= 18) {
+                if (ph >= __fLo && ph <= __fHi) {
                     ctx.strokeStyle = 'rgba(254,240,138,0.55)';
                     ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
                     ctx.beginPath();
                     ctx.arc(cx, cy, cellSize * 1.4, 0, Math.PI * 2);
                     ctx.stroke();
-                } else if (ph <= 4) {
+                } else if (ph <= __nHi) {
                     ctx.strokeStyle = 'rgba(148,163,184,0.5)';
                     ctx.lineWidth = Math.max(1, cellSize * 0.04);
                     ctx.beginPath();
@@ -86,7 +94,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`(() => { const p = st.ply % 29; return p <= 4 ? '新月' : p >= 14 && p <= 18 ? '満月' : p < 14 ? '上弦' : '下弦'; })()`),
+        ...K.EVENT_CHIP_SPEC(`(() => { const c = Math.max(2, P('cycle') || 29); const p = st.ply % c; return p <= Math.max(0, Math.round(5 * c / 29) - 1) ? '新月' : p >= Math.round(14 * c / 29) && p <= Math.round(19 * c / 29) - 1 ? '満月' : p < Math.round(14 * c / 29) ? '上弦' : '下弦'; })()`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            月相碁: 29手周期の月の満ち欠け。満月期 (14-18手目) は取れず、新月期 (周期の最初5手) はアゲハマ2倍<br>
             PC: クリックで配置<br>

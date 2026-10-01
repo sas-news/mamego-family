@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,22 +27,35 @@ module.exports = {
     icon: 'moatgo',
     spec: [
         ...K.rb('MOATGO', '内堀碁', 'moatgo'),
+        K.params([
+            { key: 'moat_frac', label: '堀の半径係数', min: 0.1, max: 0.45, def: 0.3, step: 0.05, hint: '盤サイズに対する割合' },
+            { key: 'flow_interval', label: '流れの間隔', min: 1, max: 6, def: 1, unit: '手', hint: 'N手ごとに1マス流れる' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 内堀: 城郭の周りを時計回りに流れる環状の濠 (着手可)
-        const MOAT_R = Math.max(2, Math.floor(BOARD_SIZE * 0.30));
-        const MOAT_C = Math.floor(BOARD_SIZE / 2);
-        const MOAT = [];
-        for (let x = MOAT_C - MOAT_R; x <= MOAT_C + MOAT_R; x++) MOAT.push((MOAT_C - MOAT_R) * BOARD_SIZE + x);
-        for (let y = MOAT_C - MOAT_R + 1; y <= MOAT_C + MOAT_R; y++) MOAT.push(y * BOARD_SIZE + MOAT_C + MOAT_R);
-        for (let x = MOAT_C + MOAT_R - 1; x >= MOAT_C - MOAT_R; x--) MOAT.push((MOAT_C + MOAT_R) * BOARD_SIZE + x);
-        for (let y = MOAT_C + MOAT_R - 1; y > MOAT_C - MOAT_R; y--) MOAT.push(y * BOARD_SIZE + MOAT_C - MOAT_R);
-        const MOAT_SET = new Set(MOAT);`],
+        // 内堀: 城郭の周りを時計回りに流れる環状の濠 (着手可・半径は設定で調整)
+        let MOAT_R = 0, MOAT_C = 0, MOAT = [], MOAT_SET = new Set();
+        function rebuildMoat() {
+            MOAT_R = Math.max(2, Math.floor(BOARD_SIZE * (P('moat_frac') || 0.30)));
+            MOAT_C = Math.floor(BOARD_SIZE / 2);
+            MOAT = [];
+            for (let x = MOAT_C - MOAT_R; x <= MOAT_C + MOAT_R; x++) MOAT.push((MOAT_C - MOAT_R) * BOARD_SIZE + x);
+            for (let y = MOAT_C - MOAT_R + 1; y <= MOAT_C + MOAT_R; y++) MOAT.push(y * BOARD_SIZE + MOAT_C + MOAT_R);
+            for (let x = MOAT_C + MOAT_R - 1; x >= MOAT_C - MOAT_R; x--) MOAT.push((MOAT_C + MOAT_R) * BOARD_SIZE + x);
+            for (let y = MOAT_C + MOAT_R - 1; y > MOAT_C - MOAT_R; y--) MOAT.push(y * BOARD_SIZE + MOAT_C - MOAT_R);
+            MOAT_SET = new Set(MOAT);
+        }
+        rebuildMoat();
+        // 設定変更で堀を即時再構成
+        function onVariantParam(p) {
+            if (p.key === 'moat_frac') rebuildMoat();
+        }`],
         // 毎手、堀の石は1マス流れる — 水門 (環の末尾) に達すると流出する
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 内堀: 堀の石は毎手1マス下流へ。水門に達した石は流出する
-            {
+            // 内堀: 堀の石はN手ごとに1マス下流へ。水門に達した石は流出する
+            if (history.length % Math.max(1, P('flow_interval') || 1) === 0) {
                 let flowed = false;
                 for (let k = MOAT.length - 1; k >= 0; k--) {
                     const i = MOAT[k];

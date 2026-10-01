@@ -9,6 +9,9 @@ module.exports = {
     kind: 'parity',
     spec: [
         ...K.rb('PARITYGO', '偶奇碁', 'paritygo'),
+        K.params([
+            { key: 'parity_map', label: '偶奇の割り当て', options: [{ v: 'normal', l: '奇数手は奇数点' }, { v: 'swap', l: '奇数手は偶数点' }], def: 'normal' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -18,7 +21,7 @@ module.exports = {
             {
                 const evenMove = (history.length + 1) % 2 === 0;
                 for (const p of cells) {
-                    const evenPoint = (p.x + p.y) % 2 === 0;
+                    const evenPoint = ((p.x + p.y) % 2 === 0) !== (P('parity_map') === 'swap');
                     if (evenMove !== evenPoint) return false;
                 }
             }`],

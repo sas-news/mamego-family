@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 80) / 100))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'deergo',
     spec: [
         ...K.rb('DEERGO', '鹿苑碁', 'deergo'),
+        K.params([
+            { key: 'antler_range', label: '角の届く距離', min: 1, max: 2, def: 1, hint: '星の石からのマンハッタン距離' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 80, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         // 鹿苑ルール: 星の上の石は鹿 — 孤立した敵石が隣に置かれると角で跳ね返す
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -38,8 +42,9 @@ module.exports = {
                 const isolated = getNeighbors(mi).every(i => board[i] !== player);
                 if (stillOnBoard && isolated) {
                     const stars = getStarPoints(BOARD_SIZE);
+                    const ar = P('antler_range') || 1;
                     const deer = stars.some(pt => board[pt.y * BOARD_SIZE + pt.x] === opponent &&
-                        getNeighbors(mi).includes(pt.y * BOARD_SIZE + pt.x));
+                        Math.abs(pt.x - move.cells[0].x) + Math.abs(pt.y - move.cells[0].y) <= ar);
                     if (deer) {
                         board[mi] = 0;
                         captures[opponent]++;

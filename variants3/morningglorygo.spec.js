@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,11 @@ module.exports = {
     icon: 'morningglorygo',
     spec: [
         ...K.rb('MORNINGGLORYGO', '朝顔碁', 'morningglorygo'),
+        K.params([
+            { key: 'cycle', label: '昼夜の周期', min: 6, max: 30, def: 12, unit: '手', hint: '前半が朝 (花開く)・後半が夜 (しぼむ)' },
+            { key: 'wither_age', label: '花が散る齢', min: 5, max: 30, def: 12, unit: '手' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST('{ born: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -58,7 +63,7 @@ module.exports = {
                     const idx = +k;
                     if (board[idx] !== 1 && board[idx] !== 2) { delete st.born[k]; continue; }
                     const age = history.length - st.born[k];
-                    if (age >= 12 && getNeighbors(idx).filter(n => board[n] === board[idx]).length < 2) {
+                    if (age >= (P('wither_age') || 12) && getNeighbors(idx).filter(n => board[n] === board[idx]).length < 2) {
                         const col = board[idx];
                         board[idx] = 0;
                         delete st.born[k];
@@ -75,7 +80,7 @@ module.exports = {
             for (const k in st.born) {
                 const cell = +k;
                 if (board[cell] !== 1 && board[cell] !== 2) continue;
-                if ((history.length - st.born[k]) % 12 < 6) {
+                if ((history.length - st.born[k]) % Math.max(2, P('cycle') || 12) < Math.max(2, P('cycle') || 12) / 2) {
                     if (board[cell] === 1) territory.black += 1;
                     else territory.white += 1;
                 }
@@ -88,7 +93,7 @@ module.exports = {
                 for (const k in st.born) {
                     const idx = +k;
                     if (board[idx] !== 1 && board[idx] !== 2) continue;
-                    const bloom = (history.length - st.born[k]) % 12 < 6;
+                    const bloom = (history.length - st.born[k]) % Math.max(2, P('cycle') || 12) < Math.max(2, P('cycle') || 12) / 2;
                     const x = idx % BOARD_SIZE, y = (idx / BOARD_SIZE) | 0;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
                     ctx.strokeStyle = bloom ? 'rgba(167,139,250,' + (0.6 + 0.3 * Math.sin(now / 400 + idx)) + ')' : 'rgba(148,163,184,0.5)';

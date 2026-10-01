@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,17 +27,24 @@ module.exports = {
     icon: 'lampgo',
     spec: [
         ...K.rb('LAMPGO', '燈火碁', 'lampgo'),
+        K.params([
+            { key: 'stone_light', label: '石の灯り範囲', min: 1, max: 5, def: 2, hint: '自分の石の周囲何マスまで灯りか' },
+            { key: 'lamp_ratio', label: '常夜灯の半径比', min: 0.1, max: 0.9, def: 0.23, step: 0.01, hint: '盤サイズに対する常夜灯の届く範囲' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 燈火: 中央の常夜灯と自分の石の周囲2マスが灯り
+        // 燈火: 中央の常夜灯と自分の石の周囲 stone_light マスが灯り
         const LAMP_C = Math.floor(BOARD_SIZE / 2);
-        const LAMP_R = Math.max(2, Math.round(BOARD_SIZE * 0.23));
+        function lampR() { return Math.max(2, Math.round(BOARD_SIZE * (P('lamp_ratio') || 0.23))); }
+        function stoneLight() { return Math.max(1, P('stone_light') || 2); }
         function isLitFor(x, y, p) {
             if (Math.abs(x - LAMP_C) + Math.abs(y - LAMP_C) <= 0) return true;
-            if (Math.max(Math.abs(x - LAMP_C), Math.abs(y - LAMP_C)) <= LAMP_R) return true;
-            for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+            if (Math.max(Math.abs(x - LAMP_C), Math.abs(y - LAMP_C)) <= lampR()) return true;
+            const sl = stoneLight();
+            for (let dy = -sl; dy <= sl; dy++) for (let dx = -sl; dx <= sl; dx++) {
                 const nx = x + dx, ny = y + dy;
                 if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) continue;
-                if (Math.max(Math.abs(dx), Math.abs(dy)) <= 2 && board[ny * BOARD_SIZE + nx] === p) return true;
+                if (Math.max(Math.abs(dx), Math.abs(dy)) <= sl && board[ny * BOARD_SIZE + nx] === p) return true;
             }
             return false;
         }`],
@@ -67,7 +74,7 @@ module.exports = {
                 const flick = 0.75 + Math.sin(fxNow() * 0.006) * 0.2;
                 ctx.fillStyle = 'rgba(255, 190, 80, ' + (0.18 * flick) + ')';
                 ctx.beginPath();
-                ctx.arc(cx, cy, cellSize * (LAMP_R + 0.6), 0, Math.PI * 2);
+                ctx.arc(cx, cy, cellSize * (lampR() + 0.6), 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = 'rgba(255, 200, 90, 0.95)';
                 ctx.beginPath();

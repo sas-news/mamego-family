@@ -9,12 +9,25 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('ELASTGO', '伸縮碁', 'elastgo'),
+        K.params([
+            { key: 'max_len', label: 'ピースの最大の長さ', min: 1, max: 5, def: 3, unit: '連' },
+        ]),
         [K.ONE, `            ORIENTATIONS[type] = list;
         });`, `            ORIENTATIONS[type] = list;
         });
 
         // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
-        ORIENTATIONS.STONE = [[[0,0]],[[0,0],[1,0]],[[0,0],[0,1]],[[0,0],[1,0],[2,0]],[[0,0],[0,1],[0,2]]];`],
+        function buildElastOris() {
+            const L = Math.max(1, P('max_len') || 3);
+            ORIENTATIONS.STONE = [];
+            for (let l = 1; l <= L; l++) {
+                ORIENTATIONS.STONE.push(Array.from({ length: l }, (_, k) => [k, 0]));
+                if (l > 1) ORIENTATIONS.STONE.push(Array.from({ length: l }, (_, k) => [0, k]));
+            }
+        }
+        buildElastOris();
+        // 設定変更でピース形を即時再構成
+        function onVariantParam(p) { if (p.key === 'max_len') buildElastOris(); }`],
         [K.ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`, `        const PIECE_SIZE = 1;`],
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
 

@@ -36,6 +36,9 @@ module.exports = {
     icon: 'echo2go',
     spec: [
         ...K.rb('ECHOGO', '残響碁', 'echo2go'),
+        K.params([
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 4, def: 1.1, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...PERSIST('{ echo: { 1: null, 2: null } }'),
         // 残響座標は自分の番では着手不可 (取った後の空点にも残響は残る)
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
@@ -56,7 +59,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();

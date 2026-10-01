@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'sometsukego',
     spec: [
         ...K.rb('SOMETSUKEGO', '青花碁', 'sometsukego'),
+        K.params([
+            { key: 'motif_pts', label: '文様点1個の呉須ボーナス', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 染付の文様点: 盤上の8点 (回転対称の花菱)
         function isMotifPoint(i) {
@@ -51,8 +55,8 @@ module.exports = {
 `            if (captured.length > 0) {
                 let mot = 0;
                 captured.forEach(idx => { if (isMotifPoint(idx)) mot++; board[idx] = 0; });
-                captures[player] += captured.length + mot * 2;
-                if (mot > 0) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '染付 +' + (mot * 2), '#1d4ed8', 1200);`],
+                captures[player] += captured.length + mot * (P('motif_pts') ?? 2);
+                if (mot > 0) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '染付 +' + (mot * (P('motif_pts') ?? 2)), '#1d4ed8', 1200);`],
         // 文様点の青い花菱を描く
         K.CUE_GRID(`            // 染付の文様点: 青い花菱の印
             {

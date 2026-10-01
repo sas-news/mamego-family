@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'makiego',
     spec: [
         ...K.rb('MAKIEGO', '蒔絵碁', 'makiego'),
+        K.params([
+            { key: 'edge_pts', label: '隣接辺の得点', min: 0, max: 1, def: 0.25, step: 0.05, hint: '同色隣接辺1本ごとの終局加点' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 蒔絵: 同色の隣接辺1本ごとに+0.25目 (各辺を重複なく数える)
         function makiBonus(player) {
@@ -37,7 +41,7 @@ module.exports = {
                 if (x + 1 < BOARD_SIZE && board[i + 1] === player) edges++;
                 if (y + 1 < BOARD_SIZE && board[i + BOARD_SIZE] === player) edges++;
             }
-            return edges * 0.25;
+            return edges * (P('edge_pts') ?? 0.25);
         }
 
         function endGameByScore() {`],

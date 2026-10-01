@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('SUGOROKUGO', '双六碁', 'sugorokugo'),
+        K.params([
+            { key: 'dice_max', label: '駒の進み幅の上限', min: 1, max: 6, def: 3, unit: 'マス' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         // 双六碁: 盤面を外周から中央へ這う螺旋の升目を生成
         function buildSugoPath(size) {
@@ -42,7 +45,7 @@ module.exports = {
             {
                 if (sugoPath.length !== board.length) sugoPath = buildSugoPath(BOARD_SIZE);
                 const prevPos = sugoPos[player];
-                const step = 1 + Math.floor(Math.random() * 3);
+                const step = 1 + Math.floor(Math.random() * (P('dice_max') || 3));
                 sugoPos[player] += step;
                 // 駒の進み: 旧升目から新升目へ滑らせる
                 const fromIdx = sugoPath[Math.min(prevPos, sugoPath.length - 1)];

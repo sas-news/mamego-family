@@ -9,12 +9,16 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('CRUMBGO', '崩落碁', 'crumbgo'),
+        K.params([
+            { key: 'crumb_interval', label: '崩落の間隔', min: 1, max: 10, def: 3, unit: '手' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 60, max: 480, def: 240, unit: '手' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 崩落: 3手ごとに全ての連 (2石以上) が最も露出した端から1石ずつ崩れる。
             //       (着手より崩れの方が遅いので盤は少しずつ埋まり終盤へ進む)
-            if (history.length % 3 === 0) {
+            if (history.length % Math.max(1, P('crumb_interval') || 3) === 0) {
                 const snapB = [...board];
                 const seen = new Set();
                 const groups = [];
@@ -48,8 +52,8 @@ module.exports = {
                 }
             }
 
-            // 崩落が盤を決して満たさないため、240手で自動的に点数計算して終局 (無期限の延命を防ぐ)
-            if (history.length >= 240 && !gameOver) {
+            // 崩落が盤を決して満たさないため、既定の手数で自動的に点数計算して終局 (無期限の延命を防ぐ)
+            if (history.length >= (P('cap_moves') || 240) && !gameOver) {
                 endGameByScore();
                 return;
             }

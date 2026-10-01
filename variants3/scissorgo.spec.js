@@ -27,6 +27,9 @@ module.exports = {
     icon: 'scissorgo',
     spec: [
         ...K.rb('SCISSORGO', '鋏碁', 'scissorgo'),
+        K.params([
+            { key: 'scissor_len', label: '鋏のリーチ', min: 2, max: 4, def: 2, unit: 'マス', hint: '対側の自石までの距離' },
+        ]),
         // 鋏: 新しい石と既存の自石で敵石を直線に挟むと切り落とす (呼吸点に関係なく)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -35,15 +38,20 @@ module.exports = {
             {
                 const bc = move.cells[0];
                 const cuts = [];
+                const L = Math.max(2, P('scissor_len') || 2);
                 for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
-                    const ex = bc.x + dx, ey = bc.y + dy;
-                    const ox = bc.x + dx * 2, oy = bc.y + dy * 2;
-                    if (ex < 0 || ey < 0 || ex >= BOARD_SIZE || ey >= BOARD_SIZE) continue;
+                    const ox = bc.x + dx * L, oy = bc.y + dy * L;
                     if (ox < 0 || oy < 0 || ox >= BOARD_SIZE || oy >= BOARD_SIZE) continue;
-                    const ei = ey * BOARD_SIZE + ex;
-                    if (board[ei] !== opponent) continue;
                     if (board[oy * BOARD_SIZE + ox] !== player) continue;
-                    cuts.push(ei);
+                    const line = [];
+                    let ok = true;
+                    for (let d = 1; d < L; d++) {
+                        const ex = bc.x + dx * d, ey = bc.y + dy * d;
+                        const ei = ey * BOARD_SIZE + ex;
+                        if (board[ei] !== opponent) { ok = false; break; }
+                        line.push(ei);
+                    }
+                    if (ok) cuts.push(...line);
                 }
                 if (cuts.length > 0) {
                     cuts.forEach(ei => {

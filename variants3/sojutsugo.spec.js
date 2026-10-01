@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'sojutsugo',
     spec: [
         ...K.rb('SOJUTSUGO', '槍術碁', 'sojutsugo'),
+        K.params([
+            { key: 'spear_min', label: '槍になる連数', min: 2, max: 6, def: 3, unit: '連' },
+            { key: 'spear_range', label: '槍の間合い', min: 1, max: 7, def: 3, unit: '点' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // 槍の間合い: 敵の3連以上の直線の槍先正面3点は着手不可
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
@@ -38,7 +43,7 @@ module.exports = {
                 for (const d of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
                     // 直線上で最も近い石 (3点以内) を探す
                     let tip = -1;
-                    for (let t = 1; t <= 3; t++) {
+                    for (let t = 1; t <= (P('spear_range') || 3); t++) {
                         const x = p.x - d[0] * t, y = p.y - d[1] * t;
                         if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) break;
                         if (board[y * BOARD_SIZE + x] !== 0) { tip = t; break; }
@@ -55,7 +60,7 @@ module.exports = {
                         if (board[y * BOARD_SIZE + x] !== c0) break;
                         run++;
                     }
-                    if (run >= 3) return false;
+                    if (run >= (P('spear_min') || 3)) return false;
                 }
             }`],
         // 3連以上の直線は槍の印を先端に表示
@@ -79,7 +84,7 @@ module.exports = {
                         }
                         const fx2 = x + d[0], fy2 = y + d[1];
                         const front = fx2 < 0 || fx2 >= BOARD_SIZE || fy2 < 0 || fy2 >= BOARD_SIZE || board[fy2 * BOARD_SIZE + fx2] !== board[i];
-                        if (run >= 3 && front) {
+                        if (run >= (P('spear_min') || 3) && front) {
                             const cx = padding + x * cellSize, cy = padding + y * cellSize;
                             ctx.strokeStyle = 'rgba(239,68,68,0.9)';
                             ctx.lineWidth = Math.max(1.3, cellSize * 0.06);

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,13 @@ module.exports = {
     icon: 'reservoirgo',
     spec: [
         ...K.rb('RESERVOIRGO', '貯水槽碁', 'reservoirgo'),
+        K.params([
+            { key: 'water_max', label: '満水になる水量', min: 4, max: 20, def: 10 },
+            { key: 'flood_rows', label: '氾濫する段数', min: 1, max: 4, def: 2, unit: '段' },
+            { key: 'irrigate_cost', label: 'かんがいに必要な水量', min: 1, max: 10, def: 3 },
+            { key: 'moist_turns', label: '潤いの持続', min: 4, max: 30, def: 12, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 潤い石は取られない
         [K.ONE, K.CAPTURE_BLOCK, `            let captured = getCapturedStones(board, opponent);
@@ -64,12 +71,16 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 降雨: 着手ごとに水+1。満水 (10) で下2段が氾濫
-            st.water = Math.min(10, st.water + 1);
-            if (st.water >= 10) {
+            // 降雨: 着手ごとに水+1。満水で下段が氾濫
+            const wmax = Math.max(1, P('water_max') || 10);
+            st.water = Math.min(wmax, st.water + 1);
+            if (st.water >= wmax) {
                 const victims = [];
+                const rows = Math.max(1, P('flood_rows') || 2);
                 for (let x = 0; x < BOARD_SIZE; x++) {
-                    for (const y of [BOARD_SIZE - 2, BOARD_SIZE - 1]) {
+                    for (let r = 1; r <= rows; r++) {
+                        const y = BOARD_SIZE - r;
+                        if (y < 0) break;
                         const i = y * BOARD_SIZE + x;
                         if ((board[i] === 1 || board[i] === 2) && !(st.moist[i] && st.moist[i] >= history.length)) {
                             victims.push(i);
@@ -114,9 +125,9 @@ module.exports = {
         btnWater.addEventListener('click', () => {
             soundManager.playClick();
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
-            if (st.water < 3) return;
+            if (st.water < Math.max(1, P('irrigate_cost') || 3)) return;
             st.water = 0;
-            const until = history.length + 12;
+            const until = history.length + Math.max(1, P('moist_turns') || 12);
             board.forEach((v, i) => { if (v === turn) st.moist[i] = until; });
             render();
             updateUI();
@@ -133,7 +144,7 @@ module.exports = {
                 ctx.ellipse(mx, my - cellSize * 0.18, cellSize * 0.09, cellSize * 0.13, 0, 0, Math.PI * 2);
                 ctx.fill();
             });`),
-        ...K.EVENT_CHIP_SPEC(`'水量 ' + st.water + '/10'`),
+        ...K.EVENT_CHIP_SPEC(`'水量 ' + st.water + '/' + (P('water_max') || 10)`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            貯水槽碁: 着手毎に水が貯まり、満水で下2段が氾濫。「かんがい」で自石に潤いを与えて守る<br>
             PC: クリックで配置 / 「かんがい」=水3以上消費で自石に潤い12手<br>

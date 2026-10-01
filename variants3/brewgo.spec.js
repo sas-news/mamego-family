@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,20 +47,30 @@ module.exports = {
     icon: 'brewgo',
     spec: [
         ...K.rb('BREWGO', '醸造碁', 'brewgo'),
+        K.params([
+            { key: 'brew_age', label: '熟成期間', min: 4, max: 30, def: 12, unit: '手' },
+            { key: 'vat_radius', label: '醸造槽の半径', min: 1, max: 3, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.9, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 醸造槽: 盤に2棟ある対称の仕込み樽 (石を酒に変える)
-        const BREW_SET = new Set();
-        const BREW_AGE = 12; // 12手浸かると酒に変わる
-        {
+        // 半径は設定で調整可能。変更は即時再構成される
+        const BREW_AGE = 12; // 既定の熟成期間
+        let BREW_SET = new Set();
+        function rebuildBrewSet() {
+            BREW_SET = new Set();
             const m = Math.floor(BOARD_SIZE / 2);
             const a = Math.max(1, Math.floor(BOARD_SIZE * 0.20));
+            const vr = Math.max(1, P('vat_radius') || 1);
             [[a, a], [BOARD_SIZE - 1 - a, BOARD_SIZE - 1 - a]].forEach(([cx0, cy0]) => {
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if (Math.abs(x - cx0) <= 1 && Math.abs(y - cy0) <= 1) BREW_SET.add(y * BOARD_SIZE + x);
+                    if (Math.abs(x - cx0) <= vr && Math.abs(y - cy0) <= vr) BREW_SET.add(y * BOARD_SIZE + x);
                 }
             });
-        }`],
+        }
+        rebuildBrewSet();
+        function onVariantParam(p) { if (p.key === 'vat_radius') rebuildBrewSet(); }`],
         // 毎手、槽内の石が熟成する
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -70,7 +80,7 @@ module.exports = {
                 if (board[i] === 1 || board[i] === 2) {
                     if (st.sake.includes(i)) return;
                     st.brew[i] = (st.brew[i] || 0) + 1;
-                    if (st.brew[i] >= BREW_AGE) {
+                    if (st.brew[i] >= (P('brew_age') || BREW_AGE)) {
                         st.sake.push(i);
                         delete st.brew[i];
                         fxGlow(i, '#f59e0b', 800);

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 90) / 100))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'dropletgo',
     spec: [
         ...K.rb('DROPLETGO', '雫碁', 'dropletgo'),
+        K.params([
+            { key: 'tension', label: '表面張力の限界面数', min: 2, max: 4, def: 3, hint: 'これ以上の同色隣接で弾ける' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 90, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 表面張力: 同色の隣接は2面まで。3面目を同時に触れると弾ける
         function ownContacts(idx, p) {
@@ -37,7 +41,7 @@ module.exports = {
                 if (p0.x < 0 || p0.x >= BOARD_SIZE || p0.y < 0 || p0.y >= BOARD_SIZE) return false;
                 const i0 = p0.y * BOARD_SIZE + p0.x;
                 if (board[i0] !== 0) return false;
-                if (ownContacts(i0, player) >= 3) return false; // 表面張力で弾ける
+                if (ownContacts(i0, player) >= (P('tension') || 3)) return false; // 表面張力で弾ける
             }`],
         // 合体のエフェクト: 2面以上に触れて置いたとき水しぶき
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,

@@ -37,6 +37,9 @@ module.exports = {
     icon: 'swapstonego',
     spec: [
         ...K.rb('SWAPSTONEGO', '交替石碁', 'swapstonego'),
+        K.params([
+            { key: 'flip_interval', label: '色が反転する間隔', min: 2, max: 15, def: 5, unit: '手' },
+        ]),
         ...PERSIST('{ birth: {} }'),
         // 置いた手数を記録 (反転タイマー)
         [K.ONE, K.PIECES_PUSH, `            move.cells.forEach(p => { st.birth[p.y * BOARD_SIZE + p.x] = history.length; });
@@ -54,7 +57,7 @@ module.exports = {
             for (let i = 0; i < board.length; i++) {
                 if ((board[i] === 1 || board[i] === 2) && st.birth[i] != null) {
                     const age = history.length - st.birth[i];
-                    if (age > 0 && age % 5 === 0) {
+                    if (age > 0 && age % (P('flip_interval') || 5) === 0) {
                         board[i] = board[i] === 1 ? 2 : 1;
                         fxGlow(i, '#f0abfc', 550);
                     }
@@ -74,7 +77,7 @@ module.exports = {
             for (let i = 0; i < board.length; i++) {
                 if ((board[i] !== 1 && board[i] !== 2) || !st.birth || st.birth[i] == null) continue;
                 const age = history.length - st.birth[i];
-                const rem = 5 - (age % 5);
+                const rem = (P('flip_interval') || 5) - (age % (P('flip_interval') || 5));
                 if (rem > 2) continue;
                 const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
                 ctx.save();

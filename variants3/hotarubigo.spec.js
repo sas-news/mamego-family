@@ -27,6 +27,9 @@ module.exports = {
     icon: 'hotarubigo',
     spec: [
         ...K.rb('HOTARUBIGO', '蛍火碁', 'hotarubigo'),
+        K.params([
+            { key: 'hotaru_pts', label: '蛍火の得点', min: 0, max: 2, def: 0.5, step: 0.5, unit: '目' },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 蛍火: 全隣接点が空点の石は暗がりで光る — 1個+0.5目
         function hotaruBonus(player) {
@@ -34,7 +37,7 @@ module.exports = {
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== player) continue;
                 const nb = getNeighbors(i);
-                if (nb.length > 0 && nb.every(n => board[n] === 0)) b += 0.5;
+                if (nb.length > 0 && nb.every(n => board[n] === 0)) b += (P('hotaru_pts') ?? 0.5);
             }
             return b;
         }

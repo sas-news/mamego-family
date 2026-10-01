@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,14 +27,19 @@ module.exports = {
     icon: 'crevicego',
     spec: [
         ...K.rb('CREVICEGO', '亀裂碁', 'crevicego'),
+        K.params([
+            { key: 'bridge_step', label: '自然橋の間隔', min: 0, max: 8, def: 4, unit: '行', hint: '0=橋なし' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         // 亀裂: 中央列の境を越える横方向の近傍を断つ (y%4==1 は自然橋で通れる)
         [K.ONE, K.NBRS_GRID, `        function getNeighbors(idx) {
             const x = idx % BOARD_SIZE;
             const y = Math.floor(idx / BOARD_SIZE);
             const neighbors = [];
-            // 亀裂: 中央列 a と a+1 の間。y%4==1 は自然橋で繋がる
+            // 亀裂: 中央列 a と a+1 の間。一定間隔の行は自然橋で繋がる
             const a = Math.floor((BOARD_SIZE - 1) / 2);
-            const cracked = (x1, x2, yy) => yy % 4 !== 1 &&
+            const _bs = P('bridge_step') ?? 4;
+            const cracked = (x1, x2, yy) => (_bs <= 0 || yy % _bs !== 1) &&
                 ((x1 === a && x2 === a + 1) || (x2 === a && x1 === a + 1));
 
             if (x > 0 && !cracked(x - 1, x, y)) neighbors.push(idx - 1);
@@ -49,13 +54,14 @@ module.exports = {
             {
                 const a = Math.floor((BOARD_SIZE - 1) / 2);
                 const gx = padding + (a + 0.5) * cellSize;
+                const _bs = P('bridge_step') ?? 4;
                 ctx.save();
                 ctx.strokeStyle = 'rgba(24,18,14,0.75)';
                 ctx.lineWidth = Math.max(2, cellSize * 0.09);
                 ctx.lineJoin = 'round';
                 ctx.lineCap = 'round';
                 for (let y = 0; y < BOARD_SIZE; y++) {
-                    if (y % 4 === 1) continue; // 自然橋: 亀裂が途切れる
+                    if (_bs > 0 && y % _bs === 1) continue; // 自然橋: 亀裂が途切れる
                     const cy = padding + y * cellSize;
                     const j = Math.sin(y * 2.7) * cellSize * 0.14;
                     ctx.beginPath();

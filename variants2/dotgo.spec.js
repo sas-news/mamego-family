@@ -9,8 +9,21 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('DOTGO', '双点碁', 'dotgo'),
+        K.params([
+            { key: 'dot_min_dist', label: '2点間の最小距離', min: 0, max: 8, def: 0, hint: 'マンハッタン距離。0=制限なし' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let pendingDot = null; // 双点碁: 1点目の仮置き {x,y}`],
+        // 2点間の最小距離チェック (0=制限なし)
+        [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
+            // 双点碁: 2点間の最小距離 (設定で調整、0=制限なし)
+            if (cells.length === 2) {
+                const md = P('dot_min_dist') ?? 0;
+                if (md > 0) {
+                    const d = Math.abs(cells[0].x - cells[1].x) + Math.abs(cells[0].y - cells[1].y);
+                    if (d < md) return false;
+                }
+            }`],
         [K.ONE, K.RESET_HELD, K.RESET_HELD + `
             pendingDot = null;`],
         [K.ONE, `            currentRot = (currentRot + 1) % list.length;`, `            pendingDot = null; // Rキー/右クリック/ホイール: 仮置きを取消`],

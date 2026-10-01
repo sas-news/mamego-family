@@ -10,6 +10,11 @@ module.exports = {
     icon: 'glowgo',
     spec: [
         ...K.rb('GLOWGO', '輝石碁', 'glowgo'),
+        K.params([
+            { key: 'glow_min', label: '輝石になる連の大きさ', min: 2, max: 15, def: 5, unit: '個' },
+            { key: 'glow_bonus', label: '輝石の追加倍率', min: 1, max: 4, def: 1, unit: '倍' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.5, max: 2, step: 0.05, def: 1.1 },
+        ]),
         // 捕獲: 取られた連が5個以上ならアゲハマ倍率x2
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
@@ -30,7 +35,7 @@ module.exports = {
                             if (capSet.has(n) && !seen.has(n)) { seen.add(n); q.push(n); }
                         });
                     }
-                    if (grp.length >= 5) bonus += grp.length;
+                    if (grp.length >= (P('glow_min') || 5)) bonus += grp.length * (P('glow_bonus') || 1);
                 }
                 captures[player] += captured.length + bonus;
                 if (bonus > 0) {
@@ -47,7 +52,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -71,7 +76,7 @@ module.exports = {
                             if (board[n] === col && !seen2.has(n)) { seen2.add(n); q.push(n); }
                         });
                     }
-                    if (grp.length < 5) continue;
+                    if (grp.length < (P('glow_min') || 5)) continue;
                     grp.forEach(g => {
                         const gx = g % BOARD_SIZE, gy = Math.floor(g / BOARD_SIZE);
                         const cx = padding + gx * cellSize, cy = padding + gy * cellSize;

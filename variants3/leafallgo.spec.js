@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,13 +47,18 @@ module.exports = {
     icon: 'leafallgo',
     spec: [
         ...K.rb('LEAFALLGO', '落葉碁', 'leafallgo'),
+        K.params([
+            { key: 'fall_interval', label: '落葉の間隔', min: 10, max: 90, def: 30, hint: 'この手数ごとに葉が落ちる' },
+            { key: 'trunk_keep', label: '幹に残る石数', min: 1, max: 4, def: 1, hint: '各グループで落ちずに残る石の数' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 秋: 30手毎に各グループの最初の石だけ残して葉が落ちる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 秋: 30手毎に葉が落ちる (各連結グループの最初の石=幹だけ残る)
-            if (history.length > 0 && history.length % 30 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('fall_interval') || 30) === 0) {
                 const seen = Array(board.length).fill(false);
                 let fell = 0;
                 for (let i = 0; i < board.length; i++) {
@@ -62,10 +67,10 @@ module.exports = {
                     // グループを flood fill: 先頭 (幹) 以外を落とす
                     const stack = [i];
                     seen[i] = true;
-                    let first = true;
+                    let kept = 0;
                     while (stack.length) {
                         const c = stack.pop();
-                        if (first) { first = false; }
+                        if (kept < Math.max(1, P('trunk_keep') || 1)) { kept++; }
                         else { board[c] = 0; fxBurst(c, '#d97706', 5, 1.0); fell++; }
                         getNeighbors(c).forEach(n => {
                             if (!seen[n] && board[n] === p) { seen[n] = true; stack.push(n); }

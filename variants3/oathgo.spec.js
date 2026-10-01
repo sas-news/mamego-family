@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'oathgo',
     spec: [
         ...K.rb('OATHGO', '宣誓碁', 'oathgo'),
+        K.params([
+            { key: 'oath_count', label: '宣誓に必要な刻み数', min: 2, max: 7, def: 3, unit: '箇所' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         // 刻文判定関数を挿入 (winByRule と共に)
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN +
 `        // 宣誓勝利: 中央列 (刻文) に自石が3箇所以上
@@ -34,7 +38,7 @@ module.exports = {
             const m = Math.floor(BOARD_SIZE / 2);
             let n = 0;
             for (let y = 0; y < BOARD_SIZE; y++) if (board[y * BOARD_SIZE + m] === player) n++;
-            return n >= 3;
+            return n >= (P('oath_count') || 3);
         }
         function endGameByScore() {`],
         // 着手後に宣誓判定

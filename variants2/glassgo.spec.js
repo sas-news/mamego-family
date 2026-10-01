@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('GLASSGO', '硝子碁', 'glassgo'),
+        K.params([
+            { key: 'shatter_depth', label: '連鎖砕けの深さ', min: 1, max: 8, def: 2, unit: '段' },
+        ]),
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 // 硝子碁: 砕けた石に隣接する石 (色問わず) も連鎖して割れる。
@@ -18,7 +21,7 @@ module.exports = {
                 const queue = [...captured];
                 while (queue.length > 0) {
                     const c = queue.shift();
-                    if (depth.get(c) >= SHATTER_DEPTH) continue;
+                    if (depth.get(c) >= (P('shatter_depth') || SHATTER_DEPTH)) continue;
                     getNeighbors(c).forEach(n => {
                         if (!depth.has(n) && board[n] !== 0) {
                             depth.set(n, depth.get(c) + 1);

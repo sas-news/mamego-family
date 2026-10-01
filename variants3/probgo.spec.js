@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,7 @@ module.exports = {
     icon: 'probgo',
     spec: [
         ...K.rb('PROBGO', '確率碁', 'probgo'),
+        K.params([{ key: 'slip_pct', label: '着手がズレる確率', min: 0, max: 60, def: 15, unit: '%' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' }]),
         // 確率逸脱: 決定的ハッシュ (番地×手数) が15%未満なら隣接空点へズレる
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
 `            {
@@ -34,7 +35,7 @@ module.exports = {
                 const __pi = __p.y * BOARD_SIZE + __p.x;
                 let __final = __pi;
                 const __roll = (__pi * 31 + history.length * 17) % 100;
-                if (__roll < 15) {
+                if (__roll < (P('slip_pct') || 15)) {
                     const __nb = getNeighbors(__pi).filter(i => board[i] === 0);
                     if (__nb.length > 0) {
                         const __t = __nb[(__pi + history.length) % __nb.length];

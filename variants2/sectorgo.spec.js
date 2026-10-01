@@ -9,6 +9,9 @@ module.exports = {
     kind: 'fan',
     spec: [
         ...K.rb('SECTORGO', '回転扇碁', 'sectorgo'),
+        K.params([
+            { key: 'sectors', label: '扇区の数', min: 4, max: 16, def: 8, unit: '区' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -17,15 +20,15 @@ module.exports = {
             // 回転扇碁ルール: 天元を軸に8分割した扇区を、手数と一致する区のみ着手可
             {
                 const c = (BOARD_SIZE - 1) / 2;
-                const allowed = history.length % 8;
+                const allowed = history.length % Math.max(1, P('sectors') || 8);
                 for (const p of cells) {
                     const dx = p.x - c, dy = p.y - c;
                     if (dx === 0 && dy === 0) continue; // 天元は全区に属するとして常に許可
-                    const s = Math.floor((Math.atan2(dy, dx) + Math.PI) / (Math.PI * 2) * 8) % 8;
+                    const s = Math.floor((Math.atan2(dy, dx) + Math.PI) / (Math.PI * 2) * Math.max(1, P('sectors') || 8)) % Math.max(1, P('sectors') || 8);
                     if (s !== allowed) return false;
                 }
             }`],
-        ...K.EVENT_CHIP_SPEC(`'扇区: ' + (history.length % 8 + 1) + '/8'`),
+        ...K.EVENT_CHIP_SPEC(`'扇区: ' + (history.length % Math.max(1, P('sectors') || 8) + 1) + '/' + (P('sectors') || 8)`),
         // 回転扇: 許可扇区内をゆっくり掃引するレーダー線 (扇区が回転するルールを常時示す)
         [K.ONE, `        let obstaclePainter = null;`,
 `        let obstaclePainter = null;
@@ -33,8 +36,8 @@ module.exports = {
             const c = (BOARD_SIZE - 1) / 2;
             const cx = pad + c * cs, cy = pad + c * cs;
             const rr = (c + 0.5) * cs;
-            const a = -Math.PI + (history.length % 8) * (Math.PI / 4)
-                + ((now % 2600) / 2600) * (Math.PI / 4);
+            const a = -Math.PI + (history.length % Math.max(1, P('sectors') || 8)) * (Math.PI * 2 / Math.max(1, P('sectors') || 8))
+                + ((now % 2600) / 2600) * (Math.PI * 2 / Math.max(1, P('sectors') || 8));
             ctx2.save();
             const g = ctx2.createLinearGradient(cx, cy, cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
             g.addColorStop(0, 'rgba(90,110,170,0.02)');
@@ -51,8 +54,8 @@ module.exports = {
         K.CUE_GRID(`            // 回転扇: 現在の許可扇区を扇形で照らす
             {
                 const c = (BOARD_SIZE - 1) / 2;
-                const a0 = -Math.PI + (history.length % 8) * Math.PI / 4;
-                const a1 = a0 + Math.PI / 4;
+                const a0 = -Math.PI + (history.length % Math.max(1, P('sectors') || 8)) * Math.PI * 2 / Math.max(1, P('sectors') || 8);
+                const a1 = a0 + Math.PI * 2 / Math.max(1, P('sectors') || 8);
                 const cx = padding + c * cellSize, cy = padding + c * cellSize;
                 const rr = (c + 0.5) * cellSize;
                 ctx.save();

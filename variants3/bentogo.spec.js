@@ -10,6 +10,11 @@ module.exports = {
     icon: 'bentogo',
     spec: [
         ...K.rb('BENTOGO', '弁当碁', 'bentogo'),
+        K.params([
+            { key: 'bento_interval', label: '開け弁当の間隔', min: 6, max: 24, def: 12, unit: '手' },
+            { key: 'bento_win', label: '幕の内勝ちの点数', min: 2, max: 6, def: 3, unit: '点' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 70, max: 300, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { bal: { 1: 0, 2: 0 } }; // バランス点`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -58,7 +63,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 開け弁当: 12手ごと。4仕切りすべてに石がある側がバランス点+1
-            if (history.length > 0 && history.length % 12 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('bento_interval') || 12) === 0) {
                 const c1 = countByQuad(1), c2 = countByQuad(2);
                 const ok1 = c1.every(c => c > 0), ok2 = c2.every(c => c > 0);
                 if (ok1 && !ok2) st.bal[1]++;
@@ -66,14 +71,14 @@ module.exports = {
                 else if (ok1 && ok2) { st.bal[1]++; st.bal[2]++; }
                 const mid = Math.floor(BOARD_SIZE / 2);
                 fxText(mid * BOARD_SIZE + mid, '開け弁当!', '#fb923c', 1200);
-                if (st.bal[1] >= 3 || st.bal[2] >= 3) {
-                    const w = st.bal[1] >= 3 ? 1 : 2;
+                if (st.bal[1] >= (P('bento_win') || 3) || st.bal[2] >= (P('bento_win') || 3)) {
+                    const w = st.bal[1] >= (P('bento_win') || 3) ? 1 : 2;
                     winByRule(w, '幕の内勝ち', 'バランス点が3点に達しました'); return;
                 }
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

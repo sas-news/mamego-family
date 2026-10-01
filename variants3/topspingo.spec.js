@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'topspingo',
     spec: [
         ...K.rb('TOPSPINGO', '独楽碁', 'topspingo'),
+        K.params([
+            { key: 'spin_moves', label: '独楽が取れない期間', min: 1, max: 5, def: 2, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.8, hint: '交点数比' },
+        ]),
         ...ST(ST_INIT),
         // 回転中の独楽 (st.spin>0) は捕獲対象にならない
         [K.ONE, `                    if (!hasLiberty) {
@@ -72,7 +76,7 @@ module.exports = {
             {
                 const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (board[ci] === player) {
-                    st.spin[ci] = 2;
+                    st.spin[ci] = P('spin_moves') || 2;
                     fxText(ci, 'ヒュルヒュル', '#38bdf8', 800);
                 }
             }

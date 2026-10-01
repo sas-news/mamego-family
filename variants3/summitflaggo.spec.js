@@ -47,6 +47,9 @@ module.exports = {
     icon: 'summitflaggo',
     spec: [
         ...K.rb('SUMMITFLAGGO', '登頂碁2', 'summitflaggo'),
+        K.params([
+            { key: 'hold_turns', label: '旗を立て続ける手数', min: 1, max: 6, def: 2, unit: '手' },
+        ]),
         ...ST(ST_INIT),
 
         // 登頂勝利ルール
@@ -92,7 +95,7 @@ module.exports = {
                 const top = c * BOARD_SIZE + c;
                 if (board[top] === player) {
                     st.flag[player]++;
-                    if (st.flag[player] >= 2) {
+                    if (st.flag[player] >= (P('hold_turns') || 2)) {
                         fxGlow(top, '#facc15', 950);
                         fxText(top, '登頂!', '#facc15', 1400);
                         fxShake(6, 360);

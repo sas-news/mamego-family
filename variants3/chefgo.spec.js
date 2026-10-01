@@ -10,14 +10,19 @@ module.exports = {
     icon: 'chefgo',
     spec: [
         ...K.rb('CHEFGO', '料理碁', 'chefgo'),
+        K.params([
+            { key: 'cook_mult', label: '調理済み倍率', min: 1, max: 4, def: 2, unit: '倍' },
+            { key: 'raw_penalty', label: '生の石の減点', min: 0, max: 1, step: 0.1, def: 0.5, unit: '目/個' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         // 取った石は「調理済み」: アゲハマが2倍になる
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
-                captures[player] += captured.length * 2; // 調理済み: 2倍計上
+                captures[player] += captured.length * (P('cook_mult') || 2); // 調理済み: 倍率計上
                 const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 captured.forEach(idx => fxGlow(idx, '#f97316', 700));
-                fxText(ci, '調理済み ×2', '#fb923c', 1100);
+                fxText(ci, '調理済み ×' + (P('cook_mult') || 2), '#fb923c', 1100);
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {
@@ -28,19 +33,20 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const raw1 = board.filter(v => v === 1).length;
             const raw2 = board.filter(v => v === 2).length;
-            const blackTotal = territory.black + captures[1] - raw1 * 0.5;
-            const whiteTotal = territory.white + captures[2] + komi - raw2 * 0.5;`],
+            const _rp = P('raw_penalty') ?? 0.5;
+            const blackTotal = territory.black + captures[1] - raw1 * _rp;
+            const whiteTotal = territory.white + captures[2] + komi - raw2 * _rp;`],
         [K.ONE, `                    <div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>`,
 `                    <div class="flex justify-between"><span>黒のアゲハマ(調理済):</span> <strong>\${captures[1]}</strong></div>
-                    <div class="flex justify-between"><span>黒の生減点:</span> <strong>-\${board.filter(v => v === 1).length * 0.5}</strong></div>`],
+                    <div class="flex justify-between"><span>黒の生減点:</span> <strong>-\${board.filter(v => v === 1).length * (P('raw_penalty') ?? 0.5)}</strong></div>`],
         [K.ONE, `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
 `                    <div class="flex justify-between"><span>白のアゲハマ(調理済):</span> <strong>\${captures[2]}</strong></div>
-                    <div class="flex justify-between"><span>白の生減点:</span> <strong>-\${board.filter(v => v === 2).length * 0.5}</strong></div>`],
+                    <div class="flex justify-between"><span>白の生減点:</span> <strong>-\${board.filter(v => v === 2).length * (P('raw_penalty') ?? 0.5)}</strong></div>`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            // 打ち切り終局: 交点数の一定割合の手数を超えたら強制終局して採点
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 endGameByScore();
                 return;
             }

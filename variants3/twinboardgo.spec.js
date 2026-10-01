@@ -12,7 +12,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -28,6 +28,9 @@ module.exports = {
     icon: 'twinboardgo',
     spec: [
         ...K.rb('TWINBOARDGO', '双盤碁', 'twinboardgo'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         // 裏盤状態 (board は常に表盤)
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let boardB = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 裏盤

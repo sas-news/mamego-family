@@ -9,7 +9,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -25,7 +25,13 @@ module.exports = {
     icon: 'librarygo',
     spec: [
         ...K.rb('LIBRARYGO', '蔵書碁', 'librarygo'),
-        // 書棚スコア: 3x3ブロックごとに、自石>=4 かつ 敵石<=1 なら「分類済み」+4
+        K.params([
+            { key: 'shelf_mine', label: '分類に要する自石', min: 2, max: 9, def: 4, hint: '棚を分類する自石の最低数' },
+            { key: 'shelf_foe', label: '許容する敵石', min: 0, max: 4, def: 1, hint: '分類を妨げない敵石の上限' },
+            { key: 'shelf_pts', label: '棚1つの得点', min: 0, max: 12, def: 4, hint: '分類済み棚1つにつき加点' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 1.1, step: 0.05, hint: '交点数×倍率' },
+        ]),
+        // 書棚スコア: 3x3ブロックごとに、自石>=shelf_mine かつ 敵石<=shelf_foe なら「分類済み」+shelf_pts
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            // 蔵書碁: 書棚(3x3ブロック)を分類した側に+4
@@ -40,7 +46,7 @@ module.exports = {
                             const v = board[y * BOARD_SIZE + x];
                             if (v === p) mine++; else if (v === q) foe++;
                         }
-                        if (mine >= 4 && foe <= 1) pts += 4;
+                        if (mine >= (P('shelf_mine') || 4) && foe <= (P('shelf_foe') ?? 1)) pts += (P('shelf_pts') || 4);
                     }
                 }
                 return pts;
@@ -71,7 +77,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 ${CAP}
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`(() => { let b = 0, w = 0; for (let by = 0; by < BOARD_SIZE; by += 3) for (let bx = 0; bx < BOARD_SIZE; bx += 3) { let m1 = 0, m2 = 0; for (let dy = 0; dy < 3; dy++) for (let dx = 0; dx < 3; dx++) { const v = board[(by + dy) * BOARD_SIZE + bx + dx] || 0; if (v === 1) m1++; else if (v === 2) m2++; } if (m1 >= 4 && m2 <= 1) b++; if (m2 >= 4 && m1 <= 1) w++; } return '書棚 黒' + b + ' / 白' + w; })()`),
+        ...K.EVENT_CHIP_SPEC(`(() => { const mn = P('shelf_mine') || 4, fe = (P('shelf_foe') ?? 1); let b = 0, w = 0; for (let by = 0; by < BOARD_SIZE; by += 3) for (let bx = 0; bx < BOARD_SIZE; bx += 3) { let m1 = 0, m2 = 0; for (let dy = 0; dy < 3; dy++) for (let dx = 0; dx < 3; dx++) { const v = board[(by + dy) * BOARD_SIZE + bx + dx] || 0; if (v === 1) m1++; else if (v === 2) m2++; } if (m1 >= mn && m2 <= fe) b++; if (m2 >= mn && m1 <= fe) w++; } return '書棚 黒' + b + ' / 白' + w; })()`),
         [K.ONE, K.INFO_ALGO, `            蔵書碁: 盤は3x3の書棚。棚を自分の石4個以上・敵1以下で「分類」すると+4<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

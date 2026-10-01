@@ -47,6 +47,10 @@ module.exports = {
     icon: 'silkwormgo',
     spec: [
         ...K.rb('SILKWORMGO', '養蚕碁', 'silkwormgo'),
+        K.params([
+            { key: 'silk_age', label: '収穫までの手数', min: 3, max: 30, def: 10, unit: '手' },
+            { key: 'silk_pts', label: '収穫の得点', min: 0, max: 5, def: 1, unit: '点' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 桑畑: 盤に2枚ある対称の桑畑 (蚕が糸を吐く)
@@ -69,9 +73,9 @@ module.exports = {
             SILK_SET.forEach(i => {
                 if (board[i] === 1 || board[i] === 2) {
                     st.worm[i] = (st.worm[i] || 0) + 1;
-                    if (st.worm[i] >= SILK_AGE) {
+                    if (st.worm[i] >= (P('silk_age') || SILK_AGE)) {
                         delete st.worm[i];
-                        st.score[board[i]]++;
+                        st.score[board[i]] += (P('silk_pts') ?? 1);
                         board[i] = 0;
                         fxBurst(i, '#fef3c7', 10, 1.2);
                         fxText(i, '収穫+1', '#fde68a', 1000);
@@ -106,10 +110,10 @@ module.exports = {
                 const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
                 const cx = padding + x * cellSize, cy = padding + y * cellSize;
                 ctx.save();
-                ctx.strokeStyle = 'rgba(253, 230, 138, ' + (0.25 + n / SILK_AGE * 0.6) + ')';
+                ctx.strokeStyle = 'rgba(253, 230, 138, ' + (0.25 + n / (P('silk_age') || SILK_AGE) * 0.6) + ')';
                 ctx.lineWidth = Math.max(1, cellSize * 0.04);
                 ctx.beginPath();
-                ctx.arc(cx, cy, cellSize * (0.4 - n / SILK_AGE * 0.1), 0, Math.PI * 2);
+                ctx.arc(cx, cy, cellSize * (0.4 - n / (P('silk_age') || SILK_AGE) * 0.1), 0, Math.PI * 2);
                 ctx.stroke();
                 ctx.restore();
             });`),

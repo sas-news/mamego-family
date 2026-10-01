@@ -10,6 +10,9 @@ module.exports = {
     icon: 'jengago',
     spec: [
         ...K.rb('JENGAGO', '抜積碁', 'jengago'),
+        K.params([
+            { key: 'pull_pts', label: '抜き取りの得点', min: 1, max: 4, def: 1, unit: '目' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { pullMode: false }; // 抜くモード`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -69,11 +72,11 @@ module.exports = {
                 }
                 collapsed = !ownNbs.every(n => reach.has(n));
             }
-            captures[turn] += 1;
+            captures[turn] += (P('pull_pts') || 1);
             cleanUpPieces();
             st.pullMode = false;
             if (collapsed) {
-                captures[turn] -= 1;
+                captures[turn] -= (P('pull_pts') || 1);
                 fxShake(8, 700);
                 winByRule(turn === 1 ? 2 : 1, '塔が崩れた', '抜いた石で自軍の連が分断された');
                 return;

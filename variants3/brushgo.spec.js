@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,10 +27,15 @@ module.exports = {
     icon: 'brushgo',
     spec: [
         ...K.rb('BRUSHGO', '筆造碁', 'brushgo'),
+        K.params([
+            { key: 'brush_min', label: '良い筆の最小石数', min: 2, max: 6, def: 3 },
+            { key: 'brush_liberty', label: '良い筆の呼吸ボーナス', min: 1, max: 4, def: 2 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.9, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 良い筆判定: 連が3石以上で全て同一行か同一列に揃っていれば書き味が良い
         function isGoodBrush(group) {
-            if (group.length < 3) return false;
+            if (group.length < (P('brush_min') || 3)) return false;
             const xs = group.map(i => i % BOARD_SIZE), ys = group.map(i => (i / BOARD_SIZE) | 0);
             return xs.every(x => x === xs[0]) || ys.every(y => y === ys[0]);
         }`],
@@ -43,7 +48,7 @@ module.exports = {
                     if (!hasLiberty) {`,
 `                        });
                     }
-                    if (isGoodBrush(group)) liberties += 2; // 穂先の揃った筆は書き味が良い
+                    if (isGoodBrush(group)) liberties += (P('brush_liberty') || 2); // 穂先の揃った筆は書き味が良い
 
                     if (liberties <= 0) {`],
         [K.ONE, `            while (queue.length > 0) {
@@ -73,7 +78,7 @@ module.exports = {
                     }
                 });
             }
-            if (isGoodBrush(brushGroup)) liberties += 2; // 穂先の揃った筆は書き味が良い
+            if (isGoodBrush(brushGroup)) liberties += (P('brush_liberty') || 2); // 穂先の揃った筆は書き味が良い
             return liberties;`],
         // 良い筆の連には墨の筋が入る
         ...K.STONE_MARKS_SPEC(`            // 良い筆: 直線に揃った連の石に墨の縦筋

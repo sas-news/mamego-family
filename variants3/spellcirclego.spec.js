@@ -34,7 +34,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -50,6 +50,10 @@ module.exports = {
     icon: 'spellcirclego',
     spec: [
         ...K.rb('SPELLCIRCLEGO', '魔法陣碁', 'spellcirclego'),
+        K.params([
+            { key: 'blast_range', label: '大魔法の効果範囲', min: 1, max: 3, def: 1, unit: 'マス', hint: '外側フレームの幅' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 2.0, def: 1.1, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...PERSIST('{ fired: {} }'),
         // 魔法陣ルール: 着手で完成した2x2自石ブロックが発動 — 周囲フレームの敵石を爆破
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -75,10 +79,11 @@ module.exports = {
                         fxText(ay * BOARD_SIZE + ax, '魔法陣発動!', '#c084fc', 1300);
                         fxShake(5, 320);
                         let vapor = 0;
-                        for (let ry = ay - 1; ry <= ay + 2; ry++) {
-                            for (let rx = ax - 1; rx <= ax + 2; rx++) {
+                        const __br = P('blast_range') || 1;
+                        for (let ry = ay - __br; ry <= ay + 1 + __br; ry++) {
+                            for (let rx = ax - __br; rx <= ax + 1 + __br; rx++) {
                                 if (rx < 0 || ry < 0 || rx >= BOARD_SIZE || ry >= BOARD_SIZE) continue;
-                                if (rx >= ax && rx <= ax + 1 && ry >= ay && ry <= ay + 1) continue;
+                                if (rx >= ax - (__br - 1) && rx <= ax + __br && ry >= ay - (__br - 1) && ry <= ay + __br) continue;
                                 const ri = ry * BOARD_SIZE + rx;
                                 if (board[ri] === opponent) {
                                     board[ri] = 0;

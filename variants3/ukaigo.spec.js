@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'ukaigo',
     spec: [
         ...K.rb('UKAIGO', '鵜飼碁', 'ukaigo'),
+        K.params([
+            { key: 'ayu_per', label: '捕獲ごとの鮎数', min: 1, max: 3, def: 1, unit: '尾' },
+            { key: 'ayu_max', label: '鮎の上限', min: 1, max: 15, def: 5, unit: '尾' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT),
         // 鵜飼: 捕獲した手は鵜となり鮎+1 (最大5)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
@@ -55,7 +60,7 @@ module.exports = {
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 // 鵜飼: 捕獲成功で着手石が鵜に。鮎+1 (最大5)
-                st.ukai[player] = Math.min(5, st.ukai[player] + 1);
+                st.ukai[player] = Math.min(P('ayu_max') || 5, st.ukai[player] + (P('ayu_per') || 1));
                 st.birds[move.cells[0].y * BOARD_SIZE + move.cells[0].x] = player;
                 fxText(captured[0], '鮎!', '#38bdf8', 1000);
                 fxGlow(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '#f59e0b', 700);

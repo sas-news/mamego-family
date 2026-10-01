@@ -9,6 +9,9 @@ module.exports = {
     kind: 'scarce',
     spec: [
         ...K.rb('SCARCEGO', '寡占碁', 'scarcego'),
+        K.params([
+            { key: 'row_max', label: '行あたりの石数上限', min: 1, max: 12, def: 4, unit: '個' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -21,10 +24,10 @@ module.exports = {
                     if (board[i] !== 0) rowCount[Math.floor(i / BOARD_SIZE)]++;
                 }
                 for (const p of cells) {
-                    if (rowCount[p.y] >= 4) return false;
+                    if (rowCount[p.y] >= Math.max(1, P('row_max') || 4)) return false;
                 }
             }`],
-        ...K.EVENT_CHIP_SPEC(`'行の石上限: 4'`),
+        ...K.EVENT_CHIP_SPEC(`'行の石上限: ' + (P('row_max') || 4)`),
         // 寡占: 各行の石数カウンタ (右端) と満杯行の閉鎖色
         K.CUE_GRID(`            {
                 const rowCount = new Array(BOARD_SIZE).fill(0);
@@ -34,15 +37,15 @@ module.exports = {
                 ctx.save();
                 for (let y = 0; y < BOARD_SIZE; y++) {
                     const cy = padding + y * cellSize;
-                    if (rowCount[y] >= 4) {
+                    if (rowCount[y] >= Math.max(1, P('row_max') || 4)) {
                         ctx.fillStyle = 'rgba(200,60,60,0.15)';
                         ctx.fillRect(padding - cellSize * 0.5, cy - cellSize * 0.5, width - padding * 2 + cellSize, cellSize);
                     }
-                    ctx.fillStyle = rowCount[y] >= 4 ? '#c0392b' : alphaColor(currentTheme.lineColor, 0.7);
+                    ctx.fillStyle = rowCount[y] >= Math.max(1, P('row_max') || 4) ? '#c0392b' : alphaColor(currentTheme.lineColor, 0.7);
                     ctx.font = 'bold ' + (cellSize * 0.27).toFixed(1) + 'px sans-serif';
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(rowCount[y] + '/4', width - padding + cellSize * 0.32, cy);
+                    ctx.fillText(rowCount[y] + '/' + (P('row_max') || 4), width - padding + cellSize * 0.32, cy);
                 }
                 ctx.restore();
             }`),

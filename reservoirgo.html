@@ -255,6 +255,12 @@
                 <div id="onlineRoomStatus" class="text-center font-bold text-neutral-600 pt-1"></div>
             </div>
 
+            <!-- バリアント固有設定 (VPARAMSがあるゲームのみ表示) -->
+            <div id="variantParamsBox" class="hidden p-3 bg-amber-50 rounded-xl border border-amber-200 flex flex-col gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-neutral-500">このゲームの設定</span>
+                <div id="variantParams" class="flex flex-col gap-3"></div>
+            </div>
+
             <!-- 4. サウンド設定 -->
             <div class="flex items-center justify-between pt-1">
                 <span class="text-sm font-bold text-neutral-700">効果音 (SE)</span>
@@ -313,6 +319,77 @@
     </div>
 
     <script>
+        // === バリアント固有パラメータ ===
+        // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
+        // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
+        const VPARAMS = [{"key":"water_max","label":"満水になる水量","min":4,"max":20,"def":10},{"key":"flood_rows","label":"氾濫する段数","min":1,"max":4,"def":2,"unit":"段"},{"key":"irrigate_cost","label":"かんがいに必要な水量","min":1,"max":10,"def":3},{"key":"moist_turns","label":"潤いの持続","min":4,"max":30,"def":12,"unit":"手"},{"key":"cap_ratio","label":"打ち切り手数係数","min":0.4,"max":2.5,"def":0.75,"step":0.05,"hint":"交点数×この係数で強制終局"}];
+        const VPAR_MAP = {};
+        const VPAR_SAVED = (() => {
+            try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
+            catch (e) { return {}; }
+        })();
+        VPARAMS.forEach(p => {
+            if (p.val === undefined) p.val = VPAR_SAVED[p.key] !== undefined ? VPAR_SAVED[p.key] : p.def;
+            VPAR_MAP[p.key] = p;
+        });
+        const P = k => (VPAR_MAP[k] ? VPAR_MAP[k].val : undefined);
+        function saveVpar() {
+            try {
+                const o = {};
+                VPARAMS.forEach(p => { if (p.val !== p.def) o[p.key] = p.val; });
+                localStorage.setItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : ''), JSON.stringify(o));
+            } catch (e) {}
+        }
+        // 設定モーダルの「このゲームの設定」に VPARAMS 分のUIを生成
+        function initVariantParams() {
+            const box = document.getElementById('variantParamsBox');
+            const list = document.getElementById('variantParams');
+            if (!box || !list || !VPARAMS.length) return;
+            box.classList.remove('hidden');
+            const fmt = (p, v) => (p.step && p.step < 1 ? Number(v).toFixed(1) : String(v)) + (p.unit || '');
+            VPARAMS.forEach(p => {
+                const wrap = document.createElement('div');
+                wrap.className = 'flex flex-col gap-1';
+                const head = document.createElement('div');
+                head.className = 'flex justify-between text-xs font-bold text-neutral-600';
+                const lab = document.createElement('span');
+                lab.textContent = p.label + (p.hint ? ` (${p.hint})` : '');
+                const valEl = document.createElement('span');
+                valEl.className = 'text-amber-700';
+                valEl.textContent = fmt(p, p.val);
+                head.appendChild(lab); head.appendChild(valEl);
+                wrap.appendChild(head);
+                const applyVal = v => {
+                    p.val = v;
+                    valEl.textContent = fmt(p, p.val);
+                    saveVpar();
+                    if (typeof onVariantParam === 'function') onVariantParam(p);
+                };
+                if (p.options) {
+                    const sel = document.createElement('select');
+                    sel.className = 'w-full border border-neutral-300 rounded-lg py-1.5 text-sm font-bold bg-white';
+                    p.options.forEach(o => {
+                        const op = document.createElement('option');
+                        op.value = o.v; op.textContent = o.l;
+                        sel.appendChild(op);
+                    });
+                    sel.value = p.val;
+                    sel.addEventListener('change', () => {
+                        const num = parseFloat(sel.value);
+                        applyVal(isNaN(num) ? sel.value : num);
+                    });
+                    wrap.appendChild(sel);
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'range'; inp.min = p.min; inp.max = p.max; inp.step = p.step || 1; inp.value = p.val;
+                    inp.className = 'w-full accent-amber-600';
+                    inp.addEventListener('input', () => applyVal(parseFloat(inp.value)));
+                    wrap.appendChild(inp);
+                }
+                list.appendChild(wrap);
+            });
+        }
+        initVariantParams();
         // ==========================================
         // 1. カラーテーマ定義
         // ==========================================
@@ -1740,7 +1817,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1796,12 +1873,16 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 降雨: 着手ごとに水+1。満水 (10) で下2段が氾濫
-            st.water = Math.min(10, st.water + 1);
-            if (st.water >= 10) {
+            // 降雨: 着手ごとに水+1。満水で下段が氾濫
+            const wmax = Math.max(1, P('water_max') || 10);
+            st.water = Math.min(wmax, st.water + 1);
+            if (st.water >= wmax) {
                 const victims = [];
+                const rows = Math.max(1, P('flood_rows') || 2);
                 for (let x = 0; x < BOARD_SIZE; x++) {
-                    for (const y of [BOARD_SIZE - 2, BOARD_SIZE - 1]) {
+                    for (let r = 1; r <= rows; r++) {
+                        const y = BOARD_SIZE - r;
+                        if (y < 0) break;
                         const i = y * BOARD_SIZE + x;
                         if ((board[i] === 1 || board[i] === 2) && !(st.moist[i] && st.moist[i] >= history.length)) {
                             victims.push(i);
@@ -2027,9 +2108,9 @@
         btnWater.addEventListener('click', () => {
             soundManager.playClick();
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
-            if (st.water < 3) return;
+            if (st.water < Math.max(1, P('irrigate_cost') || 3)) return;
             st.water = 0;
-            const until = history.length + 12;
+            const until = history.length + Math.max(1, P('moist_turns') || 12);
             board.forEach((v, i) => { if (v === turn) st.moist[i] = until; });
             render();
             updateUI();
@@ -2711,7 +2792,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('水量 ' + st.water + '/10');
+                const et = gameOver ? '' : ('水量 ' + st.water + '/' + (P('water_max') || 10));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

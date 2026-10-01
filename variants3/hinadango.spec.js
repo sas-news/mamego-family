@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'hinadango',
     spec: [
         ...K.rb('HINADANGO', '雛壇碁', 'hinadango'),
+        K.params([
+            { key: 'hina_min', label: '段を制するのに必要な石数', min: 2, max: 9, def: 4, unit: '個' },
+            { key: 'hina_bonus', label: '1段あたりの得点', min: 0, max: 12, def: 4, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.3, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         // 雛壇判定ヘルパー: 行ごとに4石以上かつ相手より多い側に+4
         [K.ONE, `        function endGameByScore() {`, `        // 雛壇判定: 1行に自石4個以上かつ相手より多い段を数える
         function hinaRows(pl) {
@@ -38,11 +43,11 @@ module.exports = {
                     const v = board[y * BOARD_SIZE + x];
                     if (v === pl) a++; else if (v === opp) b++;
                 }
-                if (a >= 4 && a > b) rows.push(y);
+                if (a >= (P('hina_min') || 4) && a > b) rows.push(y);
             }
             return rows;
         }
-        function hinaBonus(pl) { return hinaRows(pl).length * 4; }
+        function hinaBonus(pl) { return hinaRows(pl).length * (P('hina_bonus') || 4); }
 
         function endGameByScore() {`],
         // 採点に雛壇点を加算

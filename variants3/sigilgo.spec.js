@@ -10,6 +10,10 @@ module.exports = {
     icon: 'sigilgo',
     spec: [
         ...K.rb('SIGILGO', '印章碁', 'sigilgo'),
+        K.params([
+            { key: 'sigil_pts', label: '刻印の得点', min: 0, max: 27, def: 9, unit: '点' },
+            { key: 'move_cap', label: '打ち切り手数', min: 60, max: 280, def: 140, step: 10, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { inv: [], sigils: [] }; // 無敵セルidx / 刻印済み3x3の起点idx`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -62,15 +66,15 @@ module.exports = {
                                 if (st.inv.indexOf(si) < 0) st.inv.push(si);
                             }
                         }
-                        captures[player] += 9;
+                        captures[player] += (P('sigil_pts') ?? 9);
                         fxGlow(anchor + BOARD_SIZE + 1, '#f59e0b', 1100);
-                        fxText(anchor + BOARD_SIZE + 1, '刻印! +9', '#d97706', 1500);
+                        fxText(anchor + BOARD_SIZE + 1, '刻印! +' + (P('sigil_pts') ?? 9), '#d97706', 1500);
                         fxShake(5, 360);
                     }
                 }
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('move_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         // 刻印済み区域に朱色の印影を描画

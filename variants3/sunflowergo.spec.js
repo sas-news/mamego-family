@@ -27,12 +27,16 @@ module.exports = {
     icon: 'sunflowergo',
     spec: [
         ...K.rb('SUNFLOWERGO', '向日葵碁', 'sunflowergo'),
+        K.params([
+            { key: 'sun_period', label: '太陽が巡る間隔', min: 2, max: 20, def: 8, unit: '手' },
+            { key: 'sun_pts', label: '光を浴びた石の得点', min: 0, max: 5, def: 1, unit: '目' },
+        ]),
         // 日向判定: 太陽方向の隣が空点か味方 → その石は日向 (+1目)
         [K.ONE, `            const territory = calculateTerritory();`,
 `            const territory = calculateTerritory();
             {
                 const SDIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-                const sd = SDIRS[Math.floor(history.length / 8) % 4];
+                const sd = SDIRS[Math.floor(history.length / (P('sun_period') || 8)) % 4];
                 for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
                     if (board[i] !== 1 && board[i] !== 2) continue;
                     const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
@@ -40,15 +44,15 @@ module.exports = {
                     const lit = nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE ||
                         board[ny * BOARD_SIZE + nx] === 0 || board[ny * BOARD_SIZE + nx] === board[i];
                     if (!lit) continue;
-                    if (board[i] === 1) territory.black += 1;
-                    else territory.white += 1;
+                    if (board[i] === 1) territory.black += (P('sun_pts') ?? 1);
+                    else territory.white += (P('sun_pts') ?? 1);
                 }
             }`],
         // 日向の石は橙の花冠。盤上に太陽の方角を表示
         ...K.STONE_MARKS_SPEC(`            // 向日葵: 太陽の方角に向く石に橙の花冠
             {
                 const SDIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-                const sd = SDIRS[Math.floor(history.length / 8) % 4];
+                const sd = SDIRS[Math.floor(history.length / (P('sun_period') || 8)) % 4];
                 ctx.save();
                 for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
                     if (board[i] !== 1 && board[i] !== 2) continue;
@@ -70,7 +74,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC('"太陽 " + ["北","東","南","西"][Math.floor(history.length / 8) % 4]'),
+        ...K.EVENT_CHIP_SPEC('"太陽 " + ["北","東","南","西"][Math.floor(history.length / (P("sun_period") || 8)) % 4]'),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            向日葵碁: 太陽の方角は8手ごとに回る。向いた先が空か味方なら日向 — 終局時+1目<br>
             PC: クリックで配置<br>

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'kingyosukuigo',
     spec: [
         ...K.rb('KINGYOSUKUIGO', '金魚すくい碁', 'kingyosukuigo'),
+        K.params([
+            { key: 'scoop_pts', label: '金魚1匹の得点', min: 1, max: 5, def: 2, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 掬った金魚は水しぶきを上げる
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
@@ -44,10 +48,10 @@ module.exports = {
         // 掬った金魚は1匹2目分の得点
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
-`            const blackTotal = territory.black + captures[1] * 2;
-            const whiteTotal = territory.white + captures[2] * 2 + komi;`],
+`            const blackTotal = territory.black + captures[1] * (P('scoop_pts') || 2);
+            const whiteTotal = territory.white + captures[2] * (P('scoop_pts') || 2) + komi;`],
         [K.ONE, `                    <div class="my-1 border-b border-current/10"></div>`,
-`                    <div class="flex justify-between"><span>金魚ボーナス:</span> <strong>黒 +\${captures[1]} / 白 +\${captures[2]}</strong></div>
+`                    <div class="flex justify-between"><span>金魚ボーナス:</span> <strong>黒 +\${captures[1] * (Math.max(1, P('scoop_pts') || 2) - 1)} / 白 +\${captures[2] * (Math.max(1, P('scoop_pts') || 2) - 1)}</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            金魚すくい碁: 取った敵石はポイで掬った金魚 — アゲハマ1個につき2目の得点<br>

@@ -36,13 +36,17 @@ module.exports = {
     icon: 'rhythmgo',
     spec: [
         ...K.rb('RHYTHMGO', '拍子碁', 'rhythmgo'),
+        K.params([
+            { key: 'beat', label: '拍子の周期', min: 2, max: 8, def: 4, unit: '手', hint: '周期の最終拍が強拍' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 1.1, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...PERSIST('{ extra: false }'),
         // 強拍 (4手ごと) の着手者は追加でもう1石置ける
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 拍子: 4の倍数手は強拍。強拍の着手者は手番を維持してもう1石置ける
-            if (history.length % 4 === 0 && !st.extra) {
+            // 拍子: 周期の倍数手は強拍。強拍の着手者は手番を維持してもう1石置ける
+            if (history.length % Math.max(2, P('beat') || 4) === 0 && !st.extra) {
                 st.extra = true;
                 fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '強拍!', '#fb923c', 1000);
                 fxShake(3, 200);
@@ -51,7 +55,7 @@ module.exports = {
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -59,7 +63,7 @@ module.exports = {
             }
 
             turn = st.extra ? player : opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'拍 ' + ((history.length % 4) + 1) + '/4' + (history.length % 4 === 3 ? ' (次=強拍)' : '')`),
+        ...K.EVENT_CHIP_SPEC(`(() => { const b = Math.max(2, P('beat') || 4); return '拍 ' + ((history.length % b) + 1) + '/' + b + (history.length % b === b - 1 ? ' (次=強拍)' : ''); })()`),
         [K.ONE, K.RV_ALGO, K.rv([
             '4拍子周期: 4手ごとの強拍の着手者は、続けてもう1石置ける (合計2石)。',
             '強拍の巡りは盤の手数で決まり両者共通。強拍に合わせて攻めを組み立てよう。',

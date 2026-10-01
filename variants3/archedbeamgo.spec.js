@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,11 @@ module.exports = {
     icon: 'archedbeamgo',
     spec: [
         ...K.rb('ARCHEDBEAMGO', '虹梁碁', 'archedbeamgo'),
+        K.params([
+            { key: 'beam_min', label: '虹梁の最小連数', min: 2, max: 6, def: 3, unit: '連' },
+            { key: 'beam_pts', label: '虹梁の得点', min: 1, max: 8, def: 2, unit: '点' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -76,7 +81,7 @@ module.exports = {
             let aRun = 1;
             for (let x = (aIdx % BOARD_SIZE) - 1; x >= 0 && board[aRow * BOARD_SIZE + x] === player; x--) aRun++;
             for (let x = (aIdx % BOARD_SIZE) + 1; x < BOARD_SIZE && board[aRow * BOARD_SIZE + x] === player; x++) aRun++;
-            if (aRun >= 3) st.score[player] += 2;
+            if (aRun >= (P('beam_min') || 3)) st.score[player] += (P('beam_pts') || 2);
 
             turn = opponent;`],
         ...K.STONE_MARKS_SPEC(`            // 虹梁: 横3連以上の上に虹の弧を描く
@@ -89,7 +94,7 @@ module.exports = {
                         if (v === 0) { x++; continue; }
                         let x2 = x;
                         while (x2 + 1 < BOARD_SIZE && board[y * BOARD_SIZE + x2 + 1] === v) x2++;
-                        if (x2 - x + 1 >= 3) {
+                        if (x2 - x + 1 >= (P('beam_min') || 3)) {
                             const cx1 = padding + x * cellSize, cx2 = padding + x2 * cellSize;
                             const cy = padding + y * cellSize;
                             ctx.strokeStyle = v === 1 ? 'rgba(254,243,199,0.75)' : 'rgba(120,53,15,0.75)';

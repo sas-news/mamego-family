@@ -9,9 +9,12 @@ module.exports = {
     kind: 'triple',
     spec: [
         ...K.rb('TRIPLEGO', '三手碁', 'triplego'),
+        K.params([
+            { key: 'stones_per_turn', label: '1手番の石数', min: 1, max: 6, def: 3, unit: '石' },
+        ]),
         // 手番内の残り石数カウンタを追加
         [K.ONE, K.BOARD_DECL, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        let stonesLeftInTurn = 3; // この手番であと何石置けるか
+        let stonesLeftInTurn = P('stones_per_turn') || 3; // この手番であと何石置けるか
         let turnPlaced = []; // この手番で置いた石の idx (順序印用)`],
         // 手番は3石置き切るまで巡らない
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -21,7 +24,7 @@ module.exports = {
             turnPlaced.push(move.cells[0].y * BOARD_SIZE + move.cells[0].x);
             stonesLeftInTurn--;
             if (stonesLeftInTurn <= 0) {
-                stonesLeftInTurn = 3;
+                stonesLeftInTurn = P('stones_per_turn') || 3;
                 turnPlaced = [];
                 turn = opponent;
             }`],
@@ -33,7 +36,7 @@ module.exports = {
         [K.ONE, K.SNAP_POP, `            holdUsed = !!snap.holdUsed;
             if (snap.stonesLeftInTurn !== undefined) stonesLeftInTurn = snap.stonesLeftInTurn;`],
         [K.ONE, K.RESET_HELD, `            heldPieces = { 1: null, 2: null };
-            stonesLeftInTurn = 3;
+            stonesLeftInTurn = P('stones_per_turn') || 3;
             turnPlaced = [];`],
         [K.ONE, K.SAVE_TAIL, `                    stonesLeftInTurn,
                     heldPieces,
@@ -50,7 +53,7 @@ module.exports = {
         // パスは残り手を放棄して交代するのでカウンタを初期化
         [K.ONE, `                turn = turn === 1 ? 2 : 1;`,
 `                turn = turn === 1 ? 2 : 1;
-                stonesLeftInTurn = 3; // パスは残り手を放棄して交代
+                stonesLeftInTurn = P('stones_per_turn') || 3; // パスは残り手を放棄して交代
                 turnPlaced = [];`],
         // 手番表示に残り石数を出す
         [K.ONE, K.TURN_LINE, `            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + ' ×残り' + stonesLeftInTurn + '石';`],
@@ -61,7 +64,7 @@ module.exports = {
         // この手番で置いた石に①②③の順序印
         ...K.STONE_MARKS_SPEC(`            // 三手: この手番で置いた石に順序印
             {
-                const nums = ['①', '②', '③'];
+                const nums = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧'];
                 ctx.save();
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';

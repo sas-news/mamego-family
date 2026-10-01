@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,11 @@ module.exports = {
     icon: 'rainbowgo',
     spec: [
         ...K.rb('RAINBOWGO', '虹霓碁', 'rainbowgo'),
+        K.params([
+            { key: 'cycle', label: '虹の周期', min: 8, max: 60, def: 24, unit: '手' },
+            { key: 'rainbow_len', label: '虹の出る手数', min: 1, max: 16, def: 8, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 虹 (24手周期の後半8手): 斜め隣接も連結に数える
         [K.ONE, K.NBRS_GRID, `        function getNeighbors(idx) {
             const x = idx % BOARD_SIZE;
@@ -55,8 +60,10 @@ module.exports = {
             if (x < BOARD_SIZE - 1) n.push(idx + 1);
             if (y > 0) n.push(idx - BOARD_SIZE);
             if (y < BOARD_SIZE - 1) n.push(idx + BOARD_SIZE);
-            // 虹: 24手周期の後半8手は斜め隣接も連結
-            if (history.length % 24 >= 16) {
+            // 虹: 周期の末尾 rbLen 手は斜め隣接も連結
+            const rbCyc = Math.max(2, P('cycle') || 24);
+            const rbLen = Math.min(Math.max(1, P('rainbow_len') || 8), rbCyc);
+            if (history.length % rbCyc >= rbCyc - rbLen) {
                 if (x > 0 && y > 0) n.push(idx - BOARD_SIZE - 1);
                 if (x < BOARD_SIZE - 1 && y > 0) n.push(idx - BOARD_SIZE + 1);
                 if (x > 0 && y < BOARD_SIZE - 1) n.push(idx + BOARD_SIZE - 1);
@@ -68,7 +75,8 @@ module.exports = {
         [K.ONE, K.FX_BOOT, K.FX_BOOT + `
         // 虹: 雨上がりの間だけ盤に虹のアーチを描く
         fxAmbient((ctx2, now, pad, cs) => {
-            if (history.length % 24 < 16) return;
+            const rbCyc = Math.max(2, P('cycle') || 24), rbLen = Math.min(Math.max(1, P('rainbow_len') || 8), rbCyc);
+            if (history.length % rbCyc < rbCyc - rbLen) return;
             const w = pad * 2 + (BOARD_SIZE - 1) * cs;
             const cx = w / 2, cy = w * 0.62;
             const cols = ['#ef4444', '#f59e0b', '#facc15', '#22c55e', '#3b82f6', '#8b5cf6'];
@@ -83,7 +91,7 @@ module.exports = {
             });
             ctx2.restore();
         });`],
-        ...K.EVENT_CHIP_SPEC(`history.length % 24 >= 16 ? '虹出現!' : '虹まで ' + (16 - history.length % 24) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`(() => { const c = Math.max(2, P('cycle') || 24), l = Math.min(Math.max(1, P('rainbow_len') || 8), c), h = history.length % c; return h >= c - l ? '虹出現!' : '虹まで ' + (c - l - h) + '手'; })()`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            虹霓碁: 24手周期の後半8手で虹が架かり、斜め隣接も連結・呼吸になる<br>
             PC: クリックで配置<br>

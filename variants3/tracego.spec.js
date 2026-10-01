@@ -10,6 +10,9 @@ module.exports = {
     icon: 'tracego',
     spec: [
         ...K.rb('TRACEGO', '追跡碁', 'tracego'),
+        K.params([
+            { key: 'cap_moves', label: '打ち切り手数', min: 40, max: 400, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             // 基点: 黒は上端中央、白は下端中央
             {
@@ -52,7 +55,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'koango',
     spec: [
         ...K.rb('KOANGO', '公案碁', 'koango'),
+        K.params([
+            { key: 'koan_pts', label: '公案1枡の悟り点', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 公案: 同色の2x2の枡 (左上を基点に数える) は解けた公案 — 1枡+2目
         function koanBonus(player) {
@@ -35,7 +39,7 @@ module.exports = {
                 for (let x = 0; x < BOARD_SIZE - 1; x++) {
                     const i = y * BOARD_SIZE + x;
                     if (board[i] === player && board[i + 1] === player &&
-                        board[i + BOARD_SIZE] === player && board[i + BOARD_SIZE + 1] === player) b += 2;
+                        board[i + BOARD_SIZE] === player && board[i + BOARD_SIZE + 1] === player) b += (P('koan_pts') ?? 2);
                 }
             }
             return b;

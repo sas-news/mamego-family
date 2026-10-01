@@ -10,13 +10,19 @@ module.exports = {
     icon: 'lurego',
     spec: [
         ...K.rb('LUREGO', '擬餌碁', 'lurego'),
+        K.params([
+            { key: 'lure_interval', label: '擬餌の周期', min: 4, max: 30, def: 10, hint: '自分の着手何回ごとに擬餌か' },
+            { key: 'lure_min', label: '誘引の最小距離', min: 1, max: 5, def: 2, hint: 'この距離以上の敵石を誘引' },
+            { key: 'lure_max', label: '誘引の最大距離', min: 2, max: 8, def: 3, hint: 'この距離までの敵石を誘引' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 擬餌: 自分の10手ごとの着手は擬餌 — 周囲の敵石を誘引する
             {
                 const myCount = pieces.filter(pc => pc.player === player).length;
-                if (myCount % 10 === 0) {
+                if (myCount % Math.max(1, P('lure_interval') || 10) === 0) {
                     const lc = move.cells[0];
                     const li = lc.y * BOARD_SIZE + lc.x;
                     const lp = pieces.find(pc => pc.cells.some(p => p.x === lc.x && p.y === lc.y));
@@ -28,7 +34,8 @@ module.exports = {
                         const i = y * BOARD_SIZE + x;
                         if (board[i] !== opponent) continue;
                         const d = Math.max(Math.abs(x - lc.x), Math.abs(y - lc.y));
-                        if (d < 2 || d > 3) continue;
+                        const lmin = Math.max(1, P('lure_min') || 2), lmax = Math.max(lmin, P('lure_max') || 3);
+                        if (d < lmin || d > lmax) continue;
                         pulled.push([x, y, i]);
                     }
                     pulled.forEach(([x, y, i]) => {
@@ -47,7 +54,7 @@ module.exports = {
             }
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -77,7 +84,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'次のルアーまで ' + (10 - (pieces.filter(pc => pc.player === turn).length % 10)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'次のルアーまで ' + (Math.max(1, P('lure_interval') || 10) - (pieces.filter(pc => pc.player === turn).length % Math.max(1, P('lure_interval') || 10))) + '手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '10手ごとの自分の着手は「擬餌」になる (釣り針マーク)。',
             '擬餌を置くと周囲2〜3マスの敵石が1マスずつ誘い寄せられる。両者同じ周期で現れる。',

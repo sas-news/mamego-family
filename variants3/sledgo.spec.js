@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'sledgo',
     spec: [
         ...K.rb('SLEDGO', '橇碁', 'sledgo'),
+        K.params([
+            { key: 'snow_frac', label: '雪原の広さ', min: 0.2, max: 0.8, def: 0.5, step: 0.05, hint: '盤の下側の割合' },
+            { key: 'sled_pts', label: '押し潰しのアゲハマ', min: 0, max: 4, def: 1, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.6, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // 橇: 雪原(下半分)で自石と同じ行/列に置くと橇が滑走 — 間に孤立敵石があれば1つ押し出す (落として+1)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -34,7 +39,7 @@ module.exports = {
             // 橇: 雪原 (下半分) で同じ行または列に自石がある方向へ滑走。途中の孤立敵石を1つ押し潰す
             {
                 const x0 = move.cells[0].x, y0 = move.cells[0].y;
-                const snow = Math.floor(BOARD_SIZE / 2); // y >= snow が雪原
+                const snow = Math.floor(BOARD_SIZE * (P('snow_frac') || 0.5)); // y >= snow が雪原
                 if (y0 >= snow) {
                     const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
                     let squashed = 0;
@@ -58,7 +63,7 @@ module.exports = {
                                 const g = getConnectedGroup(i2, opponent);
                                 if (g.length === 1) {
                                     board[i2] = 0;
-                                    captures[player]++;
+                                    captures[player] += (P('sled_pts') ?? 1);
                                     squashed++;
                                     fxBurst(i2, '#e0f2fe', 12, 1.6);
                                     fxText(i2, '橇で轢いた!', '#38bdf8', 1200);
@@ -76,7 +81,7 @@ module.exports = {
         // 雪原の描画: 下半分を雪色に
         ...K.CUE_GRID(`            // 雪原: 下半分を雪色に
             {
-                const snow2 = Math.floor(BOARD_SIZE / 2);
+                const snow2 = Math.floor(BOARD_SIZE * (P('snow_frac') || 0.5));
                 ctx.save();
                 ctx.fillStyle = 'rgba(224,242,254,0.35)';
                 ctx.fillRect(padding - cellSize * 0.5, padding + (snow2 - 0.5) * cellSize, BOARD_SIZE * cellSize, (BOARD_SIZE - snow2) * cellSize);
@@ -86,7 +91,7 @@ module.exports = {
         [K.ONE, K.FX_BOOT, K.FX_BOOT + `
         // 雪原の雪: 下半分に雪片が漂う
         fxAmbient((ctx2, now, pad, cs) => {
-            const snow3 = Math.floor(BOARD_SIZE / 2);
+            const snow3 = Math.floor(BOARD_SIZE * (P('snow_frac') || 0.5));
             ctx2.save();
             for (let k = 0; k < 10; k++) {
                 const t = (now / 4000 + k * 0.17) % 1;

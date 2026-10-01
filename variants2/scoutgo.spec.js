@@ -9,6 +9,10 @@ module.exports = {
     kind: 'scout',
     spec: [
         ...K.rb('SCOUTGO', '斥候碁', 'scoutgo'),
+        K.params([
+            { key: 'scout_move', label: '斥候が出る手目', min: 2, max: 12, def: 4, unit: '手目' },
+            { key: 'scout_view', label: '斥候の視界の持続', min: 1, max: 6, def: 2, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { pcnt: { 1: 0, 2: 0 }, until: { 1: 0, 2: 0 } }; // 斥候碁: 着手数と斥候の視界期限`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -44,7 +48,7 @@ module.exports = {
                 rot: move.rot,
                 cells: move.cells,
                 at: history.length,
-                scout: st.pcnt[player] === 4
+                scout: st.pcnt[player] === Math.max(1, P('scout_move') || 4)
             });`],
         // 斥候石が置かれたら、その側の視界を2手分だけ確保する
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -53,7 +57,7 @@ module.exports = {
 
             // 斥候碁: 斥候石 (各側4手目) が盤を照らし、2手の間その側に敵の全呼吸数を見せる
             if (pieces.length && pieces[pieces.length - 1].scout && pieces[pieces.length - 1].player === player) {
-                st.until[player] = history.length + 2;
+                st.until[player] = history.length + Math.max(1, P('scout_view') || 2);
                 // 斥候の投入: 緑の閃光 + 「斥候」表示 + 敵石を一斉に照らす
                 const si = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 fxBurst(si, '#4ade80', 10, 1.3);
@@ -115,7 +119,7 @@ module.exports = {
                     ctx.restore();
                 }
             }`),
-        ...K.EVENT_CHIP_SPEC(`isScoutView(turn) ? '斥候の視界 残り' + (st.until[turn] - history.length) + '手' : '斥候まで ' + Math.max(0, 4 - (st.pcnt[turn] || 0)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`isScoutView(turn) ? '斥候の視界 残り' + (st.until[turn] - history.length) + '手' : '斥候まで ' + Math.max(0, (P('scout_move') || 4) - (st.pcnt[turn] || 0)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            斥候碁: 各側4手目の石は斥候。以後2手の間、敵の全石の呼吸数が暴かれる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

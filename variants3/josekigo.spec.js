@@ -47,6 +47,10 @@ module.exports = {
     icon: 'josekigo',
     spec: [
         ...K.rb('JOSEKIGO', '定石碁', 'josekigo'),
+        K.params([
+            { key: 'joseki_turns', label: '定石域の有効手数', min: 8, max: 60, def: 24, unit: '手' },
+            { key: 'joseki_pts', label: '定石ボーナス', min: 0, max: 4, def: 1, unit: '目' },
+        ]),
         ...ST(ST_INIT),
         // 定石域 (隅4線以内) への序盤着手 → +1目
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -57,10 +61,10 @@ module.exports = {
                 const __p = move.cells[0];
                 const __e = BOARD_SIZE - 1;
                 const __corner = (__p.x <= 3 || __p.x >= __e - 3) && (__p.y <= 3 || __p.y >= __e - 3);
-                if (__corner && history.length <= 24) {
+                if (__corner && history.length <= (P('joseki_turns') || 24)) {
                     const __pi = __p.y * BOARD_SIZE + __p.x;
-                    st.bonus[player] = (st.bonus[player] || 0) + 1;
-                    fxText(__pi, '定石 +1', '#f59e0b', 1000);
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('joseki_pts') ?? 1);
+                    fxText(__pi, '定石 +' + (P('joseki_pts') ?? 1), '#f59e0b', 1000);
                     fxGlow(__pi, '#f59e0b', 700);
                 }
             }
@@ -85,7 +89,7 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
-        ...K.EVENT_CHIP_SPEC(`history.length <= 24 ? '定石 +' + ((st.bonus && st.bonus[turn]) || 0) + '目' : ''`),
+        ...K.EVENT_CHIP_SPEC(`history.length <= (P('joseki_turns') || 24) ? '定石 +' + ((st.bonus && st.bonus[turn]) || 0) + '目' : ''`),
         [K.ONE, K.INFO_ALGO, `            定石碁: 序盤24手で隅の定石域に置くと +1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

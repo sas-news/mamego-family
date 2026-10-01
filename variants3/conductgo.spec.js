@@ -10,6 +10,10 @@ module.exports = {
     icon: 'conductgo',
     spec: [
         ...K.rb('CONDUCTGO', '導電碁', 'conductgo'),
+        K.params([
+            { key: 'short_penalty', label: '短絡の呼吸点低下', min: 0, max: 4, def: 2, unit: '点', hint: '0=短絡で弱化しない' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 導電: 左右端が電極。連が両端に触れると短絡 → 呼吸点-2
         const ELEC_L = 0, ELEC_R = BOARD_SIZE - 1;
@@ -80,7 +84,7 @@ module.exports = {
             for (let i = 0; i < boardState.length; i++) {
                 if (boardState[i] === player && !visited[i]) {
                     const { group, liberties, shorted } = groupLiberties(boardState, i, visited);
-                    const eff = liberties - (shorted ? 2 : 0); // 短絡で呼吸点-2
+                    const eff = liberties - (shorted ? (P('short_penalty') ?? 2) : 0); // 短絡で呼吸点低下
                     if (eff < 1) {
                         captured.push(...group);
                     }
@@ -118,7 +122,7 @@ module.exports = {
             if (player === 0) return 0;
             const visited = Array(boardState.length).fill(false);
             const { liberties, shorted } = groupLiberties(boardState, idx, visited);
-            return liberties - (shorted ? 2 : 0);
+            return liberties - (shorted ? (P('short_penalty') ?? 2) : 0);
         }`],
         // 電極の描画 (格子線の直前: 左右端に電極帯)
         K.CUE_GRID(`            // 導電: 左右端の電極帯
@@ -151,7 +155,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

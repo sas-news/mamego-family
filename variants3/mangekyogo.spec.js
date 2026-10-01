@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'mangekyogo',
     spec: [
         ...K.rb('MANGEKYOGO', '万華鏡碁', 'mangekyogo'),
+        K.params([
+            { key: 'mirror_n', label: '写る対称位置の数', min: 1, max: 3, def: 3, hint: '回転対称に写る石の数 (3=4重対称)' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // 万華鏡: 着地点を中心に90/180/270度回転した位置にも自石が写る (空点かつ呼吸できる場所のみ)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -37,7 +41,7 @@ module.exports = {
                 const c = (BOARD_SIZE - 1) / 2;
                 const dx = bc.x - c, dy = bc.y - c;
                 const seen = new Set();
-                [[-dy, dx], [-dx, -dy], [dy, -dx]].forEach(([rx, ry]) => {
+                [[-dy, dx], [-dx, -dy], [dy, -dx]].slice(0, Math.max(1, Math.min(3, P('mirror_n') || 3))).forEach(([rx, ry]) => {
                     const nx = c + rx, ny = c + ry;
                     if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) return;
                     const i0 = ny * BOARD_SIZE + nx;

@@ -10,7 +10,11 @@ module.exports = {
     icon: 'lungego',
     spec: [
         ...K.rb('LUNGEGO', '突撃碁', 'lungego'),
-        // 突撃: 着手に接する敵石を接触方向に1マス後退させる
+        K.params([
+            { key: 'lunge_dist', label: '後退マス数', min: 1, max: 4, def: 1, hint: '突撃で敵石が何マス後退するか' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
+        // 突撃: 着手に接する敵石を接触方向に lunge_dist マス後退させる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
@@ -23,7 +27,8 @@ module.exports = {
                     if (board[n] !== opponent) return;
                     const dx = (n % BOARD_SIZE) - p0.x;
                     const dy = Math.floor(n / BOARD_SIZE) - p0.y;
-                    const tx = (n % BOARD_SIZE) + dx, ty = Math.floor(n / BOARD_SIZE) + dy;
+                    const LD = Math.max(1, P('lunge_dist') || 1);
+                    const tx = (n % BOARD_SIZE) + dx * LD, ty = Math.floor(n / BOARD_SIZE) + dy * LD;
                     const pc = pieces.find(x => x.cells.some(c => c.y * BOARD_SIZE + c.x === n));
                     board[n] = 0;
                     if (tx < 0 || tx >= BOARD_SIZE || ty < 0 || ty >= BOARD_SIZE || board[ty * BOARD_SIZE + tx] !== 0) {
@@ -45,7 +50,7 @@ module.exports = {
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 endGameByScore();
                 return;
             }

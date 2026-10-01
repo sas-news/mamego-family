@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('EXPANDGO', '拡大碁', 'expandgo'),
+        K.params([
+            { key: 'expand_interval', label: '盤が拡大する間隔', min: 2, max: 20, def: 5, unit: '手' },
+            { key: 'expand_max', label: '盤の最大サイズ', options: [{ v: 15, l: '15路' }, { v: 17, l: '17路' }, { v: 19, l: '19路' }, { v: 21, l: '21路' }], def: 19 },
+        ]),
         // undoで盤サイズも戻す
         [K.ONE, K.SNAP_PUSH, `                heldPieces: { ...heldPieces },
                 holdUsed,
@@ -22,7 +26,7 @@ module.exports = {
 
             // 拡大ルール: 5手ごとに盤が外周へ1マスずつ拡大する (最大19路)。
             //             既存の石は新盤面の1マス内側にそのまま残る。
-            if (history.length % 5 === 0 && BOARD_SIZE < 19) {
+            if (history.length % Math.max(1, P('expand_interval') || 5) === 0 && BOARD_SIZE < (P('expand_max') || 19)) {
                 const N0 = BOARD_SIZE, N2 = N0 + 2;
                 const nb = new Array(N2 * N2).fill(0);
                 for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) {
@@ -54,7 +58,7 @@ module.exports = {
                 ctx.fillRect(padding + (BOARD_SIZE - 0.5) * cellSize, padding - cellSize * 0.5, cellSize, w);
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'拡大まで ' + (BOARD_SIZE >= 19 ? '上限' : (5 - history.length % 5) + ' 手')`),
+        ...K.EVENT_CHIP_SPEC(`'拡大まで ' + (BOARD_SIZE >= (P('expand_max') || 19) ? '上限' : ((P('expand_interval') || 5) - history.length % (P('expand_interval') || 5)) + ' 手')`),
         [K.ONE, K.RV_ALGO, K.rv([
             '5手ごとに盤が外周へ1マスずつ拡大する (上限19路)。既存の石は1マス内側に残る。',
             '新しい辺境が生まれ続ける。終盤ほど広い盤での大きな戦いになる。',

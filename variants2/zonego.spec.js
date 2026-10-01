@@ -9,6 +9,10 @@ module.exports = {
     kind: 'zone',
     spec: [
         ...K.rb('ZONEGO', '区域碁', 'zonego'),
+        K.params([
+            { key: 'ctrl_margin', label: '制圧に必要な差', min: 1, max: 6, def: 2, unit: '石' },
+            { key: 'win_zones', label: '勝利に必要な区域数', min: 3, max: 9, def: 5, unit: '区域' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         // 区域制圧数: 自石が相手より2個以上多い区域の数
         function controlledZones(player) {
@@ -22,7 +26,7 @@ module.exports = {
                 else if (v === opponent) opp[z]++;
             }
             let n = 0;
-            for (let z = 0; z < 9; z++) if (own[z] >= opp[z] + 2) n++;
+            for (let z = 0; z < 9; z++) if (own[z] >= opp[z] + (P('ctrl_margin') || 2)) n++;
             return n;
         }
 
@@ -30,14 +34,14 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 区域ルール: 5区域以上を制圧したら即勝ち
-            if (controlledZones(player) >= 5) {
+            // 区域ルール: N区域以上を制圧したら即勝ち
+            if (controlledZones(player) >= (P('win_zones') || 5)) {
                 if (lastMove && lastMove.cells[0]) {
                     fxGlow(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, '#facc15', 800);
                     fxText(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, '制圧!', '#facc15', 1200);
                 }
                 fxShake(4, 300);
-                winByRule(player, '区域制圧勝ち', '9区域のうち5区域以上を制圧しました'); return;
+                winByRule(player, '区域制圧勝ち', '9区域のうち' + (P('win_zones') || 5) + '区域以上を制圧しました'); return;
             }
 
             turn = opponent;`],
@@ -65,20 +69,21 @@ module.exports = {
                     else if (v === 2) opp[z]++;
                 }
                 for (let z = 0; z < 9; z++) {
+                    const cm = P('ctrl_margin') || 2;
                     const zx = z % 3, zy = Math.floor(z / 3);
                     const x0 = padding + zx * zw * cellSize - cellSize * 0.5;
                     const y0 = padding + zy * zh * cellSize - cellSize * 0.5;
                     const w2 = Math.min(zw * cellSize, width - padding * 2 + cellSize - zx * zw * cellSize);
                     const h2 = Math.min(zh * cellSize, width - padding * 2 + cellSize - zy * zh * cellSize);
-                    if (own[z] >= opp[z] + 2) {
+                    if (own[z] >= opp[z] + cm) {
                         ctx.fillStyle = 'rgba(30,30,30,0.16)';
-                    } else if (opp[z] >= own[z] + 2) {
+                    } else if (opp[z] >= own[z] + cm) {
                         ctx.fillStyle = 'rgba(255,255,255,0.28)';
                     } else {
                         continue;
                     }
                     ctx.fillRect(x0, y0, w2, h2);
-                    const dark = own[z] >= opp[z] + 2;
+                    const dark = own[z] >= opp[z] + cm;
                     ctx.fillStyle = dark ? 'rgba(15,15,15,0.55)' : 'rgba(255,255,255,0.7)';
                     const fx2 = x0 + w2 * 0.15, fy2 = y0 + h2 * 0.14;
                     ctx.fillRect(fx2 - cellSize * 0.015, fy2, cellSize * 0.03, cellSize * 0.32);

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'feintgo',
     spec: [
         ...K.rb('FEINTGO', '囮碁', 'feintgo'),
+        K.params([
+            { key: 'decoy_ttl', label: '囮石が消えるまでの手数', min: 1, max: 16, def: 4, unit: '手' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 囮石: 配置時に記録 (見た目・性質は通常石と同じ)
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -66,7 +70,7 @@ module.exports = {
             // 囮石の消滅: 配置から4手経つと消える
             Object.keys(st.decoys || {}).forEach(k => {
                 const i = +k;
-                if (history.length - st.decoys[i] >= 4 && (board[i] === 1 || board[i] === 2)) {
+                if (history.length - st.decoys[i] >= Math.max(1, P('decoy_ttl') || 4) && (board[i] === 1 || board[i] === 2)) {
                     board[i] = 0;
                     fxText(i, '消えた!', '#e879f9', 1000);
                     delete st.decoys[i];

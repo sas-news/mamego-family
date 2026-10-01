@@ -10,6 +10,11 @@ module.exports = {
     icon: 'dualphasego',
     spec: [
         ...K.rb('DUALPHASEGO', '二相碁', 'dualphasego'),
+        K.params([
+            { key: 'light_w', label: '白マスの呼吸倍率', min: 1, max: 4, step: 0.5, def: 2, unit: '倍' },
+            { key: 'dark_w', label: '黒マスの呼吸倍率', min: 0, max: 1, step: 0.25, def: 0.5, unit: '倍' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 80, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 二相: 市松盤。白マス (x+y が偶数) の石は呼吸点2倍、黒マスの石は0.5倍
         function isLightSq(x, y) { return (x + y) % 2 === 0; }`],
@@ -64,7 +69,7 @@ module.exports = {
                         const curr = queue.shift();
                         group.push(curr);
                         const cx = curr % BOARD_SIZE, cy = Math.floor(curr / BOARD_SIZE);
-                        const w = isLightSq(cx, cy) ? 2 : 0.5; // 白マスは呼吸2倍・黒マスは半分
+                        const w = isLightSq(cx, cy) ? (P('light_w') || 2) : (P('dark_w') ?? 0.5); // 白マスは呼吸2倍・黒マスは半分
 
                         const neighbors = getNeighbors(curr);
                         neighbors.forEach(n => {
@@ -122,7 +127,7 @@ module.exports = {
             while (queue.length > 0) {
                 const curr = queue.shift();
                 const cx = curr % BOARD_SIZE, cy = Math.floor(curr / BOARD_SIZE);
-                const w = isLightSq(cx, cy) ? 2 : 0.5;
+                const w = isLightSq(cx, cy) ? (P('light_w') || 2) : (P('dark_w') ?? 0.5);
                 const neighbors = getNeighbors(curr);
                 neighbors.forEach(n => {
                     if (boardState[n] === 0 && !deadMask[n]) {
@@ -156,7 +161,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 80) / 100))) {
                 endGameByScore();
                 return;
             }

@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'tesujigo',
     spec: [
         ...K.rb('TESUJIGO', '手筋碁', 'tesujigo'),
+        K.params([
+            { key: 'atari_bonus', label: 'アタリ手筋の得点', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'link_bonus', label: '連結手筋の得点', min: 0, max: 8, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.9, hint: '交点数比' },
+        ]),
         ...ST(ST_INIT),
         // 手筋判定: アタリ手筋 +2 / 連結手筋 +1
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -79,11 +84,11 @@ module.exports = {
                     }
                 });
                 if (__atari > 0) {
-                    st.bonus[player] = (st.bonus[player] || 0) + 2;
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('atari_bonus') ?? 2);
                     fxText(__pi, 'アタリ手筋 +2', '#f87171', 1100);
                     fxGlow(__pi, '#f87171', 800);
                 } else if (__ownGroups.size >= 2) {
-                    st.bonus[player] = (st.bonus[player] || 0) + 1;
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('link_bonus') ?? 1);
                     fxText(__pi, '連結手筋 +1', '#38bdf8', 1000);
                 }
             }

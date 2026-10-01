@@ -10,13 +10,18 @@ module.exports = {
     icon: 'cobwebgo',
     spec: [
         ...K.rb('COBWEBGO', '蛛網碁', 'cobwebgo'),
+        K.params([
+            { key: 'ring_step', label: '環状筋の間隔', min: 1, max: 4, def: 2, unit: '段', hint: '2=偶数距離の環のみ' },
+            { key: 'spoke_on', label: '放射筋', options: [{ v: 1, l: 'あり (十字)' }, { v: 0, l: 'なし' }], def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 蛛網: 中心からのチェビシェフ距離が偶数の環 + 十字の放射筋のみ着手可
         const WEB_C = Math.floor(BOARD_SIZE / 2);
         function isWebPoint(x, y) {
             const d = Math.max(Math.abs(x - WEB_C), Math.abs(y - WEB_C));
-            const ring = d > 0 && d % 2 === 0;
-            const spoke = x === WEB_C || y === WEB_C;
+            const ring = d > 0 && d % Math.max(1, P('ring_step') || 2) === 0;
+            const spoke = (x === WEB_C || y === WEB_C) && (P('spoke_on') ?? 1) === 1;
             return ring || spoke;
         }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -34,14 +39,16 @@ module.exports = {
                 const cc = padding + WEB_C * cellSize;
                 ctx.strokeStyle = 'rgba(226,232,240,0.30)';
                 ctx.lineWidth = Math.max(1, cellSize * 0.05);
-                for (let d = 2; d <= WEB_C; d += 2) {
+                for (let d = Math.max(1, P('ring_step') || 2); d <= WEB_C; d += Math.max(1, P('ring_step') || 2)) {
                     const r = d * cellSize;
                     ctx.strokeRect(cc - r, cc - r, r * 2, r * 2);
                 }
-                ctx.beginPath();
-                ctx.moveTo(padding, cc); ctx.lineTo(padding + (BOARD_SIZE - 1) * cellSize, cc);
-                ctx.moveTo(cc, padding); ctx.lineTo(cc, padding + (BOARD_SIZE - 1) * cellSize);
-                ctx.stroke();
+                if ((P('spoke_on') ?? 1) === 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(padding, cc); ctx.lineTo(padding + (BOARD_SIZE - 1) * cellSize, cc);
+                    ctx.moveTo(cc, padding); ctx.lineTo(cc, padding + (BOARD_SIZE - 1) * cellSize);
+                    ctx.stroke();
+                }
                 ctx.restore();
             }`),
         [K.ONE, K.INFO_ALGO, `            蛛網碁: 蜘蛛の巣状盤。環状筋と放射筋の交点だけが着手点<br>
@@ -54,7 +61,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

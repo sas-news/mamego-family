@@ -9,6 +9,9 @@ module.exports = {
     kind: 'echo',
     spec: [
         ...K.rb('ECHOLOCGO', '反響碁', 'echolocgo'),
+        K.params([
+            { key: 'sonar_range', label: '反響の届く範囲', min: 1, max: 6, def: 2, unit: 'マス' },
+        ]),
         [K.ONE, '        function drawBoardElements(padding, cellSize) {',
 `        // 反響碁: viewer の石から2マス以内の敵石だけが反響で見える
         function sonarSees(idx, viewer) {
@@ -16,7 +19,7 @@ module.exports = {
             for (let j = 0; j < board.length; j++) {
                 if (board[j] !== viewer) continue;
                 const jx = j % BOARD_SIZE, jy = Math.floor(j / BOARD_SIZE);
-                if (Math.max(Math.abs(jx - x), Math.abs(jy - y)) <= 2) return true;
+                if (Math.max(Math.abs(jx - x), Math.abs(jy - y)) <= (P('sonar_range') || 2)) return true;
             }
             return false;
         }
@@ -44,7 +47,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'反響: 自石の2マス以内のみ可視'`),
+        ...K.EVENT_CHIP_SPEC(`'反響: 自石の' + (P('sonar_range') || 2) + 'マス以内のみ可視'`),
         [K.ONE, K.INFO_ALGO, `            反響碁: 敵石は不可視。自分の石から2マス以内の敵石だけ反響で見える<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

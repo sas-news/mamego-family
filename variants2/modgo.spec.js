@@ -9,27 +9,32 @@ module.exports = {
     kind: 'modulo',
     spec: [
         ...K.rb('MODGO', '剰余碁', 'modgo'),
+        K.params([
+            { key: 'mod', label: '帯の数 (剰余)', min: 2, max: 6, def: 3, hint: 'x+y mod N が手数と一致する帯のみ着手可' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
             }
 
-            // 剰余碁ルール: (x+y) mod 3 が現在の許可帯 (手数-1 mod 3) と一致する点のみ
+            // 剰余碁ルール: (x+y) mod N が現在の許可帯 (手数-1 mod N) と一致する点のみ
             {
-                const allowed = history.length % 3;
+                const mm = Math.max(2, P('mod') || 3);
+                const allowed = history.length % mm;
                 for (const p of cells) {
-                    if ((p.x + p.y) % 3 !== allowed) return false;
+                    if ((p.x + p.y) % mm !== allowed) return false;
                 }
             }`],
-        ...K.EVENT_CHIP_SPEC(`'許可帯: x+y ≡ ' + (history.length % 3) + ' (mod 3)'`),
+        ...K.EVENT_CHIP_SPEC(`'許可帯: x+y ≡ ' + (history.length % Math.max(2, P('mod') || 3)) + ' (mod ' + Math.max(2, P('mod') || 3) + ')'`),
         ...K.LEGAL_DOTS_SPEC,
-        K.CUE_GRID(`            // 剰余帯: 3色の対角帯 (現在許可の帯は明るく大きく)
+        K.CUE_GRID(`            // 剰余帯: N色の対角帯 (現在許可の帯は明るく大きく)
             {
-                const band = history.length % 3;
-                const cols = ['rgba(110,160,235,', 'rgba(235,180,90,', 'rgba(190,130,225,'];
+                const mm = Math.max(2, P('mod') || 3);
+                const band = history.length % mm;
+                const cols = ['rgba(110,160,235,', 'rgba(235,180,90,', 'rgba(190,130,225,', 'rgba(120,220,160,', 'rgba(240,130,140,', 'rgba(140,170,255,'];
                 ctx.save();
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    const b = (x + y) % 3;
+                    const b = (x + y) % mm;
                     const cur = b === band;
                     ctx.fillStyle = cols[b] + (cur ? '0.30)' : '0.09)');
                     ctx.beginPath();

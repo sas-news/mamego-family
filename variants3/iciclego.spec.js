@@ -47,11 +47,15 @@ module.exports = {
     icon: 'iciclego',
     spec: [
         ...K.rb('ICICLEGO', '氷柱碁', 'iciclego'),
+        K.params([
+            { key: 'melt_hits', label: '溶解までの日射回数', min: 1, max: 5, def: 2, unit: '回' },
+            { key: 'sun_step', label: '陽射しの進み', min: 1, max: 3, def: 1, hint: '1手で進む列数' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 陽射し: 手数とともに盤を西から東へ巡る光の列
-        function iciSunX() { return history.length % BOARD_SIZE; }
-        const ICI_MELT = 2; // 二度晒されると溶ける`],
+        function iciSunX() { return (history.length * (P('sun_step') || 1)) % BOARD_SIZE; }
+        const ICI_MELT = 2; // 二度晒されると溶ける (日射回数は設定で調整)`],
         // 毎手、日の当たる列の石が熱を浴びる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -63,7 +67,7 @@ module.exports = {
                     const i = y * BOARD_SIZE + sx;
                     if (board[i] !== 1 && board[i] !== 2) { if (st.melt[i]) delete st.melt[i]; continue; }
                     st.melt[i] = (st.melt[i] || 0) + 1;
-                    if (st.melt[i] >= ICI_MELT) {
+                    if (st.melt[i] >= (P('melt_hits') || 2)) {
                         board[i] = 0;
                         delete st.melt[i];
                         fxSplash(i, '#7dd3fc', 10);

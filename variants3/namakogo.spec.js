@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -53,7 +53,7 @@ const SCORE_END = [
         }
         function _endGameByScoreCore() {`],
 ];
-const ST_INIT = `{ score: { 1: 0, 2: 0 }, _end: false, nextFire: 15 }`;
+const ST_INIT = `{ score: { 1: 0, 2: 0 }, _end: false, nextFire: (P('fire_interval') || 15) }`;
 module.exports = {
     file: 'namakogo.html',
     en: 'NAMAKOGO',
@@ -64,6 +64,11 @@ module.exports = {
     icon: 'namakogo',
     spec: [
         ...K.rb('NAMAKOGO', '鼠壁碁', 'namakogo'),
+        K.params([
+            { key: 'fire_interval', label: '火事の間隔', min: 5, max: 40, def: 15, unit: '手' },
+            { key: 'fire_proof', label: '耐火の連サイズ', min: 1, max: 8, def: 3, unit: '石', hint: 'この数以上の連は火事で焼けない' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -72,7 +77,7 @@ module.exports = {
 
             // 鼠壁火事: nextFire手ごとに3x3区域に火が入る。小連(2石以下)は焼失
             if (history.length === st.nextFire) {
-                st.nextFire += 15;
+                st.nextFire += (P('fire_interval') || 15);
                 const fx = 1 + Math.floor(Math.random() * (BOARD_SIZE - 2));
                 const fy = 1 + Math.floor(Math.random() * (BOARD_SIZE - 2));
                 for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
@@ -80,7 +85,7 @@ module.exports = {
                     const v = board[idx];
                     if (v === 0) continue;
                     const g = getConnectedGroup(idx, v);
-                    if (g.length <= 2) {
+                    if (g.length < (P('fire_proof') || 3)) {
                         g.forEach(i => { if (board[i] === v) board[i] = 0; });
                         captures[v === 1 ? 2 : 1] += g.length;
                     }

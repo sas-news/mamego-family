@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,17 +47,24 @@ module.exports = {
     icon: 'defergo',
     spec: [
         ...K.rb('DEFERGO', '延期碁', 'defergo'),
+        K.params([
+            { key: 'save_max', label: '貯蓄の上限', min: 4, max: 30, def: 12, unit: '点' },
+            { key: 'draw_cost', label: '引出の消費点', min: 1, max: 6, def: 3, unit: '点' },
+            { key: 'defer_gain', label: '預けるの貯蓄', min: 1, max: 5, def: 2, unit: '点' },
+            { key: 'interest', label: '利子', min: 0, max: 3, def: 1, unit: '点' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 75, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         ...ST(ST_INIT),
         // 利子: 自分の着手ごとに貯蓄+1 (上限12)。引出モード中は貯蓄3点で手番継続
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 延期の利子: 着手ごとに貯蓄+1 (上限12)
-            st.save[player] = Math.min(12, st.save[player] + 1);
+            st.save[player] = Math.min((P('save_max') || 12), st.save[player] + (P('interest') ?? 1));
 
             // 引出: 貯蓄3点を消費して手番を継続
-            if (st.burst[player] && st.save[player] >= 3) {
-                st.save[player] -= 3;
+            if (st.burst[player] && st.save[player] >= (P('draw_cost') || 3)) {
+                st.save[player] -= (P('draw_cost') || 3);
                 turn = player;
                 fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '引出!', '#34d399', 900);
             } else {
@@ -87,7 +94,7 @@ module.exports = {
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
             const p = turn;
             handlePass(); // 延期 = パス + 貯蓄2点
-            st.save[p] = Math.min(12, st.save[p] + 2);
+            st.save[p] = Math.min((P('save_max') || 12), st.save[p] + (P('defer_gain') || 2));
             updateUI();
         });
         btnDraw.addEventListener('click', () => {
@@ -97,7 +104,7 @@ module.exports = {
             render();
             updateUI();
         });`],
-        ...K.EVENT_CHIP_SPEC(`'貯蓄 ' + st.save[turn] + '/12' + (st.burst[turn] ? ' / 引出中' : '')`),
+        ...K.EVENT_CHIP_SPEC(`'貯蓄 ' + st.save[turn] + '/' + (P('save_max') || 12) + (st.burst[turn] ? ' / 引出中' : '')`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            延期碁: 「預ける」で着手を延期し貯蓄。着手毎に利子が付き、3点で1手を引出せる<br>
             PC: クリックで配置 / 「預ける」=延期+貯蓄、「引出」=連打モード<br>

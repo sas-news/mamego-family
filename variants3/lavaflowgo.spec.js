@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,10 @@ module.exports = {
     icon: 'lavaflowgo',
     spec: [
         ...K.rb('LAVAFLOWGO', '溶岩碁', 'lavaflowgo'),
+        K.params([
+            { key: 'hot_age', label: '灼熱の手数', min: 1, max: 10, def: 3, hint: '配置からこの手数の間は取られない' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST('{ born: {} }'),
         // 着手時に石の生成手を記録する
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -66,8 +70,8 @@ module.exports = {
 `                    while (queue.length > 0) {
                         const curr = queue.shift();
                         group.push(curr);
-                        // 灼熱 (生後3手未満) の石を含む連は呼吸あり
-                        if (history.length - (st.born[curr] || 0) < 3) hasLiberty = true;`],
+                        // 灼熱 (生後 hot_age 手未満) の石を含む連は呼吸あり
+                        if (history.length - (st.born[curr] || 0) < Math.max(1, P('hot_age') || 3)) hasLiberty = true;`],
         // 灼熱の石は橙に脈動する光輪
         ...K.STONE_MARKS_SPEC(`            // 灼熱溶岩: 新しい石は橙に脈動して光る
             {
@@ -77,7 +81,7 @@ module.exports = {
                     const idx = +k;
                     if (board[idx] !== 1 && board[idx] !== 2) continue;
                     const age = history.length - st.born[k];
-                    if (age >= 3) continue;
+                    if (age >= Math.max(1, P('hot_age') || 3)) continue;
                     const x = idx % BOARD_SIZE, y = (idx / BOARD_SIZE) | 0;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
                     const ph = 0.5 + 0.5 * Math.sin(now / 240 + idx);

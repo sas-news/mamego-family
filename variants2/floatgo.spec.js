@@ -9,12 +9,15 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('FLOATGO', '浮遊碁', 'floatgo'),
+        K.params([
+            { key: 'float_interval', label: '浮上の間隔', min: 1, max: 12, def: 3, unit: '手' },
+        ]),
         // 3手ごと、上に行き場のある連がまるごと1マス浮上
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 浮遊ルール: 3手ごとに、各連について全セルの真上が空(または連内)なら連ごと1マス浮く
-            if (history.length % 3 === 0) {
+            if (history.length % Math.max(1, P('float_interval') || 3) === 0) {
                 const N = BOARD_SIZE;
                 const seen = new Uint8Array(N * N);
                 for (let s = 0; s < board.length; s++) {

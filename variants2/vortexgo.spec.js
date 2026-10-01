@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('VORTEXGO', '渦模様碁', 'vortexgo'),
+        K.params([
+            { key: 'wall_div', label: '渦の腕の間隔', min: 2, max: 6, def: 3, hint: '小さいほど腕の壁が密' },
+            { key: 'cap_rows', label: '打ち切り手数 (盤+N行)', min: 1, max: 8, def: 2, unit: '行' },
+        ]),
         // 角度+半径の螺旋判定で渦状の腕壁
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
@@ -18,7 +22,7 @@ module.exports = {
                     const d = Math.max(Math.abs(dx), Math.abs(dy));
                     if (d === 0) continue;
                     const t = Math.atan2(dy, dx);
-                    const band = Math.floor(((t + Math.PI) / (Math.PI * 2)) * 12 + d) % 3;
+                    const band = Math.floor(((t + Math.PI) / (Math.PI * 2)) * 12 + d) % Math.max(2, P('wall_div') || 3);
                     if (band === 0) board[y * BOARD_SIZE + x] = 3;
                 }
             }`],
@@ -91,7 +95,7 @@ module.exports = {
         // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + Math.max(1, P('cap_rows') || 2))) {
                 endGameByScore();
                 return;
             }

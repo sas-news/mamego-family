@@ -10,11 +10,18 @@ module.exports = {
     icon: 'framego',
     spec: [
         ...K.rb('FRAMEGO', '骨組碁', 'framego'),
+        K.params([
+            { key: 'pillar_pts', label: '柱1本の得点', min: 1, max: 4, def: 1, unit: '目' },
+            { key: 'beam_pts', label: '梁1本の得点', min: 1, max: 4, def: 1, unit: '目' },
+            { key: 'beam_len', label: '梁になる長さ', min: 2, max: 6, def: 3, unit: '連' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let frameDetail = { 1: 0, 2: 0 }; // 直近終局で計上した柱+梁ボーナス`],
         [K.ONE, `            const territory = calculateTerritory();`,
 `            const territory = calculateTerritory();
             // 骨組ルール: 星点上の自石は「柱」+1目、縦横に3個以上連なる同色の並びは「梁」+1目/本
+            const _pp = P('pillar_pts') || 1, _bp = P('beam_pts') || 1, _bl = P('beam_len') || 3;
             let pB = 0, pW = 0, bB = 0, bW = 0;
             getStarPoints(BOARD_SIZE).forEach(pt => {
                 const i = pt.y * BOARD_SIZE + pt.x;
@@ -25,7 +32,7 @@ module.exports = {
                 for (let x = 0; x <= BOARD_SIZE; x++) {
                     const v = x < BOARD_SIZE ? board[y * BOARD_SIZE + x] : 0;
                     if (v === col) { run++; continue; }
-                    if (run >= 3) { if (col === 1) bB++; else if (col === 2) bW++; }
+                    if (run >= _bl) { if (col === 1) bB++; else if (col === 2) bW++; }
                     col = v; run = 1;
                 }
             }
@@ -34,18 +41,18 @@ module.exports = {
                 for (let y = 0; y <= BOARD_SIZE; y++) {
                     const v = y < BOARD_SIZE ? board[y * BOARD_SIZE + x] : 0;
                     if (v === col) { run++; continue; }
-                    if (run >= 3) { if (col === 1) bB++; else if (col === 2) bW++; }
+                    if (run >= _bl) { if (col === 1) bB++; else if (col === 2) bW++; }
                     col = v; run = 1;
                 }
             }
-            frameDetail = { 1: pB + bB, 2: pW + bW };
-            territory.black += pB + bB;
-            territory.white += pW + bW;`],
+            frameDetail = { 1: pB * _pp + bB * _bp, 2: pW * _pp + bW * _bp };
+            territory.black += pB * _pp + bB * _bp;
+            territory.white += pW * _pp + bW * _bp;`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

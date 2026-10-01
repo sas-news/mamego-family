@@ -9,16 +9,21 @@ module.exports = {
     kind: 'dart',
     spec: [
         ...K.rb('DARTSGO', '的碁', 'dartsgo'),
+        K.params([
+            { key: 'dart_radius', label: '的の半径', min: 1, max: 4, def: 2, hint: 'このマンハッタン距離以内が得点圏' },
+            { key: 'dart_bull', label: '中心の得点', min: 1, max: 9, def: 3, unit: '点' },
+        ]),
         // 的得点ヘルパー (終局時加算)
         [K.ONE, `        function endGameByScore() {`, `
-        // 的ボーナス: 天元からのマンハッタン距離2以内の自石に (3-距離) 点
+        // 的ボーナス: 天元からのマンハッタン距離(的の半径)以内の自石に (中心の得点-距離) 点
         function dartScore(player) {
             const cc = Math.floor(BOARD_SIZE / 2);
+            const rad = P('dart_radius') || 2, bull = P('dart_bull') || 3;
             let s = 0;
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 if (board[y * BOARD_SIZE + x] !== player) continue;
                 const d = Math.abs(x - cc) + Math.abs(y - cc);
-                if (d <= 2) s += 3 - d;
+                if (d <= rad) s += Math.max(0, bull - d);
             }
             return s;
         }
@@ -42,14 +47,14 @@ module.exports = {
                 const cc = Math.floor(BOARD_SIZE / 2);
                 move.cells.forEach(p => {
                     const d = Math.abs(p.x - cc) + Math.abs(p.y - cc);
-                    if (d > 2) return;
+                    if (d > (P('dart_radius') || 2)) return;
                     const i = p.y * BOARD_SIZE + p.x;
                     if (d === 0) {
                         fxGlow(i, '#facc15', 1000);
                         fxBurst(i, '#fca5a5', 10, 1.4);
                         fxText(i, 'BULL!', '#facc15', 1300);
                     } else {
-                        fxText(i, '+' + (3 - d), '#fca5a5', 1000);
+                        fxText(i, '+' + Math.max(0, (P('dart_bull') || 3) - d), '#fca5a5', 1000);
                     }
                 });
             }
@@ -62,8 +67,9 @@ module.exports = {
                 ctx.save();
                 ctx.strokeStyle = '#dc2626';
                 ctx.lineWidth = Math.max(1, cellSize * 0.04);
-                for (let r = 2; r >= 1; r--) {
-                    ctx.globalAlpha = r === 2 ? 0.45 : 0.6;
+                const rad = Math.max(1, P('dart_radius') || 2);
+                for (let r = rad; r >= 1; r--) {
+                    ctx.globalAlpha = r === rad ? 0.45 : 0.6;
                     ctx.beginPath();
                     ctx.arc(bx, by, r * cellSize, 0, Math.PI * 2);
                     ctx.stroke();

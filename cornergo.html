@@ -251,6 +251,12 @@
                 <div id="onlineRoomStatus" class="text-center font-bold text-neutral-600 pt-1"></div>
             </div>
 
+            <!-- バリアント固有設定 (VPARAMSがあるゲームのみ表示) -->
+            <div id="variantParamsBox" class="hidden p-3 bg-amber-50 rounded-xl border border-amber-200 flex flex-col gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-neutral-500">このゲームの設定</span>
+                <div id="variantParams" class="flex flex-col gap-3"></div>
+            </div>
+
             <!-- 4. サウンド設定 -->
             <div class="flex items-center justify-between pt-1">
                 <span class="text-sm font-bold text-neutral-700">効果音 (SE)</span>
@@ -309,6 +315,77 @@
     </div>
 
     <script>
+        // === バリアント固有パラメータ ===
+        // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
+        // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
+        const VPARAMS = [{"key":"shoal_size","label":"隅の洲の広さ","min":1,"max":6,"def":3,"unit":"マス","hint":"四隅の常時着手可区域の一辺"}];
+        const VPAR_MAP = {};
+        const VPAR_SAVED = (() => {
+            try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
+            catch (e) { return {}; }
+        })();
+        VPARAMS.forEach(p => {
+            if (p.val === undefined) p.val = VPAR_SAVED[p.key] !== undefined ? VPAR_SAVED[p.key] : p.def;
+            VPAR_MAP[p.key] = p;
+        });
+        const P = k => (VPAR_MAP[k] ? VPAR_MAP[k].val : undefined);
+        function saveVpar() {
+            try {
+                const o = {};
+                VPARAMS.forEach(p => { if (p.val !== p.def) o[p.key] = p.val; });
+                localStorage.setItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : ''), JSON.stringify(o));
+            } catch (e) {}
+        }
+        // 設定モーダルの「このゲームの設定」に VPARAMS 分のUIを生成
+        function initVariantParams() {
+            const box = document.getElementById('variantParamsBox');
+            const list = document.getElementById('variantParams');
+            if (!box || !list || !VPARAMS.length) return;
+            box.classList.remove('hidden');
+            const fmt = (p, v) => (p.step && p.step < 1 ? Number(v).toFixed(1) : String(v)) + (p.unit || '');
+            VPARAMS.forEach(p => {
+                const wrap = document.createElement('div');
+                wrap.className = 'flex flex-col gap-1';
+                const head = document.createElement('div');
+                head.className = 'flex justify-between text-xs font-bold text-neutral-600';
+                const lab = document.createElement('span');
+                lab.textContent = p.label + (p.hint ? ` (${p.hint})` : '');
+                const valEl = document.createElement('span');
+                valEl.className = 'text-amber-700';
+                valEl.textContent = fmt(p, p.val);
+                head.appendChild(lab); head.appendChild(valEl);
+                wrap.appendChild(head);
+                const applyVal = v => {
+                    p.val = v;
+                    valEl.textContent = fmt(p, p.val);
+                    saveVpar();
+                    if (typeof onVariantParam === 'function') onVariantParam(p);
+                };
+                if (p.options) {
+                    const sel = document.createElement('select');
+                    sel.className = 'w-full border border-neutral-300 rounded-lg py-1.5 text-sm font-bold bg-white';
+                    p.options.forEach(o => {
+                        const op = document.createElement('option');
+                        op.value = o.v; op.textContent = o.l;
+                        sel.appendChild(op);
+                    });
+                    sel.value = p.val;
+                    sel.addEventListener('change', () => {
+                        const num = parseFloat(sel.value);
+                        applyVal(isNaN(num) ? sel.value : num);
+                    });
+                    wrap.appendChild(sel);
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'range'; inp.min = p.min; inp.max = p.max; inp.step = p.step || 1; inp.value = p.val;
+                    inp.className = 'w-full accent-amber-600';
+                    inp.addEventListener('input', () => applyVal(parseFloat(inp.value)));
+                    wrap.appendChild(inp);
+                }
+                list.appendChild(wrap);
+            });
+        }
+        initVariantParams();
         // ==========================================
         // 1. カラーテーマ定義
         // ==========================================
@@ -882,11 +959,12 @@
         let obstaclePainter = null;
         fxAmbient((ctx2, now, pad, cs) => {
             const M = BOARD_SIZE - 1;
+            const S = Math.max(1, P('shoal_size') || 3);
             ctx2.save();
             ctx2.strokeStyle = '#bee3f8';
             ctx2.lineWidth = Math.max(1, cs * 0.04);
-            [[0, 0], [M - 2, 0], [0, M - 2], [M - 2, M - 2]].forEach(([sx, sy], k) => {
-                const cx = pad + (sx + 1) * cs, cy = pad + (sy + 1) * cs;
+            [[0, 0], [M - S + 1, 0], [0, M - S + 1], [M - S + 1, M - S + 1]].forEach(([sx, sy], k) => {
+                const cx = pad + (sx + (S - 1) / 2) * cs, cy = pad + (sy + (S - 1) / 2) * cs;
                 const ph = Math.sin(now / 620 + k * 1.5);
                 ctx2.globalAlpha = 0.18 + ph * 0.14;
                 ctx2.beginPath();
@@ -1090,16 +1168,17 @@
             // 隅田川: 四隅の洲域を浅瀬色で照らす
             {
                 const M = BOARD_SIZE - 1;
+                const S = Math.max(1, P('shoal_size') || 3);
                 ctx.save();
                 const cell = (x, y) => {
                     const gx = padding + (x - 0.5) * cellSize, gy = padding + (y - 0.5) * cellSize;
-                    const g = ctx.createLinearGradient(gx, gy, gx, gy + cellSize * 3);
+                    const g = ctx.createLinearGradient(gx, gy, gx, gy + cellSize * S);
                     g.addColorStop(0, 'rgba(125,190,220,0.30)');
                     g.addColorStop(1, 'rgba(80,140,190,0.16)');
                     ctx.fillStyle = g;
-                    ctx.fillRect(gx, gy, cellSize * 3, cellSize * 3);
+                    ctx.fillRect(gx, gy, cellSize * S, cellSize * S);
                 };
-                cell(0, 0); cell(M - 2, 0); cell(0, M - 2); cell(M - 2, M - 2);
+                cell(0, 0); cell(M - S + 1, 0); cell(0, M - S + 1); cell(M - S + 1, M - S + 1);
                 ctx.restore();
             }
 
@@ -1741,12 +1820,13 @@
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
             }
 
-            // 隅田川碁ルール: 四隅の3x3洲域、または自石に直交隣接する点のみ着手可
+            // 隅田川碁ルール: 四隅の洲域、または自石に直交隣接する点のみ着手可
             {
                 const M = BOARD_SIZE - 1;
+                const S = Math.max(1, P('shoal_size') || 3) - 1; // 洲の一辺-1
                 const inShoal = (x, y) =>
-                    (x <= 2 && y <= 2) || (x >= M - 2 && y <= 2) ||
-                    (x <= 2 && y >= M - 2) || (x >= M - 2 && y >= M - 2);
+                    (x <= S && y <= S) || (x >= M - S && y <= S) ||
+                    (x <= S && y >= M - S) || (x >= M - S && y >= M - S);
                 for (const p of cells) {
                     if (inShoal(p.x, p.y)) continue; // 隅の洲は常に開かれている
                     const idx = p.y * BOARD_SIZE + p.x;

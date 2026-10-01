@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= Math.max(1, P('cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'mosquitogo',
     spec: [
         ...K.rb('MOSQUITOGO', '吸血碁', 'mosquitogo'),
+        K.params([
+            { key: 'bite_pts', label: '吸血1箇所の得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap', label: '打ち切り手数', min: 60, max: 400, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { bonus: { 1: 0, 2: 0 }, bitten: {} }; // 吸った目・吸血済みの敵石`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -64,7 +68,7 @@ module.exports = {
                     }
                 });
                 if (sucked) {
-                    st.bonus[player] += sucked;
+                    st.bonus[player] += sucked * (P('bite_pts') ?? 1);
                     fxText(li, '吸血 +' + sucked + '目', '#ef4444', 1100);
                 }
             }

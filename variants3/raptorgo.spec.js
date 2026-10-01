@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'raptorgo',
     spec: [
         ...K.rb('RAPTORGO', '猛禽碁', 'raptorgo'),
+        K.params([
+            { key: 'hunt_max', label: '獲物を狙う距離', min: 2, max: 8, def: 4, unit: 'マス' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 猛禽ルール: 周囲に石のない孤立着手は急降下 — 4目以内の孤立敵石を狩る
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -67,7 +71,7 @@ module.exports = {
                         if (!getNeighbors(i).every(n => board[n] !== opponent)) continue; // 連のある敵は逃げる
                         const dx = (i % BOARD_SIZE) - mx, dy = Math.floor(i / BOARD_SIZE) - my;
                         const d = Math.abs(dx) + Math.abs(dy);
-                        if (d >= 2 && d <= 4 && d < bestD) { best = i; bestD = d; }
+                        if (d >= 2 && d <= Math.max(2, P('hunt_max') || 4) && d < bestD) { best = i; bestD = d; }
                     }
                     if (best >= 0) {
                         board[best] = 0;

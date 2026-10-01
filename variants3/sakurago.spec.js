@@ -46,6 +46,10 @@ module.exports = {
     icon: 'sakurago',
     spec: [
         ...K.rb('SAKURAGO', '桜碁', 'sakurago'),
+        K.params([
+            { key: 'bloom_turns', label: '散るまでの手数', min: 2, max: 15, def: 6, unit: '手' },
+            { key: 'petal_pts', label: '花びら1つの得点', min: 1, max: 4, def: 1, unit: '点' },
+        ]),
         ...ST('{ born: {}, petal: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -57,7 +61,7 @@ module.exports = {
                 for (const k in st.born) {
                     const idx = +k;
                     if (board[idx] !== 1 && board[idx] !== 2) { delete st.born[k]; continue; }
-                    if (history.length - st.born[k] >= 6) {
+                    if (history.length - st.born[k] >= Math.max(1, P('bloom_turns') || 6)) {
                         const col = board[idx];
                         board[idx] = 0;
                         delete st.born[k];
@@ -95,8 +99,8 @@ module.exports = {
 `            const territory = calculateTerritory();
             for (const k in st.petal) {
                 if (board[k] !== 0) continue;
-                if (st.petal[k] === 1) territory.black += 1;
-                else territory.white += 1;
+                if (st.petal[k] === 1) territory.black += Math.max(1, P('petal_pts') || 1);
+                else territory.white += Math.max(1, P('petal_pts') || 1);
             }`],
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            桜碁: 置いて6手で石は散って消え、跡と隣の空点に領地の花びら (+1目) を残す<br>

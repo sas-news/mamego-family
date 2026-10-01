@@ -9,28 +9,31 @@ module.exports = {
     kind: 'cloak',
     spec: [
         ...K.rb('CLOAKGO', '隠密碁', 'cloakgo'),
+        K.params([
+            { key: 'cloak_count', label: '隠密石の数', min: 1, max: 10, def: 3, unit: '個', hint: '各側の最初の何着手がクロークされるか' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        let st = { left: { 1: 3, 2: 3 } }; // 隠密碁: 各側の隠し石の残り枠`],
+        let st = { left: { 1: P('cloak_count') || 3, 2: P('cloak_count') || 3 } }; // 隠密碁: 各側の隠し石の残り枠`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
-            st = { left: { 1: 3, 2: 3 } };`],
+            st = { left: { 1: P('cloak_count') || 3, 2: P('cloak_count') || 3 } };`],
         [K.ONE, K.SNAP_PUSH, `                heldPieces: { ...heldPieces },
                 st: JSON.parse(JSON.stringify(st)),
                 holdUsed
             });`],
         [K.ONE, K.SNAP_POP, K.SNAP_POP + `
-            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { left: { 1: 3, 2: 3 } };`],
+            st = snap.st ? JSON.parse(JSON.stringify(snap.st)) : { left: { 1: P('cloak_count') || 3, 2: P('cloak_count') || 3 } };`],
         [K.ONE, K.SAVE_TAIL, `                    heldPieces,
                     st,
                     holdUsed,
                     gameMode,`],
         [K.ONE, K.LOAD_HOLD, K.LOAD_HOLD + `
-            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { left: { 1: 3, 2: 3 } };`],
+            st = s.st ? JSON.parse(JSON.stringify(s.st)) : { left: { 1: P('cloak_count') || 3, 2: P('cloak_count') || 3 } };`],
         [K.ONE, K.ONLINE_SEND, `                heldPieces,
                 st,
                 holdUsed,
                 deadStones: [...deadStones],`],
         [K.ONE, K.ONLINE_RECV, K.ONLINE_RECV + `
-            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { left: { 1: 3, 2: 3 } };`],
+            st = data.st ? JSON.parse(JSON.stringify(data.st)) : { left: { 1: P('cloak_count') || 3, 2: P('cloak_count') || 3 } };`],
         // 配置時: 隠密枠が残っていればその石はクロークされる
         [K.ONE, K.PIECES_PUSH, `            pieces.push({
                 id: Date.now() + Math.random(),

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'chisengo',
     spec: [
         ...K.rb('CHISENGO', '池泉碁', 'chisengo'),
+        K.params([
+            { key: 'pond_pts', label: '景石ボーナス', min: 0, max: 5, def: 2, unit: '目/個' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 池泉: 中央の十字形の池 (board=3 = 水場・着手不可・呼吸点にもならない)
         function pondIdxs() {
@@ -46,7 +50,7 @@ module.exports = {
                 if (board[i] !== player) continue;
                 if (getNeighbors(i).some(m => pond.has(m))) n++;
             }
-            return n * 2;
+            return n * (P('pond_pts') ?? 2);
         }
 
         function endGameByScore() {`],
@@ -60,7 +64,7 @@ module.exports = {
         // 水面テクスチャ + 壁ガード
         [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_WATER('#1d6fa5', '#0a2f4a'))],
         ...K.WALL_GUARD_SPEC,
-        ...K.EVENT_CHIP_SPEC(`'景石 黒' + (pondBonus(1) / 2) + '/白' + (pondBonus(2) / 2)`),
+        ...K.EVENT_CHIP_SPEC(`'景石 黒' + (pondBonus(1) / Math.max(1, P('pond_pts') ?? 2)) + '/白' + (pondBonus(2) / Math.max(1, P('pond_pts') ?? 2))`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            池泉碁: 中央の十字形の池は着手不可の水場。池に面した景石ごとに+2目<br>
             PC: クリックで配置<br>

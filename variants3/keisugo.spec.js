@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'keisugo',
     spec: [
         ...K.rb('KEISUGO', '磬子碁', 'keisugo'),
+        K.params([
+            { key: 'kei_interval', label: '磬が鳴る間隔', min: 2, max: 15, def: 5, unit: '手' },
+            { key: 'kei_pts', label: '磬の功徳', min: 0, max: 10, def: 3, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 磬: 自分の5手ごとに鳴って+3
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -54,16 +59,16 @@ module.exports = {
 
             // 磬子ルール: 自分の5手ごとに磬が鳴り節目の功徳 +3
             st.pcnt[player] = (st.pcnt[player] || 0) + 1;
-            if (st.pcnt[player] % 5 === 0) {
+            if (st.pcnt[player] % Math.max(1, P('kei_interval') || 5) === 0) {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                captures[player] += 3;
+                captures[player] += (P('kei_pts') ?? 3);
                 fxGlow(mi, '#a5b4fc', 900);
-                fxText(mi, '磬 +3', '#818cf8', 1300);
+                fxText(mi, '磬 +' + (P('kei_pts') ?? 3), '#818cf8', 1300);
                 fxShake(3, 260);
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'磬まで ' + (5 - (st.pcnt[turn] % 5)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'磬まで ' + (Math.max(1, P('kei_interval') || 5) - (st.pcnt[turn] % Math.max(1, P('kei_interval') || 5))) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            磬子碁: 自分の5手ごとに磬が鳴り、法会の節目として+3目<br>
             PC: クリックで配置<br>

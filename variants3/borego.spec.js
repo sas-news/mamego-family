@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,14 +47,21 @@ module.exports = {
     icon: 'borego',
     spec: [
         ...K.rb('BOREGO', '削岩碁', 'borego'),
+        K.params([
+            { key: 'rock_layers', label: '岩盤の厚さ', min: 1, max: 4, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         ...ST(ST_INIT),
 
         // 初期盤: 外周を岩盤(3)で塞ぐ
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         const boreRock = () => {
-            for (let i = 0; i < BOARD_SIZE; i++) {
-                board[i] = 3; board[(BOARD_SIZE - 1) * BOARD_SIZE + i] = 3;
-                board[i * BOARD_SIZE] = 3; board[i * BOARD_SIZE + BOARD_SIZE - 1] = 3;
+            const rl = Math.max(1, Math.min(4, P('rock_layers') || 1));
+            for (let k = 0; k < rl; k++) {
+                for (let i = k; i < BOARD_SIZE - k; i++) {
+                    board[k * BOARD_SIZE + i] = 3; board[(BOARD_SIZE - 1 - k) * BOARD_SIZE + i] = 3;
+                    board[i * BOARD_SIZE + k] = 3; board[i * BOARD_SIZE + BOARD_SIZE - 1 - k] = 3;
+                }
             }
         };`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `

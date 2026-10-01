@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,7 +27,11 @@ module.exports = {
     icon: 'liondancego',
     spec: [
         ...K.rb('LIONDANCEGO', '獅子舞碁', 'liondancego'),
-        // 獅子噛み: 隣の敵連 (3石以下) の中で最も呼吸点の少ない石を1つ噛み落とす
+        K.params([
+            { key: 'bite_max', label: '噛める敵連の大きさ', min: 1, max: 8, def: 3, hint: 'この石数以下の敵連に噛み付く' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
+        // 獅子噛み: 隣の敵連 (bite_max 石以下) の中で最も呼吸点の少ない石を1つ噛み落とす
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
@@ -40,7 +44,7 @@ module.exports = {
                 getNeighbors(si).forEach(n => {
                     if (board[n] !== opponent || seen.has(n)) return;
                     const grp = getConnectedGroup(n, opponent);
-                    if (grp.length > 3) { grp.forEach(g => seen.add(g)); return; }
+                    if (grp.length > Math.max(1, P('bite_max') || 3)) { grp.forEach(g => seen.add(g)); return; }
                     grp.forEach(g => seen.add(g));
                     grp.forEach(g => {
                         const lib = getLiberties(board, g);
@@ -76,7 +80,7 @@ module.exports = {
                     const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
                     const hasPrey = getNeighbors(i).some(n => {
                         if (board[n] !== (turn === 1 ? 2 : 1)) return false;
-                        return getConnectedGroup(n, board[n]).length <= 3;
+                        return getConnectedGroup(n, board[n]).length <= Math.max(1, P('bite_max') || 3);
                     });
                     if (!hasPrey) continue;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;

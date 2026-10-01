@@ -10,12 +10,13 @@ module.exports = {
     icon: 'predatorgo',
     spec: [
         ...K.rb('PREDATORGO', '捕食碁', 'predatorgo'),
+        K.params([{ key: 'lv_max', label: '強さLvの上限', min: 2, max: 6, def: 3 }, { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 300, def: 140, unit: '手' }]),
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        // 石の強さLv = 1 + 直交隣接する同色の数 (最大3)
         function predLv(i, player) {
             let n = 0;
             getNeighbors(i).forEach(m => { if (board[m] === player) n++; });
-            return Math.min(3, 1 + n);
+            return Math.min((P('lv_max') || 3), 1 + n);
         }
 
         function isValidPlacement(cells, player) {`],
@@ -45,7 +46,7 @@ module.exports = {
                 }
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         // Lv2以上の石に牙マーク

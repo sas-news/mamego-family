@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -48,6 +48,11 @@ module.exports = {
     icon: 'afterimagego',
     spec: [
         ...K.rb('AFTERIMAGEGO', '残響碁', 'afterimagego'),
+        K.params([
+            { key: 'echo_life', label: '残響の持続', min: 10, max: 90, def: 30, unit: '手' },
+            { key: 'res_bonus', label: '共鳴石ボーナス', min: 0, max: 4, def: 1, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 配置: 残響を刻み、自分の残響の上なら共鳴石になる
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -56,7 +61,7 @@ module.exports = {
                 board[gi] = player;
                 // 残響の上に置くと共鳴 (30手以内の自分の残響)
                 const e = st.echo[gi];
-                if (e && e.p === player && history.length - e.at <= 30) {
+                if (e && e.p === player && history.length - e.at <= (P('echo_life') || 30)) {
                     st.res.push(gi);
                     fxText(gi, '共鳴!', '#c084fc', 1100);
                 }
@@ -82,15 +87,15 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 残響の掃除: 30手経った残響は消え、盤上に無い共鳴も外す
-            Object.keys(st.echo).forEach(k => { if (history.length - st.echo[k].at > 30) delete st.echo[k]; });
+            Object.keys(st.echo).forEach(k => { if (history.length - st.echo[k].at > (P('echo_life') || 30)) delete st.echo[k]; });
             st.res = st.res.filter(i => board[i] !== 0);
 
             turn = opponent;`],
         // 共鳴石を得点に加算
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
-`            const blackRes = st.res.filter(i => board[i] === 1).length;
-            const whiteRes = st.res.filter(i => board[i] === 2).length;
+`            const blackRes = st.res.filter(i => board[i] === 1).length * (P('res_bonus') ?? 1);
+            const whiteRes = st.res.filter(i => board[i] === 2).length * (P('res_bonus') ?? 1);
             const blackTotal = territory.black + captures[1] + blackRes;
             const whiteTotal = territory.white + captures[2] + komi + whiteRes;`],
         // 残響 (薄い色の環) と共鳴石 (二重環)

@@ -29,7 +29,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -45,6 +45,10 @@ module.exports = {
     icon: 'mochigo',
     spec: [
         ...K.rb('MOCHIGO', '鏡餅碁', 'mochigo'),
+        K.params([
+            { key: 'max_level', label: '餅の最大段数', min: 1, max: 5, def: 2, hint: '重ねられる段数 (基本の石を含まない)' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 餅の段数: 0=平たい餅 1=二段 2=三段 (鏡餅)
         let mochi = ${LV()};`],
@@ -56,14 +60,14 @@ module.exports = {
                 const p0 = cells[0];
                 if (p0.x < 0 || p0.x >= BOARD_SIZE || p0.y < 0 || p0.y >= BOARD_SIZE) return false;
                 const v = board[p0.y * BOARD_SIZE + p0.x];
-                if (v !== 0 && !(v === player && mochi[p0.y * BOARD_SIZE + p0.x] < 2)) return false;
+                if (v !== 0 && !(v === player && mochi[p0.y * BOARD_SIZE + p0.x] < (P('max_level') || 2))) return false;
             }`],
         // 着手実行: 重ねは段加算、通常置きはピース登録
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
 `            const __stackIdx = move.cells.length === 1 && board[move.cells[0].y * BOARD_SIZE + move.cells[0].x] === player
                 ? move.cells[0].y * BOARD_SIZE + move.cells[0].x : -1;
             if (__stackIdx >= 0) {
-                mochi[__stackIdx] = Math.min(2, mochi[__stackIdx] + 1);
+                mochi[__stackIdx] = Math.min(P('max_level') || 2, mochi[__stackIdx] + 1);
                 fxBurst(__stackIdx, '#fde68a', 8);
             } else {
                 move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });

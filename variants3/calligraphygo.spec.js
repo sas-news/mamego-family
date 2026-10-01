@@ -10,6 +10,10 @@ module.exports = {
     icon: 'calligraphygo',
     spec: [
         ...K.rb('CALLIGRAPHYGO', '書道碁', 'calligraphygo'),
+        K.params([
+            { key: 'brush_mult', label: '筆流の得点係数', min: 1, max: 3, def: 1, hint: '最長の一筆×この値が得点' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.8, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { last: { 1: -1, 2: -1 }, cur: { 1: 0, 2: 0 }, best: { 1: 0, 2: 0 } }; // 筆跡の流れ`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -52,7 +56,7 @@ module.exports = {
             }
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -63,8 +67,8 @@ module.exports = {
         [K.ONE, `            const territory = calculateTerritory();`,
 `            const territory = calculateTerritory();
             // 書道ルール: 最長の一筆の長さがそのまま得点
-            territory.black += st.best[1];
-            territory.white += st.best[2];`],
+            territory.black += st.best[1] * (P('brush_mult') || 1);
+            territory.white += st.best[2] * (P('brush_mult') || 1);`],
         ...K.STONE_MARKS_SPEC(`            // 現在の筆跡: 直前の石と最新の石を墨の流れで結ぶ
             {
                 ctx.save();

@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('BOUNCEGO', '跳弾碁', 'bouncego'),
+        K.params([
+            { key: 'step_scale', label: '弾の射程 (盤サイズ倍数)', min: 1, max: 8, def: 4, hint: '跳ね返りの最大ステップ数 = 盤サイズ×この値' },
+        ]),
         // 着手石は盤中心方向への斜め初速で飛び、壁・石で跳ね返りながら進んで静止する
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -23,7 +26,7 @@ module.exports = {
                 let dy = sy < c ? 1 : (sy > c ? -1 : 1);
                 let rx = sx, ry = sy, steps = 0;
                 const path = [[sx, sy]]; // 弾道 (演出再生用)
-                while (steps++ < 4 * N) {
+                while (steps++ < (P('step_scale') || 4) * N) {
                     const px = rx + dx, py = ry + dy;
                     const blX = px < 0 || px >= N || board[py * N + px] !== 0;
                     const blY = py < 0 || py >= N || board[py * N + px] !== 0;

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,14 +27,20 @@ module.exports = {
     icon: 'kohaigo',
     spec: [
         ...K.rb('KOHAIGO', '光背碁', 'kohaigo'),
+        K.params([
+            { key: 'koha_size', label: '光背の一辺サイズ', min: 2, max: 5, def: 3, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
-        // 光背: 盤上に player 色だけの3x3があればその中心idx、なければ-1
+        // 光背: 盤上に player 色だけのNxNがあればその中心idx、なければ-1
         function kohaIdx(player) {
-            for (let y = 0; y + 2 < BOARD_SIZE; y++) for (let x = 0; x + 2 < BOARD_SIZE; x++) {
+            const ks = Math.max(2, P('koha_size') || 3);
+            const ksOff = Math.floor(ks / 2);
+            for (let y = 0; y + ks - 1 < BOARD_SIZE; y++) for (let x = 0; x + ks - 1 < BOARD_SIZE; x++) {
                 let ok = true;
-                for (let dy = 0; dy < 3 && ok; dy++) for (let dx = 0; dx < 3 && ok; dx++)
+                for (let dy = 0; dy < ks && ok; dy++) for (let dx = 0; dx < ks && ok; dx++)
                     if (board[(y + dy) * BOARD_SIZE + x + dx] !== player) ok = false;
-                if (ok) return (y + 1) * BOARD_SIZE + x + 1;
+                if (ok) return (y + ksOff) * BOARD_SIZE + x + ksOff;
             }
             return -1;
         }

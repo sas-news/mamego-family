@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'trialgo',
     spec: [
         ...K.rb('TRIALGO', '試練碁', 'trialgo'),
+        K.params([
+            { key: 'gate_bonus', label: '関門突破ボーナス', min: 1, max: 8, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         ...ST(ST_INIT),
         // 補助関数をページスコープへ注入
         [K.ONE, `        function executeMove(move, player) {`, `        // 試練の関門: 四辺の中点
@@ -91,8 +95,8 @@ const TRIALS = (() => {
             TRIALS.forEach(i => {
                 if (!st.cleared[i] && board[i] === player) {
                     st.cleared[i] = player;
-                    captures[player] += 2;
-                    fxText(i, '突破 +2!', '#f87171', 1200);
+                    captures[player] += P('gate_bonus') || 2;
+                    fxText(i, '突破 +' + (P('gate_bonus') || 2) + '目!', '#f87171', 1200);
                     fxGlow(i, '#f87171', 850);
                 }
             });

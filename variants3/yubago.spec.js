@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,16 +27,21 @@ module.exports = {
     icon: 'yubago',
     spec: [
         ...K.rb('YUBAGO', '湯葉碁', 'yubago'),
+        K.params([
+            { key: 'film_min', label: '膜になる連の長さ', min: 2, max: 8, def: 4, unit: '連' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         // 湯葉集計: 各段の同色横連 (4個以上) は長さ-3の得点
         [K.ONE, `        function endGameByScore() {`, `        // 湯葉: 横の連なりを数える
         function yubaBonus() {
             const b = { 1: 0, 2: 0 };
+            const fm = P('film_min') || 4;
             for (let y = 0; y < BOARD_SIZE; y++) {
                 let run = 0, pl = 0;
                 for (let x = 0; x <= BOARD_SIZE; x++) {
                     const v = x < BOARD_SIZE ? board[y * BOARD_SIZE + x] : -1;
                     if (v === pl && (pl === 1 || pl === 2)) { run++; continue; }
-                    if ((pl === 1 || pl === 2) && run >= 4) b[pl] += run - 3;
+                    if ((pl === 1 || pl === 2) && run >= fm) b[pl] += run - fm + 1;
                     pl = v; run = (v === 1 || v === 2) ? 1 : 0;
                 }
             }
@@ -64,7 +69,7 @@ module.exports = {
                         let x2 = x;
                         while (x2 + 1 < BOARD_SIZE && board[y * BOARD_SIZE + x2 + 1] === v) x2++;
                         const len = x2 - x + 1;
-                        if (len >= 4) {
+                        if (len >= (P('film_min') || 4)) {
                             const y0 = padding + y * cellSize;
                             ctx.strokeStyle = v === 1 ? 'rgba(250, 240, 200, 0.85)' : 'rgba(190, 160, 60, 0.9)';
                             ctx.lineWidth = Math.max(1.4, cellSize * 0.08);
@@ -78,7 +83,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'湯葉 ' + (() => { let n = 0; for (let y = 0; y < BOARD_SIZE; y++) { let r = 0; for (let x = 0; x < BOARD_SIZE; x++) { const v = board[y * BOARD_SIZE + x]; if (v === turn) { r++; if (r === 4) n++; } else r = 0; } } return n + '膜'; })()`),
+        ...K.EVENT_CHIP_SPEC(`'湯葉 ' + (() => { let n = 0; for (let y = 0; y < BOARD_SIZE; y++) { let r = 0; for (let x = 0; x < BOARD_SIZE; x++) { const v = board[y * BOARD_SIZE + x]; if (v === turn) { r++; if (r === (P('film_min') || 4)) n++; } else r = 0; } } return n + '膜'; })()`),
         [K.ONE, K.INFO_ALGO, `            湯葉碁: 横に4個以上連なった石は湯葉の膜 (終局時 長さ-3 目)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

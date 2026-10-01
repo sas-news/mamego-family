@@ -47,13 +47,16 @@ module.exports = {
     icon: 'sinkinggo',
     spec: [
         ...K.rb('SINKINGGO', '水没碁', 'sinkinggo'),
+        K.params([
+            { key: 'rise_interval', label: '水位上昇の間隔', min: 4, max: 30, def: 12, unit: '手' },
+        ]),
         ...ST(ST_INIT),
         // 水位上昇: 12手ごとに下の行が水没する (両者に同じ周期)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 水没: 12手ごとに水位が1行上がる
-            while (st.level < Math.floor(history.length / 12) && st.level < BOARD_SIZE - 2) {
+            while (st.level < Math.floor(history.length / (P('rise_interval') || 12)) && st.level < BOARD_SIZE - 2) {
                 st.level++;
                 const wy = BOARD_SIZE - st.level; // 沈む行
                 let drowned = 0;
@@ -98,7 +101,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'水位 ' + st.level + ' 行 / 次の上昇まで ' + (12 - (history.length % 12)) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`'水位 ' + st.level + ' 行 / 次の上昇まで ' + ((P('rise_interval') || 12) - (history.length % (P('rise_interval') || 12))) + ' 手'`),
         [K.ONE, K.INFO_ALGO, `            水没碁: ダムに沈む村。12手ごとに水位が1行上がり、沈んだ石はアゲハマに<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

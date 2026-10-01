@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,14 +64,15 @@ module.exports = {
     icon: 'planetarygo',
     spec: [
         ...K.rb('PLANETARYGO', '七曜碁', 'planetarygo'),
+        K.params([{ key: 'band_n', label: '曜の帯数', min: 3, max: 9, def: 7, unit: '帯' }, { key: 'band_pts', label: '当番帯ボーナス', min: 0, max: 10, def: 2, unit: '点' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' }]),
         ...ST(ST_INIT, `
         // 七曜: 盤を7つの縦帯に分け、手数%7で当番帯が日→土へ巡る
         const PLANET_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
-        const planetBand = (x) => Math.floor(x * 7 / BOARD_SIZE);
-        const planetNow = () => (history.length - 1) % 7;`, ''),
+        const planetBand = (x) => Math.floor(x * (P('band_n') || 7) / BOARD_SIZE);
+        const planetNow = () => (history.length - 1) % (P('band_n') || 7);`, ''),
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
             // 当番の曜の帯に置くと+2
-            if (planetBand(move.cells[0].x) === planetNow()) st.score[player] += 2;`],
+            if (planetBand(move.cells[0].x) === planetNow()) st.score[player] += (P('band_pts') || 2);`],
         K.CUE_GRID(`            // 七曜: 当番帯を淡く照らす
             {
                 const b = planetNow();
@@ -83,7 +84,7 @@ module.exports = {
             }`),
         ...GAME_OVER,
         ...SCORE_END,
-        ...K.EVENT_CHIP_SPEC(`'七曜 ' + PLANET_NAMES[planetNow()] + 'の帯'`),
+        ...K.EVENT_CHIP_SPEC(`'七曜 ' + ((PLANET_NAMES[planetNow()] || '星') || '星') + 'の帯'`),
         [K.ONE, K.INFO_ALGO, `                        七曜碁: 盤の縦7帯に日曜〜土曜が順に当番 (手数%7)。当番の帯への着手で+2点。<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

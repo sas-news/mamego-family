@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,12 +47,17 @@ module.exports = {
     icon: 'oomagago',
     spec: [
         ...K.rb('OOMAGAGO', '大駒碁', 'oomagago'),
+        K.params([
+            { key: 'ooma_move', label: '大駒になる手数', min: 1, max: 5, def: 2, unit: '手目' },
+            { key: 'nerf_div', label: '喪失時のアゲハマ割合', options: [{ v: 2, l: '半減 (1/2)' }, { v: 3, l: '1/3' }, { v: 4, l: '1/4' }], def: 2 },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 大駒喪失でアゲハマ半減
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
-                captures[player] += st.nerf[player] ? Math.ceil(captured.length / 2) : captured.length;
+                captures[player] += st.nerf[player] ? Math.ceil(captured.length / (P('nerf_div') || 2)) : captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {
@@ -67,7 +72,7 @@ module.exports = {
                 st.placed[player] = (st.placed[player] || 0) + 1;
                 const __p = move.cells[0];
                 const __pi = __p.y * BOARD_SIZE + __p.x;
-                if (st.placed[player] === 2 && st.ooma[player] < 0) {
+                if (st.placed[player] === Math.max(1, P('ooma_move') || 2) && st.ooma[player] < 0) {
                     st.ooma[player] = __pi;
                     const __e = BOARD_SIZE - 1;
                     [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([dx, dy]) => {

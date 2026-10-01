@@ -10,6 +10,10 @@ module.exports = {
     icon: 'karutago',
     spec: [
         ...K.rb('KARUTAGO', '歌牌碁', 'karutago'),
+        K.params([
+            { key: 'cards_to_win', label: '歌牌勝ちに必要な札数', min: 2, max: 7, def: 4, unit: '枚' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 40, max: 400, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { cards: [], got: { 1: 0, 2: 0 } }; // 札の位置と取得数`],
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
@@ -54,14 +58,14 @@ module.exports = {
                     st.got[player]++;
                     fxBurst(li, '#fde047', 10, 1.6);
                     fxText(li, '札を取った!', '#fde047', 1200);
-                    if (st.got[player] >= 4) {
-                        winByRule(player, '歌牌勝ち', '札を4枚取りました'); return;
+                    if (st.got[player] >= (P('cards_to_win') || 4)) {
+                        winByRule(player, '歌牌勝ち', '札を' + (P('cards_to_win') || 4) + '枚取りました'); return;
                     }
                 }
             }
 
-            // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 打ち切り終局 (手数は設定で調整)
+            if (history.length >= Math.max(1, P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

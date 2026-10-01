@@ -9,9 +9,9 @@ const GAME_OVER = [
     [K.ONE, `        function executeMove(move, player) {`,
 `        let capFired = false;
         function executeMove(move, player) {
-            // 打ち切り: 150手を超えたら即採点終局
+            // 打ち切り: 設定手数を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('cap_moves') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,13 +27,17 @@ module.exports = {
     icon: 'gradientgo',
     spec: [
         ...K.rb('GRADIENTGO', '勾配碁', 'gradientgo'),
+        K.params([
+            { key: 'cap_moves', label: '打ち切り手数', min: 50, max: 600, def: 150, step: 10, unit: '手' },
+            { key: 'roll_limit', label: '転がり上限 (盤サイズ倍率)', min: 1, max: 4, def: 2, step: 0.5 },
+        ]),
         // 転がり: 置いた石は右か下の空きへ転がり続ける (取り判定は定着位置で行う)
         [K.ONE, K.CAPTURE_BLOCK, `            // 勾配転がり: 置いた石は右下へ空きがある限り転がり落ちる
             {
                 const st0 = move.cells[0];
                 let sx = st0.x, sy = st0.y;
                 let guard = 0;
-                while (guard++ < BOARD_SIZE * 2) {
+                while (guard++ < BOARD_SIZE * (P('roll_limit') || 2)) {
                     const rOk = sx + 1 < BOARD_SIZE && board[sy * BOARD_SIZE + sx + 1] === 0;
                     const dOk = sy + 1 < BOARD_SIZE && board[(sy + 1) * BOARD_SIZE + sx] === 0;
                     if (!rOk && !dOk) break;

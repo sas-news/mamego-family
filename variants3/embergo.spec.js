@@ -10,6 +10,10 @@ module.exports = {
     icon: 'embergo',
     spec: [
         ...K.rb('EMBERGO', '残火碁', 'embergo'),
+        K.params([
+            { key: 'ember_ttl', label: '余燼の残る手数', min: 1, max: 10, def: 4, unit: '手番' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { ember: {} }; // 余燼マス idx -> [残り手数, 置けない側]`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -42,7 +46,7 @@ module.exports = {
         // 取った石は余燼を残す (取られた側がしばらく置けない)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
-                captured.forEach(idx => { board[idx] = 0; st.ember[idx] = [4, opponent]; fxGlow(idx, '#f97316', 500); });
+                captured.forEach(idx => { board[idx] = 0; st.ember[idx] = [Math.max(1, P('ember_ttl') || 4), opponent]; fxGlow(idx, '#f97316', 500); });
                 captures[player] += captured.length;
                 soundManager.playCapture();
                 cleanUpPieces();
@@ -86,7 +90,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

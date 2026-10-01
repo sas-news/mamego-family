@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'offergo',
     spec: [
         ...K.rb('OFFERGO', '捧剣碁', 'offergo'),
+        K.params([
+            { key: 'offer_len', label: '捧剣に必要な連の大きさ', min: 3, max: 8, def: 4, unit: '石' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         // 祭壇判定関数を挿入 (winByRule と共に)
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN +
 `        // 捧剣勝利: 天元 (祭壇) を含む自連が4石以上
@@ -35,7 +39,7 @@ module.exports = {
             const t = m * BOARD_SIZE + m;
             if (board[t] !== player) return false;
             const group = getConnectedGroup(t, player);
-            return group.length >= 4;
+            return group.length >= (P('offer_len') || 4);
         }
         function endGameByScore() {`],
         // 着手後に捧剣判定

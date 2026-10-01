@@ -252,6 +252,12 @@
                 <div id="onlineRoomStatus" class="text-center font-bold text-neutral-600 pt-1"></div>
             </div>
 
+            <!-- バリアント固有設定 (VPARAMSがあるゲームのみ表示) -->
+            <div id="variantParamsBox" class="hidden p-3 bg-amber-50 rounded-xl border border-amber-200 flex flex-col gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-neutral-500">このゲームの設定</span>
+                <div id="variantParams" class="flex flex-col gap-3"></div>
+            </div>
+
             <!-- 4. サウンド設定 -->
             <div class="flex items-center justify-between pt-1">
                 <span class="text-sm font-bold text-neutral-700">効果音 (SE)</span>
@@ -310,6 +316,77 @@
     </div>
 
     <script>
+        // === バリアント固有パラメータ ===
+        // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
+        // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
+        const VPARAMS = [{"key":"radar_interval","label":"レーダーの間隔","min":1,"max":10,"def":3,"unit":"手"},{"key":"fog_alpha","label":"霧の中の敵石の濃さ","min":0,"max":0.5,"def":0.1,"step":0.05},{"key":"cap_extra","label":"打ち切り余分","min":0,"max":8,"def":2,"unit":"行分","hint":"交点数+この行数×盤サイズの手数で強制終局"}];
+        const VPAR_MAP = {};
+        const VPAR_SAVED = (() => {
+            try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
+            catch (e) { return {}; }
+        })();
+        VPARAMS.forEach(p => {
+            if (p.val === undefined) p.val = VPAR_SAVED[p.key] !== undefined ? VPAR_SAVED[p.key] : p.def;
+            VPAR_MAP[p.key] = p;
+        });
+        const P = k => (VPAR_MAP[k] ? VPAR_MAP[k].val : undefined);
+        function saveVpar() {
+            try {
+                const o = {};
+                VPARAMS.forEach(p => { if (p.val !== p.def) o[p.key] = p.val; });
+                localStorage.setItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : ''), JSON.stringify(o));
+            } catch (e) {}
+        }
+        // 設定モーダルの「このゲームの設定」に VPARAMS 分のUIを生成
+        function initVariantParams() {
+            const box = document.getElementById('variantParamsBox');
+            const list = document.getElementById('variantParams');
+            if (!box || !list || !VPARAMS.length) return;
+            box.classList.remove('hidden');
+            const fmt = (p, v) => (p.step && p.step < 1 ? Number(v).toFixed(1) : String(v)) + (p.unit || '');
+            VPARAMS.forEach(p => {
+                const wrap = document.createElement('div');
+                wrap.className = 'flex flex-col gap-1';
+                const head = document.createElement('div');
+                head.className = 'flex justify-between text-xs font-bold text-neutral-600';
+                const lab = document.createElement('span');
+                lab.textContent = p.label + (p.hint ? ` (${p.hint})` : '');
+                const valEl = document.createElement('span');
+                valEl.className = 'text-amber-700';
+                valEl.textContent = fmt(p, p.val);
+                head.appendChild(lab); head.appendChild(valEl);
+                wrap.appendChild(head);
+                const applyVal = v => {
+                    p.val = v;
+                    valEl.textContent = fmt(p, p.val);
+                    saveVpar();
+                    if (typeof onVariantParam === 'function') onVariantParam(p);
+                };
+                if (p.options) {
+                    const sel = document.createElement('select');
+                    sel.className = 'w-full border border-neutral-300 rounded-lg py-1.5 text-sm font-bold bg-white';
+                    p.options.forEach(o => {
+                        const op = document.createElement('option');
+                        op.value = o.v; op.textContent = o.l;
+                        sel.appendChild(op);
+                    });
+                    sel.value = p.val;
+                    sel.addEventListener('change', () => {
+                        const num = parseFloat(sel.value);
+                        applyVal(isNaN(num) ? sel.value : num);
+                    });
+                    wrap.appendChild(sel);
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'range'; inp.min = p.min; inp.max = p.max; inp.step = p.step || 1; inp.value = p.val;
+                    inp.className = 'w-full accent-amber-600';
+                    inp.addEventListener('input', () => applyVal(parseFloat(inp.value)));
+                    wrap.appendChild(inp);
+                }
+                list.appendChild(wrap);
+            });
+        }
+        initVariantParams();
         // ==========================================
         // 1. カラーテーマ定義
         // ==========================================
@@ -1229,9 +1306,9 @@
         }
 
         // 探知碁: 着手数が3の倍数の局面でレーダー照射 → 敵石が可視化される
-        function isRadarOn() { return history.length > 0 && history.length % 3 === 0; }
+        function isRadarOn() { return history.length > 0 && history.length % Math.max(1, P('radar_interval') || 3) === 0; }
         // 手番側から見た敵石の濃さ (レーダー中は実色、普段は幽霊)
-        function fogAlphaFor(pl) { return (pl !== turn && !isRadarOn()) ? 0.10 : 1; }
+        function fogAlphaFor(pl) { return (pl !== turn && !isRadarOn()) ? (P('fog_alpha') ?? 0.10) : 1; }
 
         function drawBoardElements(padding, cellSize) {
             const r = cellSize * 0.46;
@@ -1830,10 +1907,16 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 探知碁: 3の倍数手でレーダー照射 → 敵石が光って見える合図
-            if (history.length % 3 === 0) {
+            if (history.length % Math.max(1, P('radar_interval') || 3) === 0) {
                 board.forEach((v, i) => { if (v === opponent) fxGlow(i, '#38bdf8', 700); });
                 const mc = move.cells[0];
                 if (mc) fxText(mc.y * BOARD_SIZE + mc.x, 'レーダー', '#7dd3fc', 1100);
+            }
+
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_extra') ?? 2))) {
+                endGameByScore();
+                return;
             }
 
             turn = opponent;
@@ -2706,7 +2789,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : (isRadarOn() ? 'レーダー照射中' : 'レーダーまで ' + (3 - history.length % 3) + '手');
+                const et = gameOver ? '' : (isRadarOn() ? 'レーダー照射中' : 'レーダーまで ' + (Math.max(1, P('radar_interval') || 3) - history.length % Math.max(1, P('radar_interval') || 3)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

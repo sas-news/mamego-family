@@ -9,12 +9,15 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('HOURGO', '砂時計碁', 'hourgo'),
-        // |x-c| <= |y-c| の砂時計形
+        K.params([
+            { key: 'waist', label: '咽喉の広さ', min: -2, max: 3, def: 0, hint: '大きいほど上下の繋がりが広い' },
+        ]),
+        // |x-c| <= |y-c| の砂時計形 (咽喉の広さは設定で調整)
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
                 const c = Math.floor(BOARD_SIZE / 2);
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    if (Math.abs(x - c) > Math.abs(y - c)) board[y * BOARD_SIZE + x] = 3;
+                    if (Math.abs(x - c) > Math.abs(y - c) + (P('waist') || 0)) board[y * BOARD_SIZE + x] = 3;
                 }
             }`],
         // 虚無地帯は枯れた砂の彫り込みで自前描画

@@ -10,6 +10,9 @@ module.exports = {
     icon: 'scapegoatgo',
     spec: [
         ...K.rb('SCAPEGOATGO', '身代碁', 'scapegoatgo'),
+        K.params([
+            { key: 'doll_move', label: '身代わりになる手番', min: 1, max: 10, def: 1, unit: '手目', hint: '自分のN手目' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { doll: { 1: -1, 2: -1 }, used: { 1: false, 2: false } }; // 身代わりの位置と使用済`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -57,7 +60,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 身代わり: 各プレイヤーの初手の石が藁人形になる
-            if (st.doll[player] < 0) {
+            if (st.doll[player] < 0 && pieces.filter(pc => pc.player === player).length >= Math.max(1, P('doll_move') || 1)) {
                 st.doll[player] = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
             }
 

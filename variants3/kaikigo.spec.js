@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'kaikigo',
     spec: [
         ...K.rb('KAIKIGO', '回忌碁', 'kaikigo'),
+        K.params([
+            { key: 'kaiki_interval', label: '回忌法要の間隔', min: 2, max: 20, def: 7, unit: '手' },
+            { key: 'merit_div', label: '徳点の換算 (取り石÷N)', min: 1, max: 5, def: 2 },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 採点に徳点を加算
         [K.ONE, `            const blackTotal = territory.black + captures[1];
@@ -57,17 +62,19 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 回忌: 7手ごとの法要 — 取った石1つごとに徳+1として差分を清算
+            // 回忌: N手ごとの法要 — 取り石÷Nの差を徳点として清算 (間隔・換算は設定で調整)
             st.ply++;
-            if (st.ply % 7 === 0) {
-                const m1 = Math.floor(captures[1] / 2) - 0; // 黒が取った白石→黒の徳
-                const m2 = Math.floor(captures[2] / 2);
+            const __iv = Math.max(1, P('kaiki_interval') || 7);
+            const __dv = Math.max(1, P('merit_div') || 2);
+            if (st.ply % __iv === 0) {
+                const m1 = Math.floor(captures[1] / __dv) - 0; // 黒が取った白石→黒の徳
+                const m2 = Math.floor(captures[2] / __dv);
                 const diff = Math.abs(m1 - m2);
                 const hi = m1 >= m2 ? 1 : 2;
                 st.merit[hi] += diff;
                 const c = Math.floor(BOARD_SIZE / 2) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2);
                 fxGlow(c, '#a5f3fc', 900);
-                fxText(c, '回忌法要 ' + (st.ply / 7), '#67e8f9', 1400);
+                fxText(c, '回忌法要 ' + (st.ply / __iv), '#67e8f9', 1400);
                 fxShake(3, 250);
             }
 
@@ -85,7 +92,7 @@ module.exports = {
                 ctx.fillRect(cx - w / 2, cy + h * 0.18, w, h * 0.22);
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'法要: ' + (st.ply % 7 === 0 ? '今!' : (7 - st.ply % 7) + '手後')`),
+        ...K.EVENT_CHIP_SPEC(`'法要: ' + (st.ply % Math.max(1, P('kaiki_interval') || 7) === 0 ? '今!' : (Math.max(1, P('kaiki_interval') || 7) - st.ply % Math.max(1, P('kaiki_interval') || 7)) + '手後')`),
         [K.ONE, K.INFO_ALGO, `            回忌碁: 7手ごとに回忌法要。互いの取り石(故人)の差が徳点になる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

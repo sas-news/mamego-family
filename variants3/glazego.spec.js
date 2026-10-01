@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'glazego',
     spec: [
         ...K.rb('GLAZEGO', '釉薬碁', 'glazego'),
+        K.params([
+            { key: 'kiln_interval', label: '窯入りの周期', min: 3, max: 48, def: 12, unit: '手' },
+            { key: 'raw_mult', label: '生乾き石の取り倍率', min: 1, max: 5, def: 2, unit: '倍' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT),
         // 着手した石は生乾き
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -54,13 +59,13 @@ module.exports = {
             move.cells.forEach(p => st.raw.push(p.y * BOARD_SIZE + p.x));`],
         // 生乾きの石は2個分のアゲハマになる
         [K.ONE, `                captures[player] += captured.length;`,
-`                captures[player] += captured.reduce((s, i) => s + (st.raw.includes(i) ? 2 : 1), 0);`],
+`                captures[player] += captured.reduce((s, i) => s + (st.raw.includes(i) ? (P('raw_mult') || 2) : 1), 0);`],
         // 12手ごとの窯焚き: 生乾きの石が確定 (素地→釉薬)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 釉薬碁: 12手ごとに窯が焚かれ、生乾きの石の色が確定する
-            if (history.length > 0 && history.length % 12 === 0 && st.raw.length) {
+            if (history.length > 0 && history.length % Math.max(1, P('kiln_interval') || 12) === 0 && st.raw.length) {
                 st.raw.forEach(i => {
                     if (board[i] === 1 || board[i] === 2) fxGlow(i, '#fb923c', 700);
                 });
@@ -88,7 +93,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             });`),
-        ...K.EVENT_CHIP_SPEC(`st.raw.length ? '生乾き ' + st.raw.length + '個 (窯まで ' + (12 - history.length % 12) + '手)' : '窯まで ' + (12 - history.length % 12) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`st.raw.length ? '生乾き ' + st.raw.length + '個 (窯まで ' + ((P('kiln_interval') || 12) - history.length % (P('kiln_interval') || 12)) + '手)' : '窯まで ' + ((P('kiln_interval') || 12) - history.length % (P('kiln_interval') || 12)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            釉薬碁: 生乾きの石は取られると2個分。12手ごとの窯で確定<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

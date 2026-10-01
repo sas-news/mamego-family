@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,11 @@ module.exports = {
     icon: 'fiveplanetgo',
     spec: [
         ...K.rb('FIVEPLANETGO', '五星碁', 'fiveplanetgo'),
+        K.params([
+            { key: 'three_pts', label: '三連の兆ボーナス', min: 0, max: 10, def: 3, unit: '目' },
+            { key: 'five_pts', label: '五星会合ボーナス', min: 0, max: 20, def: 8, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT, `
         // 五星: 着手順に五行(木・火・土・金・水)の型を割り当てる
         const FP_COLORS = ['#16a34a', '#dc2626', '#a16207', '#d4d4d8', '#0ea5e9'];
@@ -92,10 +97,10 @@ module.exports = {
             st.fusion[player] = st.fusion[player] || [];
             if (fpTypes.size >= 5 && !st.fusion[player].includes(5)) {
                 st.fusion[player].push(5);
-                st.score[player] += 8;
+                st.score[player] += (P('five_pts') || 8);
             } else if (fpTypes.size >= 3 && !st.fusion[player].includes(3)) {
                 st.fusion[player].push(3);
-                st.score[player] += 3;
+                st.score[player] += (P('three_pts') || 3);
             }
 
             turn = opponent;`],

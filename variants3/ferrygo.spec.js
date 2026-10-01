@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'ferrygo',
     spec: [
         ...K.rb('FERRYGO', '渡船碁', 'ferrygo'),
+        K.params([
+            { key: 'ferry_pts', label: '渡船ボーナス', min: 0, max: 5, def: 1, unit: '目', hint: '新しい渡船1隻あたり' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 渡船: 川(中央1列)を挟んだ両岸の同じ行に自石があると渡し船 — 両岸の連は呼吸を共有 (連が繋がる扱い)
         // 実装は簡略化: 両岸の同じ行に自石が揃うと渡船料+1目、かつ川マスは両者の「共有呼吸点」として孤立連を救う
@@ -64,9 +68,9 @@ module.exports = {
                 const old = st.ferries[player] || [];
                 const newOnes = Object.keys(rows).filter(y => !old.includes(+y));
                 if (newOnes.length) {
-                    captures[player] += newOnes.length;
+                    captures[player] += newOnes.length * (P('ferry_pts') || 1);
                     newOnes.forEach(y => {
-                        fxText((+y) * BOARD_SIZE + rc, '渡船 +1', '#38bdf8', 1200);
+                        fxText((+y) * BOARD_SIZE + rc, '渡船 +' + (P('ferry_pts') || 1), '#38bdf8', 1200);
                         fxGlow((+y) * BOARD_SIZE + (rc - 1), '#38bdf8', 600);
                         fxGlow((+y) * BOARD_SIZE + (rc + 1), '#38bdf8', 600);
                     });

@@ -251,6 +251,12 @@
                 <div id="onlineRoomStatus" class="text-center font-bold text-neutral-600 pt-1"></div>
             </div>
 
+            <!-- バリアント固有設定 (VPARAMSがあるゲームのみ表示) -->
+            <div id="variantParamsBox" class="hidden p-3 bg-amber-50 rounded-xl border border-amber-200 flex flex-col gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-neutral-500">このゲームの設定</span>
+                <div id="variantParams" class="flex flex-col gap-3"></div>
+            </div>
+
             <!-- 4. サウンド設定 -->
             <div class="flex items-center justify-between pt-1">
                 <span class="text-sm font-bold text-neutral-700">効果音 (SE)</span>
@@ -309,6 +315,77 @@
     </div>
 
     <script>
+        // === バリアント固有パラメータ ===
+        // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
+        // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
+        const VPARAMS = [{"key":"gravity_dir","label":"重力の向き","def":"down","options":[{"v":"down","l":"下へ落ちる"},{"v":"up","l":"上へ落ちる"},{"v":"left","l":"左へ落ちる"},{"v":"right","l":"右へ落ちる"}]},{"key":"cap_ply","label":"打ち切り手数","min":60,"max":400,"def":140,"hint":"この手数で地数判定"}];
+        const VPAR_MAP = {};
+        const VPAR_SAVED = (() => {
+            try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
+            catch (e) { return {}; }
+        })();
+        VPARAMS.forEach(p => {
+            if (p.val === undefined) p.val = VPAR_SAVED[p.key] !== undefined ? VPAR_SAVED[p.key] : p.def;
+            VPAR_MAP[p.key] = p;
+        });
+        const P = k => (VPAR_MAP[k] ? VPAR_MAP[k].val : undefined);
+        function saveVpar() {
+            try {
+                const o = {};
+                VPARAMS.forEach(p => { if (p.val !== p.def) o[p.key] = p.val; });
+                localStorage.setItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : ''), JSON.stringify(o));
+            } catch (e) {}
+        }
+        // 設定モーダルの「このゲームの設定」に VPARAMS 分のUIを生成
+        function initVariantParams() {
+            const box = document.getElementById('variantParamsBox');
+            const list = document.getElementById('variantParams');
+            if (!box || !list || !VPARAMS.length) return;
+            box.classList.remove('hidden');
+            const fmt = (p, v) => (p.step && p.step < 1 ? Number(v).toFixed(1) : String(v)) + (p.unit || '');
+            VPARAMS.forEach(p => {
+                const wrap = document.createElement('div');
+                wrap.className = 'flex flex-col gap-1';
+                const head = document.createElement('div');
+                head.className = 'flex justify-between text-xs font-bold text-neutral-600';
+                const lab = document.createElement('span');
+                lab.textContent = p.label + (p.hint ? ` (${p.hint})` : '');
+                const valEl = document.createElement('span');
+                valEl.className = 'text-amber-700';
+                valEl.textContent = fmt(p, p.val);
+                head.appendChild(lab); head.appendChild(valEl);
+                wrap.appendChild(head);
+                const applyVal = v => {
+                    p.val = v;
+                    valEl.textContent = fmt(p, p.val);
+                    saveVpar();
+                    if (typeof onVariantParam === 'function') onVariantParam(p);
+                };
+                if (p.options) {
+                    const sel = document.createElement('select');
+                    sel.className = 'w-full border border-neutral-300 rounded-lg py-1.5 text-sm font-bold bg-white';
+                    p.options.forEach(o => {
+                        const op = document.createElement('option');
+                        op.value = o.v; op.textContent = o.l;
+                        sel.appendChild(op);
+                    });
+                    sel.value = p.val;
+                    sel.addEventListener('change', () => {
+                        const num = parseFloat(sel.value);
+                        applyVal(isNaN(num) ? sel.value : num);
+                    });
+                    wrap.appendChild(sel);
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'range'; inp.min = p.min; inp.max = p.max; inp.step = p.step || 1; inp.value = p.val;
+                    inp.className = 'w-full accent-amber-600';
+                    inp.addEventListener('input', () => applyVal(parseFloat(inp.value)));
+                    wrap.appendChild(inp);
+                }
+                list.appendChild(wrap);
+            });
+        }
+        initVariantParams();
         // ==========================================
         // 1. カラーテーマ定義
         // ==========================================
@@ -1758,25 +1835,37 @@
             consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 玉石ルール: 全ての石が列の底へ転がり落ちる (列内の順序は保持)
+            // 玉石ルール: 全ての石が重力の向きの底へ転がり落ちる (列・行内の順序は保持)
             {
-                let rolled = 0;
-                for (let x = 0; x < BOARD_SIZE; x++) {
-                    const col = [];
-                    for (let y = BOARD_SIZE - 1; y >= 0; y--) {
-                        const v = board[y * BOARD_SIZE + x];
-                        if (v === 1 || v === 2) col.push(v);
+                const GD = P('gravity_dir') || 'down';
+                const lines = [];
+                if (GD === 'down' || GD === 'up') {
+                    for (let x = 0; x < BOARD_SIZE; x++) {
+                        const idxs = [];
+                        for (let y = 0; y < BOARD_SIZE; y++) idxs.push(y * BOARD_SIZE + x);
+                        if (GD === 'down') idxs.reverse();
+                        lines.push(idxs);
                     }
-                    for (let y = BOARD_SIZE - 1; y >= 0; y--) {
-                        const i = y * BOARD_SIZE + x;
-                        const nv = col.length ? col.shift() : 0;
-                        if (board[i] !== nv) { board[i] = nv; rolled++; }
+                } else {
+                    for (let y = 0; y < BOARD_SIZE; y++) {
+                        const idxs = [];
+                        for (let x = 0; x < BOARD_SIZE; x++) idxs.push(y * BOARD_SIZE + x);
+                        if (GD === 'right') idxs.reverse();
+                        lines.push(idxs);
                     }
                 }
+                let rolled = 0;
+                lines.forEach(idxs => {
+                    const stones = idxs.map(i => board[i]).filter(v => v === 1 || v === 2);
+                    idxs.forEach((i, k) => {
+                        const nv = k < stones.length ? stones[k] : 0;
+                        if (board[i] !== nv) { board[i] = nv; rolled++; }
+                    });
+                });
                 if (rolled) cleanUpPieces();
             }
-            // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 長期戦防止: cap_ply 手経過でその時点の地数判定
+            if (history.length >= Math.max(10, P('cap_ply') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

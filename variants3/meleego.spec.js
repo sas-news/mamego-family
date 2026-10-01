@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,7 +27,11 @@ module.exports = {
     icon: 'meleego',
     spec: [
         ...K.rb('MEELEGO', '組討碁', 'meleego'),
-        // 組討ルール: 着手した連に接触する敵連ごとに、互いの接触石が1個ずつ脱落
+        K.params([
+            { key: 'melee_n', label: '削り合う石数', min: 1, max: 4, def: 1, hint: '組討ちで互いの接触石が何個ずつ脱落するか' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
+        // 組討ルール: 着手した連に接触する敵連ごとに、互いの接触石が melee_n 個ずつ脱落
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
@@ -50,21 +54,24 @@ module.exports = {
                         });
                     });
                     foeGroups.forEach(g => {
-                        // 敵連の脱落: 自連に最も近い接触石 (最小index)
+                        const MN = Math.max(1, P('melee_n') || 1);
+                        // 敵連の脱落: 自連に最も近い接触石から melee_n 個 (index順)
                         const eContact = g.filter(i => getNeighbors(i).some(n => board[n] === player));
-                        const eIdx = Math.min.apply(null, eContact);
-                        board[eIdx] = 0;
-                        captures[player]++;
-                        fxBurst(eIdx, '#ef4444', 10, 1.6);
-                        // 自連の脱落: その敵連に接触する自石 (最小index)
+                        const dropped = new Set();
+                        eContact.sort((a, b) => a - b).slice(0, MN).forEach(eIdx => {
+                            board[eIdx] = 0;
+                            dropped.add(eIdx);
+                            captures[player]++;
+                            fxBurst(eIdx, '#ef4444', 10, 1.6);
+                        });
+                        // 自連の脱落: その敵連に接触する自石から melee_n 個 (index順)
                         const mg = getConnectedGroup(mi, player);
-                        const mContact = mg.filter(i => getNeighbors(i).some(n => n === eIdx || board[n] === opponent));
-                        if (mContact.length) {
-                            const mIdx = Math.min.apply(null, mContact);
+                        const mContact = mg.filter(i => getNeighbors(i).some(n => dropped.has(n) || board[n] === opponent));
+                        mContact.sort((a, b) => a - b).slice(0, MN).forEach(mIdx => {
                             board[mIdx] = 0;
                             captures[opponent]++;
                             fxBurst(mIdx, '#60a5fa', 10, 1.6);
-                        }
+                        });
                     });
                     if (foeGroups.length) {
                         fxText(mi, '組討ち!', '#f87171', 1200);

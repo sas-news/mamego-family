@@ -10,7 +10,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -62,6 +62,7 @@ module.exports = {
     icon: 'prisonergo',
     spec: [
         ...K.rb('PRISONERGO', '逆領碁', 'prisonergo'),
+        K.params([{ key: 'imprison_pts', label: '監禁の得点 (1石あたり)', min: 1, max: 6, def: 2, unit: '目' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 2.2, def: 1.1, step: 0.05, hint: '交点数×倍率' }]),
         // 逆領採点: 地を数えず、監禁した敵石とアゲハマで勝負
         [K.ONE, ENDSCORE, `        function endGameByScore() {
             gameOver = true;
@@ -83,7 +84,7 @@ module.exports = {
                         getNeighbors(l).forEach(n => { if (board[n] === captor) ok = true; });
                         if (!ok) watched = false;
                     });
-                    if (watched) pts += grp.length * 2;
+                    if (watched) pts += grp.length * (P('imprison_pts') || 2);
                 }
                 return pts;
             };

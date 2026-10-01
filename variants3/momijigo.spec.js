@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,11 @@ module.exports = {
     icon: 'momijigo',
     spec: [
         ...K.rb('MOMIJIGO', '紅葉碁', 'momijigo'),
+        K.params([
+            { key: 'age1', label: '青→紅になる手数', min: 2, max: 15, def: 5, unit: '手' },
+            { key: 'age2', label: '深紅になる手数', min: 5, max: 30, def: 12, unit: '手' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST('{ born: {} }'),
         // 着手時に石の生成手を記録する
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -65,7 +70,7 @@ module.exports = {
             for (const k in st.born) {
                 const cell = +k;
                 const age = history.length - st.born[k];
-                const bonus = age >= 12 ? 2 : age >= 5 ? 1 : 0;
+                const bonus = age >= (P('age2') || 12) ? 2 : age >= (P('age1') || 5) ? 1 : 0;
                 if (board[cell] === 1) territory.black += bonus;
                 else if (board[cell] === 2) territory.white += bonus;
             }`],
@@ -77,10 +82,10 @@ module.exports = {
                     const idx = +k;
                     if (board[idx] !== 1 && board[idx] !== 2) continue;
                     const age = history.length - st.born[k];
-                    if (age < 5) continue;
+                    if (age < (P('age1') || 5)) continue;
                     const x = idx % BOARD_SIZE, y = (idx / BOARD_SIZE) | 0;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
-                    const deep = age >= 12;
+                    const deep = age >= (P('age2') || 12);
                     ctx.strokeStyle = deep ? 'rgba(153,27,27,0.95)' : 'rgba(239,68,68,0.8)';
                     ctx.lineWidth = Math.max(1.5, cellSize * (deep ? 0.09 : 0.06));
                     ctx.beginPath();

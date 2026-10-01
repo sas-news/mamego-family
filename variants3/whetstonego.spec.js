@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,20 +47,26 @@ module.exports = {
     icon: 'whetstonego',
     spec: [
         ...K.rb('WHETSTONEGO', '研師碁', 'whetstonego'),
+        K.params([
+            { key: 'whet_offset', label: '砥石の位置', options: [{ v: 0, l: '自動 (盤の1/4)' }, { v: 1, l: '1' }, { v: 2, l: '2' }, { v: 3, l: '3' }, { v: 4, l: '4' }, { v: 5, l: '5' }, { v: 6, l: '6' }], def: 0, hint: '辺からの距離' },
+            { key: 'edge_pts', label: '切れ味点', min: 0, max: 5, def: 1, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 砥石: 盤の四辺に2箇所ずつ (1マスの研磨面)
         let WHET = new Set();
         function rebuildWhet() {
             WHET = new Set();
-            const n = BOARD_SIZE, m = Math.floor(n / 2), q = Math.max(1, Math.floor(n / 4));
+            const n = BOARD_SIZE, m = Math.floor(n / 2), q = P('whet_offset') || Math.max(1, Math.floor(n / 4));
             [ [q, 0], [n - 1 - q, 0], [q, n - 1], [n - 1 - q, n - 1],
               [0, q], [0, n - 1 - q], [n - 1, q], [n - 1, n - 1 - q] ]
                 .forEach(([x, y]) => WHET.add(y * n + x));
         }
         function nearWhet(i) {
             return getNeighbors(i).some(n => WHET.has(n));
-        }`],
+        }
+        function onVariantParam(p) { if (p.key === 'whet_offset') rebuildWhet(); }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             rebuildWhet();`],
         // 研ぎ: 砥石に隣接して打った石は「切れた」状態になる
@@ -78,9 +84,9 @@ module.exports = {
             // 切れ味: 研がれた石を取ると切れ味点+1
             captured.forEach(idx => {
                 if (st.sharp[idx]) {
-                    st.score[player]++;
+                    st.score[player] += (P('edge_pts') ?? 1);
                     delete st.sharp[idx];
-                    fxText(idx, '切れ味+1', '#22d3ee', 1100);
+                    fxText(idx, '切れ味+' + (P('edge_pts') ?? 1), '#22d3ee', 1100);
                 }
             });`],
         // 砥石の描画: 灰色の研磨面 + 砥石特有の筋

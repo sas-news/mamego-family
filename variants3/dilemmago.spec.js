@@ -32,7 +32,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 90) / 100))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -48,19 +48,26 @@ module.exports = {
     icon: 'dilemmago',
     spec: [
         ...K.rb('DILEMMAGO', '囚人碁', 'dilemmago'),
+        K.params([
+            { key: 'payoff_cycle', label: '精算の周期', min: 4, max: 30, def: 12, unit: '手' },
+            { key: 'coop_pt', label: '協力×協力の得点', min: 0, max: 8, def: 3, unit: '目' },
+            { key: 'dd_pt', label: '裏切り×裏切りの得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'betray_pt', label: '裏切り側の得点', min: 0, max: 10, def: 5, unit: '目' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 90, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         ...ST(ST_INIT),
         // 12手ごとのペイオフ解決: C/C=両者+3、D/D=両者+1、片方D=裏切り側+5・協力側+0
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 囚人のジレンマ: 12手周期で姿勢の組合せを精算
-            if (history.length % 12 === 0 && st.lastResolve !== history.length) {
+            if (history.length % Math.max(1, P('payoff_cycle') || 12) === 0 && st.lastResolve !== history.length) {
                 st.lastResolve = history.length;
                 const __b = st.stance[1] === 'D', __w = st.stance[2] === 'D';
-                if (!__b && !__w) { st.bonus[1] += 3; st.bonus[2] += 3; }
-                else if (__b && __w) { st.bonus[1] += 1; st.bonus[2] += 1; }
-                else if (__b) { st.bonus[1] += 5; }
-                else { st.bonus[2] += 5; }
+                if (!__b && !__w) { const pt = P('coop_pt') ?? 3; st.bonus[1] += pt; st.bonus[2] += pt; }
+                else if (__b && __w) { const pt = P('dd_pt') ?? 1; st.bonus[1] += pt; st.bonus[2] += pt; }
+                else if (__b) { st.bonus[1] += (P('betray_pt') ?? 5); }
+                else { st.bonus[2] += (P('betray_pt') ?? 5); }
                 st.stance = { 1: 'C', 2: 'C' };
                 const __c = Math.floor(BOARD_SIZE / 2) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2);
                 fxText(__c, __b === __w ? '両者' + (__b ? '裏切り' : '協力') + '!' : '裏切り発生!', '#e879f9', 1400);
@@ -96,7 +103,7 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
-        ...K.EVENT_CHIP_SPEC(`'精算まで ' + (12 - (history.length % 12)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'精算まで ' + ((P('payoff_cycle') || 12) - (history.length % (P('payoff_cycle') || 12))) + '手'`),
         [K.ONE, K.INFO_ALGO, `            囚人碁: 12手ごとに協力/裏切りを精算。「姿勢」ボタンで宣言を切替<br>
             PC: クリックで配置 / 「姿勢」ボタンで協力⇄裏切り<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

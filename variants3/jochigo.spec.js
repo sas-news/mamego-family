@@ -27,6 +27,9 @@ module.exports = {
     icon: 'jochigo',
     spec: [
         ...K.rb('JOCHIGO', '定置碁', 'jochigo'),
+        K.params([
+            { key: 'net_interval', label: '網上げの間隔', min: 4, max: 20, def: 10, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 定置網: 対角の2つの3x2区域 (沖の網)
         const AMI_SET = new Set();
@@ -43,7 +46,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 定置網: 10手ごとの網上げ — 区域の石は全て獲られ相手のアゲハマに
-            if (history.length > 0 && history.length % 10 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('net_interval') || 10) === 0) {
                 let caught = 0;
                 AMI_SET.forEach(i => {
                     const v = board[i];
@@ -83,7 +86,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'網上げまで ' + (10 - (history.length % 10)) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`'網上げまで ' + (Math.max(1, P('net_interval') || 10) - (history.length % Math.max(1, P('net_interval') || 10))) + ' 手'`),
         [K.ONE, K.INFO_ALGO, `            定置碁: 網区域の石は10手ごとの網上げで全て獲られる (相手のアゲハマに)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

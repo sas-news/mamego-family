@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'roofgo',
     spec: [
         ...K.rb('ROOFGO', '屋根碁', 'roofgo'),
+        K.params([
+            { key: 'ridge_bonus', label: '棟1石の得点', min: 0, max: 10, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 屋根: 頂点から下に広がる三角。棟は中央の頂線
         const RIDGE_X = Math.floor(BOARD_SIZE / 2);
@@ -41,8 +45,8 @@ module.exports = {
         [K.ONE, `            const territory = calculateTerritory();`,
 `            const territory = calculateTerritory();
             RIDGE_SET.forEach(i => {
-                if (board[i] === 1) territory.black += 2;
-                else if (board[i] === 2) territory.white += 2;
+                if (board[i] === 1) territory.black += (P('ridge_bonus') ?? 2);
+                else if (board[i] === 2) territory.white += (P('ridge_bonus') ?? 2);
             });`],
         // 屋根の外は瓦色の壁
         [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_BRICK('#9a5140', '#5d2f26'))],

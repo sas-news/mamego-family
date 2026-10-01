@@ -9,6 +9,7 @@ module.exports = {
     kind: 'pot',
     spec: [
         ...K.rb('POTGO', '壺碁', 'potgo'),
+        K.params([{ key: 'pot_min', label: '壺を奪える大取の個数', min: 1, max: 10, def: 3, unit: '個' }]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let pot = 0; // 壺に蓄積された石 (誰のものでもない)`],
         [K.ONE, K.RESET_HELD, `            heldPieces = { 1: null, 2: null };
@@ -36,7 +37,7 @@ module.exports = {
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 // 壺ルール: 3個以上の大取なら壺ごと奪う、それ未満は壺に蓄積
-                if (captured.length >= 3) {
+                if (captured.length >= (P('pot_min') || 3)) {
                     captures[player] += captured.length + pot;
                     const ci = captured[0];
                     fxGlow(ci, '#fbbf24', 850);

@@ -47,6 +47,11 @@ module.exports = {
     icon: 'stowagego',
     spec: [
         ...K.rb('STOWAGEGO', '積荷碁', 'stowagego'),
+        K.params([
+            { key: 'bal_min', label: '均衡に必要な石数', min: 2, max: 10, def: 4, unit: '石' },
+            { key: 'bal_diff', label: '許容する左右差', min: 0, max: 4, def: 1, unit: '石' },
+            { key: 'bal_pts', label: '均衡ボーナス', min: 0, max: 6, def: 2, unit: '点' },
+        ]),
         ...ST(ST_INIT),
 
         // 積荷: 左右の自石差が1以内 (4個以上) で+2目。崩れたら再度狙える
@@ -63,13 +68,13 @@ module.exports = {
                     if (x < c) L++; else if (x > c) R++;
                 }
                 const diff = Math.abs(L - R);
-                if (L + R >= 4 && diff <= 1 && !st.bal[player]) {
+                if (L + R >= (P('bal_min') || 4) && diff <= (P('bal_diff') ?? 1) && !st.bal[player]) {
                     st.bal[player] = true;
-                    captures[player] += 2;
+                    captures[player] += (P('bal_pts') ?? 2);
                     const pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                     fxText(pi, '積荷均衡 +2', '#38bdf8', 1200);
                     fxGlow(pi, '#38bdf8', 800);
-                } else if (diff > 2) {
+                } else if (diff > (P('bal_diff') ?? 1) + 1) {
                     st.bal[player] = false; // バランス崩れ → 再挑戦可
                 }
             }

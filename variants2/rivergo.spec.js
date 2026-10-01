@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('RIVERGO', '大河碁', 'rivergo'),
+        K.params([
+            { key: 'river_width', label: '川の幅', min: 1, max: 4, def: 2, unit: '行' },
+            { key: 'cap_extra', label: '打ち切り余分', min: 0, max: 8, def: 2, unit: '行分', hint: '交点数+この行数×盤サイズの手数で強制終局' },
+        ]),
         // 着手ごと、川筋(中央2行)の石を1マス右へ流し、右端の石は流れ落ちる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -20,7 +24,8 @@ module.exports = {
                 const N = BOARD_SIZE;
                 const c = Math.floor(N / 2);
                 const lost = { 1: 0, 2: 0 };
-                for (const ry of [c, c + 1]) {
+                for (let rk = 0; rk < Math.max(1, P('river_width') || 2); rk++) {
+                    const ry = c + rk;
                     if (ry >= N) continue;
                     const last = ry * N + (N - 1);
                     if (board[last] === 1 || board[last] === 2) {
@@ -53,7 +58,7 @@ module.exports = {
 
 
             // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_extra') ?? 2))) {
                 endGameByScore();
                 return;
             }
@@ -66,7 +71,7 @@ module.exports = {
                 ctx.save();
                 ctx.fillStyle = 'rgba(70,130,220,0.20)';
                 const y0 = padding + (c - 0.5) * cellSize;
-                const h = Math.min(2, BOARD_SIZE - c) * cellSize;
+                const h = Math.min(Math.max(1, P('river_width') || 2), BOARD_SIZE - c) * cellSize;
                 ctx.fillRect(padding - cellSize * 0.5, y0, cellSize * BOARD_SIZE, h);
                 ctx.strokeStyle = 'rgba(120,180,255,0.5)';
                 ctx.lineWidth = Math.max(1, cellSize * 0.05);
@@ -93,7 +98,7 @@ module.exports = {
         fxAmbient((ctx2, now, pad, cs) => {
             const c = Math.floor(BOARD_SIZE / 2);
             const y0 = pad + (c - 0.5) * cs;
-            const h = Math.min(2, BOARD_SIZE - c) * cs;
+            const h = Math.min(Math.max(1, P('river_width') || 2), BOARD_SIZE - c) * cs;
             ctx2.save();
             ctx2.strokeStyle = 'rgba(150,205,255,0.30)';
             ctx2.lineWidth = Math.max(1, cs * 0.045);

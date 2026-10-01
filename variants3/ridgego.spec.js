@@ -10,6 +10,10 @@ module.exports = {
     icon: 'ridgego',
     spec: [
         ...K.rb('RIDGEGO', '山稜碁', 'ridgego'),
+        K.params([
+            { key: 'ridge_penalty', label: '稜線の呼吸減', min: 0, max: 6, def: 2, unit: '点/石' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 山稜: 中央の稜線行。稜線の石1個ごとに連の呼吸点-2
         const RIDGE_Y = Math.floor(BOARD_SIZE / 2);
@@ -65,7 +69,7 @@ module.exports = {
                         const curr = queue.shift();
                         group.push(curr);
                         // 稜線の石は呼吸点-2 (風が強く息苦しい)
-                        if (isRidge(curr % BOARD_SIZE, Math.floor(curr / BOARD_SIZE))) liberties -= 2;
+                        if (isRidge(curr % BOARD_SIZE, Math.floor(curr / BOARD_SIZE))) liberties -= Math.max(0, P('ridge_penalty') ?? 2);
 
                         const neighbors = getNeighbors(curr);
                         neighbors.forEach(n => {
@@ -122,7 +126,7 @@ module.exports = {
 
             while (queue.length > 0) {
                 const curr = queue.shift();
-                if (isRidge(curr % BOARD_SIZE, Math.floor(curr / BOARD_SIZE))) liberties -= 2;
+                if (isRidge(curr % BOARD_SIZE, Math.floor(curr / BOARD_SIZE))) liberties -= Math.max(0, P('ridge_penalty') ?? 2);
                 const neighbors = getNeighbors(curr);
                 neighbors.forEach(n => {
                     if (boardState[n] === 0 && !deadMask[n]) {
@@ -171,7 +175,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

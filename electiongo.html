@@ -251,6 +251,12 @@
                 <div id="onlineRoomStatus" class="text-center font-bold text-neutral-600 pt-1"></div>
             </div>
 
+            <!-- バリアント固有設定 (VPARAMSがあるゲームのみ表示) -->
+            <div id="variantParamsBox" class="hidden p-3 bg-amber-50 rounded-xl border border-amber-200 flex flex-col gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-neutral-500">このゲームの設定</span>
+                <div id="variantParams" class="flex flex-col gap-3"></div>
+            </div>
+
             <!-- 4. サウンド設定 -->
             <div class="flex items-center justify-between pt-1">
                 <span class="text-sm font-bold text-neutral-700">効果音 (SE)</span>
@@ -309,6 +315,77 @@
     </div>
 
     <script>
+        // === バリアント固有パラメータ ===
+        // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
+        // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
+        const VPARAMS = [{"key":"districts","label":"選挙区の分割","options":[{"v":2,"l":"2x2 (4区)"},{"v":3,"l":"3x3 (9区)"},{"v":4,"l":"4x4 (16区)"}],"def":3},{"key":"district_pts","label":"選挙区ボーナス","min":0,"max":12,"def":4,"unit":"目"},{"key":"ply_cap","label":"打ち切り手数","min":0.4,"max":3,"def":0.8,"step":0.05,"hint":"交点数×倍率"}];
+        const VPAR_MAP = {};
+        const VPAR_SAVED = (() => {
+            try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
+            catch (e) { return {}; }
+        })();
+        VPARAMS.forEach(p => {
+            if (p.val === undefined) p.val = VPAR_SAVED[p.key] !== undefined ? VPAR_SAVED[p.key] : p.def;
+            VPAR_MAP[p.key] = p;
+        });
+        const P = k => (VPAR_MAP[k] ? VPAR_MAP[k].val : undefined);
+        function saveVpar() {
+            try {
+                const o = {};
+                VPARAMS.forEach(p => { if (p.val !== p.def) o[p.key] = p.val; });
+                localStorage.setItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : ''), JSON.stringify(o));
+            } catch (e) {}
+        }
+        // 設定モーダルの「このゲームの設定」に VPARAMS 分のUIを生成
+        function initVariantParams() {
+            const box = document.getElementById('variantParamsBox');
+            const list = document.getElementById('variantParams');
+            if (!box || !list || !VPARAMS.length) return;
+            box.classList.remove('hidden');
+            const fmt = (p, v) => (p.step && p.step < 1 ? Number(v).toFixed(1) : String(v)) + (p.unit || '');
+            VPARAMS.forEach(p => {
+                const wrap = document.createElement('div');
+                wrap.className = 'flex flex-col gap-1';
+                const head = document.createElement('div');
+                head.className = 'flex justify-between text-xs font-bold text-neutral-600';
+                const lab = document.createElement('span');
+                lab.textContent = p.label + (p.hint ? ` (${p.hint})` : '');
+                const valEl = document.createElement('span');
+                valEl.className = 'text-amber-700';
+                valEl.textContent = fmt(p, p.val);
+                head.appendChild(lab); head.appendChild(valEl);
+                wrap.appendChild(head);
+                const applyVal = v => {
+                    p.val = v;
+                    valEl.textContent = fmt(p, p.val);
+                    saveVpar();
+                    if (typeof onVariantParam === 'function') onVariantParam(p);
+                };
+                if (p.options) {
+                    const sel = document.createElement('select');
+                    sel.className = 'w-full border border-neutral-300 rounded-lg py-1.5 text-sm font-bold bg-white';
+                    p.options.forEach(o => {
+                        const op = document.createElement('option');
+                        op.value = o.v; op.textContent = o.l;
+                        sel.appendChild(op);
+                    });
+                    sel.value = p.val;
+                    sel.addEventListener('change', () => {
+                        const num = parseFloat(sel.value);
+                        applyVal(isNaN(num) ? sel.value : num);
+                    });
+                    wrap.appendChild(sel);
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'range'; inp.min = p.min; inp.max = p.max; inp.step = p.step || 1; inp.value = p.val;
+                    inp.className = 'w-full accent-amber-600';
+                    inp.addEventListener('input', () => applyVal(parseFloat(inp.value)));
+                    wrap.appendChild(inp);
+                }
+                list.appendChild(wrap);
+            });
+        }
+        initVariantParams();
         // ==========================================
         // 1. カラーテーマ定義
         // ==========================================
@@ -1079,8 +1156,8 @@
                 ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.5);
                 ctx.lineWidth = Math.max(1.4, cellSize * 0.045);
                 ctx.setLineDash([cellSize * 0.18, cellSize * 0.14]);
-                for (let k = 1; k < 3; k++) {
-                    const pos = padding + Math.round(BOARD_SIZE * k / 3 - 0.5) * cellSize;
+                for (let k = 1; k < (P('districts') || 3); k++) {
+                    const pos = padding + Math.round(BOARD_SIZE * k / (P('districts') || 3) - 0.5) * cellSize;
                     ctx.beginPath();
                     ctx.moveTo(pos, padding); ctx.lineTo(pos, padding + (BOARD_SIZE - 1) * cellSize);
                     ctx.stroke();
@@ -1778,7 +1855,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -2132,22 +2209,23 @@
             gameOver = true;
             const territory = calculateTerritory();
             // 選挙ルール: 9つの選挙区で石が多い側が区を制して+4目
-            const distB = [0, 0, 0, 0, 0, 0, 0, 0, 0], distW = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+            const g = Math.max(1, P('districts') || 3);
+            const distB = new Array(g * g).fill(0), distW = new Array(g * g).fill(0);
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 const v = board[y * BOARD_SIZE + x];
                 if (v !== 1 && v !== 2) continue;
-                const d = Math.min(2, Math.floor(x * 3 / BOARD_SIZE)) * 3 +
-                          Math.min(2, Math.floor(y * 3 / BOARD_SIZE));
+                const d = Math.min(g - 1, Math.floor(x * g / BOARD_SIZE)) * g +
+                          Math.min(g - 1, Math.floor(y * g / BOARD_SIZE));
                 if (v === 1) distB[d]++; else distW[d]++;
             }
             let wB = 0, wW = 0;
-            for (let d = 0; d < 9; d++) {
+            for (let d = 0; d < g * g; d++) {
                 if (distB[d] > distW[d]) wB++;
                 else if (distW[d] > distB[d]) wW++;
             }
             electionDetail = { 1: wB, 2: wW };
-            territory.black += wB * 4;
-            territory.white += wW * 4;
+            territory.black += wB * (P('district_pts') || 4);
+            territory.white += wW * (P('district_pts') || 4);
 
             const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,11 +27,17 @@ module.exports = {
     icon: 'kilngo',
     spec: [
         ...K.rb('KILNGO', '登窯碁', 'kilngo'),
+        K.params([
+            { key: 'chambers', label: '窯室の数', min: 3, max: 8, def: 5, unit: '房' },
+            { key: 'fire_libs', label: '焼き上がりの呼吸ボーナス', min: 0, max: 3, def: 1 },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 窯室: 盤を上から5房に分ける (房0が最上段 = 火が最も強い)
+        // 窯室: 盤を上からN房に分ける (房0が最上段 = 火が最も強い)
         function chamberOf(i) {
             const y = (i / BOARD_SIZE) | 0;
-            return Math.min(4, Math.floor(y * 5 / BOARD_SIZE));
+            const ch = Math.max(2, P('chambers') || 5);
+            return Math.min(ch - 1, Math.floor(y * ch / BOARD_SIZE));
         }
         // 完全焼成: 連の全石が最上段の窯室(房0)にある → +1呼吸
         function fullyFired(group) {
@@ -44,29 +50,30 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                    }
-                    if (fullyFired(group)) liberties += 1; // 登り窯の頂点で焼き上がった連は+1呼吸
+                    if (fullyFired(group)) liberties += (P('fire_libs') ?? 1); // 登り窯の頂点で焼き上がった連は+N呼吸
 
                     if (liberties <= 0) {`],
         // 窯室の帯を描く
         K.CUE_GRID(`            // 登り窯の窯室: 上ほど火が強い5房の帯
             {
                 ctx.save();
-                for (let c = 0; c < 5; c++) {
-                    const heat = 0.16 - c * 0.03;
+                const __CH = Math.max(2, P('chambers') || 5);
+                for (let c = 0; c < __CH; c++) {
+                    const heat = 0.16 - c * (0.13 / __CH);
                     ctx.fillStyle = 'rgba(220,110,40,' + heat.toFixed(3) + ')';
-                    const y0 = padding + Math.floor(c * BOARD_SIZE / 5) * cellSize - cellSize * 0.5;
-                    const y1 = padding + Math.floor((c + 1) * BOARD_SIZE / 5) * cellSize - cellSize * 0.5;
+                    const y0 = padding + Math.floor(c * BOARD_SIZE / __CH) * cellSize - cellSize * 0.5;
+                    const y1 = padding + Math.floor((c + 1) * BOARD_SIZE / __CH) * cellSize - cellSize * 0.5;
                     ctx.fillRect(padding - cellSize * 0.5, y0, BOARD_SIZE * cellSize, y1 - y0);
                 }
                 ctx.strokeStyle = 'rgba(160,80,30,0.35)';
                 ctx.lineWidth = Math.max(1, cellSize * 0.04);
-                for (let c = 1; c < 5; c++) {
-                    const py = padding + Math.floor(c * BOARD_SIZE / 5) * cellSize - cellSize * 0.5;
+                for (let c = 1; c < __CH; c++) {
+                    const py = padding + Math.floor(c * BOARD_SIZE / __CH) * cellSize - cellSize * 0.5;
                     ctx.beginPath(); ctx.moveTo(padding - cellSize * 0.5, py); ctx.lineTo(padding + (BOARD_SIZE - 0.5) * cellSize, py); ctx.stroke();
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'窯室' + (lastMove ? chamberOf(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x) + 1 : '-') + '/5'`),
+        ...K.EVENT_CHIP_SPEC(`'窯室' + (lastMove ? chamberOf(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x) + 1 : '-') + '/' + Math.max(2, P('chambers') || 5)`),
         [K.ONE, K.INFO_ALGO, `            登窯碁: 盤は下から上への5連房の登り窯。連の全石が最上段にあれば焼き上がり+1呼吸<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

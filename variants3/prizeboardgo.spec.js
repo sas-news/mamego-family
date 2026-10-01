@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -40,7 +40,7 @@ const ST_INIT = `{ nums: null, roll: null }`;
 const NUMS_FN = `        // 宝盤: 各着手点に1〜6の当たり数字 (盤サイズに合わせて生成)
         function prizeNums() {
             if (!st.nums || st.nums.length !== board.length) {
-                st.nums = board.map(() => 1 + Math.floor(Math.random() * 6));
+                st.nums = board.map(() => 1 + Math.floor(Math.random() * (P('num_max') || 6)));
             }
             return st.nums;
         }
@@ -55,6 +55,7 @@ module.exports = {
     icon: 'prizeboardgo',
     spec: [
         ...K.rb('PRIZEBOARDGO', '宝盤碁', 'prizeboardgo'),
+        K.params([{ key: 'num_max', label: '当たり数字の種類', min: 3, max: 10, def: 6, unit: '種類' }, { key: 'hit_pts', label: '命中1点の得点', min: 1, max: 9, def: 3, unit: '目' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' }]),
         ...ST(ST_INIT),
         [K.ONE, '        function updateUI() {', NUMS_FN + `
         function updateUI() {`],
@@ -62,9 +63,9 @@ module.exports = {
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const nums = prizeNums();
-            if (st.roll == null) st.roll = 1 + Math.floor(Math.random() * 6);
-            const hitB = nums.filter((n, i) => n === st.roll && board[i] === 1).length * 3;
-            const hitW = nums.filter((n, i) => n === st.roll && board[i] === 2).length * 3;
+            if (st.roll == null) st.roll = 1 + Math.floor(Math.random() * (P('num_max') || 6));
+            const hitB = nums.filter((n, i) => n === st.roll && board[i] === 1).length * (P('hit_pts') || 3);
+            const hitW = nums.filter((n, i) => n === st.roll && board[i] === 2).length * (P('hit_pts') || 3);
             const blackTotal = territory.black + captures[1] + hitB;
             const whiteTotal = territory.white + captures[2] + komi + hitW;`],
         [K.ONE, `                    <div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>`,

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'compassgo',
     spec: [
         ...K.rb('COMPASSGO', '方位碁', 'compassgo'),
+        K.params([
+            { key: 'cardinal_pts', label: '四正方位の得点', min: 0, max: 8, def: 3, unit: '点/石' },
+            { key: 'corner_pts', label: '四隅方位の得点', min: 0, max: 6, def: 1, unit: '点/石' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         // 方位ヘルパー
         [K.ONE, `        function endGameByScore() {`, `        // 八方位: 外周の石の方位を中心からの角度で判定 (0=東 2=南 4=西 6=北)
         function compassSector(i) {
@@ -42,7 +47,7 @@ module.exports = {
                 const i = y * BOARD_SIZE + x;
                 if (board[i] !== pl) continue;
                 const sec = compassSector(i);
-                s += (sec % 2 === 0) ? 3 : 1; // 四正+3・四隅+1
+                s += (sec % 2 === 0) ? (P('cardinal_pts') ?? 3) : (P('corner_pts') ?? 1); // 四正/四隅で得点が違う
             }
             return s;
         }

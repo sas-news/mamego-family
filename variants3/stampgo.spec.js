@@ -10,6 +10,9 @@ module.exports = {
     icon: 'stampgo',
     spec: [
         ...K.rb('STAMPGO', '判子碁', 'stampgo'),
+        K.params([
+            { key: 'stamp_pts', label: '印1つあたりの得点', min: 0, max: 5, def: 1, unit: '目' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { stamp: {} }; // 印: idx -> 捺した側 (1|2)
         let stampDetail = { 1: 0, 2: 0 };`],
@@ -58,8 +61,8 @@ module.exports = {
             Object.keys(st.stamp).forEach(k => {
                 const i = +k, ow = st.stamp[i];
                 if (board[i] === (ow === 1 ? 2 : 1)) return; // 敵に踏まれた印は無効
-                stampDetail[ow]++;
-                if (ow === 1) territory.black++; else territory.white++;
+                stampDetail[ow] += (P('stamp_pts') ?? 1);
+                if (ow === 1) territory.black += (P('stamp_pts') ?? 1); else territory.white += (P('stamp_pts') ?? 1);
             });`],
         ...K.STONE_MARKS_SPEC(`            // 印: 捺された点に朱色の小さな角印
             {

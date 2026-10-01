@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'tsukumogo',
     spec: [
         ...K.rb('TSUKUMOGO', '付喪碁', 'tsukumogo'),
+        K.params([
+            { key: 'tsukumo_age', label: '化ける歳数', min: 3, max: 20, def: 8, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         ...ST(ST_INIT),
         // 自分の手番ごとに自分の石は歳を取り、8歳で付喪神に化けて敵色になる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -59,7 +63,7 @@ module.exports = {
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== player) continue;
                 st.age[i] = (st.age[i] || 0) + 1;
-                if (st.age[i] >= 8) {
+                if (st.age[i] >= Math.max(1, P('tsukumo_age') || 8)) {
                     board[i] = opponent;
                     delete st.age[i];
                     fxBurst(i, '#a78bfa', 12, 1.6);
@@ -74,7 +78,7 @@ module.exports = {
                 ctx.save();
                 for (const k in st.age) {
                     const i = +k;
-                    if ((st.age[k] || 0) < 6 || board[i] === 0) continue;
+                    if ((st.age[k] || 0) < Math.max(1, (P('tsukumo_age') || 8) - 2) || board[i] === 0) continue;
                     const cx = padding + (i % BOARD_SIZE) * cellSize;
                     const cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
                     ctx.strokeStyle = 'rgba(167,139,250,' + (0.3 + st.age[k] * 0.06) + ')';

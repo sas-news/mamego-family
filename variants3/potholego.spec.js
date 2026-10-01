@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,15 +27,19 @@ module.exports = {
     icon: 'potholego',
     spec: [
         ...K.rb('POTHOLEGO', '甌穴碁', 'potholego'),
+        K.params([{ key: 'hole_pos', label: '甌穴の位置', min: 0.1, max: 0.5, step: 0.02, def: 0.3, hint: '盤辺からの比率' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' }]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 甌穴: 盤に点在する5つの深い穴。空いている穴に隣接する石は落ち込む
-        const HOLE_SET = new Set();
-        {
+        let HOLE_SET = new Set();
+        function rebuildHoles() {
+            HOLE_SET = new Set();
             const m = Math.floor(BOARD_SIZE / 2);
-            const a = Math.max(2, Math.round(BOARD_SIZE * 0.30));
+            const a = Math.max(2, Math.round(BOARD_SIZE * (P('hole_pos') || 0.30)));
             [[m, 1], [1, m], [BOARD_SIZE - 2, m], [m, BOARD_SIZE - 2], [m, m]]
                 .forEach(([x, y]) => HOLE_SET.add(y * BOARD_SIZE + x));
-        }`],
+        }
+        rebuildHoles();
+        function onVariantParam() { rebuildHoles(); }`],
         // 穴に落ちた石は取られず連にも加わらない (捕獲走査から除外)
         [K.ONE, `                if (boardState[i] === player && !visited[i]) {`,
 `                if (boardState[i] === player && !visited[i] && !HOLE_SET.has(i)) {`],

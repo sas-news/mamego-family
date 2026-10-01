@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -28,11 +28,12 @@ module.exports = {
     icon: "polarnightgo",
     spec: [
         ...K.rb("Polar Night-Go", "極夜碁", "polarnightgo"),
+        K.params([{ key: 'cycle', label: '極夜の周期', min: 8, max: 48, def: 24, unit: '手' }, { key: 'night_len', label: '極夜の長さ', min: 2, max: 12, def: 6, unit: '手' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' }]),
         [K.ONE, '            if (getCapturedStones(after, player).length > 0) return false;',
             "            // 変則: 取り残された死に連が残り得るため、着手した石の連だけを窒息判定する\n            const placedSuicide = cells.some(p => {\n                const pi = p.y * BOARD_SIZE + p.x;\n                const seen = new Set([pi]), q = [pi];\n                while (q.length) {\n                    const cur = q.pop();\n                    for (const n of getNeighbors(cur)) if (after[n] === player && !seen.has(n)) { seen.add(n); q.push(n); }\n                }\n                return getCapturedStones(after, player).some(d => seen.has(d));\n            });\n            if (placedSuicide) return false;"],
-        [K.ONE, K.CAPTURE_BLOCK, "            // 極夜碁: 周期の18-23手目は極夜。一切の取りが凍る\n            const pn = (history.length % 24) >= 18;\n            const captured = pn ? [] : getCapturedStones(board, opponent);\n            if (captured.length > 0) {\n                captured.forEach(idx => board[idx] = 0);\n                captures[player] += captured.length;\n                soundManager.playCapture();\n                cleanUpPieces();\n            } else {\n                soundManager.playPlace();\n                if (pn) fxGlow(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '#818cf8', 700);\n            }"],
-        K.CUE_GRID("            // 極夜は盤面を深い藍に染める\n            if ((history.length % 24) >= 18) {\n                ctx.save();\n                ctx.fillStyle = 'rgba(15,23,42,0.40)';\n                ctx.fillRect(padding - cellSize / 2, padding - cellSize / 2, BOARD_SIZE * cellSize, BOARD_SIZE * cellSize);\n                ctx.restore();\n            }"),
-        ...K.EVENT_CHIP_SPEC("(history.length % 24) >= 18 ? '極夜' : '極夜まで' + (((18 - history.length % 24) + 24) % 24) + '手'"),
+        [K.ONE, K.CAPTURE_BLOCK, "            // 極夜碁: 周期の18-23手目は極夜。一切の取りが凍る\n            const pn = (history.length % (P('cycle') || 24)) >= ((P('cycle') || 24) - (P('night_len') || 6));\n            const captured = pn ? [] : getCapturedStones(board, opponent);\n            if (captured.length > 0) {\n                captured.forEach(idx => board[idx] = 0);\n                captures[player] += captured.length;\n                soundManager.playCapture();\n                cleanUpPieces();\n            } else {\n                soundManager.playPlace();\n                if (pn) fxGlow(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '#818cf8', 700);\n            }"],
+        K.CUE_GRID("            // 極夜は盤面を深い藍に染める\n            if ((history.length % (P('cycle') || 24)) >= ((P('cycle') || 24) - (P('night_len') || 6))) {\n                ctx.save();\n                ctx.fillStyle = 'rgba(15,23,42,0.40)';\n                ctx.fillRect(padding - cellSize / 2, padding - cellSize / 2, BOARD_SIZE * cellSize, BOARD_SIZE * cellSize);\n                ctx.restore();\n            }"),
+        ...K.EVENT_CHIP_SPEC("((history.length % (P('cycle') || 24)) >= ((P('cycle') || 24) - (P('night_len') || 6))) ? '極夜' : '極夜まで' + (((((P('cycle') || 24) - (P('night_len') || 6)) - history.length % (P('cycle') || 24)) + (P('cycle') || 24)) % (P('cycle') || 24)) + '手'"),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, "24手周期の18〜23手目は極夜 — 太陽が昇らず盤が凍る。この間はどんな包囲も取りにならない。極夜の6手間は息を潜めて布石を整えよ。"],
         [K.ONE, K.RV_ALGO, K.rv(["周期の最後6手は極夜で一切取れない",

@@ -47,6 +47,9 @@ module.exports = {
     icon: 'hoshitorigo',
     spec: [
         ...K.rb('HOSHITORIGO', '星取碁', 'hoshitorigo'),
+        K.params([
+            { key: 'streak_bonus', label: '連勝ボーナス', min: 0, max: 3, def: 1, unit: '星' },
+        ]),
         ...ST(ST_INIT),
         // 星取表: 取った分だけ星が増え、自分の手番で取り続ければ連勝ボーナス
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -56,8 +59,8 @@ module.exports = {
             if (captured.length > 0) {
                 st.stars[player] += captured.length;
                 if (st.hot[player]) {
-                    st.stars[player] += 1;
-                    fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '連勝+1星', '#fde047', 1200);
+                    st.stars[player] += (P('streak_bonus') ?? 1);
+                    fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '連勝+' + (P('streak_bonus') ?? 1) + '星', '#fde047', 1200);
                 }
                 st.hot[player] = true;
             } else {

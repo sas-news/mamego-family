@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('FLIPGO', '挟撃碁', 'flipgo'),
+        K.params([
+            { key: 'flip_dirs', label: '挟撃の方向', options: [{ v: 'hv', l: '縦横のみ' }, { v: 'all', l: '縦横+斜め' }], def: 'hv' },
+        ]),
         // 挟撃処理を通常捕獲の前に挿入
         [K.ONE, K.CAPTURE_BLOCK, `            // 挟撃碁: 自分色で縦か横に両挟みされた敵石を盤全体から返す
             {
@@ -18,8 +21,11 @@ module.exports = {
                     const x = i % BOARD_SIZE, y = Math.floor(i / BOARD_SIZE);
                     const at = (xx, yy) => (xx >= 0 && yy >= 0 && xx < BOARD_SIZE && yy < BOARD_SIZE)
                         ? board[yy * BOARD_SIZE + xx] : -1;
+                    const diag = (P('flip_dirs') || 'hv') === 'all';
                     if ((at(x - 1, y) === player && at(x + 1, y) === player)
-                        || (at(x, y - 1) === player && at(x, y + 1) === player)) {
+                        || (at(x, y - 1) === player && at(x, y + 1) === player)
+                        || (diag && ((at(x - 1, y - 1) === player && at(x + 1, y + 1) === player)
+                            || (at(x - 1, y + 1) === player && at(x + 1, y - 1) === player)))) {
                         flips.push(i);
                     }
                 }

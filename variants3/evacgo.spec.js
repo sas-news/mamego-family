@@ -10,6 +10,10 @@ module.exports = {
     icon: 'evacgo',
     spec: [
         ...K.rb('EVACGO', '避難碁', 'evacgo'),
+        K.params([
+            { key: 'wave_interval', label: '災害波の間隔', min: 4, max: 40, def: 10, unit: '手' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 600, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { lost: { 1: 0, 2: 0 } }; // 災害で失った石の数`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -50,8 +54,9 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 災害波: 10手ごとに盤の半分を舐める — 孤立石は飲まれる
-            if (history.length > 0 && history.length % 10 === 0) {
-                const waveNo = Math.floor(history.length / 10);
+            const wi = Math.max(1, P('wave_interval') || 10);
+            if (history.length > 0 && history.length % wi === 0) {
+                const waveNo = Math.floor(history.length / wi);
                 const topHalf = waveNo % 2 === 1; // 奇数回は上半分、偶数回は下半分
                 const shel = shelterCells();
                 const gone = [];
@@ -76,7 +81,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,
@@ -85,7 +90,7 @@ module.exports = {
         K.CUE_STARS(`            // 避難所 (緑の屋敷) と次に襲う半盤の警告色
             {
                 const mid = Math.floor(BOARD_SIZE / 2);
-                const nextWave = Math.floor(history.length / 10) + 1;
+                const nextWave = Math.floor(history.length / Math.max(1, P('wave_interval') || 10)) + 1;
                 const topNext = nextWave % 2 === 1;
                 const horizon = Math.floor((BOARD_SIZE - 1) / 2);
                 ctx.save();

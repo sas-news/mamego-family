@@ -47,6 +47,9 @@ module.exports = {
     icon: 'sutegomago',
     spec: [
         ...K.rb('SUTEGOMAGO', '捨駒碁', 'sutegomago'),
+        K.params([
+            { key: 'sute_lib', label: '捨駒の呼吸点上限', min: 0, max: 3, def: 1, hint: 'この呼吸点数以下の連が根付く' },
+        ]),
         ...ST(ST_INIT),
         // 捨駒が取られたら道連れ: 隣接する呼吸1以下の敵連も取り除く
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
@@ -68,7 +71,7 @@ module.exports = {
                                 if (board[__m] === player && !__seen.has(__m)) { __seen.add(__m); __q.push(__m); }
                             });
                         }
-                        if (getLiberties(board, __root) <= 1) __seen.forEach(__c => __dead.add(__c));
+                        if (getLiberties(board, __root) <= (P('sute_lib') ?? 1)) __seen.forEach(__c => __dead.add(__c));
                     });
                     if (__dead.size > 0) {
                         __dead.forEach(__c => { if (board[__c] === player) { board[__c] = 0; captures[opponent]++; } });

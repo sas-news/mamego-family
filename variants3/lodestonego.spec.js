@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,14 +64,20 @@ module.exports = {
     icon: 'lodestonego',
     spec: [
         ...K.rb('LODESTONEGO', '磁針碁', 'lodestonego'),
+        K.params([
+            { key: 'pts_center', label: '天元の指針点', min: 0, max: 10, def: 4 },
+            { key: 'pts_adj', label: '天元四隣の指針点', min: 0, max: 6, def: 2 },
+            { key: 'pts_meridian', label: '子午線の指針点', min: 0, max: 4, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
             // 磁針: 天元に近いほど指針点が高い
             const lX = move.cells[0].x, lY = move.cells[0].y;
             const lc = (BOARD_SIZE - 1) / 2;
-            if (lX === lc && lY === lc) st.score[player] += 4;
-            else if (Math.abs(lX - lc) + Math.abs(lY - lc) === 1) st.score[player] += 2;
-            else if (lX === lc || lY === lc) st.score[player] += 1;`],
+            if (lX === lc && lY === lc) st.score[player] += (P('pts_center') ?? 4);
+            else if (Math.abs(lX - lc) + Math.abs(lY - lc) === 1) st.score[player] += (P('pts_adj') ?? 2);
+            else if (lX === lc || lY === lc) st.score[player] += (P('pts_meridian') ?? 1);`],
         K.CUE_GRID(`            // 子午線: 中央の縦横を淡く照らす
             {
                 const c_ = (BOARD_SIZE - 1) / 2;

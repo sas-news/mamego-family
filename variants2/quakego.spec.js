@@ -9,12 +9,16 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('QUAKEGO', '地震碁', 'quakego'),
+        K.params([
+            { key: 'quake_interval', label: '地震の間隔', min: 2, max: 15, def: 6, unit: '手' },
+            { key: 'cap_extra', label: '打ち切り余分', min: 0, max: 8, def: 2, unit: '行分', hint: '交点数+この行数×盤サイズの手数で強制終局' },
+        ]),
         // 6手ごとに地震: 全石がそれぞれ擬似ランダムな方向へ1マス散る
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 地震ルール: 6手ごとに盤が揺れ、全石がバラバラの方向へ1マス散る
-            if (history.length % 6 === 0) {
+            if (history.length % Math.max(1, P('quake_interval') || 6) === 0) {
                 const N = BOARD_SIZE;
                 const dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]];
                 const scat = []; // 散る移動を先に全部決めてから適用 (1手1マス)
@@ -45,8 +49,14 @@ module.exports = {
                 cleanUpPieces();
             }
 
+            // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_extra') ?? 2))) {
+                endGameByScore();
+                return;
+            }
+
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'地震まで ' + (6 - history.length % 6) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`'地震まで ' + (Math.max(1, P('quake_interval') || 6) - history.length % Math.max(1, P('quake_interval') || 6)) + ' 手'`),
         // 地割れの描画
         K.CUE_GRID(`            // 地割れ: 盤を走るジグザグの裂け目
             {

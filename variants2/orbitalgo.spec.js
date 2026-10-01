@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('ORBITALGO', '衛星碁', 'orbitalgo'),
+        K.params([
+            { key: 'orbit_step', label: '公転の歩幅', min: 1, max: 3, def: 1, unit: 'マス' },
+        ]),
         // 着手ごと、全石がそれぞれの軌道リング上を反時計回りに1マス公転
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -26,13 +29,14 @@ module.exports = {
                     return cs;
                 };
                 const maxd = Math.floor((N - 1) / 2);
+                const __step = Math.max(1, P('orbit_step') || 1);
                 for (let d = 0; d <= maxd; d++) {
                     const cs = ring(d);
                     const vals = cs.map(([x, y]) => board[y * N + x]);
                     cs.forEach(([x, y], k) => {
-                        board[y * N + x] = vals[(k + 1) % vals.length];
+                        board[y * N + x] = vals[(k + __step) % vals.length];
                         if (board[y * N + x] !== 0) {
-                            const [sx, sy] = cs[(k + 1) % vals.length];
+                            const [sx, sy] = cs[(k + __step) % vals.length];
                             fxSlide(sy * N + sx, y * N + x, 400);
                         }
                     });

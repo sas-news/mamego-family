@@ -35,7 +35,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -51,6 +51,11 @@ module.exports = {
     icon: 'kenzokugo',
     spec: [
         ...K.rb('KENZOKUGO', '眷属碁', 'kenzokugo'),
+        K.params([
+            { key: 'ez_rows', label: '敵陣帯の深さ', min: 1, max: 6, def: 3, unit: '段', hint: '13路では3段' },
+            { key: 'fam_pts', label: '眷属の探索得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 1.1, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...PERSIST('{ fam: {}, pts: { 1: 0, 2: 0 } }'),
         // 眷属ルール: 敵陣帯の単石が眷属化し毎ターン探索得点
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -58,7 +63,7 @@ module.exports = {
 
             // 眷属ルール: 敵陣帯 (黒は上3段 / 白は下3段) の単石は使い魔
             {
-                const EZ = Math.max(2, Math.floor(BOARD_SIZE / 4));
+                const EZ = Math.min(Math.max(1, P('ez_rows') || 3), Math.floor(BOARD_SIZE / 2));
                 const inEnemyZone = (i, p) => {
                     const y = (i / BOARD_SIZE) | 0;
                     return p === 1 ? y < EZ : y >= BOARD_SIZE - EZ;
@@ -71,8 +76,8 @@ module.exports = {
                 // 眷属の探索: 自分の手番ごとに+1
                 Object.keys(st.fam).forEach(k => {
                     if (st.fam[k].p === player) {
-                        st.pts[player]++;
-                        fxText(+k, '眷属探索+1', '#fbbf24', 700);
+                        st.pts[player] += (P('fam_pts') ?? 1);
+                        fxText(+k, '眷属探索+' + (P('fam_pts') ?? 1), '#fbbf24', 700);
                     }
                 });
                 // 新規眷属: 敵陣に打ち込んだ単石が使い魔になる
@@ -98,7 +103,7 @@ ${CAP}
                     <div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>`],
         // 敵陣帯の色付けと眷属の目印
         ...K.STONE_MARKS_SPEC(`            {
-                const EZ = Math.max(2, Math.floor(BOARD_SIZE / 4));
+                const EZ = Math.min(Math.max(1, P('ez_rows') || 3), Math.floor(BOARD_SIZE / 2));
                 ctx.save();
                 for (let y = 0; y < BOARD_SIZE; y++) {
                     let band = null;

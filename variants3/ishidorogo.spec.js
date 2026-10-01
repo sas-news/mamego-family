@@ -27,6 +27,9 @@ module.exports = {
     icon: 'ishidorogo',
     spec: [
         ...K.rb('ISHIDOROGO', '灯籠碁', 'ishidorogo'),
+        K.params([
+            { key: 'lantern_pts', label: '灯籠1基の得点', min: 2, max: 12, def: 6, unit: '目' },
+        ]),
         // 灯籠ボーナス: 星点(天元を除く)に自石があれば1基+6
         [K.ONE, `        function endGameByScore() {`,
 `        function lanternIdxs() {
@@ -36,7 +39,7 @@ module.exports = {
                 .map(p => p.y * BOARD_SIZE + p.x);
         }
         function lanternBonus(player) {
-            return lanternIdxs().filter(i => board[i] === player).length * 6;
+            return lanternIdxs().filter(i => board[i] === player).length * (P('lantern_pts') || 6);
         }
 
         function endGameByScore() {`],
@@ -90,7 +93,7 @@ module.exports = {
             });
             ctx2.restore();
         });`],
-        ...K.EVENT_CHIP_SPEC(`'灯籠 黒' + (lanternBonus(1) / 6) + '/白' + (lanternBonus(2) / 6)`),
+        ...K.EVENT_CHIP_SPEC(`'灯籠 黒' + (lanternBonus(1) / (P('lantern_pts') || 6)) + '/白' + (lanternBonus(2) / (P('lantern_pts') || 6))`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            灯籠碁: 星点は庭灯籠。灯籠に火(石)を入れると夜の庭が照らされ1基+6目<br>
             PC: クリックで配置<br>

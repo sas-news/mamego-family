@@ -9,13 +9,16 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('SLIDEGO', '滑走碁', 'slidego'),
+        K.params([
+            { key: 'slide_interval', label: '滑走の間隔', min: 1, max: 5, def: 1, unit: '手ごと' },
+        ]),
         // 着手ごと、全石が右下へ1マス滑る (連鎖的に滑る雪崩式)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
 
             // 滑走ルール: 全石が右下へ1マス滑る。下流から処理するので連鎖的に滑り落ちる
-            {
+            if (history.length % (P('slide_interval') || 1) === 0) {
                 const N = BOARD_SIZE;
                 for (let y = N - 1; y >= 0; y--) for (let x = N - 1; x >= 0; x--) {
                     const i = y * N + x;

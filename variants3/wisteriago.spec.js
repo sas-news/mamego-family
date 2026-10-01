@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,10 @@ module.exports = {
     icon: 'wisteriago',
     spec: [
         ...K.rb('WISTERIAGO', '藤碁', 'wisteriago'),
+        K.params([
+            { key: 'vine_max', label: '棚ごとの花房上限', min: 1, max: 9, def: 3, unit: '房' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST('{ vine: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -57,7 +61,7 @@ module.exports = {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 for (const k in st.vine) {
                     const vi = +k, vc = st.vine[k];
-                    if (board[vi] !== player || vc.flo >= 3) continue;
+                    if (board[vi] !== player || vc.flo >= (P('vine_max') || 3)) continue;
                     const vx = vi % BOARD_SIZE;
                     for (let y = (vi / BOARD_SIZE | 0) + 1; y < BOARD_SIZE; y++) {
                         const cand = y * BOARD_SIZE + vx;

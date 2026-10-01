@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'zashikigo',
     spec: [
         ...K.rb('ZASHIKIGO', '座敷碁', 'zashikigo'),
+        K.params([
+            { key: 'top_pts', label: '上座の点', min: 0, max: 9, def: 3, unit: '目' },
+            { key: 'mid_pts', label: '中座の点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         // 席次ボーナス: 上1/3帯+3、中1/3帯+1、下帯0
         [K.ONE, `        function endGameByScore() {`,
 `        function seatBonus(player) {
@@ -34,8 +39,8 @@ module.exports = {
             let bonus = 0;
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 if (board[y * BOARD_SIZE + x] !== player) continue;
-                if (y < t) bonus += 3;
-                else if (y < t * 2) bonus += 1;
+                if (y < t) bonus += (P('top_pts') ?? 3);
+                else if (y < t * 2) bonus += (P('mid_pts') ?? 1);
             }
             return bonus;
         }

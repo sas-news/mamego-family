@@ -10,25 +10,33 @@ module.exports = {
     icon: 'chainreact',
     spec: [
         ...K.rb('CHAINREACT', '連鎖碁', 'chainreact'),
+        K.params([
+            { key: 'chain_waves', label: '連鎖の最大波数', min: 0, max: 5, def: 2, unit: '波', hint: '0=連鎖なし' },
+            { key: 'chain_dirs', label: '連鎖の届く範囲', options: [{ v: 8, l: '8近傍 (斜めも)' }, { v: 4, l: '4近傍のみ' }], def: 8 },
+            { key: 'cap_moves', label: '打ち切り手数', min: 40, max: 300, def: 140, unit: '手' },
+        ]),
         // 捕獲後の連鎖爆発: 取られた石の8近傍にある敵石が連鎖して消える (最大2波)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
                 captures[player] += captured.length;
                 soundManager.playCapture();
-                // 連鎖ルール: 爆発した石の8近傍の敵石も連鎖して消える (最大2波)
+                // 連鎖ルール: 爆発した石の近傍の敵石も連鎖して消える (波数・近傍は設定で調整)
+                const _waves = P('chain_waves') ?? 2;
+                const _dirs = (P('chain_dirs') || 8) === 4
+                    ? [[1,0],[-1,0],[0,1],[0,-1]]
+                    : [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
                 let frontier = [...captured];
-                for (let wave = 0; wave < 2; wave++) {
+                for (let wave = 0; wave < _waves; wave++) {
                     const blast = new Set();
                     frontier.forEach(ci => {
                         const cx = ci % BOARD_SIZE, cy = Math.floor(ci / BOARD_SIZE);
-                        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-                            if (!dx && !dy) continue;
+                        _dirs.forEach(([dx, dy]) => {
                             const nx = cx + dx, ny = cy + dy;
-                            if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) continue;
+                            if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) return;
                             const ni = ny * BOARD_SIZE + nx;
                             if (board[ni] === opponent) blast.add(ni);
-                        }
+                        });
                     });
                     if (blast.size === 0) break;
                     frontier = [];
@@ -45,8 +53,8 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 長期戦防止: 既定の手数経過でその時点の地数判定
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, K.RV_ALGO, K.rv([

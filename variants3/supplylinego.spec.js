@@ -19,7 +19,7 @@ const ST = (init) => [
                 deadStones: [...deadStones],`],
     [K.ONE, K.ONLINE_RECV, K.ONLINE_RECV + `\n            st = data.st ? JSON.parse(JSON.stringify(data.st)) : ${init};`],
 ];
-const ST_INIT = `{ ration: { 1: 24, 2: 24 } }`;
+const ST_INIT = `{ ration: { 1: (P('ration_init') || 24), 2: (P('ration_init') || 24) } }`;
 const GAME_OVER = [
     [K.ONE, `            if (consecutivePasses >= 2) {
                 startDeadStoneSelectionPhase();`,
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'supplylinego',
     spec: [
         ...K.rb('SUPPLYLINEGO', '兵糧碁', 'supplylinego'),
+        K.params([
+            { key: 'ration_init', label: '初期兵糧', min: 8, max: 60, def: 24, unit: '石分' },
+            { key: 'ration_resupply', label: '補給船の兵糧', min: 4, max: 40, def: 12, unit: '石分' },
+        ]),
         ...ST(ST_INIT),
         // 兵糧: 敵を取ると鹵獲 (取った数だけ兵糧補給)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
@@ -78,7 +82,7 @@ module.exports = {
                 if (st.ration[player] < 0 && biggest) {
                     const deserter = Math.max.apply(null, biggest);
                     board[deserter] = 0;
-                    st.ration[player] = 12; // 補給船が再出港
+                    st.ration[player] = (P('ration_resupply') || 12); // 補給船が再出港
                     fxBurst(deserter, '#78716c', 10, 1.5);
                     fxText(deserter, '兵糧切れ脱走!', '#a8a29e', 1400);
                     fxShake(4, 300);

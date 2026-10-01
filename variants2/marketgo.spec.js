@@ -9,6 +9,11 @@ module.exports = {
     kind: 'market',
     spec: [
         ...K.rb('MARKETGO', '相場碁', 'marketgo'),
+        K.params([
+            { key: 'price_max', label: '石価の上限', min: 2, max: 9, def: 5, hint: '石価は1〜この値で変動' },
+            { key: 'price_step', label: '変動の歩幅', min: 1, max: 13, def: 7, hint: '手数ごとに動く歩幅' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.7, max: 2.5, def: 1.4, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let market = 3; // 現在の石価 (1〜5で変動)`],
         [K.ONE, K.RESET_HELD, `            heldPieces = { 1: null, 2: null };
@@ -52,7 +57,7 @@ module.exports = {
                     fxText(p.y * BOARD_SIZE + p.x, '¥' + last.mv, last.mv >= 4 ? '#facc15' : '#cbd5e1', 1000);
                 }
             }
-            market = 1 + ((history.length * 7 + 3) % 5);
+            market = 1 + ((history.length * Math.max(1, P('price_step') || 7) + 3) % Math.max(1, P('price_max') || 5));
 
             turn = opponent;`],
         // 終局時: 盤上の自石の購入価格総額を資産得点に
@@ -102,7 +107,21 @@ module.exports = {
             '高値の時に置き、安値の時は取りに回れ。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
-        ...K.MOVE_CAP_SPEC,
+        // 打ち切り手数は設定で調整可能
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 新規対局 (履歴空) で打ち切りを再武装
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            // (1局につき1回のみ発火。死に石選択を取り消して続行する場合は再発火しない)
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.4))) {
+                moveCapFired = true;
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

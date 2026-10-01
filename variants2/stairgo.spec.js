@@ -9,10 +9,14 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('STAIRGO', '階段碁', 'stairgo'),
+        K.params([
+            { key: 'step_w', label: '段の横幅', min: 1, max: 5, def: 2, unit: '列' },
+            { key: 'step_h', label: '段の高さ', min: 1, max: 4, def: 2, unit: '段', hint: '新しい対局で反映' },
+        ]),
         // 階段形状: 列ごとに2段ずつせり上がる (右端が最も高い)
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                const top = Math.max(0, (BOARD_SIZE - 1) - Math.floor(x / 2) * 2);
+                const top = Math.max(0, (BOARD_SIZE - 1) - Math.floor(x / (P('step_w') || 2)) * (P('step_h') || 2));
                 if (y < top) board[y * BOARD_SIZE + x] = 3;
             }`],
         // 階段の質感: 石段ブロック (段の小口を明るい踏面で示す)

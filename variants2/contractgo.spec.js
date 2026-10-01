@@ -9,6 +9,9 @@ module.exports = {
     kind: 'contract',
     spec: [
         ...K.rb('CONTRACTGO', '請負碁', 'contractgo'),
+        K.params([
+            { key: 'need', label: '請負の必要個数', min: 1, max: 4, def: 3, unit: '箇所', hint: '四隅・星で達成に必要な数' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         const CONTRACT_TYPES = {
             corners: { name: '四隅請負', desc: '4隅のうち3箇所に自石を置く' },
@@ -53,10 +56,10 @@ module.exports = {
             const isP = (x, y) => board[y * BOARD_SIZE + x] === player;
             const m = BOARD_SIZE - 1;
             if (t === 'corners') {
-                return [[0,0],[m,0],[0,m],[m,m]].filter(([x,y]) => isP(x,y)).length >= 3;
+                return [[0,0],[m,0],[0,m],[m,m]].filter(([x,y]) => isP(x,y)).length >= (P('need') || 3);
             }
             if (t === 'stars') {
-                return getStarPoints(BOARD_SIZE).filter(pt => isP(pt.x, pt.y)).length >= 3;
+                return getStarPoints(BOARD_SIZE).filter(pt => isP(pt.x, pt.y)).length >= (P('need') || 3);
             }
             if (t === 'edges') {
                 let top = false, bot = false, left = false, right = false;

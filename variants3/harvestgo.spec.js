@@ -10,6 +10,11 @@ module.exports = {
     icon: 'harvestgo',
     spec: [
         ...K.rb('HARVESTGO', '収穫碁', 'harvestgo'),
+        K.params([
+            { key: 'season_len', label: '季節の長さ', min: 4, max: 30, def: 12, step: 2, unit: '手' },
+            { key: 'harvest_win', label: '豊作勝ちに必要な収穫点', min: 2, max: 10, def: 4, unit: '点' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 50, max: 500, def: 140, step: 10, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { score: { 1: 0, 2: 0 } }; // 収穫点`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -43,7 +48,7 @@ module.exports = {
             if (x > mid && y > mid) return 2;
             return 3;
         }
-        function currentSeason() { return Math.floor(history.length / 12); }
+        function currentSeason() { return Math.floor(history.length / Math.max(1, P('season_len') || 12)); }
 
         function isValidPlacement(cells, player) {`],
         [K.ONE, '        function endGameByScore() {', K.WIN_BY_RULE_FN + `
@@ -52,7 +57,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 収穫: 12手ごとに実りの象限で石が多い側が1点 (同数なら両方に)
-            if (history.length > 0 && history.length % 12 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('season_len') || 12) === 0) {
                 const q = ripeQuadrant(currentSeason() - 1);
                 let c1 = 0, c2 = 0;
                 for (let y = 0; y < BOARD_SIZE; y++) {
@@ -68,14 +73,14 @@ module.exports = {
                 const mx = (q === 1 || q === 2) ? Math.floor(BOARD_SIZE * 0.75) : Math.floor(BOARD_SIZE * 0.25);
                 const my = (q >= 2) ? Math.floor(BOARD_SIZE * 0.75) : Math.floor(BOARD_SIZE * 0.25);
                 fxText(my * BOARD_SIZE + mx, '収穫!', '#eab308', 1200);
-                if (st.score[1] >= 4 || st.score[2] >= 4) {
-                    const w = st.score[1] >= 4 ? 1 : 2;
+                if (st.score[1] >= (P('harvest_win') || 4) || st.score[2] >= (P('harvest_win') || 4)) {
+                    const w = st.score[1] >= (P('harvest_win') || 4) ? 1 : 2;
                     winByRule(w, '豊作勝ち', '収穫点が4点に達しました'); return;
                 }
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

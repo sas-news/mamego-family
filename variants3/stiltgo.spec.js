@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,9 @@ module.exports = {
     icon: 'stiltgo',
     spec: [
         ...K.rb('STILTGO', '竹馬碁', 'stiltgo'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2, def: 0.75, step: 0.1, hint: '交点数の倍率' },
+        ]),
         // 竹馬: 星点への着手は隣接する全敵石を踏み潰す (呼吸点に関係なく)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る

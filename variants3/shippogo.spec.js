@@ -27,6 +27,9 @@ module.exports = {
     icon: 'shippogo',
     spec: [
         ...K.rb('SHIPPOGO', '七宝碁', 'shippogo'),
+        K.params([
+            { key: 'shippo_pts', label: '七宝1個の得点', min: 0, max: 2, def: 0.5, step: 0.5, unit: '目' },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 七宝: 全隣接点(盤端は2-3方向)が同色の石は釉薬が彩られた七宝 — 1個+0.5目
         function shippoBonus(player) {
@@ -34,7 +37,7 @@ module.exports = {
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== player) continue;
                 const nb = getNeighbors(i);
-                if (nb.length > 0 && nb.every(n => board[n] === player)) b += 0.5;
+                if (nb.length > 0 && nb.every(n => board[n] === player)) b += (P('shippo_pts') ?? 0.5);
             }
             return b;
         }

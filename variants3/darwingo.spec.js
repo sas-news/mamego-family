@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 80) / 100))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,12 +27,18 @@ module.exports = {
     icon: 'darwingo',
     spec: [
         ...K.rb('DARWINGO', '淘汰碁', 'darwingo'),
+        K.params([
+            { key: 'sel_interval', label: '自然選択の間隔', min: 2, max: 20, def: 8, unit: '手' },
+            { key: 'weak_size', label: '弱い連の石数上限', min: 1, max: 5, def: 2, unit: '個' },
+            { key: 'weak_libs', label: '弱い連の呼吸上限', min: 1, max: 5, def: 2 },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 80, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         // 自然選択: 8手ごとに弱い連 (2個以下 & 呼吸2以下) が死滅 — 両者対象
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 淘汰碁: 8手ごとの自然選択 — 弱い連は死滅する
-            if (history.length % 8 === 0) {
+            // 淘汰碁: N手ごとの自然選択 — 弱い連は死滅する (間隔・閾値は設定で調整)
+            if (history.length % Math.max(1, P('sel_interval') || 8) === 0) {
                 const seen = new Set();
                 for (let i = 0; i < board.length; i++) {
                     if ((board[i] !== 1 && board[i] !== 2) || seen.has(i)) continue;
@@ -48,7 +54,7 @@ module.exports = {
                     const libSet = new Set();
                     g.forEach(c => getNeighbors(c).forEach(n => { if (board[n] === 0) libSet.add(n); }));
                     libs = libSet.size;
-                    if (g.length <= 2 && libs <= 2) {
+                    if (g.length <= (P('weak_size') || 2) && libs <= (P('weak_libs') || 2)) {
                         g.forEach(c => { board[c] = 0; fxBurst(c, '#a3a3a3', 6, 1.2); });
                         captures[col === 1 ? 2 : 1] += g.length;
                         fxText(g[0], '死滅', '#d4d4d4', 900);

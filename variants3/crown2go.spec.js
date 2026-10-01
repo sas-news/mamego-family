@@ -10,6 +10,9 @@ module.exports = {
     icon: 'crown2go',
     spec: [
         ...K.rb('CROWN2GO', '戴冠碁', 'crown2go'),
+        K.params([
+            { key: 'cap_moves', label: '打ち切り手数', min: 40, max: 300, def: 140, unit: '手' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         // 王冠形: 中心+上下左右4石の十字 + 斜め4隅のどれか1石
         function crownFound(player) {
@@ -40,8 +43,8 @@ module.exports = {
                     winByRule(player, '戴冠勝ち', '王冠形 (菱6連) を完成させました'); return;
                 }
             }
-            // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 長期戦防止: 既定の手数経過でその時点の地数判定
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, K.RV_ALGO, K.rv([

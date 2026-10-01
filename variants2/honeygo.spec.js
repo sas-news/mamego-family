@@ -9,10 +9,13 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('HONEYGO', '蜂巣碁', 'honeygo'),
+        K.params([
+            { key: 'wall_gap', label: '隔壁の間隔', min: 3, max: 9, def: 5, hint: '大きいほど巣房が広く壁が疎になる' },
+        ]),
         // 2方向の斜め壁が交差して菱形〜六角の巣房を作る
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                if ((x + y) % 5 === 0 || (x - y + 2 * BOARD_SIZE) % 5 === 0) board[y * BOARD_SIZE + x] = 3;
+                if ((x + y) % Math.max(2, P('wall_gap') || 5) === 0 || (x - y + 2 * BOARD_SIZE) % Math.max(2, P('wall_gap') || 5) === 0) board[y * BOARD_SIZE + x] = 3;
             }`],
         // 巣房っぽく蜂蜜色の壁: 蜂の巣の六角巣房として描く
         [K.ONE, '            const covered = new Set(); // ピース描画でカバー済みのマス',

@@ -9,6 +9,9 @@ module.exports = {
     kind: 'bishop',
     spec: [
         ...K.rb('BISHOPGO', '角行碁', 'bishopgo'),
+        K.params([
+            { key: 'free_places', label: '自由着手の数', min: 1, max: 5, def: 1, hint: 'この個数の自石までは斜線外にも着手できる' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -16,17 +19,18 @@ module.exports = {
 
             // 角行碁ルール: 既存の自石と同じ斜線 (|dx|=|dy|>0) 上にのみ着手可 (初手は自由)
             {
-                let hasOwn = false, onDiag = false;
+                let ownCount = 0, onDiag = false;
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] !== player) continue;
-                    hasOwn = true;
+                    ownCount++;
                     const sx = i % BOARD_SIZE, sy = Math.floor(i / BOARD_SIZE);
                     for (const p of cells) {
                         if (Math.abs(p.x - sx) === Math.abs(p.y - sy) && (p.x !== sx || p.y !== sy)) onDiag = true;
                     }
                     if (onDiag) break;
                 }
-                if (hasOwn && !onDiag) return false;
+                // 自由着手の数を超える自石があると斜線制限が効く
+                if (ownCount >= Math.max(1, P('free_places') || 1) && !onDiag) return false;
             }`],
         ...K.LEGAL_DOTS_SPEC,
         // 角行: 手番の石から斜線の射程を薄く照射 (着手可能線の可視化)

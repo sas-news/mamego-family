@@ -47,14 +47,22 @@ module.exports = {
     icon: 'sedimentgo',
     spec: [
         ...K.rb('SEDIMENTGO', '堆積碁', 'sedimentgo'),
+        K.params([
+            { key: 'river_rows', label: '川の行数', min: 1, max: 4, def: 2, unit: '行', hint: '上下それぞれ' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 川: 上下2行は海 (着手不可)。河口(中央列)に堆積して三角州が育つ
         let RIVER = new Set();
         function rebuildRiver() {
             RIVER = new Set();
-            for (let y = 0; y < 2; y++) for (let x = 0; x < BOARD_SIZE; x++) RIVER.add(y * BOARD_SIZE + x);
-            for (let y = BOARD_SIZE - 2; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) RIVER.add(y * BOARD_SIZE + x);
+            const rr = Math.max(1, P('river_rows') || 2);
+            for (let y = 0; y < rr; y++) for (let x = 0; x < BOARD_SIZE; x++) RIVER.add(y * BOARD_SIZE + x);
+            for (let y = BOARD_SIZE - rr; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) RIVER.add(y * BOARD_SIZE + x);
+        }
+        // 設定変更で区域を即時再構成 (盤面への反映は次の対局開始時)
+        function onVariantParam(p) {
+            if (p.key === 'river_rows') rebuildRiver();
         }
         // 堆積順: 中央列から外へジグザグに埋まる河口セル列
         function deltaOrder() {
@@ -63,8 +71,8 @@ module.exports = {
                 const xs = d === 0 ? [c] : [c - Math.ceil(d / 2), c + Math.floor(d / 2)];
                 xs.forEach(x => {
                     if (x < 0 || x >= BOARD_SIZE) return;
-                    // 河口は上下の川端 (y=1 と y=BOARD_SIZE-2)
-                    [1, BOARD_SIZE - 2].forEach(y => out.push(y * BOARD_SIZE + x));
+                    // 河口は上下の川端
+                    [Math.max(1, P('river_rows') || 2) - 1, BOARD_SIZE - Math.max(1, P('river_rows') || 2)].forEach(y => out.push(y * BOARD_SIZE + x));
                 });
             }
             return out;

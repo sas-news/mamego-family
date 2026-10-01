@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'tatego',
     spec: [
         ...K.rb('TATEGO', '楯碁', 'tatego'),
+        K.params([
+            { key: 'tate_liberty', label: '楯の追加呼吸', min: 1, max: 4, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.9, hint: '交点数比' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 楯: 左右または上下の両側を同色の石で挟まれた石
         function isTate(b, i) {
@@ -44,7 +48,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                    }
-                    if (group.some(gi => isTate(boardState, gi))) liberties += 1; // 楯が後ろを守る
+                    if (group.some(gi => isTate(boardState, gi))) liberties += (P('tate_liberty') || 1); // 楯が後ろを守る
 
                     if (liberties <= 0) {`],
         // 楯の印を描く

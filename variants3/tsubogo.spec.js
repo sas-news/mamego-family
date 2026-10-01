@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'tsubogo',
     spec: [
         ...K.rb('TSUBOGO', '経穴碁', 'tsubogo'),
+        K.params([
+            { key: 'tsubo_bonus', label: '経穴の追加呼吸', min: 1, max: 6, def: 2 },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 経穴 = 星の点
         function isTsubo(i) {
@@ -40,7 +44,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                    }
-                    if (group.some(gi => isTsubo(gi))) liberties += 2; // 経穴を押さえた連は経脈が通る
+                    if (group.some(gi => isTsubo(gi))) liberties += P('tsubo_bonus') || 2; // 経穴を押さえた連は経脈が通る
 
                     if (liberties <= 0) {`],
         // 経穴の描画: 星の点に小さな円+中心点

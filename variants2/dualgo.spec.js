@@ -9,8 +9,11 @@ module.exports = {
     kind: 'dual',
     spec: [
         ...K.rb('DUALGO', '双王碁', 'dualgo'),
+        K.params([
+            { key: 'king_count', label: '王の数', min: 1, max: 4, def: 2, unit: '個', hint: '先の着手が王になる個数' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        let kingIdx = { 1: [], 2: [] }; // 各プレイヤーの王石の位置 (最大2)`],
+        let kingIdx = { 1: [], 2: [] }; // 各プレイヤーの王石の位置 (王の数まで)`],
         [K.ONE, K.RESET_HELD, `            heldPieces = { 1: null, 2: null };
             kingIdx = { 1: [], 2: [] };`],
         [K.ONE, K.SNAP_PUSH, `                heldPieces: { ...heldPieces },
@@ -37,8 +40,8 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 双王ルール: 最初の2手の石が王になる
-            if (kingIdx[player].length < 2) {
+            // 双王ルール: 最初のN手の石が王になる (数は設定で調整)
+            if (kingIdx[player].length < (P('king_count') || 2)) {
                 kingIdx[player].push(move.cells[0].y * BOARD_SIZE + move.cells[0].x);
             }
             // 敵の王のどちらかが消えた → 王取り勝ち

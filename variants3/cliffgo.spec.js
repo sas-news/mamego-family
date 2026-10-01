@@ -10,21 +10,25 @@ module.exports = {
     icon: 'cliffgo',
     spec: [
         ...K.rb('CLIFFGO', '岩壁碁', 'cliffgo'),
+        K.params([
+            { key: 'cliff_ratio', label: '崖の位置', min: 0, max: 0.9, step: 0.05, def: 0, hint: '0=自動 (盤の55%の行)' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 岩壁: CLIFF_Y が崖下の最上段。その1つ上の行が「縁」— 縁の石は崖下へ落ちる
-        const CLIFF_Y = Math.floor(BOARD_SIZE * 0.55);`],
+        // 岩壁: cliffY() が崖下の最上段。その1つ上の行が「縁」— 縁の石は崖下へ落ちる
+        const cliffY = () => Math.floor(BOARD_SIZE * (P('cliff_ratio') || 0.55));`],
         // 崖落ち: 着手ごとに縁の石が崖下へ落下 (下の列から順に処理)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 岩壁: 縁の石は崖下へ落下
             {
-                const lipY = CLIFF_Y - 1;
+                const lipY = cliffY() - 1;
                 for (let x = 0; x < BOARD_SIZE; x++) {
                     const li = lipY * BOARD_SIZE + x;
                     if (board[li] !== 1 && board[li] !== 2) continue;
                     // 崖下方向に空きがあるかぎり落ち続ける
-                    let y = CLIFF_Y;
+                    let y = cliffY();
                     while (y + 1 < BOARD_SIZE && board[(y + 1) * BOARD_SIZE + x] === 0) y++;
                     const ti = y * BOARD_SIZE + x;
                     if (board[ti] === 0) {
@@ -50,7 +54,7 @@ module.exports = {
                 cleanUpPieces();
             }
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -60,7 +64,7 @@ module.exports = {
         K.CUE_GRID(`            // 岩壁: 縁線と崖面のハッチ
             {
                 ctx.save();
-                const ey = padding + CLIFF_Y * cellSize - cellSize / 2;
+                const ey = padding + cliffY() * cellSize - cellSize / 2;
                 ctx.strokeStyle = 'rgba(87,83,78,0.8)';
                 ctx.lineWidth = Math.max(1.6, cellSize * 0.07);
                 ctx.beginPath();

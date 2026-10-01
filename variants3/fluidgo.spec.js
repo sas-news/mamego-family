@@ -10,12 +10,16 @@ module.exports = {
     icon: 'fluidgo',
     spec: [
         ...K.rb('FLUIDGO', '流体碁', 'fluidgo'),
+        K.params([
+            { key: 'flow_interval', label: '流下の間隔', min: 1, max: 5, def: 1, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         // 流体: 着手後、全石が下へ1マス流れる (下が空の場合のみ)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 流体: 全石が下へ1マス流れる (下の行から順に処理)
-            {
+            if (history.length % Math.max(1, P('flow_interval') || 1) === 0) {
                 for (let y = BOARD_SIZE - 2; y >= 0; y--) {
                     for (let x = 0; x < BOARD_SIZE; x++) {
                         const i = y * BOARD_SIZE + x;
@@ -31,7 +35,7 @@ module.exports = {
             }
 
             // 打ち切り: 長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

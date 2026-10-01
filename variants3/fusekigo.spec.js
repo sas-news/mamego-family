@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,16 +47,21 @@ module.exports = {
     icon: 'fusekigo',
     spec: [
         ...K.rb('FUSEKIGO', '布石碁', 'fusekigo'),
+        K.params([
+            { key: 'fuseki_moves', label: '布石期間', min: 4, max: 60, def: 18, unit: '手' },
+            { key: 'fuseki_pts', label: '布石1つの得点', min: 1, max: 4, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT),
         // 序盤18手は着手ボーナス、以後はアゲハマが各+1目上乗せ
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 布石碁: 序盤 (18手まで) は着手ごとに +1目
-            if (history.length <= 18) {
+            if (history.length <= (P('fuseki_moves') || 18)) {
                 const __pi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                st.bonus[player] = (st.bonus[player] || 0) + 1;
-                fxText(__pi, '布石 +1', '#f59e0b', 800);
+                st.bonus[player] = (st.bonus[player] || 0) + (P('fuseki_pts') || 1);
+                fxText(__pi, '布石 +' + (P('fuseki_pts') || 1), '#f59e0b', 800);
             }
 
             turn = opponent;`],
@@ -64,7 +69,7 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
-        ...K.EVENT_CHIP_SPEC(`history.length <= 18 ? '布石 +' + ((st.bonus && st.bonus[turn]) || 0) + '目' : ''`),
+        ...K.EVENT_CHIP_SPEC(`history.length <= (P('fuseki_moves') || 18) ? '布石 +' + ((st.bonus && st.bonus[turn]) || 0) + '目' : ''`),
         [K.ONE, K.INFO_ALGO, `            布石碁: 序盤18手は1手ごとに +1目。終盤は取り石が点数を伸ばす<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

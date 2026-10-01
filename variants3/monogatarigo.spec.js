@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'monogatarigo',
     spec: [
         ...K.rb('MONOGATARIGO', '物語碁', 'monogatarigo'),
+        K.params([
+            { key: 'tale_pts', label: '物語完成の得点', min: 1, max: 20, def: 5, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 物語の四場面: 左上=起 (0), 右上=承 (1), 右下=転 (2), 左下=結 (3)
@@ -78,7 +82,7 @@ module.exports = {
                     st.tale[player]++;
                     if (st.tale[player] >= 4) {
                         st.tale[player] = 0;
-                        st.score[player] += 5;
+                        st.score[player] += (P('tale_pts') ?? 5);
                         fxText(q === -1 ? 0 : (TALE_SCENE[q].y0 * BOARD_SIZE + TALE_SCENE[q].x0), '完結!', '#f472b6', 1500);
                         fxBurst(q === -1 ? 0 : (TALE_SCENE[q].y0 * BOARD_SIZE + TALE_SCENE[q].x0), '#ec4899', 14);
                     }

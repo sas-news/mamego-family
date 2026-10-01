@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'radengo',
     spec: [
         ...K.rb('RADENGO', '螺鈿碁', 'radengo'),
+        K.params([
+            { key: 'raden_foe', label: '螺鈿化に必要な敵石数', min: 1, max: 4, def: 2, unit: '石' },
+            { key: 'raden_bonus', label: '螺鈿石1個の得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 螺鈿: 隣に敵石2個以上・味方0個の石は漆に嵌った貝片 — 1個+1目
         function radenBonus(player) {
@@ -37,7 +42,7 @@ module.exports = {
                 const nb = getNeighbors(i);
                 const foe = nb.filter(n => board[n] === opp).length;
                 const ally = nb.filter(n => board[n] === player).length;
-                if (foe >= 2 && ally === 0) b += 1;
+                if (foe >= Math.max(1, P('raden_foe') || 2) && ally === 0) b += (P('raden_bonus') ?? 1);
             }
             return b;
         }

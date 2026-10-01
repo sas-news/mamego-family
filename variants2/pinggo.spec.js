@@ -9,6 +9,7 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('PINGGO', '乒乓碁', 'pinggo'),
+        K.params([{ key: 'ball_every', label: 'ボールの移動間隔', min: 1, max: 5, def: 1, unit: '手ごと' }, { key: 'push_dist', label: '押し出し距離', min: 1, max: 3, def: 1, unit: 'マス' }]),
         [K.ONE, K.BOARD_DECL, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         let ballPos = 0, ballDx = 1, ballDy = 1; // ボールの位置と進行方向
         let ballTrail = []; // 直近の軌跡 (idx)`],
@@ -19,7 +20,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 乒乓: ボールが1マス進み、石に当たれば押し出して跳ね返る
-            {
+            if (history.length % Math.max(1, P('ball_every') || 1) === 0) {
                 ballTrail.push(ballPos); if (ballTrail.length > 6) ballTrail.shift();
                 const bx = ballPos % BOARD_SIZE, by = Math.floor(ballPos / BOARD_SIZE);
                 let nx = bx + ballDx, ny = by + ballDy;
@@ -29,7 +30,7 @@ module.exports = {
                 if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE) {
                     const ni = ny * BOARD_SIZE + nx;
                     if (board[ni] === 1 || board[ni] === 2) {
-                        const qx = nx + ballDx, qy = ny + ballDy;
+                        const _pd = Math.max(1, P('push_dist') || 1), qx = nx + ballDx * _pd, qy = ny + ballDy * _pd;
                         if (qx >= 0 && qx < BOARD_SIZE && qy >= 0 && qy < BOARD_SIZE
                             && board[qy * BOARD_SIZE + qx] === 0) {
                             board[qy * BOARD_SIZE + qx] = board[ni];

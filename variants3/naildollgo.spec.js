@@ -10,13 +10,17 @@ module.exports = {
     icon: 'naildollgo',
     spec: [
         ...K.rb('NAILDOLLGO', '呪殺碁', 'naildollgo'),
+        K.params([
+            { key: 'interval', label: '釘を打つ間隔', min: 3, max: 20, def: 9, unit: '手', hint: '自分のN石目ごとに釘が打たれる' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 呪殺: 自分の9手ごとの着手は五寸釘 — 対蹠点の敵石を呪い殺す
             {
                 const myCount = pieces.filter(pc => pc.player === player).length;
-                if (myCount % 9 === 0) {
+                if (myCount % Math.max(1, P('interval') || 9) === 0) {
                     const p0 = move.cells[0];
                     const i0 = p0.y * BOARD_SIZE + p0.x;
                     const c = (BOARD_SIZE - 1) / 2;
@@ -37,7 +41,7 @@ module.exports = {
             }
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -68,7 +72,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'次の釘まで ' + (9 - (pieces.filter(pc => pc.player === turn).length % 9)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'次の釘まで ' + (Math.max(1, P('interval') || 9) - (pieces.filter(pc => pc.player === turn).length % Math.max(1, P('interval') || 9))) + '手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '9手ごとの自分の着手は「五寸釘」(赤い釘印) になる。',
             '釘を打つと、中心を挟んだ対称位置 (対蹠点) にいる敵石が呪い殺される。両者同じ周期で現れる。',

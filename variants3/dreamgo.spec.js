@@ -10,27 +10,32 @@ module.exports = {
     icon: 'dreamgo',
     spec: [
         ...K.rb('DREAMGO', '夢幻碁', 'dreamgo'),
+        K.params([
+            { key: 'swap_interval', label: '入れ替え周期', min: 4, max: 30, def: 10, unit: '手' },
+            { key: 'seed_dist', label: '夢の種石の距離', min: 1, max: 5, def: 3, hint: '中心からの距離' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 75, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 夢盤と夢の石 (最初から夢の石が1つずつ置かれている)
         let st = (() => {
-            const c = Math.floor(BOARD_SIZE / 2);
+            const c = Math.floor(BOARD_SIZE / 2), sd = P('seed_dist') || 3;
             const d = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-            d[(c - 3) * BOARD_SIZE + (c - 3)] = 1;
-            d[(c + 3) * BOARD_SIZE + (c + 3)] = 2;
+            d[(c - sd) * BOARD_SIZE + (c - sd)] = 1;
+            d[(c + sd) * BOARD_SIZE + (c + sd)] = 2;
             return { dream: d, dp: [
-                { id: -1, player: 1, cells: [{ x: c - 3, y: c - 3 }] },
-                { id: -2, player: 2, cells: [{ x: c + 3, y: c + 3 }] }
+                { id: -1, player: 1, cells: [{ x: c - sd, y: c - sd }] },
+                { id: -2, player: 2, cells: [{ x: c + sd, y: c + sd }] }
             ] };
         })();`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             {
-                const c = Math.floor(BOARD_SIZE / 2);
+                const c = Math.floor(BOARD_SIZE / 2), sd = P('seed_dist') || 3;
                 const d = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
-                d[(c - 3) * BOARD_SIZE + (c - 3)] = 1;
-                d[(c + 3) * BOARD_SIZE + (c + 3)] = 2;
+                d[(c - sd) * BOARD_SIZE + (c - sd)] = 1;
+                d[(c + sd) * BOARD_SIZE + (c + sd)] = 2;
                 st = { dream: d, dp: [
-                    { id: -1, player: 1, cells: [{ x: c - 3, y: c - 3 }] },
-                    { id: -2, player: 2, cells: [{ x: c + 3, y: c + 3 }] }
+                    { id: -1, player: 1, cells: [{ x: c - sd, y: c - sd }] },
+                    { id: -2, player: 2, cells: [{ x: c + sd, y: c + sd }] }
                 ] };
             }`],
         [K.ONE, K.SNAP_PUSH, `                heldPieces: { ...heldPieces },
@@ -64,8 +69,8 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 夢幻ルール: 10手ごとに現実盤と夢盤が入れ替わる
-            if (history.length % 10 === 0) {
+            // 夢幻ルール: N手ごとに現実盤と夢盤が入れ替わる (周期は設定で調整)
+            if (history.length % Math.max(1, P('swap_interval') || 10) === 0) {
                 const tmpB = board; board = st.dream; st.dream = tmpB;
                 const tmpP = pieces; pieces = st.dp; st.dp = tmpP;
                 fxShake(6, 500);
@@ -73,7 +78,7 @@ module.exports = {
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 endGameByScore();
                 return;
             }
@@ -128,7 +133,7 @@ module.exports = {
         [K.ONE, `        btnPass.addEventListener('click', handlePass);`,
 `        btnPass.addEventListener('click', handlePass);
         btnDream.addEventListener('click', () => showDreamBoard());`],
-        ...K.EVENT_CHIP_SPEC(`'夢盤入替 あと' + (10 - history.length % 10) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'夢盤入替 あと' + ((P('swap_interval') || 10) - history.length % (P('swap_interval') || 10)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            夢幻碁: 10手ごとに現実盤と夢盤が入れ替わる。取った石は現実に持ち帰る<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

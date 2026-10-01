@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'skimminggo',
     spec: [
         ...K.rb('SKIMMINGGO', '水切碁', 'skimminggo'),
+        K.params([
+            { key: 'skim_bonus', label: '跳ね数ボーナス (空き隣+この値)', min: 0, max: 4, def: 1 },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 水切り: 置いた時の空き隣接数+1が跳ね数 (耐久)
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -55,7 +59,7 @@ module.exports = {
             move.cells.forEach(p => {
                 const si = p.y * BOARD_SIZE + p.x;
                 const open = getNeighbors(si).filter(n => board[n] === 0).length;
-                st.hp[si] = open + 1;
+                st.hp[si] = open + (P('skim_bonus') ?? 1);
             });`],
         // 捕獲: 跳ね数が残る石は取られず跳ね数だけ減る
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);

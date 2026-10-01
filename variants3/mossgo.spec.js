@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'mossgo',
     spec: [
         ...K.rb('MOSSGO', '苔庭碁', 'mossgo'),
+        K.params([
+            { key: 'wither_interval', label: '枯れる間隔', min: 3, max: 20, def: 8, unit: '手' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 乾燥区域 (最外周) を砂色で塗る — 格子の下、石の下
         K.CUE_GRID(`            // 乾燥区域: 最外周を乾いた砂の色で示す
             {
@@ -44,7 +48,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 苔庭ルール: 8手ごとに乾燥区域 (最外周) の石が枯れて相手のアゲハマになる
-            if (history.length % 8 === 0) {
+            if (history.length % Math.max(1, P('wither_interval') || 8) === 0) {
                 let n = 0;
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     if (!(x === 0 || y === 0 || x === BOARD_SIZE - 1 || y === BOARD_SIZE - 1)) continue;
@@ -65,7 +69,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'枯れるまで ' + (8 - (history.length % 8)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'枯れるまで ' + (Math.max(1, P('wither_interval') || 8) - (history.length % Math.max(1, P('wither_interval') || 8))) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            苔庭碁: 石=苔が庭を覆う。最外周の乾燥区域では8手ごとに苔が枯れて相手のアゲハマになる<br>
             PC: クリックで配置<br>

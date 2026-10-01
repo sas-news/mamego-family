@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,13 +47,19 @@ module.exports = {
     icon: 'okagego',
     spec: [
         ...K.rb('OKAGEGO', 'お陰碁', 'okagego'),
+        K.params([
+            { key: 'okage_bonus', label: 'おかげ参りの得点', min: 0, max: 6, def: 2, unit: '点' },
+            { key: 'zone_r', label: '神域の広さ (半径)', min: 1, max: 4, def: 2, unit: 'マス' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 神域一覧ヘルパー
         [K.ONE, `        function endGameByScore() {`, `        // 神域: 天元を囲む5x5
         function okageZone() {
             const c = Math.floor(BOARD_SIZE / 2);
+            const r = Math.max(1, P('zone_r') || 2);
             const cells = new Set();
-            for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+            for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
                 const x = c + dx, y = c + dy;
                 if (x >= 0 && y >= 0 && x < BOARD_SIZE && y < BOARD_SIZE) cells.add(y * BOARD_SIZE + x);
             }
@@ -74,9 +80,9 @@ module.exports = {
             {
                 const cell = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (okageZone().has(cell)) {
-                    st.fortune[player] += 2;
+                    st.fortune[player] += (P('okage_bonus') || 2);
                     fxGlow(cell, '#f0abfc', 800);
-                    fxText(cell, 'おかげ +2', '#f0abfc', 1000);
+                    fxText(cell, 'おかげ +' + (P('okage_bonus') || 2), '#f0abfc', 1000);
                 }
             }
 
@@ -91,10 +97,11 @@ module.exports = {
                     ctx.fillRect(padding + (x - 0.5) * cellSize, padding + (y - 0.5) * cellSize, cellSize, cellSize);
                 });
                 const c = Math.floor(BOARD_SIZE / 2);
+                const rr = Math.max(1, P('zone_r') || 2) + 0.5;
                 const cx = padding + c * cellSize, cy = padding + c * cellSize;
                 ctx.strokeStyle = 'rgba(192,38,211,0.45)';
                 ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
-                ctx.strokeRect(cx - cellSize * 2.5, cy - cellSize * 2.5, cellSize * 5, cellSize * 5);
+                ctx.strokeRect(cx - cellSize * rr, cy - cellSize * rr, cellSize * rr * 2, cellSize * rr * 2);
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'福: 黒' + st.fortune[1] + ' 白' + st.fortune[2]`),

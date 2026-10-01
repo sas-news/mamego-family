@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'biidamago',
     spec: [
         ...K.rb('BIIDAMAGO', 'ビー玉碁', 'biidamago'),
+        K.params([
+            { key: 'hole_pts', label: '入穴の得点', min: 1, max: 8, def: 2, unit: '点' },
+            { key: 'hole_lib', label: '穴の中の呼吸ボーナス', min: 1, max: 3, def: 1, unit: '点' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 1.8, def: 0.9, step: 0.1, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 穴: 星の点 (盤サイズで変わる)
@@ -68,7 +73,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                        });
-                        if (inHole(curr)) liberties++; // 穴の中のビー玉は抜けにくい
+                        if (inHole(curr)) liberties += (P('hole_lib') || 1); // 穴の中のビー玉は抜けにくい
                     }
 
                     if (liberties <= 0) {`],
@@ -76,7 +81,7 @@ module.exports = {
             }
             return liberties;`,
 `                });
-                if (inHole(curr)) liberties++; // 穴の中のビー玉は抜けにくい
+                if (inHole(curr)) liberties += (P('hole_lib') || 1); // 穴の中のビー玉は抜けにくい
             }
             return liberties;`],
         // ビー玉入穴: 穴に入れると+2点
@@ -85,7 +90,7 @@ module.exports = {
             move.cells.forEach(p => {
                 const hi = p.y * BOARD_SIZE + p.x;
                 if (inHole(hi)) {
-                    st.score[player] += 2;
+                    st.score[player] += (P('hole_pts') || 2);
                     fxGlow(hi, '#22d3ee', 1000);
                     fxText(hi, '入穴+2', '#22d3ee', 1200);
                 }

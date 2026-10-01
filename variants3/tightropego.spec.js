@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'tightropego',
     spec: [
         ...K.rb('TIGHTROPEGO', '綱渡碁', 'tightropego'),
+        K.params([
+            { key: 'arrive_bonus', label: '渡りきった時の得点', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.75, hint: '交点数比' },
+        ]),
         ...ST(ST_INIT),
 
         // 綱渡り: 自分の手番のたび綱上の自石が対岸へ1マス歩く
@@ -65,7 +69,7 @@ module.exports = {
                     const nx = x + dir;
                     if (nx < 0 || nx >= BOARD_SIZE) {
                         board[i] = 0;
-                        captures[player] += 2;
+                        captures[player] += (P('arrive_bonus') ?? 2);
                         fxBurst(i, '#34d399', 10, 1.6);
                         fxText(i, '到達 +2', '#34d399', 1200);
                         arrived = true;

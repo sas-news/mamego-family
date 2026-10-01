@@ -10,11 +10,14 @@ module.exports = {
     icon: 'shrinkgo',
     spec: [
         ...K.rb('SHRINKGO', '縮小碁', 'shrinkgo'),
+        K.params([
+            { key: 'collapse_interval', label: '崩落の間隔', min: 4, max: 24, def: 10, unit: '手' },
+        ]),
         // 10手ごとに外周が崩落
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
-            if (history.length % 10 === 0) {
-                const d = history.length / 10 - 1;
+            if (history.length % (P('collapse_interval') || 10) === 0) {
+                const d = history.length / (P('collapse_interval') || 10) - 1;
                 let fell = 0;
                 for (let i = 0; i < board.length; i++) {
                     const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
@@ -31,7 +34,7 @@ module.exports = {
             }
             turn = opponent;`],
         // 崩落予告チップ
-        ...K.EVENT_CHIP_SPEC(`'崩落まで ' + (10 - (history.length % 10)) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`'崩落まで ' + ((P('collapse_interval') || 10) - (history.length % (P('collapse_interval') || 10))) + ' 手'`),
         [K.ONE, K.INFO_ALGO, `            縮小碁: 10手ごとに盤の外周が1マスずつ崩落して縮む。縁の石は奈落に呑まれる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

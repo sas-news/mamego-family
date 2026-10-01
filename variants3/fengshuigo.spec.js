@@ -10,6 +10,9 @@ module.exports = {
     icon: 'fengshuigo',
     spec: [
         ...K.rb('FENGSHUIGO', '風水碁', 'fengshuigo'),
+        K.params([
+            { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 600, def: 140, unit: '手' },
+        ]),
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        function qiWells() { return getStarPoints(BOARD_SIZE).map(pt => pt.y * BOARD_SIZE + pt.x); }
 
@@ -37,7 +40,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

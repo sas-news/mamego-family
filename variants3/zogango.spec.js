@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'zogango',
     spec: [
         ...K.rb('ZOGANGO', '象嵌碁', 'zogango'),
+        K.params([
+            { key: 'zogan_pts', label: '文様1個の点', options: [{ v: 0, l: 'なし' }, { v: 0.25, l: '+0.25' }, { v: 0.5, l: '+0.5' }, { v: 1, l: '+1' }], def: 0.25, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 象嵌: 敵石に1つ以上隣接する石は異素材の象嵌文様 — 1個+0.25目
         function zoganBonus(player) {
@@ -34,7 +38,7 @@ module.exports = {
             const opp = player === 1 ? 2 : 1;
             for (let i = 0; i < board.length; i++) {
                 if (board[i] !== player) continue;
-                if (getNeighbors(i).some(n => board[n] === opp)) b += 0.25;
+                if (getNeighbors(i).some(n => board[n] === opp)) b += (P('zogan_pts') ?? 0.25);
             }
             return b;
         }

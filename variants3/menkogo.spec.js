@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'menkogo',
     spec: [
         ...K.rb('MENKOGO', '面子碁', 'menkogo'),
+        K.params([
+            { key: 'menko_pts', label: '面返しの得点', min: 0, max: 4, def: 1, step: 0.5, hint: '裏返した面1つにつき何アゲハマ' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // 履歴に裏返した面を記録 (描画用)
         [K.ONE, K.SNAP_PUSH, `                heldPieces: { ...heldPieces },
                 flipped: null,
@@ -38,7 +42,7 @@ module.exports = {
                 // 面子: 呼吸を失った連は裏返って着手者の石になる (面を取った=得点)
                 if (history.length > 0) history[history.length - 1].flipped = captured.slice();
                 captured.forEach(idx => { board[idx] = player; });
-                captures[player] += captured.length;
+                captures[player] += Math.round(captured.length * (P('menko_pts') ?? 1));
                 captured.forEach(idx => {
                     pieces.forEach(pc => {
                         if (pc.player === opponent && pc.cells.some(p => p.y * BOARD_SIZE + p.x === idx)) pc.player = player;

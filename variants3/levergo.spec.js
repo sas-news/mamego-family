@@ -10,6 +10,10 @@ module.exports = {
     icon: 'levergo',
     spec: [
         ...K.rb('LEVERGO', '梃子碁', 'levergo'),
+        K.params([
+            { key: 'lever_shift', label: '梃子の移動量', min: 1, max: 4, def: 1, hint: '敵石が中央へ何マスずれるか' },
+            { key: 'cap_ply', label: '打ち切り手数', min: 60, max: 400, def: 140, hint: 'この手数で地数判定' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
@@ -20,9 +24,15 @@ module.exports = {
                 const mx = BOARD_SIZE - 1 - px, my = BOARD_SIZE - 1 - py;
                 const mi = my * BOARD_SIZE + mx;
                 if (board[mi] === opponent) {
-                    const sx = Math.sign(c - mx), sy = Math.sign(c - my);
-                    const nx = mx + sx, ny = my + sy;
-                    if (nx === c && ny === c) {
+                    // lever_shift マス分だけ中央へずらす (支点に達する/越えると潰れる)
+                    const S = Math.max(1, P('lever_shift') || 1);
+                    let nx = mx, ny = my, reached = false;
+                    for (let s = 0; s < S; s++) {
+                        nx += Math.sign(c - nx); ny += Math.sign(c - ny);
+                        if ((nx === c && ny === c) ||
+                            ((nx - c) * (c - mx) > 0 && (ny - c) * (c - my) > 0)) { reached = true; break; }
+                    }
+                    if (reached) {
                         // 支点で潰れる → 捕獲
                         board[mi] = 0; captures[player]++;
                         fxBurst(mi, '#f59e0b', 8, 1.6);
@@ -38,8 +48,8 @@ module.exports = {
                     }
                 }
             }
-            // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            // 長期戦防止: cap_ply 手経過でその時点の地数判定
+            if (history.length >= Math.max(10, P('cap_ply') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         // 中央支点の描画

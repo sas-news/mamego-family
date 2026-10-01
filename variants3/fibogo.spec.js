@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'fibogo',
     spec: [
         ...K.rb('FIBOGO', 'フィボ碁', 'fibogo'),
+        K.params([
+            { key: 'fib_pts', label: 'フィボボーナス', min: 0, max: 10, def: 2, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 連サイズがフィボナッチ数 → +2目
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -65,8 +69,8 @@ module.exports = {
                 }
                 const __FIB = { 2: 1, 3: 1, 5: 1, 8: 1, 13: 1, 21: 1, 34: 1, 55: 1, 89: 1, 144: 1, 233: 1 };
                 if (__FIB[__seen.size]) {
-                    st.bonus[player] = (st.bonus[player] || 0) + 2;
-                    fxText(__fi, 'フィボ +' + 2, '#4ade80', 1100);
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('fib_pts') || 2);
+                    fxText(__fi, 'フィボ +' + (P('fib_pts') || 2), '#4ade80', 1100);
                     fxGlow(__fi, '#4ade80', 800);
                 }
             }

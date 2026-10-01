@@ -1108,12 +1108,30 @@ const AMBIENT_MIST = (tint) => `
         });`;
 
 // ============================================================
+// VPARAMS: バリアント固有の調整パラメータ宣言
+// spec 配列に K.params([...]) を入れると、そのゲームの設定モーダルに
+// 「このゲームの設定」スライダー/セレクトが自動生成される。
+// ゲームコード内では P('key') で現在値を読む (localStorageに保存値が残る)。
+// 例: K.params([
+//   { key: 'interval', label: 'イベント間隔', min: 1, max: 10, def: 4, unit: '手' },
+//   { key: 'radius',   label: '効果範囲',     min: 1, max: 5,  def: 2 },
+//   { key: 'mode',     label: '挙動', options: [{v:'a',l:'穏やか'},{v:'b',l:'激しい'}], def: 'a' },
+// ])
+// ============================================================
+const VPARAMS = 'const VPARAMS = [];';
+function params(arr) {
+    return [ONE, VPARAMS, 'const VPARAMS = ' + JSON.stringify(arr) + ';'];
+}
+
+// ============================================================
 // exports
 // ============================================================
 module.exports = {
     ALGO,
     apply,
     ONE,
+    VPARAMS,
+    params,
     out,
     MOLECULES_ALGO,
     OCNT_ALGO,

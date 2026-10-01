@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,14 +27,24 @@ module.exports = {
     icon: 'basingo',
     spec: [
         ...K.rb('BASINGO', '窪地碁', 'basingo'),
+        K.params([
+            { key: 'basin_r', label: '窪地の半径', min: 0.1, max: 0.5, def: 0.3, step: 0.05, hint: '盤サイズ×倍率' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 1.8, def: 0.9, step: 0.1, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 窪地: 中央の円形盆地。底に水が溜まり、窪地の空点は呼吸点にならない
-        const BASIN_R = BOARD_SIZE * 0.30;
+        const BASIN_R = () => BOARD_SIZE * (P('basin_r') || 0.30);
         const BASIN_C = (BOARD_SIZE - 1) / 2;
-        const BASIN_SET = new Set();
-        for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-            if (Math.hypot(x - BASIN_C, y - BASIN_C) <= BASIN_R) BASIN_SET.add(y * BOARD_SIZE + x);
-        }`],
+        let BASIN_SET = new Set();
+        function rebuildBasin() {
+            BASIN_SET = new Set();
+            const r = BASIN_R();
+            for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                if (Math.hypot(x - BASIN_C, y - BASIN_C) <= r) BASIN_SET.add(y * BOARD_SIZE + x);
+            }
+        }
+        rebuildBasin();
+        function onVariantParam(p) { if (p.key === 'basin_r') rebuildBasin(); }`],
         // 窪地の空点は水没していて呼吸点にならない (取り判定・呼吸数の両方)
         [K.ALL, `                            if (boardState[n] === 0 && !deadMask[n]) {`,
 `                            if (boardState[n] === 0 && !deadMask[n] && !BASIN_SET.has(n)) {`],
@@ -49,7 +59,7 @@ module.exports = {
                 BASIN_SET.forEach(i => {
                     const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
-                    const d = Math.hypot(x - BASIN_C, y - BASIN_C) / BASIN_R;
+                    const d = Math.hypot(x - BASIN_C, y - BASIN_C) / BASIN_R();
                     ctx.fillStyle = 'rgba(30, 110, 170, ' + (0.12 + (1 - d) * 0.25) + ')';
                     ctx.fillRect(cx - cellSize * 0.5, cy - cellSize * 0.5, cellSize, cellSize);
                 });

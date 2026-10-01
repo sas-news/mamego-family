@@ -47,17 +47,25 @@ module.exports = {
     icon: 'sumigo',
     spec: [
         ...K.rb('SUMIGO', '墨摺碁', 'sumigo'),
+        K.params([
+            { key: 'suzuri_size', label: '硯の一辺のサイズ', min: 1, max: 4, def: 2, unit: 'マス' },
+            { key: 'ink_bonus', label: '濃墨の追加アゲハマ', min: 0, max: 5, def: 1, unit: '点' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 硯: 盤中央の2x2の黒い水盤
         let SUZURI = new Set();
         function rebuildSuzuri() {
             SUZURI = new Set();
+            const n = P('suzuri_size') || 2;
             const c = Math.floor(BOARD_SIZE / 2);
-            [ [c - 1, c - 1], [c, c - 1], [c - 1, c], [c, c] ].forEach(([x, y]) => {
+            const s = c - Math.floor(n / 2);
+            for (let dy = 0; dy < n; dy++) for (let dx = 0; dx < n; dx++) {
+                const x = s + dx, y = s + dy;
                 if (x >= 0 && y >= 0 && x < BOARD_SIZE && y < BOARD_SIZE) SUZURI.add(y * BOARD_SIZE + x);
-            });
+            }
         }
+        function onVariantParam(p) { if (p.key === 'suzuri_size') rebuildSuzuri(); }
         function onSuzuri(i) { return SUZURI.has(i); }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             rebuildSuzuri();`],
@@ -76,7 +84,7 @@ module.exports = {
             // 濃墨ボーナス: 濃い墨は取られると2点のアゲハマになる
             captured.forEach(idx => {
                 if (st.ink[idx] > 1) {
-                    captures[player]++;
+                    captures[player] += (P('ink_bonus') ?? 1);
                     delete st.ink[idx];
                     fxText(idx, '濃墨+1', '#374151', 1000);
                 }

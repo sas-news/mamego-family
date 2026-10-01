@@ -10,6 +10,10 @@ module.exports = {
     icon: 'domgo',
     spec: [
         ...K.rb('DOMGO', '半球碁', 'domgo'),
+        K.params([
+            { key: 'roll_max', label: '転がる最大歩数', min: 0, max: 16, def: 0, hint: '0で無制限' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 90, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // ドーム: 中央からのマンハッタン距離が「高さ」。孤立石は外へ転がる
         const DOME_C = (BOARD_SIZE - 1) / 2;
@@ -19,7 +23,7 @@ module.exports = {
         }
         function rollStone(i, player) {
             let cur = i;
-            for (let step = 0; step < BOARD_SIZE; step++) {
+            for (let step = 0; step < (P('roll_max') || BOARD_SIZE); step++) {
                 if (board[cur] !== player) break;
                 // 連に繋がっていれば固定される
                 if (getNeighbors(cur).some(n => board[n] === player)) break;
@@ -72,7 +76,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 90) / 100))) {
                 capFired = true;
                 endGameByScore();
                 return;

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'counterpointgo',
     spec: [
         ...K.rb('COUNTERPOINTGO', '対位碁', 'counterpointgo'),
+        K.params([
+            { key: 'canon_min', label: '輪唱の最小連サイズ', min: 1, max: 6, def: 2, unit: '石' },
+            { key: 'canon_pts', label: '輪唱の得点', min: 0, max: 8, def: 2, unit: '目', hint: '0=輪唱なし' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         // 対位ルール: 着手連と同じ大きさの自連がもう1つあれば輪唱成立 +2目
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -37,7 +42,7 @@ module.exports = {
                 if (board[mi] === player) {
                     const mg = getConnectedGroup(mi, player);
                     const s = mg.length;
-                    if (s >= 2) {
+                    if (s >= (P('canon_min') || 2)) {
                         const seenP = {};
                         let twins = 0;
                         for (let i = 0; i < board.length; i++) {
@@ -47,9 +52,9 @@ module.exports = {
                             if (g.length === s) twins++;
                         }
                         if (twins >= 2) {
-                            captures[player] += 2;
+                            captures[player] += (P('canon_pts') ?? 2);
                             fxGlow(mi, '#c084fc', 700);
-                            fxText(mi, '輪唱 +2', '#c084fc', 1300);
+                            fxText(mi, '輪唱 +' + (P('canon_pts') ?? 2), '#c084fc', 1300);
                         }
                     }
                 }

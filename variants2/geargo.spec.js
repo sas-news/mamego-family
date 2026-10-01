@@ -9,12 +9,15 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('GEARGO', '歯車碁', 'geargo'),
+        K.params([
+            { key: 'gear_interval', label: '歯車の回転間隔', min: 1, max: 9, def: 3, unit: '手' },
+        ]),
         // 手番交代直前に2リングを逆方向へ1コマ回転
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 歯車機構: 3手ごとに外リングは進行方向へ、内リングは逆へ1コマ回転
-            if (history.length % 3 === 0) {
+            if (history.length % Math.max(1, P('gear_interval') || 3) === 0) {
                 const N = BOARD_SIZE;
                 const ringCells = (k) => {
                     const cells = [];

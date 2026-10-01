@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'homeportgo',
     spec: [
         ...K.rb('HOMEPORTGO', '帰港碁', 'homeportgo'),
+        K.params([
+            { key: 'port_bonus', label: '帰港1回のアゲハマ', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'port_win', label: '即勝ちに必要な帰港数', min: 2, max: 10, def: 5, unit: '回' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.3, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 帰港: 黒は下辺・白は上辺への着手で+2アゲハマ。5回の帰港で即勝
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -56,11 +61,11 @@ module.exports = {
                 const home = player === 1 ? BOARD_SIZE - 1 : 0;
                 if (y === home) {
                     st.port[player]++;
-                    captures[player] += 2;
+                    captures[player] += (P('port_bonus') ?? 2);
                     const pi = y * BOARD_SIZE + move.cells[0].x;
                     fxText(pi, '帰港!', '#0ea5e9', 1300);
                     fxGlow(pi, '#0ea5e9', 900);
-                    if (st.port[player] >= 5) {
+                    if (st.port[player] >= Math.max(1, P('port_win') || 5)) {
                         gameOver = true;
                         endGameByScore();
                         return;
@@ -83,7 +88,7 @@ module.exports = {
                 ctx.beginPath(); ctx.moveTo(padding, padding + w); ctx.lineTo(padding + w, padding + w); ctx.stroke();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'帰港 ' + st.port[turn] + '/5'`),
+        ...K.EVENT_CHIP_SPEC(`'帰港 ' + st.port[turn] + '/' + Math.max(1, P('port_win') || 5)`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            帰港碁: 黒は下辺・白は上辺が母港。母港に着手すると+2アゲハマ、5回の帰港で即勝<br>
             PC: クリックで配置<br>

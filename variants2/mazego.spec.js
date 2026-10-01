@@ -9,10 +9,14 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('MAZEGO', '迷路碁', 'mazego'),
+        K.params([
+            { key: 'maze_seed', label: '迷路のシード', min: 0, max: 99, def: 0, hint: '迷路の形が変わる (0=標準)' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.7, max: 2.5, def: 1.4, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // 部屋格子の全域木を掘る (seeded で決定的)
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(3);
             {
-                let seed = (BOARD_SIZE * 2654435761) % 2147483647;
+                let seed = (BOARD_SIZE * 2654435761 + (P('maze_seed') || 0)) % 2147483647;
                 if (seed <= 0) seed += 2147483646;
                 const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
                 const RW = Math.floor(BOARD_SIZE / 2), RH = Math.floor(BOARD_SIZE / 2);
@@ -41,7 +45,21 @@ module.exports = {
             '迷路の形は盤サイズごとに固定。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
-        ...K.MOVE_CAP_SPEC,
+        // 打ち切り手数は設定で調整可能
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 新規対局 (履歴空) で打ち切りを再武装
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            // (1局につき1回のみ発火。死に石選択を取り消して続行する場合は再発火しない)
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.4))) {
+                moveCapFired = true;
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

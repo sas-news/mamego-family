@@ -10,6 +10,9 @@ module.exports = {
     icon: 'symbiosisgo',
     spec: [
         ...K.rb('SYMBIOSISGO', '共生碁', 'symbiosisgo'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2, def: 0.8, step: 0.1, hint: '交点数の倍率' },
+        ]),
         // 共生: 取られた連に隣接していた自分の石も連鎖して死ぬ (相手のアゲハマに)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
@@ -35,7 +38,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

@@ -9,9 +9,13 @@ module.exports = {
     kind: 'mirage',
     spec: [
         ...K.rb('MIRAGEGO', '蜃気楼碁', 'miragego'),
+        K.params([
+            { key: 'mirage_turns', label: '蜃気楼の持続', min: 1, max: 8, def: 3, unit: '手' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 1.4, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, '        function executeMove(move, player) {',
-`        // 蜃気楼碁: 置いてから3手未満の石は蜃気楼 (未確定)
-        function isMirage(pc) { return pc.at !== undefined && (history.length - pc.at) < 3; }
+`        // 蜃気楼碁: 置いてからN手未満の石は蜃気楼 (未確定・手数は設定で調整)
+        function isMirage(pc) { return pc.at !== undefined && (history.length - pc.at) < (P('mirage_turns') || 3); }
 
         let moveCapFired = false;
         function executeMove(move, player) {
@@ -19,7 +23,7 @@ module.exports = {
             if (moveCapFired && history.length === 0) moveCapFired = false;
             // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
             // (1局につき1回のみ発火。死に石選択を取り消して続行する場合は再発火しない)
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.4)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 1.4))) {
                 moveCapFired = true;
                 startDeadStoneSelectionPhase();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
@@ -59,9 +63,9 @@ module.exports = {
                 if (gone) { cleanUpPieces(); fxShake(3, 200); }
             }
 
-            // 蜃気楼碁: 3手経って実体化した石は青白く発光して確定を知らせる
+            // 蜃気楼碁: N手経って実体化した石は青白く発光して確定を知らせる
             pieces.forEach(pc => {
-                if (pc.at === undefined || history.length - pc.at !== 3) return;
+                if (pc.at === undefined || history.length - pc.at !== (P('mirage_turns') || 3)) return;
                 pc.cells.forEach(p => {
                     const i = p.y * BOARD_SIZE + p.x;
                     if (board[i] === pc.player) fxGlow(i, '#67e8f9', 600);

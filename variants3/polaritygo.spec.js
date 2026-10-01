@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,7 @@ module.exports = {
     icon: 'polaritygo',
     spec: [
         ...K.rb('POLARITYGO', '磁界碁', 'polaritygo'),
+        K.params([{ key: 'repel_d', label: '反発の距離', min: 1, max: 3, def: 1, unit: 'マス' }, { key: 'attract_d', label: '吸着の届く距離', min: 1, max: 3, def: 1, unit: 'マス', hint: '1=2マス先を1マス引く' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' }]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 磁界: 偶数列=N極・奇数列=S極
         function poleOf(x) { return x % 2 === 0 ? 'N' : 'S'; }
@@ -36,14 +37,14 @@ module.exports = {
             const jobs = [];
             // 反発: 同じ列の上下の敵石を1マス押し退く
             [-1, 1].forEach(dy => {
-                const ny = py + dy, ty = py + dy * 2;
+                const _rd = Math.max(1, P('repel_d') || 1), ny = py + dy, ty = py + dy * (1 + _rd);
                 if (ny < 0 || ny >= BOARD_SIZE || ty < 0 || ty >= BOARD_SIZE) return;
                 const ni = ny * BOARD_SIZE + px, ti = ty * BOARD_SIZE + px;
                 if (board[ni] === opp && board[ti] === 0) jobs.push([ni, ti]);
             });
             // 吸着: 左右2マスの敵石を1マス引き寄せる
             [-1, 1].forEach(dx => {
-                const nx = px + dx * 2, tx = px + dx;
+                const _ad = Math.max(1, P('attract_d') || 1) + 1, nx = px + dx * _ad, tx = px + dx * (_ad - 1);
                 if (nx < 0 || nx >= BOARD_SIZE) return;
                 const ni = py * BOARD_SIZE + nx, ti = py * BOARD_SIZE + tx;
                 if (board[ni] === opp && board[ti] === 0) jobs.push([ni, ti]);

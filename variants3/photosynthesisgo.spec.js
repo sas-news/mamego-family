@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('ply_cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,7 @@ module.exports = {
     icon: 'photosynthesisgo',
     spec: [
         ...K.rb('PHOTOSYNTHESISGO', '光合成碁', 'photosynthesisgo'),
+        K.params([{ key: 'sun_edge', label: '日当たり区域の内側幅', min: 0, max: 5, def: 2, unit: '列' }, { key: 'leaf_pts', label: '葉1枚の養分', min: 1, max: 4, def: 1, unit: '目' }, { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 400, def: 150, unit: '手' }]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { bonus: { 1: 0, 2: 0 } };`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -54,7 +55,7 @@ module.exports = {
 
             // 光合成: 中央の日当たり区域 (辺から2列以内の内側) にある自分の石が養分を作る
             {
-                const EDGE = 2;
+                const EDGE = Math.max(0, P('sun_edge') || 2);
                 let leaves = 0;
                 board.forEach((v, i) => {
                     if (v !== player) return;
@@ -62,8 +63,8 @@ module.exports = {
                     if (x >= EDGE && x < BOARD_SIZE - EDGE && y >= EDGE && y < BOARD_SIZE - EDGE) leaves++;
                 });
                 if (leaves > 0) {
-                    st.bonus[player] += leaves;
-                    if (leaves >= 3) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '光合成 +' + leaves + '目', '#84cc16', 1000);
+                    st.bonus[player] += leaves * (P('leaf_pts') || 1);
+                    if (leaves >= 3) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '光合成 +' + (leaves * (P('leaf_pts') || 1)) + '目', '#84cc16', 1000);
                 }
             }
 
@@ -71,7 +72,7 @@ module.exports = {
         // 日当たり区域: 内側を淡い陽光色に染める
         K.CUE_GRID(`            // 日当たり: 中央区域を淡い陽光色で染める
             {
-                const EDGE = 2;
+                const EDGE = Math.max(0, P('sun_edge') || 2);
                 const x0 = padding + EDGE * cellSize - cellSize / 2;
                 const y0 = padding + EDGE * cellSize - cellSize / 2;
                 const w = (BOARD_SIZE - EDGE * 2) * cellSize;

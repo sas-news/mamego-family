@@ -9,6 +9,10 @@ module.exports = {
     kind: 'clock',
     spec: [
         ...K.rb('CLOCKGO', '時計碁', 'clockgo'),
+        K.params([
+            { key: 'hours', label: '時刻区域の数', min: 4, max: 24, def: 12, unit: '区' },
+            { key: 'hour_step', label: '区域の進み幅', min: 1, max: 4, def: 1, unit: '区/手' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -17,23 +21,25 @@ module.exports = {
             // 時計碁ルール: 天元を文字盤に12分割。手数 mod 12 の時刻区域のみ着手可
             {
                 const c = (BOARD_SIZE - 1) / 2;
-                const allowed = history.length % 12; // 0=12時, 3=3時, 6=6時, 9=9時
+                const HH = Math.max(2, P('hours') || 12); // 時刻区域の数
+                const allowed = (history.length * Math.max(1, P('hour_step') || 1)) % HH; // 0=12時
                 for (const p of cells) {
                     const dx = p.x - c, dy = p.y - c;
                     if (dx === 0 && dy === 0) continue; // 天元(針の軸)は常に許可
                     // 画面上で12時=0として時計回りの角度に変換 (y下向きなのでatan2増加=時計回り)
                     const a = (Math.atan2(dy, dx) + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
-                    const h = Math.floor(a / (Math.PI * 2) * 12) % 12;
+                    const h = Math.floor(a / (Math.PI * 2) * HH) % HH;
                     if (h !== allowed) return false;
                 }
             }`],
-        ...K.EVENT_CHIP_SPEC(`'時刻区域: ' + (history.length % 12 === 0 ? 12 : history.length % 12) + '時'`),
+        ...K.EVENT_CHIP_SPEC(`'時刻区域: ' + (((history.length * Math.max(1, P('hour_step') || 1)) % Math.max(2, P('hours') || 12)) || Math.max(2, P('hours') || 12)) + '時'`),
         K.CUE_GRID(`            // 時計: 現在の時刻区域を扇形で照らす
             {
                 const c = (BOARD_SIZE - 1) / 2;
-                const h0 = history.length % 12;
-                const a0 = h0 * Math.PI / 6 - Math.PI / 2;
-                const a1 = a0 + Math.PI / 6;
+                const HH = Math.max(2, P('hours') || 12);
+                const h0 = (history.length * Math.max(1, P('hour_step') || 1)) % HH;
+                const a0 = h0 * Math.PI * 2 / HH - Math.PI / 2;
+                const a1 = a0 + Math.PI * 2 / HH;
                 const cx = padding + c * cellSize, cy = padding + c * cellSize;
                 const rr = (c + 0.5) * cellSize;
                 ctx.save();
@@ -51,9 +57,10 @@ module.exports = {
                 const cx = padding + c * cellSize, cy = padding + c * cellSize;
                 const rr = (c + 0.40) * cellSize;
                 ctx.save();
-                for (let k = 0; k < 12; k++) {
-                    const a = k * Math.PI / 6 - Math.PI / 2;
-                    const cur = k === history.length % 12;
+                const HH2 = Math.max(2, P('hours') || 12);
+                for (let k = 0; k < HH2; k++) {
+                    const a = k * Math.PI * 2 / HH2 - Math.PI / 2;
+                    const cur = k === (history.length * Math.max(1, P('hour_step') || 1)) % HH2;
                     ctx.strokeStyle = cur ? '#dc2626' : alphaColor(currentTheme.lineColor, 0.6);
                     ctx.lineWidth = cur ? Math.max(2.2, cellSize * 0.075) : Math.max(1.2, cellSize * 0.04);
                     ctx.beginPath();
@@ -61,7 +68,7 @@ module.exports = {
                     ctx.lineTo(cx + Math.cos(a) * (rr + cellSize * 0.18), cy + Math.sin(a) * (rr + cellSize * 0.18));
                     ctx.stroke();
                 }
-                const ha = (history.length % 12) * Math.PI / 6 - Math.PI / 2;
+                const ha = ((history.length * Math.max(1, P('hour_step') || 1)) % HH2) * Math.PI * 2 / HH2 - Math.PI / 2;
                 ctx.strokeStyle = '#dc2626';
                 ctx.lineWidth = Math.max(2, cellSize * 0.06);
                 ctx.lineCap = 'round';

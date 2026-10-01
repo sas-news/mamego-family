@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'bulletgo',
     spec: [
         ...K.rb('BULLETGO', '弾丸碁', 'bulletgo'),
+        K.params([
+            { key: 'bullet_every', label: '弾丸の間隔', min: 2, max: 10, def: 5, unit: '手' },
+            { key: 'pierce_max', label: '貫通数の上限', min: 1, max: 6, def: 3 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         // 弾丸: そのプレイヤーの5手ごとの着手が弾を放つ (最近方角の敵石を最大3個貫通)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -34,7 +39,7 @@ module.exports = {
             // 弾丸: 5手ごとに発射 — 4方角で最も近い敵石へ向かって撃ち、最大3個を貫通
             {
                 const cnt = player === 1 ? (history.length + 1) >> 1 : history.length >> 1;
-                if (cnt % 5 === 0) {
+                if (cnt % (P('bullet_every') || 5) === 0) {
                     const bc = move.cells[0];
                     const si = bc.y * BOARD_SIZE + bc.x;
                     let bestDir = null, bestDist = Infinity;
@@ -52,7 +57,7 @@ module.exports = {
                     }
                     if (bestDir) {
                         let pierced = 0;
-                        for (let d = 1; d < BOARD_SIZE && pierced < 3; d++) {
+                        for (let d = 1; d < BOARD_SIZE && pierced < (P('pierce_max') || 3); d++) {
                             const nx = bc.x + bestDir[0] * d, ny = bc.y + bestDir[1] * d;
                             if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) break;
                             const ni = ny * BOARD_SIZE + nx;
@@ -73,7 +78,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`(() => { const c = turn === 1 ? (history.length + 1) >> 1 : history.length >> 1; const r = 5 - c % 5; return r === 5 ? '弾丸装填済' : '弾丸まで ' + r + '手'; })()`),
+        ...K.EVENT_CHIP_SPEC(`(() => { const c = turn === 1 ? (history.length + 1) >> 1 : history.length >> 1; const ev = P('bullet_every') || 5; const r = ev - c % ev; return r === ev ? '弾丸装填済' : '弾丸まで ' + r + '手'; })()`),
         [K.ONE, K.INFO_ALGO, `            弾丸碁: 各側5手目の石は弾丸。最も近い敵石へ弾を放ち直線上を最大3個貫通<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

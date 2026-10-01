@@ -9,6 +9,9 @@ module.exports = {
     kind: 'leash',
     spec: [
         ...K.rb('LEASHGO', '繋留碁', 'leashgo'),
+        K.params([
+            { key: 'leash_range', label: '繋留距離', min: 1, max: 8, def: 3, hint: 'アンカーからのチェビシェフ距離' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -24,9 +27,10 @@ module.exports = {
                     if (board[c0.y * BOARD_SIZE + c0.x] === player) { anchor = c0; break; }
                 }
                 if (anchor) {
+                    const lr = P('leash_range') || 3;
                     for (const p of cells) {
                         const d = Math.max(Math.abs(p.x - anchor.x), Math.abs(p.y - anchor.y));
-                        if (d > 3) return false;
+                        if (d > lr) return false;
                     }
                 }
             }`],
@@ -39,10 +43,11 @@ module.exports = {
                     if (board[c0.y * BOARD_SIZE + c0.x] === turn) { anc = c0; break; }
                 }
                 if (anc) {
+                    const lr = P('leash_range') || 3;
                     ctx.save();
                     ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.12);
-                    ctx.fillRect(padding + (anc.x - 3.5) * cellSize, padding + (anc.y - 3.5) * cellSize,
-                        cellSize * 7, cellSize * 7);
+                    ctx.fillRect(padding + (anc.x - lr - 0.5) * cellSize, padding + (anc.y - lr - 0.5) * cellSize,
+                        cellSize * (lr * 2 + 1), cellSize * (lr * 2 + 1));
                     ctx.restore();
                 }
             }`),
@@ -61,7 +66,7 @@ module.exports = {
                     ctx.lineWidth = Math.max(1.4, cellSize * 0.05);
                     ctx.setLineDash([cellSize * 0.2, cellSize * 0.14]);
                     ctx.beginPath();
-                    ctx.arc(ax, ay, cellSize * 3.45, 0, Math.PI * 2);
+                    ctx.arc(ax, ay, cellSize * ((P('leash_range') || 3) + 0.45), 0, Math.PI * 2);
                     ctx.stroke();
                     ctx.setLineDash([]);
                     ctx.lineWidth = Math.max(1.8, cellSize * 0.07);

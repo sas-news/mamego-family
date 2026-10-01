@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,25 +27,38 @@ module.exports = {
     icon: 'yeastgo',
     spec: [
         ...K.rb('YEASTGO', '酵母碁', 'yeastgo'),
+        K.params([
+            { key: 'bud_interval', label: '出芽の間隔', min: 2, max: 16, def: 8, unit: '手' },
+            { key: 'pool_radius', label: '糖蜜窪みの半径', min: 1, max: 6, def: 2 },
+            { key: 'pool_offset', label: '窪みの中心位置', min: 2, max: 9, def: 4, hint: '端からの距離' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 糖蜜: 盤に点在する2つの甘区域 (対称の糖蜜窪み)
-        const YEAST_SET = new Set();
-        {
+        // 半径・位置は設定で調整可能。変更は新しいゲーム開始時に反映される
+        let YEAST_SET = new Set();
+        function rebuildYeastSet() {
+            YEAST_SET = new Set();
             const m = Math.floor(BOARD_SIZE / 2);
-            const a = Math.max(2, Math.round(BOARD_SIZE * 0.28));
-            const r = Math.max(1, Math.round(BOARD_SIZE * 0.12));
+            const a = Math.min(BOARD_SIZE - 3, Math.max(2, P('pool_offset') || 4));
+            const r = Math.max(1, P('pool_radius') || 2);
             [[a, m], [BOARD_SIZE - 1 - a, m]].forEach(([cx0, cy0]) => {
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     if (Math.hypot(x - cx0, y - cy0) <= r) YEAST_SET.add(y * BOARD_SIZE + x);
                 }
             });
+        }
+        rebuildYeastSet();
+        // 設定変更で区域を即時再構成
+        function onVariantParam(p) {
+            if (p.key === 'pool_radius' || p.key === 'pool_offset') rebuildYeastSet();
         }`],
         // 8手ごとの出芽: 甘区域の石が隣の空地に芽を出す
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 酵母碁: 8手ごとに甘区域の石が出芽する
-            if (history.length > 0 && history.length % 8 === 0) {
+            // 酵母碁: N手ごとに甘区域の石が出芽する (間隔は設定で調整)
+            if (history.length > 0 && history.length % Math.max(1, P('bud_interval') || 8) === 0) {
                 const buds = [];
                 YEAST_SET.forEach(i => {
                     const v = board[i];

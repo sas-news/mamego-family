@@ -9,6 +9,9 @@ module.exports = {
     kind: 'quantum',
     spec: [
         ...K.rb('SCHROGO', '量子碁', 'schrogo'),
+        K.params([
+            { key: 'quantum_interval', label: '量子石の間隔', min: 2, max: 8, def: 3, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { pcnt: { 1: 0, 2: 0 } }; // 量子碁: 各側の着手数 (3手ごとに量子石)`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -44,7 +47,7 @@ module.exports = {
                 rot: move.rot,
                 cells: move.cells,
                 at: history.length,
-                schro: st.pcnt[player] % 3 === 0
+                schro: st.pcnt[player] % Math.max(1, P('quantum_interval') || 3) === 0
             });`],
         // 量子石は敵石が隣接した瞬間に観測されて確定する
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -109,7 +112,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`(function(){ const q = pieces.filter(pc => pc.schro).length; return q > 0 ? '量子石 ' + q + '個' : '量子まで ' + (3 - st.pcnt[turn] % 3) + '手'; })()`),
+        ...K.EVENT_CHIP_SPEC(`(function(){ const q = pieces.filter(pc => pc.schro).length; return q > 0 ? '量子石 ' + q + '個' : '量子まで ' + ((P('quantum_interval') || 3) - st.pcnt[turn] % (P('quantum_interval') || 3)) + '手'; })()`),
         [K.ONE, K.INFO_ALGO, `            量子碁: 3手ごとの石は白黒の重ね合わせ。敵石が隣接すると観測され色が確定する<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

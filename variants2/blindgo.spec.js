@@ -9,17 +9,20 @@ module.exports = {
     kind: 'blind',
     spec: [
         ...K.rb('BLINDGO', '盲点碁', 'blindgo'),
+        K.params([
+            { key: 'blind_size', label: '死角エリアの大きさ', min: 1, max: 8, def: 4, hint: '盤サイズ13で4 (元は盤の1/3)' },
+        ]),
         [K.ONE, '        function drawBoardElements(padding, cellSize) {',
 `        // 盲点碁: 黒は左下三角、白は右上三角が死角エリア
         function inBlind(x, y, pl) {
-            const k = Math.floor(BOARD_SIZE / 3);
+            const k = P('blind_size') || Math.floor(BOARD_SIZE / 3);
             return pl === 1 ? (x + (BOARD_SIZE - 1 - y)) < k : ((BOARD_SIZE - 1 - x) + y) < k;
         }
 
         function drawBoardElements(padding, cellSize) {`],
         K.CUE_GRID(`            // 盲点碁: 両者の死角エリアを暗い三角で翳らせる
             {
-                const k = Math.floor(BOARD_SIZE / 3);
+                const k = P('blind_size') || Math.floor(BOARD_SIZE / 3);
                 ctx.save();
                 ctx.fillStyle = 'rgba(30, 27, 75, 0.16)';
                 [[0, BOARD_SIZE - 1, 1, -1], [BOARD_SIZE - 1, 0, -1, 1]].forEach(([ox, oy, sx, sy]) => {

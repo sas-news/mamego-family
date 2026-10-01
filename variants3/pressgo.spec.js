@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -36,7 +36,7 @@ const ST = (init) => [
                 deadStones: [...deadStones],`],
     [K.ONE, K.ONLINE_RECV, K.ONLINE_RECV + `\n            st = data.st ? JSON.parse(JSON.stringify(data.st)) : ${init};`],
 ];
-const ST_INIT = `{ uses: { 1: 3, 2: 3 }, armed: { 1: false, 2: false }, plates: {} }`;
+const ST_INIT = `{ uses: { 1: (P('press_uses') || 3), 2: (P('press_uses') || 3) }, armed: { 1: false, 2: false }, plates: {} }`;
 module.exports = {
     file: 'pressgo.html',
     en: 'PRESSGO',
@@ -47,6 +47,7 @@ module.exports = {
     icon: 'pressgo',
     spec: [
         ...K.rb('PRESSGO', '圧延碁', 'pressgo'),
+        K.params([{ key: 'press_uses', label: '圧延の回数', min: 1, max: 10, def: 3, unit: '回' }, { key: 'press_len', label: '圧延で延びるマス数', min: 1, max: 4, def: 2, unit: 'マス' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' }]),
         ...ST(ST_INIT),
         // 補助関数をページスコープへ注入
         [K.ONE, `        function executeMove(move, player) {`, `        const pressApply = (idx, player) => {
@@ -70,7 +71,7 @@ module.exports = {
     lastMove = { player, cells: [{ x: idx % BOARD_SIZE, y: Math.floor(idx / BOARD_SIZE) }] };
     st.uses[player]--;
     st.plates[idx] = 1;
-    const free = getNeighbors(idx).filter(n => board[n] === 0).slice(0, 2);
+    const free = getNeighbors(idx).filter(n => board[n] === 0).slice(0, Math.max(1, P('press_len') || 2));
     free.forEach(n => {
         board[n] = player;
         st.plates[n] = 1;
@@ -82,7 +83,7 @@ module.exports = {
     consecutivePasses = 0;
     holdUsed = false;
     turn = player === 1 ? 2 : 1;
-    if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) { endGameByScore(); return true; }
+    if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) { endGameByScore(); return true; }
     updateUI();
     if (gameMode === 'online' && onlineRoomId) syncOnlineState();
     saveState();

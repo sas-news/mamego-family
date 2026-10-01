@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 90) / 100))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,9 @@ module.exports = {
     icon: 'cylindergo',
     spec: [
         ...K.rb('CYLINDERGO', '中空碁', 'cylindergo'),
+        K.params([
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 90, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         // 円筒: 左右の端がループ (上下は通常の辺)
         [K.ONE, K.NBRS_GRID,
 `        // 円筒: 左右の端がループする。右端の隣は左端 (上下の辺は通常通り)

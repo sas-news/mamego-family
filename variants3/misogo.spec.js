@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,16 +27,27 @@ module.exports = {
     icon: 'misogo',
     spec: [
         ...K.rb('MISOGO', '味噌碁', 'misogo'),
+        K.params([
+            { key: 'taru_size', label: '味噌樽のサイズ', min: 1, max: 4, def: 2, unit: 'マス', hint: '対角2箇所の正方形区域の一辺' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 味噌樽: 対角の2つの2x2区域
+        // 味噌樽: 対角の2つの正方形区域 (サイズは設定で調整)
         const TARU_SET = new Set();
-        {
+        function rebuildTaru() {
+            TARU_SET.clear();
             const tc = Math.floor(BOARD_SIZE / 3);
-            [[tc, tc], [BOARD_SIZE - 2 - tc, BOARD_SIZE - 2 - tc]].forEach(([bx, by]) => {
-                for (let dy = 0; dy <= 1; dy++) for (let dx = 0; dx <= 1; dx++) {
+            const ts = Math.max(1, P('taru_size') || 2);
+            [[tc, tc], [BOARD_SIZE - ts - tc, BOARD_SIZE - ts - tc]].forEach(([bx, by]) => {
+                for (let dy = 0; dy < ts; dy++) for (let dx = 0; dx < ts; dx++) {
                     TARU_SET.add((by + dy) * BOARD_SIZE + (bx + dx));
                 }
             });
+        }
+        rebuildTaru();
+        // 設定変更で区域を即時再構成
+        function onVariantParam(p) {
+            if (p.key === 'taru_size') rebuildTaru();
         }`],
         // 樽の中の連は発酵して固くなる — 取られない
         [K.ONE, `                    if (!hasLiberty) {

@@ -36,6 +36,9 @@ module.exports = {
     icon: 'outlastgo',
     spec: [
         ...K.rb('OUTLASTGO', '耐久碁', 'outlastgo'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.5, max: 2, def: 1.1, step: 0.05 },
+        ]),
         ...PERSIST('{ rest: { 1: false, 2: false } }'),
         // パス = 休養: パスした側の連は次の相手番だけ呼吸点+1
         [K.ONE, K.PASS_INC, `            prevBoard = null; // パスでコウ制限は解除
@@ -61,7 +64,7 @@ module.exports = {
             st.rest = { 1: false, 2: false };
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();

@@ -10,8 +10,12 @@ module.exports = {
     icon: 'tidepoolgo',
     spec: [
         ...K.rb('TIDEPOOLGO', '潮間碁', 'tidepoolgo'),
+        K.params([
+            { key: 'tide_period', label: '潮汐の周期', min: 4, max: 30, def: 10, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.0, step: 0.1, def: 1.1, hint: '交点数比' },
+        ]),
         // 満潮時 (手数の10の位が奇数の10手帯) は外周1段が水没で着手不可
-        [K.ONE, K.VALID_BOUNDS, `            const isHigh = Math.floor(history.length / 10) % 2 === 1;
+        [K.ONE, K.VALID_BOUNDS, `            const isHigh = Math.floor(history.length / (P('tide_period') || 10)) % 2 === 1;
             for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -21,8 +25,8 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 潮汐: 10手ごとに満潮/干潮が入れ替わる (両者共通)
-            if (history.length % 10 === 0) {
-                const nowHigh = Math.floor(history.length / 10) % 2 === 1;
+            if (history.length % (P('tide_period') || 10) === 0) {
+                const nowHigh = Math.floor(history.length / (P('tide_period') || 10)) % 2 === 1;
                 if (nowHigh) {
                     // 満潮: 外周1段の石は全て流出 (アゲハマにはならない)。全滅はさせない
                     const washed = [];
@@ -41,7 +45,7 @@ module.exports = {
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -50,7 +54,7 @@ module.exports = {
 
             turn = opponent;`],
         ...K.STONE_MARKS_SPEC(`            // 満潮時: 外周1段を水面で覆う
-            if (Math.floor(history.length / 10) % 2 === 1) {
+            if (Math.floor(history.length / (P('tide_period') || 10)) % 2 === 1) {
                 ctx.save();
                 ctx.fillStyle = 'rgba(56,189,248,0.35)';
                 for (let x = 0; x < BOARD_SIZE; x++) for (let y = 0; y < BOARD_SIZE; y++) {
@@ -59,7 +63,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`Math.floor(history.length / 10) % 2 === 1 ? '満潮' : '干潮'`),
+        ...K.EVENT_CHIP_SPEC(`Math.floor(history.length / (P('tide_period') || 10)) % 2 === 1 ? '満潮' : '干潮'`),
         // 連続パスは潮に流されて即終局 — 死石は自動判定で採点 (対話的死石確認は省略)
         [K.ONE, `                startDeadStoneSelectionPhase();`, `                endGameByScore();`],
         [K.ONE, K.RV_ALGO, K.rv([

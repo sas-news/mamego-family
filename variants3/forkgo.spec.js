@@ -10,17 +10,22 @@ module.exports = {
     icon: 'forkgo',
     spec: [
         ...K.rb('FORKGO', '分岐碁', 'forkgo'),
+        K.params([
+            { key: 'fork_width', label: 'Y字の腕の太さ', min: 1, max: 3, def: 1, unit: '列', hint: '新しい対局で反映' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // Y字: 胴 (中央縦) + 左右の腕 (対角線) — 幅3
         const FORK_C = (BOARD_SIZE - 1) / 2;
         function isForkCell(x, y) {
             const N = BOARD_SIZE;
             // 胴: 中心より下の縦3列
-            if (Math.abs(x - FORK_C) <= 1 && y >= FORK_C) return true;
+            const _fw = P('fork_width') || 1;
+            if (Math.abs(x - FORK_C) <= _fw && y >= FORK_C) return true;
             // 左腕: (0,0)-(c,c) の対角線 ±1
-            if (y <= FORK_C && Math.abs(x - y) <= 1) return true;
+            if (y <= FORK_C && Math.abs(x - y) <= _fw) return true;
             // 右腕: (N-1,0)-(c,c) の対角線 ±1
-            if (y <= FORK_C && Math.abs(x - (N - 1 - y)) <= 1) return true;
+            if (y <= FORK_C && Math.abs(x - (N - 1 - y)) <= _fw) return true;
             return false;
         }`],
         // Y字の外は深淵
@@ -58,7 +63,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

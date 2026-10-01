@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= Math.max(1, P('move_cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'sequencego',
     spec: [
         ...K.rb('SEQUENCEGO', '数列碁', 'sequencego'),
+        K.params([
+            { key: 'fib_bonus', label: '数列ボーナス', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'move_cap', label: '打ち切り手数', min: 40, max: 400, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { bonus: { 1: 0, 2: 0 }, fib: { 1: {}, 2: {} } }; // 数列ボーナス・達成済みのフィボナッチ数`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -59,10 +63,10 @@ module.exports = {
                 for (let i = 0; i < board.length; i++) if (board[i] === player) cnt++;
                 if (FIB[cnt] && !st.fib[player][cnt]) {
                     st.fib[player][cnt] = true;
-                    st.bonus[player] += 2;
+                    st.bonus[player] += (P('fib_bonus') ?? 2);
                     const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                     fxGlow(ci, '#f59e0b', 750);
-                    fxText(ci, cnt + '石 数列+2目', '#f59e0b', 1200);
+                    fxText(ci, cnt + '石 数列+' + (P('fib_bonus') ?? 2) + '目', '#f59e0b', 1200);
                 }
             }
 

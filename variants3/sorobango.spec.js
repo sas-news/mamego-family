@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'sorobango',
     spec: [
         ...K.rb('SOROBANGO', '算盤碁', 'sorobango'),
+        K.params([
+            { key: 'carry_len', label: '繰上りに必要な列の石数', min: 3, max: 9, def: 5, unit: '個' },
+            { key: 'carry_pts', label: '繰上りの桁点', min: 0, max: 15, def: 5, unit: '点' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 採点に桁点を加算
         [K.ONE, `            const blackTotal = territory.black + captures[1];
@@ -65,14 +70,14 @@ module.exports = {
                         const i = y * BOARD_SIZE + x;
                         if (board[i] === player) col.push(i);
                     }
-                    if (col.length >= 5) {
-                        col.slice(0, 5).forEach(i => {
+                    if (col.length >= (P('carry_len') || 5)) {
+                        col.slice(0, P('carry_len') || 5).forEach(i => {
                             board[i] = 0;
                             fxBurst(i, '#fbbf24', 8);
                         });
-                        st.carry[player] += 5;
+                        st.carry[player] += (P('carry_pts') ?? 5);
                         cleanUpPieces();
-                        fxText(col[2], '繰上り +5', '#fbbf24', 1300);
+                        fxText(col[2], '繰上り +' + (P('carry_pts') ?? 5), '#fbbf24', 1300);
                         break; // 1手につき1列だけ繰上る
                     }
                 }

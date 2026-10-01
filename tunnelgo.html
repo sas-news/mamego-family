@@ -251,6 +251,12 @@
                 <div id="onlineRoomStatus" class="text-center font-bold text-neutral-600 pt-1"></div>
             </div>
 
+            <!-- バリアント固有設定 (VPARAMSがあるゲームのみ表示) -->
+            <div id="variantParamsBox" class="hidden p-3 bg-amber-50 rounded-xl border border-amber-200 flex flex-col gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-neutral-500">このゲームの設定</span>
+                <div id="variantParams" class="flex flex-col gap-3"></div>
+            </div>
+
             <!-- 4. サウンド設定 -->
             <div class="flex items-center justify-between pt-1">
                 <span class="text-sm font-bold text-neutral-700">効果音 (SE)</span>
@@ -309,6 +315,77 @@
     </div>
 
     <script>
+        // === バリアント固有パラメータ ===
+        // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
+        // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
+        const VPARAMS = [{"key":"tun_in","label":"隧道入口の位置 (端から)","min":0,"max":8,"def":0,"hint":"0=自動 (盤の1/6)"},{"key":"tun_out","label":"隧道出口の位置 (端から)","min":0,"max":12,"def":0,"hint":"0=自動 (盤の2/5)"},{"key":"cap_ratio","label":"打ち切り手数 (交点数比)","min":0.3,"max":1.5,"step":0.05,"def":0.9}];
+        const VPAR_MAP = {};
+        const VPAR_SAVED = (() => {
+            try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
+            catch (e) { return {}; }
+        })();
+        VPARAMS.forEach(p => {
+            if (p.val === undefined) p.val = VPAR_SAVED[p.key] !== undefined ? VPAR_SAVED[p.key] : p.def;
+            VPAR_MAP[p.key] = p;
+        });
+        const P = k => (VPAR_MAP[k] ? VPAR_MAP[k].val : undefined);
+        function saveVpar() {
+            try {
+                const o = {};
+                VPARAMS.forEach(p => { if (p.val !== p.def) o[p.key] = p.val; });
+                localStorage.setItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : ''), JSON.stringify(o));
+            } catch (e) {}
+        }
+        // 設定モーダルの「このゲームの設定」に VPARAMS 分のUIを生成
+        function initVariantParams() {
+            const box = document.getElementById('variantParamsBox');
+            const list = document.getElementById('variantParams');
+            if (!box || !list || !VPARAMS.length) return;
+            box.classList.remove('hidden');
+            const fmt = (p, v) => (p.step && p.step < 1 ? Number(v).toFixed(1) : String(v)) + (p.unit || '');
+            VPARAMS.forEach(p => {
+                const wrap = document.createElement('div');
+                wrap.className = 'flex flex-col gap-1';
+                const head = document.createElement('div');
+                head.className = 'flex justify-between text-xs font-bold text-neutral-600';
+                const lab = document.createElement('span');
+                lab.textContent = p.label + (p.hint ? ` (${p.hint})` : '');
+                const valEl = document.createElement('span');
+                valEl.className = 'text-amber-700';
+                valEl.textContent = fmt(p, p.val);
+                head.appendChild(lab); head.appendChild(valEl);
+                wrap.appendChild(head);
+                const applyVal = v => {
+                    p.val = v;
+                    valEl.textContent = fmt(p, p.val);
+                    saveVpar();
+                    if (typeof onVariantParam === 'function') onVariantParam(p);
+                };
+                if (p.options) {
+                    const sel = document.createElement('select');
+                    sel.className = 'w-full border border-neutral-300 rounded-lg py-1.5 text-sm font-bold bg-white';
+                    p.options.forEach(o => {
+                        const op = document.createElement('option');
+                        op.value = o.v; op.textContent = o.l;
+                        sel.appendChild(op);
+                    });
+                    sel.value = p.val;
+                    sel.addEventListener('change', () => {
+                        const num = parseFloat(sel.value);
+                        applyVal(isNaN(num) ? sel.value : num);
+                    });
+                    wrap.appendChild(sel);
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'range'; inp.min = p.min; inp.max = p.max; inp.step = p.step || 1; inp.value = p.val;
+                    inp.className = 'w-full accent-amber-600';
+                    inp.addEventListener('input', () => applyVal(parseFloat(inp.value)));
+                    wrap.appendChild(inp);
+                }
+                list.appendChild(wrap);
+            });
+        }
+        initVariantParams();
         // ==========================================
         // 1. カラーテーマ定義
         // ==========================================
@@ -560,16 +637,26 @@
         let BOARD_SIZE = 13;
         let pendingBoardSize = BOARD_SIZE; // 盤サイズの選択値 (ニューゲーム開始時に適用)
         let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
-        // 隧道: 入口 (隅寄り) -> 出口 (中央寄り) の4本
-        const TUN_A = Math.max(1, Math.floor(BOARD_SIZE / 6));
-        const TUN_B = Math.max(2, Math.floor(BOARD_SIZE * 0.4));
-        const TUNNELS = new Map([
-            [TUN_A * BOARD_SIZE + TUN_A, TUN_B * BOARD_SIZE + TUN_B],
-            [TUN_A * BOARD_SIZE + (BOARD_SIZE - 1 - TUN_A), TUN_B * BOARD_SIZE + (BOARD_SIZE - 1 - TUN_B)],
-            [(BOARD_SIZE - 1 - TUN_A) * BOARD_SIZE + TUN_A, (BOARD_SIZE - 1 - TUN_B) * BOARD_SIZE + TUN_B],
-            [(BOARD_SIZE - 1 - TUN_A) * BOARD_SIZE + (BOARD_SIZE - 1 - TUN_A), (BOARD_SIZE - 1 - TUN_B) * BOARD_SIZE + (BOARD_SIZE - 1 - TUN_B)],
-        ]);
-        const TUNNEL_EXITS = new Set(TUNNELS.values());
+        // 隧道: 入口 (隅寄り) -> 出口 (中央寄り) の4本。位置は設定で調整 (0=自動)
+        const TUN_A = Math.max(1, P('tun_in') || Math.floor(BOARD_SIZE / 6));
+        const TUN_B = Math.max(2, P('tun_out') || Math.floor(BOARD_SIZE * 0.4));
+        let TUNNELS = new Map();
+        let TUNNEL_EXITS = new Set();
+        function rebuildTunnels() {
+            const a = Math.max(1, P('tun_in') || Math.floor(BOARD_SIZE / 6));
+            const b = Math.max(2, P('tun_out') || Math.floor(BOARD_SIZE * 0.4));
+            TUNNELS = new Map([
+                [a * BOARD_SIZE + a, b * BOARD_SIZE + b],
+                [a * BOARD_SIZE + (BOARD_SIZE - 1 - a), b * BOARD_SIZE + (BOARD_SIZE - 1 - b)],
+                [(BOARD_SIZE - 1 - a) * BOARD_SIZE + a, (BOARD_SIZE - 1 - b) * BOARD_SIZE + b],
+                [(BOARD_SIZE - 1 - a) * BOARD_SIZE + (BOARD_SIZE - 1 - a), (BOARD_SIZE - 1 - b) * BOARD_SIZE + (BOARD_SIZE - 1 - b)],
+            ]);
+            TUNNEL_EXITS = new Set(TUNNELS.values());
+        }
+        rebuildTunnels();
+        function onVariantParam(p) {
+            if (p.key === 'tun_in' || p.key === 'tun_out') rebuildTunnels();
+        }
         function tunnelExit(x, y) {
             const e = TUNNELS.get(y * BOARD_SIZE + x);
             return e === undefined ? -1 : e;
@@ -1763,7 +1850,7 @@
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

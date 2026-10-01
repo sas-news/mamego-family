@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'accelgo',
     spec: [
         ...K.rb('ACCELGO', '加速碁', 'accelgo'),
+        K.params([
+            { key: 'streak_len', label: '連打ボーナス間隔', min: 2, max: 6, def: 3, unit: '手' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 加速: 連続着手3回ごとに手番を維持 (追加の1手)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -54,7 +58,7 @@ module.exports = {
 
             // 加速: 連続して石を置き続けると3手ごとに追加着手権
             st.streak[player] = (st.streak[player] || 0) + 1;
-            if (st.streak[player] >= 3) {
+            if (st.streak[player] >= (P('streak_len') || 3)) {
                 st.streak[player] = 0;
                 const ai2 = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 fxGlow(ai2, '#f97316', 800);
@@ -71,7 +75,7 @@ module.exports = {
         [K.ONE, K.PASS_INC, `            prevBoard = null; // パスでコウ制限は解除
             consecutivePasses++;
             st.streak[turn] = 0; // パスで加速リセット`],
-        ...K.EVENT_CHIP_SPEC(`'加速 ' + (st.streak[turn] || 0) + '/3'`),
+        ...K.EVENT_CHIP_SPEC(`'加速 ' + (st.streak[turn] || 0) + '/' + (P('streak_len') || 3)`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            加速碁: 連続して石を置くと3連続ごとに追加の1手 (パスでリセット)<br>
             PC: クリックで配置<br>

@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('MEDIGO', '治療碁', 'medigo'),
+        K.params([
+            { key: 'heal_loss', label: '治癒連の散り数', min: 1, max: 5, def: 1, hint: '治癒された連が取られた時に散る石の数' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.7, max: 2.5, def: 1.4, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // 治癒マーク medMark (idx の Set) の状態登録
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let medMark = new Set(); // 治癒された石 (idx)。次の取られは1石だけに軽減`],
@@ -44,9 +48,10 @@ module.exports = {
                     grp.forEach(g => seen.add(g));
                     if (grp.some(g => medMark.has(g))) {
                         grp.forEach(g => medMark.delete(g));
-                        finalRemove.push(grp[0]);
-                        // 治癒発動: 1石だけ散り連が耐える
-                        grp.slice(1).forEach(g => fxGlow(g, 'rgba(40,200,110,0.9)', 820));
+                        // 治癒発動: 治癒連は heal_loss 個だけ散り連が耐える
+                        const loss = Math.min(grp.length, Math.max(1, P('heal_loss') || 1));
+                        finalRemove.push(...grp.slice(0, loss));
+                        grp.slice(loss).forEach(g => fxGlow(g, 'rgba(40,200,110,0.9)', 820));
                         fxText(grp[0], '耐えた', '#34d399', 1000);
                     } else {
                         finalRemove.push(...grp);
@@ -97,7 +102,21 @@ module.exports = {
             '治癒された連は包囲されても全滅せず、1石だけ散って持ち堪える (治癒は消費される)。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
-        ...K.MOVE_CAP_SPEC,
+        // 打ち切り手数は設定で調整可能
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 新規対局 (履歴空) で打ち切りを再武装
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            // (1局につき1回のみ発火。死に石選択を取り消して続行する場合は再発火しない)
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.4))) {
+                moveCapFired = true;
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

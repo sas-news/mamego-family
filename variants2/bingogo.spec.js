@@ -9,17 +9,21 @@ module.exports = {
     kind: 'bingo',
     spec: [
         ...K.rb('BINGOGO', 'ビンゴ碁', 'bingogo'),
+        K.params([
+            { key: 'bingo_r', label: 'ビンゴラインの半径', min: 1, max: 3, def: 2, hint: 'ライン長 = 半径×2+1' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0, max: 400, def: 0, unit: '手', hint: '0=制限なし' },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
-        // 中央5×5のビンゴライン: 中央行・中央列・両対角線 (各5点)
+        // 中央のビンゴライン: 中央行・中央列・両対角線 (各 半径×2+1 点)
         function bingoLines() {
             const c = Math.floor(BOARD_SIZE / 2);
-            const line = pts => pts.map(([x, y]) => (c + y) * BOARD_SIZE + (c + x));
-            return [
-                line([[-2,0],[-1,0],[0,0],[1,0],[2,0]]), // 中央行
-                line([[0,-2],[0,-1],[0,0],[0,1],[0,2]]), // 中央列
-                line([[-2,-2],[-1,-1],[0,0],[1,1],[2,2]]), // 対角線\
-                line([[2,-2],[1,-1],[0,0],[-1,1],[-2,2]]), // 対角線/
-            ];
+            const r = Math.max(1, P('bingo_r') || 2);
+            const seq = (dx, dy) => {
+                const pts = [];
+                for (let k = -r; k <= r; k++) pts.push([k * dx, k * dy]);
+                return pts.map(([x, y]) => (c + y) * BOARD_SIZE + (c + x));
+            };
+            return [seq(1, 0), seq(0, 1), seq(1, 1), seq(1, -1)];
         }
         function bingoWin(player) {
             return bingoLines().some(ln => ln.every(i => board[i] === player));
@@ -45,7 +49,7 @@ module.exports = {
             {
                 const c = Math.floor(BOARD_SIZE / 2);
                 const bx = padding + c * cellSize, by = padding + c * cellSize;
-                const len = cellSize * 4 + cellSize * 0.6, th = cellSize * 0.6;
+                const len = cellSize * (2 * (P('bingo_r') || 2)) + cellSize * 0.6, th = cellSize * 0.6;
                 ctx.save();
                 ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.12);
                 ctx.fillRect(bx - len / 2, by - th / 2, len, th); // 中央行
@@ -64,7 +68,7 @@ module.exports = {
                     [1, 2].forEach(pl => {
                         const filled = ln.filter(i => board[i] === pl);
                         const empty = ln.filter(i => board[i] === 0);
-                        if (filled.length === 4 && empty.length === 1) {
+                        if (empty.length === 1 && filled.length === ln.length - 1) {
                             const i = empty[0];
                             const cx = padding + (i % BOARD_SIZE) * cellSize, cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
                             ctx.fillStyle = pl === 1 ? 'rgba(245,208,96,0.9)' : 'rgba(64,176,240,0.9)';
@@ -82,6 +86,17 @@ module.exports = {
             '盤中央の5×5がビンゴカード。中央行・中央列・両対角線のいずれかを全て自石で埋めた側が即勝ち。',
             '相手のライン途中に割って入って阻止せよ。通常の地取り勝負も残る。',
         ])],
+        // 打ち切り手数 (0=制限なし): 設定で有効化すると超過時に強制採点
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

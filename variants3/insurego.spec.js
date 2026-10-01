@@ -47,6 +47,9 @@ module.exports = {
     icon: 'insurego',
     spec: [
         ...K.rb('INSUREGO', '保険碁', 'insurego'),
+        K.params([
+            { key: 'ins_max', label: '付保の上限', min: 1, max: 5, def: 2, unit: '件' },
+        ]),
         ...ST(ST_INIT),
         // 保険: 被保険石は取られず最寄りの空点に復活する (アゲハマにもならない)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
@@ -101,7 +104,7 @@ module.exports = {
             // 保険モード: 自石をクリックして付保する (手番は消費しない)
             if (st.armed[turn]) {
                 const gi = Math.round(anchor.v) * BOARD_SIZE + Math.round(anchor.u);
-                if (gi >= 0 && gi < board.length && board[gi] === turn && !(st.insured[turn] || []).includes(gi) && (st.insured[turn] || []).length < 2) {
+                if (gi >= 0 && gi < board.length && board[gi] === turn && !(st.insured[turn] || []).includes(gi) && (st.insured[turn] || []).length < (P('ins_max') || 2)) {
                     (st.insured[turn] = st.insured[turn] || []).push(gi);
                     st.armed[turn] = false;
                     fxText(gi, '付保', '#38bdf8', 900);
@@ -144,7 +147,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'被保険 ' + ((st.insured[turn] || []).length) + '/2'`),
+        ...K.EVENT_CHIP_SPEC(`'被保険 ' + ((st.insured[turn] || []).length) + '/' + (P('ins_max') || 2)`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            保険碁: 自石に保険をかけると取られた時に近くの空点へ復活 (最大2件)<br>
             PC: 「保険」ボタン→自石をクリックして付保<br>

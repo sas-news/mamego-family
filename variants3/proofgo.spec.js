@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,7 @@ module.exports = {
     icon: 'proofgo',
     spec: [
         ...K.rb('PROOFGO', '校閲碁', 'proofgo'),
+        K.params([{ key: 'mark_pts', label: '朱1箇所の得点', min: 1, max: 5, def: 1, unit: '目' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' }]),
         ...ST(ST_INIT),
 
         // 朱入れ: 敵連のぶら下がり石 (同色隣接ちょうど1本) に+1目
@@ -61,7 +62,7 @@ module.exports = {
                     const deg = getNeighbors(i).filter(n => board[n] === opponent).length;
                     if (deg === 1) {
                         st.marked[i] = 1;
-                        captures[player]++;
+                        captures[player] += (P('mark_pts') || 1);
                         markedNow++;
                         fxText(i, '朱!', '#ef4444', 900);
                     }

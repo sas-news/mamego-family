@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,12 @@ module.exports = {
     icon: 'sonatago',
     spec: [
         ...K.rb('SONATAGO', '楽章碁', 'sonatago'),
+        K.params([
+            { key: 'dev_len', label: '展開部に必要な連の大きさ', min: 2, max: 6, def: 3, unit: '石' },
+            { key: 'rep_count', label: '再現に必要な同型の連数', min: 2, max: 4, def: 2, unit: '連' },
+            { key: 'sonata_pts', label: '楽章完結の得点', min: 0, max: 9, def: 3, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.6, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // ソナタ形式: 呈示 (新しい単石で動機) → 展開 (その連が成長) → 再現 (同じ大きさの別連) で+3目
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -62,7 +68,7 @@ module.exports = {
                         st.phase[player] = 1;
                         st.motif[player] = mi;
                         fxGlow(mi, '#7dd3fc', 500);
-                    } else if (ph === 1 && s >= 3) {
+                    } else if (ph === 1 && s >= (P('dev_len') || 3)) {
                         st.phase[player] = 2;
                         st.motif[player] = s; // 動機の連の大きさを記憶
                         fxText(mi, '展開部', '#7dd3fc', 1000);
@@ -76,10 +82,10 @@ module.exports = {
                             g.forEach(j => { seenS3[j] = true; });
                             if (g.length === st.motif[player]) cnt++;
                         }
-                        if (cnt >= 2) {
-                            captures[player] += 3;
+                        if (cnt >= (P('rep_count') || 2)) {
+                            captures[player] += (P('sonata_pts') ?? 3);
                             st.phase[player] = 0;
-                            fxText(mi, '再現部・完結 +3', '#facc15', 1400);
+                            fxText(mi, '再現部・完結 +' + (P('sonata_pts') ?? 3), '#facc15', 1400);
                             fxShake(3, 280);
                         }
                     }

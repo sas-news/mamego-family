@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'etogo',
     spec: [
         ...K.rb('ETOGO', '干支碁', 'etogo'),
+        K.params([
+            { key: 'zodiac_pts', label: '干支1種類ごとの得点', min: 0, max: 8, def: 2, unit: '点' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 干支ヘルパー
         [K.ONE, `        function endGameByScore() {`, `        // 干支: 子丑寅卯辰巳午未申酉戌亥
@@ -57,7 +61,7 @@ module.exports = {
                 const i = +k;
                 if (board[i] === pl) kinds.add(st.marks[i]);
             }
-            return kinds.size * 2;
+            return kinds.size * (P('zodiac_pts') || 2);
         }
 
         function endGameByScore() {`],

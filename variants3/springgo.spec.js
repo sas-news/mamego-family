@@ -10,8 +10,11 @@ module.exports = {
     icon: 'springgo',
     spec: [
         ...K.rb('SPRINGGO', '季節碁', 'springgo'),
+        K.params([
+            { key: 'season_len', label: '季節の長さ', min: 2, max: 15, def: 5, unit: '手' },
+        ]),
         // 冬 (季節3) は連が凍り付き取られない
-        [K.ONE, K.CAPTURE_BLOCK, `            const seasonNow = Math.floor(history.length / 5) % 4;
+        [K.ONE, K.CAPTURE_BLOCK, `            const seasonNow = Math.floor(history.length / (P('season_len') || 5)) % 4;
             const captured = seasonNow === 3 ? [] : getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
@@ -26,7 +29,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 季節: 5手ごとに 0:春 1:夏 2:秋 3:冬 が巡る
-            const season = Math.floor(history.length / 5) % 4;
+            const season = Math.floor(history.length / (P('season_len') || 5)) % 4;
             if (season === 0) {
                 // 春: 置いた石の隣の空点に芽石が1個生える
                 for (const c of move.cells) {
@@ -40,7 +43,7 @@ module.exports = {
                     }
                 }
             }
-            if (history.length % 5 === 0) {
+            if (history.length % (P('season_len') || 5) === 0) {
                 const names = ['春', '夏', '秋', '冬'];
                 fxText(Math.floor(BOARD_SIZE / 2) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2), names[season] + '到来', '#22c55e', 1100);
             }
@@ -65,7 +68,7 @@ module.exports = {
             turn = opponent;`],
         ...K.STONE_MARKS_SPEC(`            // 季節色: 盤全体を季節色の縁で彩る
             {
-                const ss = Math.floor(history.length / 5) % 4;
+                const ss = Math.floor(history.length / (P('season_len') || 5)) % 4;
                 const cols = ['rgba(74,222,128,0.55)', 'rgba(251,146,60,0.55)', 'rgba(217,119,6,0.55)', 'rgba(147,197,253,0.65)'];
                 ctx.save();
                 ctx.strokeStyle = cols[ss];
@@ -74,7 +77,7 @@ module.exports = {
                 ctx.strokeRect(1.5, 1.5, w - 3, w - 3);
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`['春=芽吹', '夏', '秋=枯れ', '冬=凍結'][Math.floor(history.length / 5) % 4] + ' ' + (5 - history.length % 5) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`['春=芽吹', '夏', '秋=枯れ', '冬=凍結'][Math.floor(history.length / (P('season_len') || 5)) % 4] + ' ' + ((P('season_len') || 5) - history.length % (P('season_len') || 5)) + '手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '季節は5手周期で巡る — 春: 置いた石の隣に芽石が生える。夏: 通常。秋: 捕獲してもアゲハマ無し。',
             '冬: 連は凍り付き取られない (呼吸点0のまま耐える)。季節の巡りは両プレイヤー共通。',

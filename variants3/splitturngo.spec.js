@@ -36,6 +36,9 @@ module.exports = {
     icon: 'splitturngo',
     spec: [
         ...K.rb('SPLITTURNGO', '分掌碁', 'splitturngo'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2, def: 1.1, step: 0.1, hint: '交点数の倍率' },
+        ]),
         ...PERSIST('{ phase: { 1: "place", 2: "place" } }'),
         // 除去フェーズ中は敵石の座標だけが合法手
         [K.ONE, K.VALID_BOUNDS, `            if (st.phase[player] === 'remove') {
@@ -76,7 +79,7 @@ module.exports = {
             st.phase[player] = st.phase[player] === 'place' ? 'remove' : 'place';
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();

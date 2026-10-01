@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'onmyogo',
     spec: [
         ...K.rb('ONMYOGO', '陰陽碁', 'onmyogo'),
+        K.params([
+            { key: 'flow', label: '相生の向き', options: [{ v: 'fwd', l: '右へ流れる' }, { v: 'rev', l: '左へ流れる' }], def: 'fwd' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         // 五行ヘルパー
         [K.ONE, `        function endGameByScore() {`, `        // 五行: 列 x%5 が木火土金水。相生は e が (e+1)%5 を生じる一方向
         const ONMYO_EL = ['木', '火', '土', '金', '水'];
@@ -45,11 +49,12 @@ module.exports = {
                 const cell = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (board[cell] === player) {
                     const el = onmyoEl(cell);
+                    const __f = P('flow') === 'rev' ? 4 : 1; // 相生の向き (rev は逆向き)
                     const targets = [], threats = [];
                     getNeighbors(cell).forEach(nb => {
                         if (board[nb] === opponent) {
-                            if (onmyoEl(nb) === (el + 1) % 5) targets.push(nb);       // 自分が生じる側 → 砕く
-                            else if (el === (onmyoEl(nb) + 1) % 5) threats.push(nb);  // 相手に生じられる → 砕かれる
+                            if (onmyoEl(nb) === (el + __f) % 5) targets.push(nb);       // 自分が生じる側 → 砕く
+                            else if (el === (onmyoEl(nb) + __f) % 5) threats.push(nb);  // 相手に生じられる → 砕かれる
                         }
                     });
                     targets.forEach(nb => {

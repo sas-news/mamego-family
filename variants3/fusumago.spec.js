@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,10 @@ module.exports = {
     icon: 'fusumago',
     spec: [
         ...K.rb('FUSUMAGO', '襖張碁', 'fusumago'),
+        K.params([
+            { key: 'fusuma_pts', label: '襖1枚の得点', min: 2, max: 40, def: 10, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -81,7 +85,7 @@ module.exports = {
                 });
                 if (tL && tR) {
                     st.fusuma[player] = true;
-                    st.score[player] += 10;
+                    st.score[player] += (P('fusuma_pts') || 10);
                 }
             }
 

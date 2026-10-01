@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -48,13 +48,17 @@ module.exports = {
     icon: 'galego',
     spec: [
         ...K.rb('GALEGO', '木枯碁', 'galego'),
+        K.params([
+            { key: 'gale_interval', label: '木枯らしの周期', min: 3, max: 48, def: 12, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         ...ST(ST_INIT),
         // 木枯らし: 12手毎に全石が風下へ1マス流される
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 木枯らし: 12手ごとに全石が風下へ流される (風向きは毎回まわる)
-            if (history.length > 0 && history.length % 12 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('gale_interval') || 12) === 0) {
                 const D = ${DIRS};
                 const dx = D.dx[st.dir], dy = D.dy[st.dir];
                 let blew = 0;
@@ -92,7 +96,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'木枯らし ' + ${DIRS}.name[st.dir] + ' まで ' + (12 - history.length % 12) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'木枯らし ' + ${DIRS}.name[st.dir] + ' まで ' + ((P('gale_interval') || 12) - history.length % (P('gale_interval') || 12)) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            木枯碁: 12手毎に木枯らしが吹き、全石が風下へ1マス流される (風向きは東→南→西→北)<br>
             PC: クリックで配置<br>

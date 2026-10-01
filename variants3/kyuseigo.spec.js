@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,15 +47,21 @@ module.exports = {
     icon: 'kyuseigo',
     spec: [
         ...K.rb('KYUSEIGO', '九星碁', 'kyuseigo'),
+        K.params([
+            { key: 'ring_dist', label: '方位リングの距離', min: 1, max: 5, def: 2, unit: '点', hint: '天元からの距離' },
+            { key: 'lucky_pts', label: '吉方の得点', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 八方位リングヘルパー
         [K.ONE, `        function endGameByScore() {`, `        // 八方位: 天元からチェビシェフ距離2の8マス (北から時計回り)
         function kyuseiRing() {
             const c = Math.floor(BOARD_SIZE / 2);
+            const rd = Math.min(Math.floor((BOARD_SIZE - 1) / 2), Math.max(1, P('ring_dist') || 2));
             return [
-                { x: c, y: c - 2 }, { x: c + 2, y: c - 2 }, { x: c + 2, y: c },
-                { x: c + 2, y: c + 2 }, { x: c, y: c + 2 }, { x: c - 2, y: c + 2 },
-                { x: c - 2, y: c }, { x: c - 2, y: c - 2 },
+                { x: c, y: c - rd }, { x: c + rd, y: c - rd }, { x: c + rd, y: c },
+                { x: c + rd, y: c + rd }, { x: c, y: c + rd }, { x: c - rd, y: c + rd },
+                { x: c - rd, y: c }, { x: c - rd, y: c - rd },
             ].filter(p => p.x >= 0 && p.y >= 0 && p.x < BOARD_SIZE && p.y < BOARD_SIZE);
         }
         function kyuseiIdx(p) { return p.y * BOARD_SIZE + p.x; }
@@ -79,9 +85,9 @@ module.exports = {
                     const lucky = kyuseiIdx(ring[st.ply % 8]);
                     const unlucky = kyuseiIdx(ring[(st.ply + 4) % 8]);
                     if (cell === lucky) {
-                        st.luck[player] += 2;
+                        st.luck[player] += (P('lucky_pts') ?? 2);
                         fxGlow(cell, '#fde047', 900);
-                        fxText(cell, '吉方 +2', '#fde047', 1200);
+                        fxText(cell, '吉方 +' + (P('lucky_pts') ?? 2), '#fde047', 1200);
                     }
                     if (cell === unlucky && board[cell] === player) {
                         board[cell] = 0;

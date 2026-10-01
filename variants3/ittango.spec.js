@@ -47,6 +47,9 @@ module.exports = {
     icon: 'ittango',
     spec: [
         ...K.rb('ITTANGO', '一反碁', 'ittango'),
+        K.params([
+            { key: 'momen_interval', label: '木綿の間隔', min: 3, max: 14, def: 7, unit: '手' },
+        ]),
         ...ST(ST_INIT),
         // 置いた石に一反木綿を重ねる: 7手ごと (両者対称)
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -57,7 +60,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 一反碁: 7手ごとの石は一反木綿 — 隣の敵石を包んで運び去る
-            if (st.cnt[player] % 7 === 0) {
+            if (st.cnt[player] % Math.max(1, P('momen_interval') || 7) === 0) {
                 const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const tgt = getNeighbors(ci).find(n => board[n] === opponent);
                 if (tgt !== undefined) {

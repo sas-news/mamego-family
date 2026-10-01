@@ -9,7 +9,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -25,6 +25,10 @@ module.exports = {
     icon: 'hilbertgo',
     spec: [
         ...K.rb('HILBERTGO', '充填碁', 'hilbertgo'),
+        K.params([
+            { key: 'window_size', label: '着手できる先頭の点数', min: 1, max: 9, def: 3, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.5, max: 2, def: 1.1, step: 0.05 },
+        ]),
         // 充填曲線: Zオーダー (モートン順) の未占領の先頭3点のみ着手可
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        const mortonCode = (x, y) => {
@@ -38,7 +42,7 @@ module.exports = {
                 if (board[i] === 0) order.push({ i, m: mortonCode(i % BOARD_SIZE, (i / BOARD_SIZE) | 0) });
             }
             order.sort((a, b) => a.m - b.m);
-            return order.slice(0, 3).map(e => e.i);
+            return order.slice(0, Math.max(1, P('window_size') || 3)).map(e => e.i);
         };
         function isValidPlacement(cells, player) {`],
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {

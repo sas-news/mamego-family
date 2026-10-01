@@ -9,6 +9,11 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('ROULETTEGO', '輪盤碁', 'roulettego'),
+        K.params([
+            { key: 'zone_radius', label: '出目区域の半径', min: 1, max: 3, def: 1, hint: '1なら3x3、2なら5x5' },
+            { key: 'bonus', label: 'ボーナス目', min: 0, max: 10, def: 2, unit: '目' },
+            { key: 'cap_extra', label: '打ち切り余分', min: 0, max: 8, def: 2, unit: '行分', hint: '交点数+この行数×盤サイズの手数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, `        let board = Array(BOARD_SIZE * BOARD_SIZE).fill(0); // 0:空, 1:黒, 2:白
         let hotIdx = -1; // 出目区域の中心`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -17,11 +22,12 @@ module.exports = {
 
             // 輪盤: 出目区域 (3x3) 内に打てば+2目ボーナス。その後出目を振り直す
             {
+                const zr = Math.max(1, P('zone_radius') || 1);
                 if (hotIdx >= 0) {
                     const hx = hotIdx % BOARD_SIZE, hy = Math.floor(hotIdx / BOARD_SIZE);
-                    const inZone = move.cells.some(p => Math.abs(p.x - hx) <= 1 && Math.abs(p.y - hy) <= 1);
+                    const inZone = move.cells.some(p => Math.abs(p.x - hx) <= zr && Math.abs(p.y - hy) <= zr);
                     if (inZone) {
-                        captures[player] += 2;
+                        captures[player] += (P('bonus') ?? 2);
                         const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                         fxGlow(ci, '#facc15', 900);
                         fxBurst(ci, '#fde68a', 10, 1.4);
@@ -34,7 +40,7 @@ module.exports = {
 
 
             // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_extra') ?? 2))) {
                 endGameByScore();
                 return;
             }
@@ -44,9 +50,10 @@ module.exports = {
         // 出目区域を金色にハイライト
         K.CUE_STARS(`            if (hotIdx >= 0) {
                 const hx = hotIdx % BOARD_SIZE, hy = Math.floor(hotIdx / BOARD_SIZE);
+                const zr = Math.max(1, P('zone_radius') || 1);
                 ctx.save();
                 ctx.fillStyle = 'rgba(235,175,40,0.18)';
-                for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -zr; dy <= zr; dy++) for (let dx = -zr; dx <= zr; dx++) {
                     const nx = hx + dx, ny = hy + dy;
                     if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) continue;
                     ctx.fillRect(padding + (nx - 0.5) * cellSize, padding + (ny - 0.5) * cellSize, cellSize, cellSize);

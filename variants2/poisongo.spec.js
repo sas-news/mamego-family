@@ -9,6 +9,7 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('POISONGO', '毒碁', 'poisongo'),
+        K.params([{ key: 'doom_max', label: '毒死する連の最大サイズ', min: 0, max: 40, def: 0, unit: '石', hint: '0=無制限 (全連が毒死)' }]),
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
@@ -18,7 +19,10 @@ module.exports = {
                 const seen = new Set();
                 captured.forEach(idx => getNeighbors(idx).forEach(n => {
                     if (board[n] === player && !seen.has(n)) {
-                        getConnectedGroup(n, player).forEach(g => { seen.add(g); doomed.add(g); });
+                        const _grp = getConnectedGroup(n, player);
+                        _grp.forEach(g => seen.add(g));
+                        const _dm = P('doom_max') || 0;
+                        if (_dm === 0 || _grp.length <= _dm) _grp.forEach(g => doomed.add(g));
                     }
                 }));
                 if (doomed.size > 0) {

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,16 +27,33 @@ module.exports = {
     icon: 'riverbridgego',
     spec: [
         ...K.rb('RIVERBRIDGEGO', '橋渡碁', 'riverbridgego'),
+        K.params([
+            { key: 'river_rows', label: '川の行数', min: 1, max: 5, def: 3, unit: '行' },
+            { key: 'bridge_inset', label: '橋の端寄り', min: 0, max: 0.45, def: 0.18, step: 0.01, hint: '両端の橋が端から離れる割合' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 川: 中央3行。橋は3列に架かる
-        const RIVER_Y0 = Math.floor(BOARD_SIZE / 2) - 1;
-        const BRIDGE_X = [Math.floor(BOARD_SIZE * 0.18), Math.floor(BOARD_SIZE / 2), BOARD_SIZE - 1 - Math.floor(BOARD_SIZE * 0.18)];
-        const BRIDGE_SET = new Set();
-        BRIDGE_X.forEach(bx => {
-            for (let y = RIVER_Y0; y < RIVER_Y0 + 3; y++) BRIDGE_SET.add(y * BOARD_SIZE + bx);
-        });
+        // 川: 中央の行。橋は3列に架かる
+        let RIVER_ROWS = 3;
+        let RIVER_Y0 = Math.floor(BOARD_SIZE / 2) - 1;
+        let BRIDGE_X = [];
+        let BRIDGE_SET = new Set();
+        function rebuildRiver() {
+            RIVER_ROWS = Math.max(1, Math.min(5, P('river_rows') || 3));
+            RIVER_Y0 = Math.max(0, Math.floor((BOARD_SIZE - RIVER_ROWS) / 2));
+            const inset = Math.max(0, Math.min(0.45, P('bridge_inset') ?? 0.18));
+            const bx0 = Math.floor(BOARD_SIZE * inset);
+            BRIDGE_X = [bx0, Math.floor(BOARD_SIZE / 2), BOARD_SIZE - 1 - bx0];
+            BRIDGE_SET = new Set();
+            BRIDGE_X.forEach(bx => {
+                for (let y = RIVER_Y0; y < RIVER_Y0 + RIVER_ROWS; y++) BRIDGE_SET.add(y * BOARD_SIZE + bx);
+            });
+        }
+        rebuildRiver();
+        // 設定変更時に川・橋を再構築
+        function onVariantParam(p) { rebuildRiver(); }
         function isRiver(x, y) {
-            if (y < RIVER_Y0 || y >= RIVER_Y0 + 3) return false;
+            if (y < RIVER_Y0 || y >= RIVER_Y0 + RIVER_ROWS) return false;
             return !BRIDGE_SET.has(y * BOARD_SIZE + x);
         }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -50,7 +67,7 @@ module.exports = {
             {
                 ctx.save();
                 BRIDGE_X.forEach(bx => {
-                    for (let y = RIVER_Y0; y < RIVER_Y0 + 3; y++) {
+                    for (let y = RIVER_Y0; y < RIVER_Y0 + RIVER_ROWS; y++) {
                         const cx = padding + bx * cellSize, cy = padding + y * cellSize;
                         ctx.fillStyle = 'rgba(146, 104, 56, 0.55)';
                         ctx.fillRect(cx - cellSize * 0.5, cy - cellSize * 0.5, cellSize, cellSize);
@@ -64,7 +81,7 @@ module.exports = {
                     const x0 = padding + bx * cellSize - cellSize * 0.42;
                     const x1 = padding + bx * cellSize + cellSize * 0.42;
                     const y0 = padding + RIVER_Y0 * cellSize - cellSize * 0.4;
-                    const y1 = padding + (RIVER_Y0 + 2) * cellSize + cellSize * 0.4;
+                    const y1 = padding + (RIVER_Y0 + RIVER_ROWS - 1) * cellSize + cellSize * 0.4;
                     ctx.strokeStyle = 'rgba(64, 42, 20, 0.9)';
                     ctx.lineWidth = Math.max(1.5, cellSize * 0.07);
                     ctx.beginPath();

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= Math.max(1, P('cap_moves') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'keepsakego',
     spec: [
         ...K.rb('KEEPSAKEGO', '形見碁', 'keepsakego'),
+        K.params([
+            { key: 'mem_pts', label: '形見1個の終局得点', min: 0, max: 4, def: 1, unit: '目' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 40, max: 400, def: 150, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { mem: {} }; // 形見セル idx→亡き主 (1/2)`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -94,7 +98,7 @@ module.exports = {
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            let memB = 0, memW = 0;
-            Object.keys(st.mem).forEach(k => { if (board[k] === 4) { if (st.mem[k] === 1) memB++; else memW++; } });
+            Object.keys(st.mem).forEach(k => { if (board[k] === 4) { if (st.mem[k] === 1) memB += (P('mem_pts') ?? 1); else memW += (P('mem_pts') ?? 1); } });
             const blackTotal = territory.black + captures[1] + memB;
             const whiteTotal = territory.white + captures[2] + komi + memW;`],
         [K.ONE, `                    <div class="flex justify-between"><span>黒のアゲハマ:</span> <strong>\${captures[1]}</strong></div>`,

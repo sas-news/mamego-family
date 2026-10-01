@@ -9,6 +9,10 @@ module.exports = {
     kind: 'loop',
     spec: [
         ...K.rb('LOOPGO', '周回碁', 'loopgo'),
+        K.params([
+            { key: 'ring_lead', label: '侵攻の先行幅', min: 1, max: 3, def: 1, hint: '最深環から何環先まで着手可' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.7, max: 2.5, def: 1.4, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -24,7 +28,7 @@ module.exports = {
                     const r = ringOf(i % BOARD_SIZE, Math.floor(i / BOARD_SIZE));
                     if (r > maxDepth) maxDepth = r;
                 }
-                const maxRing = maxDepth + 1;
+                const maxRing = maxDepth + (P('ring_lead') || 1);
                 for (const p of cells) {
                     if (ringOf(p.x, p.y) > maxRing) return false;
                 }
@@ -39,7 +43,7 @@ module.exports = {
                     const r = ringOf2(i % BOARD_SIZE, Math.floor(i / BOARD_SIZE));
                     if (r > mR) mR = r;
                 }
-                const front = mR + 1;
+                const front = mR + (P('ring_lead') || 1);
                 ctx.save();
                 ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.5);
                 ctx.lineWidth = Math.max(2, cellSize * 0.10);
@@ -61,7 +65,7 @@ module.exports = {
                 const r = ringOf(i % BOARD_SIZE, Math.floor(i / BOARD_SIZE));
                 if (r > mR) mR = r;
             }
-            const front = mR + 1;
+            const front = mR + (P('ring_lead') || 1);
             if (front * 2 >= BOARD_SIZE) return;
             const t = (now % 1600) / 1600;
             const e = t * 0.45;
@@ -78,7 +82,21 @@ module.exports = {
             '最深部の石が取られると侵攻深度も後退する。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',
         ])],
-        ...K.MOVE_CAP_SPEC,
+        // 打ち切り手数は設定で調整可能
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 新規対局 (履歴空) で打ち切りを再武装
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            // 打ち切り手数: 交点数の1.4倍を超える長期戦は死に石選択へ移行して自動終局
+            // (1局につき1回のみ発火。死に石選択を取り消して続行する場合は再発火しない)
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.4))) {
+                moveCapFired = true;
+                startDeadStoneSelectionPhase();
+                if (gameMode === 'online' && onlineRoomId) syncOnlineState();
+                saveState();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

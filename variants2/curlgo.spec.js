@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('CURLGO', '氷壺碁', 'curlgo'),
+        K.params([
+            { key: 'house_bonus', label: 'ハウスボーナス', min: 0, max: 15, def: 5, unit: '目' },
+            { key: 'slide_max', label: '滑走距離の上限', min: 0, max: 20, def: 0, unit: 'マス', hint: '0=無制限 (ハウスまで滑る)' },
+        ]),
         // 滑り処理を捕獲の前に挿入
         [K.ONE, K.CAPTURE_BLOCK, `            // 氷壺: 打った石はハウス中心へ向かって滑り、他石や中心で止まる
             {
@@ -16,15 +20,16 @@ module.exports = {
                 move.cells.forEach(p => {
                     const from = p.y * BOARD_SIZE + p.x;
                     if (board[from] !== player) return;
-                    let cx = p.x, cy = p.y;
-                    while (cx !== hc || cy !== hc) {
+                    let cx = p.x, cy = p.y, _slid = 0;
+                    const _maxD = P('slide_max') || 0; // 0=無制限
+                    while ((cx !== hc || cy !== hc) && (_maxD === 0 || _slid < _maxD)) {
                         const dx = hc - cx, dy = hc - cy;
                         let sx = 0, sy = 0;
                         if (Math.abs(dx) >= Math.abs(dy) && dx !== 0) sx = Math.sign(dx);
                         else if (dy !== 0) sy = Math.sign(dy);
                         const nx = cx + sx, ny = cy + sy;
                         if (board[ny * BOARD_SIZE + nx] !== 0) break;
-                        cx = nx; cy = ny;
+                        cx = nx; cy = ny; _slid++;
                     }
                     if (cx !== p.x || cy !== p.y) {
                         board[cy * BOARD_SIZE + cx] = player;
@@ -60,11 +65,12 @@ module.exports = {
                 else if (d === bestD && board[i] !== bestP) bestTie = true;
             }
             const house = bestTie ? 0 : bestP;
-            const blackTotal = territory.black + captures[1] + (house === 1 ? 5 : 0);
-            const whiteTotal = territory.white + captures[2] + komi + (house === 2 ? 5 : 0);`],
+            const _hb = P('house_bonus') ?? 5;
+            const blackTotal = territory.black + captures[1] + (house === 1 ? _hb : 0);
+            const whiteTotal = territory.white + captures[2] + komi + (house === 2 ? _hb : 0);`],
         [K.ONE, `<div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>`,
 `<div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>
-                    <div class="flex justify-between"><span>ハウス最接近:</span> <strong>\${house === 0 ? 'なし' : (house === 1 ? '黒 +5' : '白 +5')}</strong></div>`],
+                    <div class="flex justify-between"><span>ハウス最接近:</span> <strong>\${house === 0 ? 'なし' : ((house === 1 ? '黒 +' : '白 +') + (P('house_bonus') ?? 5))}</strong></div>`],
         // ハウス (青白赤の円) 描画
         K.CUE_STARS(`            {
                 const hc = (BOARD_SIZE - 1) / 2;

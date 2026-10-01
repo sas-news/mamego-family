@@ -36,6 +36,10 @@ module.exports = {
     icon: 'crisisgo',
     spec: [
         ...K.rb('CRISISGO', '危機碁', 'crisisgo'),
+        K.params([
+            { key: 'deficit_min', label: '捨身に必要なアゲハマ差', min: 1, max: 10, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 1.1 },
+        ]),
         ...PERSIST('{ used: { 1: false, 2: false }, arm: { 1: false, 2: false } }'),
         // 捨身ボタン: 劣勢 (アゲハマが相手より少ない) 側のみ使用可・1局1回
         [K.ONE, `            <button id="btnResign" class="flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold border border-red-500/50 text-red-600 rounded-xl hover:bg-red-500/10 active:scale-95 transition-all shadow-sm">
@@ -55,7 +59,7 @@ module.exports = {
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
             const foe = turn === 1 ? 2 : 1;
             if (st.used[turn] || st.arm[turn]) return;
-            if (captures[turn] >= captures[foe]) return; // 劣勢限定
+            if (captures[turn] + (P('deficit_min') || 1) > captures[foe]) return; // 劣勢限定
             st.arm[turn] = true;
             const ci = lastMove ? lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x : 0;
             fxText(ci, '捨身!', '#f59e0b', 1000);
@@ -76,7 +80,7 @@ module.exports = {
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -87,7 +91,7 @@ module.exports = {
         [K.ONE, K.UI_TAIL, `            const btnDesperateEl = document.getElementById('btnDesperate');
             if (btnDesperateEl) {
                 const foe2 = turn === 1 ? 2 : 1;
-                const eligible = !st.used[turn] && !st.arm[turn] && captures[turn] < captures[foe2]
+                const eligible = !st.used[turn] && !st.arm[turn] && captures[turn] + (P('deficit_min') || 1) <= captures[foe2]
                     && !gameOver && gamePhase === 'playing' && isMyTurn();
                 btnDesperateEl.disabled = !eligible;
                 btnDesperateEl.title = st.used[turn] ? '捨身は使用済み' : 'アゲハマで劣勢の時だけ使える2連続着手';
@@ -96,7 +100,7 @@ module.exports = {
             updatePieceTrayUI();
             render();
         }`],
-        ...K.EVENT_CHIP_SPEC(`st.arm[turn] ? '捨身発動中' : (st.used[turn] ? '捨身済' : (captures[turn] < captures[turn === 1 ? 2 : 1] ? '捨身可' : ''))`),
+        ...K.EVENT_CHIP_SPEC(`st.arm[turn] ? '捨身発動中' : (st.used[turn] ? '捨身済' : (captures[turn] + (P('deficit_min') || 1) <= captures[turn === 1 ? 2 : 1] ? '捨身可' : ''))`),
         [K.ONE, K.RV_ALGO, K.rv([
             'アゲハマで劣勢の側は「捨身」ボタンで1回だけ特別な手番を得られる。',
             '宣言した手番の着手後にもう1手続けて打てる (2連続着手)。各プレイヤー1局1回。',

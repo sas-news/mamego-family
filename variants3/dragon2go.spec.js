@@ -10,11 +10,15 @@ module.exports = {
     icon: 'dragon2go',
     spec: [
         ...K.rb('DRAGON2GO', '竜巻碁', 'dragon2go'),
+        K.params([
+            { key: 'tornado_interval', label: '竜巻の間隔', min: 5, max: 30, def: 15, unit: '手' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 75, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         // 竜巻: 15手ごとに一段の石を全て吹き飛ばす (アゲハマにはならない)
         [K.ONE, '        function executeMove(move, player) {',
 `        // 竜巻の通路: 手数から決定論的に段を選ぶ
         function tornadoRow() {
-            const n = Math.floor(history.length / 15);
+            const n = Math.floor(history.length / (P('tornado_interval') || 15));
             const s = Math.sin(n * 157.3 + 23.7) * 43758.5453;
             return Math.floor((s - Math.floor(s)) * BOARD_SIZE);
         }
@@ -24,7 +28,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 竜巻ルール: 15手ごとに通路段の石を全て吹き飛ばす
-            if (history.length % 15 === 0) {
+            if (history.length % Math.max(1, P('tornado_interval') || 15) === 0) {
                 const r = tornadoRow();
                 let blew = 0;
                 for (let x = 0; x < BOARD_SIZE; x++) {
@@ -43,7 +47,7 @@ module.exports = {
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 endGameByScore();
                 return;
             }
@@ -70,7 +74,7 @@ module.exports = {
                 ctx.setLineDash([]);
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'竜巻 ' + (15 - history.length % 15) + '手後 ' + tornadoRow() + '段'`),
+        ...K.EVENT_CHIP_SPEC(`'竜巻 ' + ((P('tornado_interval') || 15) - history.length % (P('tornado_interval') || 15)) + '手後 ' + tornadoRow() + '段'`),
         [K.ONE, K.INFO_ALGO, `            竜巻碁: 15手ごとに竜巻が点線の段を横断し、その段の石を全て吹き飛ばす<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

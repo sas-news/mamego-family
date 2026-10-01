@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,15 +47,26 @@ module.exports = {
     icon: 'tsukemonogo',
     spec: [
         ...K.rb('TSUKEMONOGO', '漬物碁', 'tsukemonogo'),
+        K.params([
+            { key: 'tsuke_span', label: '漬かり期間', min: 3, max: 40, def: 10, unit: '手' },
+            { key: 'nuka_radius', label: '糠床の広さ (半径)', min: 1, max: 4, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
-        // 糠床: 中央3x3
-        const NUKA_SET = new Set();
-        {
+        // 糠床: 中央の正方形区域 (半径は設定で調整。変更は次の局面から反映)
+        let NUKA_SET = new Set();
+        function rebuildNuka() {
+            NUKA_SET = new Set();
             const nc = Math.floor(BOARD_SIZE / 2);
-            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+            const nr = Math.max(1, Math.min(Math.floor(BOARD_SIZE / 2) - 1, P('nuka_radius') || 1));
+            for (let dy = -nr; dy <= nr; dy++) for (let dx = -nr; dx <= nr; dx++) {
                 NUKA_SET.add((nc + dy) * BOARD_SIZE + (nc + dx));
             }
+        }
+        rebuildNuka();
+        function onVariantParam(p) {
+            if (p.key === 'nuka_radius') rebuildNuka();
         }`],
         // 糠床に漬かったばかりの石 (10手未満) を含む連は取られない
         [K.ONE, `                    if (!hasLiberty) {
@@ -64,7 +75,7 @@ module.exports = {
 `                    // 糠床: 床内で漬かって10手未満の石を含む連は取られない
                     const inNuka = group.some(g =>
                         NUKA_SET.has(g) && st.tsuke[g] !== undefined &&
-                        history.length - st.tsuke[g] < 10);
+                        history.length - st.tsuke[g] < (P('tsuke_span') || 10));
                     if (!hasLiberty && !inNuka) {
                         captured.push(...group);
                     }`],
@@ -99,7 +110,7 @@ module.exports = {
                 Object.keys(st.tsuke || {}).forEach(k => {
                     const i = +k;
                     if (!NUKA_SET.has(i) || (board[i] !== 1 && board[i] !== 2)) return;
-                    if (history.length - st.tsuke[i] >= 10) return;
+                    if (history.length - st.tsuke[i] >= (P('tsuke_span') || 10)) return;
                     const cx = padding + (i % BOARD_SIZE) * cellSize;
                     const cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
                     ctx.fillStyle = 'rgba(161, 130, 60, 0.8)';

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -37,7 +37,7 @@ const ST = (init) => [
     [K.ONE, K.ONLINE_RECV, K.ONLINE_RECV + `\n            st = data.st ? JSON.parse(JSON.stringify(data.st)) : ${init};`],
 ];
 const ST_INIT = `{ born: {} }`;
-const AGED = `(i) => st.born[i] && history.length - st.born[i].at >= 24 && board[i] === st.born[i].p`;
+const AGED = `(i) => st.born[i] && history.length - st.born[i].at >= (P('age_plies') || 24) && board[i] === st.born[i].p`;
 module.exports = {
     file: 'barrelgo.html',
     en: 'BARRELGO',
@@ -48,6 +48,11 @@ module.exports = {
     icon: 'barrelgo',
     spec: [
         ...K.rb('BARRELGO', '樽酒碁', 'barrelgo'),
+        K.params([
+            { key: 'age_plies', label: '熟成に必要な手数', min: 8, max: 60, def: 24, unit: '手' },
+            { key: 'age_pts', label: '熟成石の得点', min: 1, max: 5, def: 1, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 配置時に仕込み時刻を記録
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -70,8 +75,8 @@ module.exports = {
 `            const aged = ${AGED};
             const blackAged = board.reduce((n, v, i) => n + (v === 1 && aged(i) ? 1 : 0), 0);
             const whiteAged = board.reduce((n, v, i) => n + (v === 2 && aged(i) ? 1 : 0), 0);
-            const blackTotal = territory.black + captures[1] + blackAged;
-            const whiteTotal = territory.white + captures[2] + komi + whiteAged;`],
+            const blackTotal = territory.black + captures[1] + blackAged * (P('age_pts') || 1);
+            const whiteTotal = territory.white + captures[2] + komi + whiteAged * (P('age_pts') || 1);`],
         // 熟成石に金の縁取り
         ...K.STONE_MARKS_SPEC(`
             const aged = ${AGED};
@@ -85,7 +90,7 @@ module.exports = {
                 ctx.arc(mx, my, cellSize * 0.34, 0, Math.PI * 2);
                 ctx.stroke();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'熟成 ' + board.reduce((n, v, i) => n + (st.born[i] && history.length - st.born[i].at >= 24 && board[i] === st.born[i].p ? 1 : 0), 0)`),
+        ...K.EVENT_CHIP_SPEC(`'熟成 ' + board.reduce((n, v, i) => n + (st.born[i] && history.length - st.born[i].at >= (P('age_plies') || 24) && board[i] === st.born[i].p ? 1 : 0), 0)`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            樽酒碁: 石は酒樽。24手残った石は熟成し、終局時に1個+1目の価値になる<br>
             PC: クリックで配置<br>

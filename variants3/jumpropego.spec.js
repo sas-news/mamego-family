@@ -27,6 +27,9 @@ module.exports = {
     icon: 'jumpropego',
     spec: [
         ...K.rb('JUMPROPEGO', '縄跳碁', 'jumpropego'),
+        K.params([
+            { key: 'rope_dist', label: '跳越距離', min: 2, max: 4, def: 2, hint: '敵石からの着地先' },
+        ]),
         // 縄跳び: 隣に敵石、その先が空なら、置いた石が敵石を跳び越えて着地
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -37,7 +40,7 @@ module.exports = {
                 const from = bc.y * BOARD_SIZE + bc.x;
                 for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
                     const mx = bc.x + dx, my = bc.y + dy;
-                    const lx = bc.x + dx * 2, ly = bc.y + dy * 2;
+                    const lx = bc.x + dx * (P('rope_dist') || 2), ly = bc.y + dy * (P('rope_dist') || 2);
                     if (lx < 0 || ly < 0 || lx >= BOARD_SIZE || ly >= BOARD_SIZE) continue;
                     if (board[my * BOARD_SIZE + mx] !== opponent) continue;
                     const land = ly * BOARD_SIZE + lx;

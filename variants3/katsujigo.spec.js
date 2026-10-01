@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,10 @@ module.exports = {
     icon: 'katsujigo',
     spec: [
         ...K.rb('KATSUJIGO', '活字碁', 'katsujigo'),
+        K.params([
+            { key: 'block_pts', label: '活字1ブロックの得点', min: 0, max: 10, def: 3, unit: '点' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -81,7 +85,7 @@ module.exports = {
                     board[(y + 1) * BOARD_SIZE + x] === player &&
                     board[(y + 1) * BOARD_SIZE + x + 1] === player) kBlocks++;
             });
-            st.score[player] += kBlocks * 3;
+            st.score[player] += kBlocks * (P('block_pts') ?? 3);
 
             turn = opponent;`],
         ...K.STONE_MARKS_SPEC(`            // 活字: 2x2ブロックに型の罫線

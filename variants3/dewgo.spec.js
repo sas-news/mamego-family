@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'dewgo',
     spec: [
         ...K.rb('DEWGO', '露草碁', 'dewgo'),
+        K.params([
+            { key: 'dew_interval', label: '朝露の間隔', min: 8, max: 48, def: 24, unit: '手' },
+            { key: 'dew_len', label: '濡れる期間', min: 3, max: 20, def: 10, unit: '手' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 75, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         ...ST(ST_INIT),
         // 濡れた空点には打てない
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
@@ -60,8 +65,8 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 朝露: 24手ごとに全石の上下左右の空点が濡れる (効果10手)
-            if (history.length > 0 && history.length % 24 === 0) {
-                const until = history.length + 10;
+            if (history.length > 0 && history.length % Math.max(1, P('dew_interval') || 24) === 0) {
+                const until = history.length + (P('dew_len') || 10);
                 board.forEach((v, i) => {
                     if (v === 1 || v === 2) {
                         getNeighbors(i).forEach(n => {

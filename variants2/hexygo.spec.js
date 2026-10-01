@@ -9,6 +9,20 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('HEXYGO', '六角辺碁', 'hexygo'),
+        K.params([
+            { key: 'edge_mult', label: '辺の地の倍率', min: 1, max: 4, def: 2, step: 0.5, unit: '倍' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0, max: 400, def: 0, unit: '手', hint: '0=制限なし' },
+        ]),
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }`],
         [K.ONE, K.NBRS_GRID, `        function getNeighbors(idx) {
             const x = idx % BOARD_SIZE;
             const y = Math.floor(idx / BOARD_SIZE);
@@ -34,7 +48,7 @@ module.exports = {
 `                    const wsum = arr => arr.reduce((s, i2) => {
                         const wx = i2 % BOARD_SIZE, wy = Math.floor(i2 / BOARD_SIZE);
                         const isEdge = wx === 0 || wy === 0 || wx === BOARD_SIZE - 1 || wy === BOARD_SIZE - 1;
-                        return s + (isEdge ? 2 : 1);
+                        return s + (isEdge ? (P('edge_mult') || 2) : 1);
                     }, 0);
                     if (touchesBlack && !touchesWhite) blackTerritory += wsum(region);
                     else if (touchesWhite && !touchesBlack) whiteTerritory += wsum(region);`],

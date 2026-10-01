@@ -51,6 +51,9 @@ module.exports = {
     icon: 'hungergo',
     spec: [
         ...K.rb('HUNGERGO', '飢餓碁', 'hungergo'),
+        K.params([
+            { key: 'maw_interval', label: '捕食の間隔', min: 2, max: 18, def: 6, unit: '手' },
+        ]),
         ...PERSIST('{ maw: -1 }'),
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             st.maw = ((BOARD_SIZE / 2) | 0) * BOARD_SIZE + ((BOARD_SIZE / 2) | 0);`],
@@ -59,7 +62,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 飢餓ルール: 6手ごとに最寄りの石を捕食
-            if (st.maw >= 0 && history.length % 6 === 0) {
+            if (st.maw >= 0 && history.length % Math.max(1, P('maw_interval') || 6) === 0) {
                 const mx = st.maw % BOARD_SIZE, my = (st.maw / BOARD_SIZE) | 0;
                 let best = -1, bestD = Infinity;
                 for (let i = 0; i < board.length; i++) {
@@ -111,7 +114,7 @@ ${CAP}
                     ctx.restore();
                 }
             }`),
-        ...K.EVENT_CHIP_SPEC(`'飢餓 ' + (st.maw >= 0 ? '次の捕食 ' + (6 - history.length % 6) + '手後' : '—')`),
+        ...K.EVENT_CHIP_SPEC(`'飢餓 ' + (st.maw >= 0 ? '次の捕食 ' + (Math.max(1, P('maw_interval') || 6) - history.length % Math.max(1, P('maw_interval') || 6)) + '手後' : '—')`),
         [K.ONE, K.INFO_ALGO, `            飢餓碁: 6手ごとに盤上の飢えたものが最寄りの石を喰らう (アゲハマにならない)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

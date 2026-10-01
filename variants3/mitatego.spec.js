@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'mitatego',
     spec: [
         ...K.rb('MITATEGO', '見立碁', 'mitatego'),
+        K.params([
+            { key: 'corner_pts', label: '曲がり角1箇所の得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 見立て集計: 縦横両方向に同色と繋がる石 (曲がり角) は+1目
         [K.ONE, `        function endGameByScore() {`, `        // 見立て: 曲がり角の石を数える
         function mitateBonus() {
@@ -39,7 +43,7 @@ module.exports = {
                 const hasH = (x > 0 && same(i, i - 1)) || (x < BOARD_SIZE - 1 && same(i, i + 1));
                 const hasV = (y > 0 && same(i, i - BOARD_SIZE)) || (y < BOARD_SIZE - 1 && same(i, i + BOARD_SIZE));
                 // 縦と横の両方向に同色がいればL字の曲がり角
-                if (hasH && hasV) b[v]++;
+                if (hasH && hasV) b[v] += (P('corner_pts') ?? 1);
             }
             return b;
         }

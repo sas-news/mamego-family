@@ -9,12 +9,16 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('CAVEGO', '洞窟碁', 'cavego'),
+        K.params([
+            { key: 'wall_density', label: '岩壁の密度', min: 1, max: 8, def: 2, hint: '大きいほど岩壁が増える' },
+            { key: 'light_radius', label: '灯りの届く範囲', min: 1, max: 6, def: 3 },
+        ]),
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             // 洞窟碁: 内側に岩壁を点在させて区画を分ける
             for (let i = 0; i < board.length; i++) {
                 const wx = i % BOARD_SIZE, wy = Math.floor(i / BOARD_SIZE);
                 if (wx === 0 || wy === 0 || wx === BOARD_SIZE - 1 || wy === BOARD_SIZE - 1) continue;
-                if ((wx * 7 + wy * 13) % 17 < 2) board[i] = 3;
+                if ((wx * 7 + wy * 13) % 17 < (P('wall_density') || 2)) board[i] = 3;
             }`],
         // 岩壁は暗い洞窟の岩肌 + 結晶の瞬き
         [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_CAVE)],
@@ -28,7 +32,7 @@ module.exports = {
                 for (let j = 0; j < board.length && !lit; j++) {
                     if (board[j] !== 1 && board[j] !== 2) continue;
                     const jx = j % BOARD_SIZE, jy = Math.floor(j / BOARD_SIZE);
-                    if (Math.max(Math.abs(jx - fx), Math.abs(jy - fy)) <= 3) lit = true;
+                    if (Math.max(Math.abs(jx - fx), Math.abs(jy - fy)) <= (P('light_radius') || 3)) lit = true;
                 }
                 if (!lit) {
                     ctx.fillRect(padding + (fx - 0.5) * cellSize, padding + (fy - 0.5) * cellSize, cellSize, cellSize);

@@ -10,6 +10,10 @@ module.exports = {
     icon: 'ghostgo2',
     spec: [
         ...K.rb('GHOSTGO2', '幽体碁', 'ghostgo2'),
+        K.params([
+            { key: 'ghost_turns', label: '幽体の期間', min: 1, max: 12, def: 3, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { ghost: {} }; // 幽霊マス idx -> 残り手数`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -43,7 +47,7 @@ module.exports = {
             for (const k in st.ghost) {
                 if (--st.ghost[k] <= 0) { delete st.ghost[k]; fxGlow(+k, '#a5b4fc', 500); }
             }
-            move.cells.forEach(p => { st.ghost[p.y * BOARD_SIZE + p.x] = 3; });
+            move.cells.forEach(p => { st.ghost[p.y * BOARD_SIZE + p.x] = (P('ghost_turns') || 3); });
             turn = opponent;`],
         // 幽霊の描画: 淡い靄のリング
         ...K.STONE_MARKS_SPEC(`            {
@@ -74,7 +78,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

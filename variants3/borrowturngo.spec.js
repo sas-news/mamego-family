@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'borrowturngo',
     spec: [
         ...K.rb('BORROWTURNGO', '借用碁', 'borrowturngo'),
+        K.params([
+            { key: 'borrow_moves', label: '借用の追加手数', min: 1, max: 3, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         ...ST(ST_INIT),
         // 借用: 自分がもう1手 → その後、債権者 (相手) の番ももう1手続く
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -54,7 +58,7 @@ module.exports = {
 
             // 借用中の着手: もう1手指せるが債務が発生。債権者の手番は債務分だけ連続する
             if (st.borrow[player]) {
-                st.borrow[player] = false;
+                st.borrow[player] = (typeof st.borrow[player] === 'number' ? st.borrow[player] : 1) - 1;
                 st.debt[player]++;
                 turn = player; // 借用した手番: もう1手
                 fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, '借用!', '#38bdf8', 900);
@@ -84,7 +88,7 @@ module.exports = {
             soundManager.playClick();
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
             if (st.debt[turn] > 0 || st.borrow[turn]) return; // 債務中は借用不可
-            st.borrow[turn] = true;
+            st.borrow[turn] = P('borrow_moves') || 1;
             render();
             updateUI();
         });`],

@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'tsumego',
     spec: [
         ...K.rb('TSUMEGO', '詰碁', 'tsumego'),
+        K.params([
+            { key: 'tsume_len', label: '詰みに必要な連続アタリ', min: 2, max: 6, def: 3, unit: '連' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         function endGameByScore() {`],
         ...ST(ST_INIT),
@@ -77,7 +81,7 @@ module.exports = {
                 if (__atari) {
                     st.chain[player] = (st.chain[player] || 0) + 1;
                     fxText(__pi, '詰み ×' + st.chain[player], '#f87171', 1000);
-                    if (st.chain[player] >= 3) {
+                    if (st.chain[player] >= (P('tsume_len') || 3)) {
                         fxBurst(__pi, '#ef4444', 20, 2.0);
                         winByRule(player, '詰み勝ち', 'アタリの3連連鎖で詰みました');
                         return;

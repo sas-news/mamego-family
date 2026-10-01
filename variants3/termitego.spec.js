@@ -36,6 +36,10 @@ module.exports = {
     icon: 'termitego',
     spec: [
         ...K.rb('TERMITAGO', '蟻塚碁', 'termitego'),
+        K.params([
+            { key: 'tunnel_len', label: '蟻の通路の長さ', min: 10, max: 100, def: 40, unit: 'マス' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.0, step: 0.1, def: 1.1, hint: '交点数比' },
+        ]),
         ...K.WALL_SPEC,
         ...PERSIST('{ head: null, len: 0 }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -51,7 +55,7 @@ module.exports = {
                     }
                     if (edge.length > 0) st.head = edge[Math.floor(Math.random() * edge.length)];
                 }
-                if (st.head != null && st.len < 40) {
+                if (st.head != null && st.len < (P('tunnel_len') || 40)) {
                     // 最後の石は食わない (全滅防止)
                     const loneStone = board.filter(v => v === 1 || v === 2).length <= 1;
                     const opts = getNeighbors(st.head).filter(n => board[n] !== 3 && !(loneStone && (board[n] === 1 || board[n] === 2)));
@@ -67,7 +71,7 @@ module.exports = {
                         st.len++;
                         cleanUpPieces();
                     } else {
-                        st.len = 40; // 行き止まり → 次は新たな通路を掘り始める
+                        st.len = (P('tunnel_len') || 40); // 行き止まり → 次は新たな通路を掘り始める
                     }
                 } else {
                     st.head = null;
@@ -76,7 +80,7 @@ module.exports = {
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -84,7 +88,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'蟻 ' + st.len + '/40'`),
+        ...K.EVENT_CHIP_SPEC(`'蟻 ' + st.len + '/' + (P('tunnel_len') || 40)`),
         [K.ONE, K.RV_ALGO, K.rv([
             '盤の縁からシロアリの通路 (茶色の壁) が毎手1マスずつ掘り進まれる。通路上の石は食われて消える。',
             '通路は呼吸を遮る壁になる。全長40マスに達するか行き止まりで、新たな通路が別の縁から伸び始める。',

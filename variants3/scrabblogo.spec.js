@@ -10,6 +10,10 @@ module.exports = {
     icon: 'scrabblogo',
     spec: [
         ...K.rb('SCRABBLOGO', '文字碁', 'scrabblogo'),
+        K.params([
+            { key: 'word_min', label: '単語になる最小の長さ', min: 2, max: 6, def: 3, unit: '字' },
+            { key: 'word_bonus', label: 'ボーナス計算の減算値', min: 0, max: 4, def: 2, hint: '連の長さ-この値の目' },
+        ]),
         // 文字タイル: 各点の文字は座標から決定論的
         [K.ONE, '        function executeMove(move, player) {',
 `        // 文字碁: 各交点のタイル文字 (座標から決定論的)
@@ -36,10 +40,10 @@ module.exports = {
             {
                 const p = move.cells[0];
                 const len = wordRun(p.x, p.y, player);
-                if (len >= 3) {
-                    captures[player] += len - 2;
+                if (len >= Math.max(1, P('word_min') || 3)) {
+                    captures[player] += len - (P('word_bonus') ?? 2);
                     const ci = p.y * BOARD_SIZE + p.x;
-                    fxText(ci, '単語 +' + (len - 2), '#f59e0b', 1200);
+                    fxText(ci, '単語 +' + (len - (P('word_bonus') ?? 2)), '#f59e0b', 1200);
                     fxGlow(ci, '#fcd34d', 700);
                 }
             }

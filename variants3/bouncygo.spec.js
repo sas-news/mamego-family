@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'bouncygo',
     spec: [
         ...K.rb('BOUNCYGO', '弾み碁', 'bouncygo'),
+        K.params([
+            { key: 'push_dist', label: '弾き飛ばす距離', min: 1, max: 3, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         // 反発: 置いた石の隣の石 (両色) を1マス弾き飛ばす
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -35,9 +39,10 @@ module.exports = {
             {
                 const bc = move.cells[0];
                 const pushes = [];
+                const pd = Math.max(1, P('push_dist') || 1);
                 for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
                     const fx2 = bc.x + dx, fy = bc.y + dy;
-                    const tx = bc.x + dx * 2, ty = bc.y + dy * 2;
+                    const tx = bc.x + dx * (1 + pd), ty = bc.y + dy * (1 + pd);
                     if (fx2 < 0 || fy < 0 || fx2 >= BOARD_SIZE || fy >= BOARD_SIZE) continue;
                     const fi = fy * BOARD_SIZE + fx2;
                     if (board[fi] !== 1 && board[fi] !== 2) continue;

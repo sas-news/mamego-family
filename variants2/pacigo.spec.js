@@ -9,13 +9,16 @@ module.exports = {
     kind: 'peace',
     spec: [
         ...K.rb('PACIGO', '平和碁', 'pacigo'),
+        K.params([
+            { key: 'peace_cap', label: '平和とみなす取り数上限', min: 0, max: 5, def: 0, unit: '個' },
+        ]),
         // 平和判定を endGameByScore 内に組み込む: 勝者決定部を差替
         [K.ONE, `            let winnerTitle = '';
             if (blackTotal > whiteTotal) winnerTitle = '黒の勝ち';
             else if (whiteTotal > blackTotal) winnerTitle = '白の勝ち';
             else winnerTitle = '引き分け';`,
 `            let winnerTitle = '';
-            const bPeace = captures[1] === 0, wPeace = captures[2] === 0;
+            const bPeace = captures[1] <= (P('peace_cap') || 0), wPeace = captures[2] <= (P('peace_cap') || 0);
             if (bPeace !== wPeace) {
                 // 平和ルール: 一度も取らなかった側が無条件勝ち
                 winnerTitle = (bPeace ? '黒' : '白') + 'の平和勝ち';

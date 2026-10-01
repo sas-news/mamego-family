@@ -28,15 +28,19 @@ module.exports = {
     icon: 'inversiongo',
     spec: [
         ...K.rb('INVERSIONGO', '逆転碁', 'inversiongo'),
-        // 勝者判定を反転: 合計が少ない側の勝ち
+        K.params([
+            { key: 'win_rule', label: '勝敗ルール', options: [{ v: 'less', l: '少ない側が勝ち' }, { v: 'more', l: '多い側が勝ち(通常)' }], def: 'less' },
+        ]),
+        // 勝者判定を反転: 合計が少ない側の勝ち (設定で通常判定にも戻せる)
         [K.ONE, `            let winnerTitle = '';
             if (blackTotal > whiteTotal) winnerTitle = '黒の勝ち';
             else if (whiteTotal > blackTotal) winnerTitle = '白の勝ち';
             else winnerTitle = '引き分け';`,
 `            let winnerTitle = '';
-            // 逆転ルール: 合計が「少ない」側の勝ち
-            if (blackTotal < whiteTotal) winnerTitle = '黒の勝ち';
-            else if (whiteTotal < blackTotal) winnerTitle = '白の勝ち';
+            // 逆転ルール: 合計が「少ない」側の勝ち (win_rule 設定で通常判定にできる)
+            const invLess = (P('win_rule') || 'less') === 'less';
+            if (invLess ? blackTotal < whiteTotal : blackTotal > whiteTotal) winnerTitle = '黒の勝ち';
+            else if (invLess ? whiteTotal < blackTotal : whiteTotal > blackTotal) winnerTitle = '白の勝ち';
             else winnerTitle = '引き分け';`],
         [K.ONE, `                    <div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>`,
 `                    <div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>

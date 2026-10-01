@@ -9,13 +9,19 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('CENTRIPETGO', '求心碁', 'centripetgo'),
+        K.params([
+            { key: 'pull_dist', label: '引力の強さ', min: 1, max: 3, def: 1, unit: 'マス/手', hint: '1手に引き寄せる距離' },
+        ]),
         // 着手ごと、全石が中心方向へ1マス引き寄せられる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 求心ルール: 全石が盤の中心へ1マス近づく (斜め優先、直交で押し込める)
+            // 求心ルール: 全石が盤の中心へ近づく (斜め優先、直交で押し込める)
+            //             引き寄せ距離は設定で調整 (既定1マス/手)
             {
                 const N = BOARD_SIZE, c = Math.floor(N / 2);
+                const _steps = Math.max(1, P('pull_dist') || 1);
+                for (let _s = 0; _s < _steps; _s++) {
                 const pulls = []; // 移動を先に全部決めてから適用 (1手1マス)
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] !== 1 && board[i] !== 2) continue;
@@ -33,6 +39,7 @@ module.exports = {
                 }
                 pulls.forEach(([i, j]) => { if (board[j] === 0) { board[j] = board[i]; board[i] = 0; fxSlide(i, j, 380); } });
                 if (pulls.length) fxShake(2, 160);
+                }
                 // 変動後処理: 呼吸のなくなった連を両色について除去
                 for (const pl of [1, 2]) {
                     const dead = getCapturedStones(board, pl);

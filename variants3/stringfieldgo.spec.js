@@ -27,6 +27,9 @@ module.exports = {
     icon: 'stringfieldgo',
     spec: [
         ...K.rb('STRINGFIELDGO', '絃楽碁', 'stringfieldgo'),
+        K.params([
+            { key: 'string_len', label: '絃に必要な石数', min: 2, max: 6, def: 3, unit: '石' },
+        ]),
         // 絃の張力: 着手で一直線3石以上の連が張られると、両端に接する孤立敵石が振動で落ちる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -41,7 +44,7 @@ module.exports = {
                     const line = [y0 * BOARD_SIZE + x0];
                     for (let s = 1; ; s++) { const x = x0 + dx * s, y = y0 + dy * s; if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE || board[y * BOARD_SIZE + x] !== player) break; line.push(y * BOARD_SIZE + x); }
                     for (let s = 1; ; s++) { const x = x0 - dx * s, y = y0 - dy * s; if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE || board[y * BOARD_SIZE + x] !== player) break; line.push(y * BOARD_SIZE + x); }
-                    if (line.length < 3) continue; // 3石未満は絃にならない
+                    if (line.length < (P('string_len') || 3)) continue; // 規定数未満は絃にならない
                     // 絃の両端の外側のマスを調べる
                     const coords = line.map(i => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)]);
                     const minD = Math.min.apply(null, coords.map(c => dx ? c[0] : c[1]));
@@ -60,7 +63,7 @@ module.exports = {
                             fxText(ei, '弦が弾いた!', '#f0abfc', 1100);
                         }
                     }
-                    if (line.length >= 3) line.forEach(j => fxGlow(j, '#e879f9', 600));
+                    if (line.length >= (P('string_len') || 3)) line.forEach(j => fxGlow(j, '#e879f9', 600));
                 }
                 if (dropped) { fxShake(5, 320); cleanUpPieces(); }
             }

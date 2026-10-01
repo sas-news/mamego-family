@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,19 +27,25 @@ module.exports = {
     icon: 'zazengo',
     spec: [
         ...K.rb('ZAZENGO', '座禅碁', 'zazengo'),
+        K.params([
+            { key: 'zone_rad', label: '座禅区域の半径', min: 1, max: 4, def: 2, hint: '中央からの距離 (2=5x5)' },
+            { key: 'zen_pts', label: '坐り切った石の点', min: 0, max: 9, def: 3, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         // 座禅ボーナス: 座禅区域内で敵に隣接しない自石ごとに+3
         [K.ONE, `        function endGameByScore() {`,
 `        function zazenCells() {
             const c = Math.floor(BOARD_SIZE / 2);
+            const zr = P('zone_rad') || 2;
             const cells = [];
-            for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++)
+            for (let dy = -zr; dy <= zr; dy++) for (let dx = -zr; dx <= zr; dx++)
                 cells.push((c + dy) * BOARD_SIZE + c + dx);
             return cells;
         }
         function zazenBonus(player) {
             return zazenCells().filter(i =>
                 board[i] === player && !getNeighbors(i).some(n => board[n] === (3 - player))
-            ).length * 3;
+            ).length * (P('zen_pts') ?? 3);
         }
 
         function endGameByScore() {`],
@@ -54,15 +60,17 @@ module.exports = {
         K.CUE_STARS(`            // 座禅区域: 中央5x5に座布団の淡い円相
             {
                 const c0 = Math.floor(BOARD_SIZE / 2);
-                const zx = padding + (c0 - 2) * cellSize - cellSize / 2;
-                const zy = padding + (c0 - 2) * cellSize - cellSize / 2;
+                const zr = P('zone_rad') || 2;
+                const zx = padding + (c0 - zr) * cellSize - cellSize / 2;
+                const zy = padding + (c0 - zr) * cellSize - cellSize / 2;
+                const zs = cellSize * (zr * 2 + 1);
                 ctx.save();
                 ctx.fillStyle = 'rgba(140,120,80,0.10)';
-                ctx.fillRect(zx, zy, cellSize * 5, cellSize * 5);
+                ctx.fillRect(zx, zy, zs, zs);
                 ctx.strokeStyle = 'rgba(120,100,60,0.5)';
                 ctx.lineWidth = Math.max(1.3, cellSize * 0.05);
                 ctx.setLineDash([cellSize * 0.3, cellSize * 0.18]);
-                ctx.strokeRect(zx, zy, cellSize * 5, cellSize * 5);
+                ctx.strokeRect(zx, zy, zs, zs);
                 ctx.setLineDash([]);
                 // 円相
                 ctx.strokeStyle = 'rgba(100,85,50,0.55)';
@@ -72,7 +80,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'坐禅 黒' + (zazenBonus(1) / 3) + '/白' + (zazenBonus(2) / 3)`),
+        ...K.EVENT_CHIP_SPEC(`'坐禅 黒' + (zazenBonus(1) / Math.max(1, P('zen_pts') ?? 3)) + '/白' + (zazenBonus(2) / Math.max(1, P('zen_pts') ?? 3))`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            座禅碁: 中央5x5の座禅区域で敵に接されない石は心が安定して終局時+3目<br>
             PC: クリックで配置<br>

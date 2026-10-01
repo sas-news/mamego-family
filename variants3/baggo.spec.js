@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,23 +27,28 @@ module.exports = {
     icon: 'baggo',
     spec: [
         ...K.rb('BAGGO', '袋碁', 'baggo'),
+        K.params([
+            { key: 'bag_cap', label: '袋の容量', min: 2, max: 12, def: 5, unit: '個' },
+            { key: 'bag_penalty', label: '溢れ1個の減点', min: 0, max: 4, def: 1, step: 0.5, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 袋: アゲハマは袋に詰められる。5個まで価値あり、溢れは重荷
-        const BAG_CAP = 5;
-        function bagScore(c) { return Math.min(c, BAG_CAP) - Math.max(0, c - BAG_CAP); }`],
+        const BAG_CAP = () => (P('bag_cap') || 5);
+        function bagScore(c) { return Math.min(c, BAG_CAP()) - Math.max(0, c - BAG_CAP()) * (P('bag_penalty') ?? 1); }`],
         // 得点計算: 袋の重さでアゲハマの価値が変わる
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + bagScore(captures[1]);
             const whiteTotal = territory.white + bagScore(captures[2]) + komi;`],
         // 袋の残量表示
-        ...K.EVENT_CHIP_SPEC(`'黒袋 ' + captures[1] + '/5 白袋 ' + captures[2] + '/5'`),
+        ...K.EVENT_CHIP_SPEC(`'黒袋 ' + captures[1] + '/' + BAG_CAP() + ' 白袋 ' + captures[2] + '/' + BAG_CAP()`),
         // 袋の描画: アゲハマ表示は石に巾着マーク
         ...K.STONE_MARKS_SPEC(`            // 袋に詰まり気味の石は薄い袋紋
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 const v = board[y * BOARD_SIZE + x];
                 if (v !== 1 && v !== 2) continue;
-                const heavy = captures[v] > BAG_CAP;
+                const heavy = captures[v] > BAG_CAP();
                 if (!heavy) continue;
                 const cx = padding + x * cellSize, cy = padding + y * cellSize;
                 ctx.save();

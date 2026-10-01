@@ -10,28 +10,40 @@ module.exports = {
     icon: 'raftgo',
     spec: [
         ...K.rb('RAFTGO', '筏碁', 'raftgo'),
+        K.params([
+            { key: 'raft_size', label: '筏の一辺', min: 2, max: 5, def: 3, unit: '目' },
+            { key: 'tide_period', label: '潮汐の周期', min: 2, max: 15, def: 5, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 4つの筏 (3x3) + ロープ橋 (潮汐で出没)
-        const RAFT_F = Math.max(1, Math.floor(BOARD_SIZE / 5));
-        const RAFT_S = 3;
-        const RAFTS = [
-            [RAFT_F, RAFT_F],
-            [BOARD_SIZE - RAFT_F - RAFT_S, RAFT_F],
-            [RAFT_F, BOARD_SIZE - RAFT_F - RAFT_S],
-            [BOARD_SIZE - RAFT_F - RAFT_S, BOARD_SIZE - RAFT_F - RAFT_S],
-        ];
-        const BRIDGE_CELLS = new Set();
-        (function buildBridges() {
+        let RAFT_F = Math.max(1, Math.floor(BOARD_SIZE / 5));
+        let RAFT_S = 3;
+        let RAFTS = [];
+        let BRIDGE_CELLS = new Set();
+        function rebuildRafts() {
+            RAFT_F = Math.max(1, Math.floor(BOARD_SIZE / 5));
+            RAFT_S = Math.max(2, Math.min(5, P('raft_size') || 3));
+            RAFTS = [
+                [RAFT_F, RAFT_F],
+                [BOARD_SIZE - RAFT_F - RAFT_S, RAFT_F],
+                [RAFT_F, BOARD_SIZE - RAFT_F - RAFT_S],
+                [BOARD_SIZE - RAFT_F - RAFT_S, BOARD_SIZE - RAFT_F - RAFT_S],
+            ];
+            BRIDGE_CELLS = new Set();
             const N = BOARD_SIZE;
             const h = (y) => { for (let x = RAFT_F + RAFT_S; x < N - RAFT_F - RAFT_S; x++) BRIDGE_CELLS.add(y * N + x); };
             const v = (x) => { for (let y = RAFT_F + RAFT_S; y < N - RAFT_F - RAFT_S; y++) BRIDGE_CELLS.add(y * N + x); };
             h(RAFT_F + 1); h(N - RAFT_F - 2); v(RAFT_F + 1); v(N - RAFT_F - 2);
-        })();
+        }
+        rebuildRafts();
+        // 設定変更時に筏・橋を再構築
+        function onVariantParam(p) { rebuildRafts(); }
         function isRaftCell(x, y) {
             return RAFTS.some(([rx, ry]) => x >= rx && x < rx + RAFT_S && y >= ry && y < ry + RAFT_S);
         }
         function isBridgeCell(i) { return BRIDGE_CELLS.has(i); }
-        function tideClose() { return Math.floor(history.length / 5) % 2 === 0; } // 近い時だけ橋が架かる
+        function tideClose() { return Math.floor(history.length / Math.max(1, P('tide_period') || 5)) % 2 === 0; } // 近い時だけ橋が架かる
         function isRaftPlayable(x, y) {
             const i = y * BOARD_SIZE + x;
             if (isRaftCell(x, y)) return true;
@@ -98,7 +110,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

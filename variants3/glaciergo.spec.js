@@ -10,17 +10,21 @@ module.exports = {
     icon: 'glaciergo',
     spec: [
         ...K.rb('GLACIERGO', '氷河碁', 'glaciergo'),
+        K.params([
+            { key: 'glace_interval', label: '氷河の侵食周期', min: 2, max: 32, def: 8, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         const GLACE_EVERY = 8; // 氷河の侵食周期
         // 氷河の前線: 何列目まで凍ったか
-        function glaceFront() { return Math.floor(history.length / GLACE_EVERY); }`],
+        function glaceFront() { return Math.floor(history.length / (P('glace_interval') || GLACE_EVERY)); }`],
         // 氷河侵食: 凍る行の石は1マス下へ押され、最下段の石は融けて消える
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 氷河: 8手ごとに上から1行が凍る
-            if (history.length > 0 && history.length % GLACE_EVERY === 0) {
-                const front = history.length / GLACE_EVERY - 1;
+            if (history.length > 0 && history.length % (P('glace_interval') || GLACE_EVERY) === 0) {
+                const front = history.length / (P('glace_interval') || GLACE_EVERY) - 1;
                 // 最下段は凍らない (残り1行に石が取り残されても全滅しない)
                 if (front >= 0 && front < BOARD_SIZE - 1) {
                     fxShake(8, 400);
@@ -41,7 +45,7 @@ module.exports = {
             }
 
             // 打ち切り: 長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

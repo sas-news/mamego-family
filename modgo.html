@@ -252,6 +252,12 @@
                 <div id="onlineRoomStatus" class="text-center font-bold text-neutral-600 pt-1"></div>
             </div>
 
+            <!-- バリアント固有設定 (VPARAMSがあるゲームのみ表示) -->
+            <div id="variantParamsBox" class="hidden p-3 bg-amber-50 rounded-xl border border-amber-200 flex flex-col gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-neutral-500">このゲームの設定</span>
+                <div id="variantParams" class="flex flex-col gap-3"></div>
+            </div>
+
             <!-- 4. サウンド設定 -->
             <div class="flex items-center justify-between pt-1">
                 <span class="text-sm font-bold text-neutral-700">効果音 (SE)</span>
@@ -310,6 +316,77 @@
     </div>
 
     <script>
+        // === バリアント固有パラメータ ===
+        // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
+        // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
+        const VPARAMS = [{"key":"mod","label":"帯の数 (剰余)","min":2,"max":6,"def":3,"hint":"x+y mod N が手数と一致する帯のみ着手可"}];
+        const VPAR_MAP = {};
+        const VPAR_SAVED = (() => {
+            try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
+            catch (e) { return {}; }
+        })();
+        VPARAMS.forEach(p => {
+            if (p.val === undefined) p.val = VPAR_SAVED[p.key] !== undefined ? VPAR_SAVED[p.key] : p.def;
+            VPAR_MAP[p.key] = p;
+        });
+        const P = k => (VPAR_MAP[k] ? VPAR_MAP[k].val : undefined);
+        function saveVpar() {
+            try {
+                const o = {};
+                VPARAMS.forEach(p => { if (p.val !== p.def) o[p.key] = p.val; });
+                localStorage.setItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : ''), JSON.stringify(o));
+            } catch (e) {}
+        }
+        // 設定モーダルの「このゲームの設定」に VPARAMS 分のUIを生成
+        function initVariantParams() {
+            const box = document.getElementById('variantParamsBox');
+            const list = document.getElementById('variantParams');
+            if (!box || !list || !VPARAMS.length) return;
+            box.classList.remove('hidden');
+            const fmt = (p, v) => (p.step && p.step < 1 ? Number(v).toFixed(1) : String(v)) + (p.unit || '');
+            VPARAMS.forEach(p => {
+                const wrap = document.createElement('div');
+                wrap.className = 'flex flex-col gap-1';
+                const head = document.createElement('div');
+                head.className = 'flex justify-between text-xs font-bold text-neutral-600';
+                const lab = document.createElement('span');
+                lab.textContent = p.label + (p.hint ? ` (${p.hint})` : '');
+                const valEl = document.createElement('span');
+                valEl.className = 'text-amber-700';
+                valEl.textContent = fmt(p, p.val);
+                head.appendChild(lab); head.appendChild(valEl);
+                wrap.appendChild(head);
+                const applyVal = v => {
+                    p.val = v;
+                    valEl.textContent = fmt(p, p.val);
+                    saveVpar();
+                    if (typeof onVariantParam === 'function') onVariantParam(p);
+                };
+                if (p.options) {
+                    const sel = document.createElement('select');
+                    sel.className = 'w-full border border-neutral-300 rounded-lg py-1.5 text-sm font-bold bg-white';
+                    p.options.forEach(o => {
+                        const op = document.createElement('option');
+                        op.value = o.v; op.textContent = o.l;
+                        sel.appendChild(op);
+                    });
+                    sel.value = p.val;
+                    sel.addEventListener('change', () => {
+                        const num = parseFloat(sel.value);
+                        applyVal(isNaN(num) ? sel.value : num);
+                    });
+                    wrap.appendChild(sel);
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'range'; inp.min = p.min; inp.max = p.max; inp.step = p.step || 1; inp.value = p.val;
+                    inp.className = 'w-full accent-amber-600';
+                    inp.addEventListener('input', () => applyVal(parseFloat(inp.value)));
+                    wrap.appendChild(inp);
+                }
+                list.appendChild(wrap);
+            });
+        }
+        initVariantParams();
         // ==========================================
         // 1. カラーテーマ定義
         // ==========================================
@@ -1075,13 +1152,14 @@
             ctx.fillRect(0, 0, width, width);
             ctx.restore();
 
-            // 剰余帯: 3色の対角帯 (現在許可の帯は明るく大きく)
+            // 剰余帯: N色の対角帯 (現在許可の帯は明るく大きく)
             {
-                const band = history.length % 3;
-                const cols = ['rgba(110,160,235,', 'rgba(235,180,90,', 'rgba(190,130,225,'];
+                const mm = Math.max(2, P('mod') || 3);
+                const band = history.length % mm;
+                const cols = ['rgba(110,160,235,', 'rgba(235,180,90,', 'rgba(190,130,225,', 'rgba(120,220,160,', 'rgba(240,130,140,', 'rgba(140,170,255,'];
                 ctx.save();
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                    const b = (x + y) % 3;
+                    const b = (x + y) % mm;
                     const cur = b === band;
                     ctx.fillStyle = cols[b] + (cur ? '0.30)' : '0.09)');
                     ctx.beginPath();
@@ -1729,11 +1807,12 @@
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
             }
 
-            // 剰余碁ルール: (x+y) mod 3 が現在の許可帯 (手数-1 mod 3) と一致する点のみ
+            // 剰余碁ルール: (x+y) mod N が現在の許可帯 (手数-1 mod N) と一致する点のみ
             {
-                const allowed = history.length % 3;
+                const mm = Math.max(2, P('mod') || 3);
+                const allowed = history.length % mm;
                 for (const p of cells) {
-                    if ((p.x + p.y) % 3 !== allowed) return false;
+                    if ((p.x + p.y) % mm !== allowed) return false;
                 }
             }
 
@@ -2688,7 +2767,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('許可帯: x+y ≡ ' + (history.length % 3) + ' (mod 3)');
+                const et = gameOver ? '' : ('許可帯: x+y ≡ ' + (history.length % Math.max(2, P('mod') || 3)) + ' (mod ' + Math.max(2, P('mod') || 3) + ')');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

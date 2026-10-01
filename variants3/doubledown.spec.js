@@ -36,6 +36,10 @@ module.exports = {
     icon: 'doubledown',
     spec: [
         ...K.rb('DOUBLEDOWN', '倍返碁', 'doubledown'),
+        K.params([
+            { key: 'dd_mult', label: '倍返しの倍率', min: 1, max: 5, def: 2, unit: '倍' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 80, max: 150, def: 110, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         ...PERSIST('{ firstCap: { 1: false, 2: false } }'),
         // 倍返し: 各プレイヤー最初の捕獲のアゲハマを2倍にする (宣言不要・両者同条件)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
@@ -44,7 +48,7 @@ module.exports = {
                 let got = captured.length;
                 if (!st.firstCap[player]) {
                     st.firstCap[player] = true;
-                    got *= 2;
+                    got *= (P('dd_mult') || 2);
                     fxText(captured[0], '倍返し!', '#fbbf24', 1200);
                     fxShake(5, 300);
                     captured.forEach(ci => fxBurst(ci, '#fbbf24', 6, 1.3));
@@ -59,7 +63,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 110) / 100))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();

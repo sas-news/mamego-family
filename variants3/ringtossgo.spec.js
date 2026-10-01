@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'ringtossgo',
     spec: [
         ...K.rb('RINGTOSSGO', '輪投碁', 'ringtossgo'),
+        K.params([
+            { key: 'ring_score', label: '輪1本の得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
 
         // 輪投げ: 着手の石が敵の連に触れると輪が掛かる (連ごとに1回)
@@ -65,7 +69,7 @@ module.exports = {
                 });
                 if (hit.size > 0) {
                     hit.forEach(k => { st.ringed[k] = true; });
-                    captures[player] += hit.size;
+                    captures[player] += hit.size * (P('ring_score') ?? 1);
                     fxGlow(pi, '#f59e0b', 800);
                     fxText(pi, hit.size + '本命中!', '#f59e0b', 1200);
                 }

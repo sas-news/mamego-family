@@ -10,6 +10,10 @@ module.exports = {
     icon: 'meteorshowergo',
     spec: [
         ...K.rb('METEORSHOWERGO', '隕群碁', 'meteorshowergo'),
+        K.params([
+            { key: 'interval', label: '流星群の間隔', min: 4, max: 30, def: 10, unit: '手' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.8, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { strikes: [] }; // 着弾点の履歴 [{x,y}]
         // 着弾点: 手数から決定論的に導出 (両者に公平なランダム)
@@ -58,13 +62,13 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 流星群: 10手ごとに着弾
-            if (history.length > 0 && history.length % 10 === 0) {
+            // 流星群: N手ごとに着弾 (間隔は設定で調整)
+            if (history.length > 0 && history.length % Math.max(1, P('interval') || 10) === 0) {
                 meteorStrike();
             }
 
             // 打ち切り: 長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -86,7 +90,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'隕石まで ' + (10 - history.length % 10) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'隕石まで ' + (Math.max(1, P('interval') || 10) - history.length % Math.max(1, P('interval') || 10)) + '手'`),
         [K.ONE, K.INFO_ALGO, `            隕群碁: 10手ごとに流星群が着弾し、十字の石を蒸発させる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

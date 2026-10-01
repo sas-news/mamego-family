@@ -9,9 +9,12 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('POKERGO', '扑克碁', 'pokergo'),
+        K.params([{ key: 'hand_scale', label: '役ボーナス倍率', min: 0, max: 3, step: 0.5, def: 1 }]),
         [K.ONE, `        function endGameByScore() {`,
 `        // 扑克碁: 各行の同色の連続した並びでポーカー役を作りボーナスを返す
-        function pokerBonus(player) {
+        function pokerBonus(player) { return Math.round(_pokerBonusRaw(player) * (P('hand_scale') || 1)); }
+        function _pokerBonusRaw(player) { return Math.round(_pokerBonusRaw(player) * (P('hand_scale') || 1)); }
+        function _pokerBonusRaw(player) {
             const cnt = { 2: 0, 3: 0, 4: 0, 5: 0 };
             for (let y = 0; y < BOARD_SIZE; y++) {
                 let run = 0;

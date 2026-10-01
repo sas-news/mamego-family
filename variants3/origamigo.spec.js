@@ -10,6 +10,10 @@ module.exports = {
     icon: 'origamigo',
     spec: [
         ...K.rb('ORIGAMIGO', '折形碁', 'origamigo'),
+        K.params([
+            { key: 'folds_needed', label: '折形完成に必要な折点数', min: 4, max: 16, def: 8, unit: '点' },
+            { key: 'move_cap', label: '打ち切り手数', min: 40, max: 400, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { folds: { 1: 0, 2: 0 }, lit: {} }; // 折点数と灯った折点`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -54,14 +58,14 @@ module.exports = {
                     st.folds[player]++;
                     fxGlow(li, '#fbbf24', 900);
                     fxText(li, '折点!', '#fbbf24', 1100);
-                    if (st.folds[player] >= 8) {
-                        winByRule(player, '折形完成', '折点を8つ灯しました'); return;
+                    if (st.folds[player] >= (P('folds_needed') || 8)) {
+                        winByRule(player, '折形完成', '折点を' + (P('folds_needed') || 8) + 'つ灯しました'); return;
                     }
                 }
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('move_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

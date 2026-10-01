@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('BILLIARDGO', '撞球碁', 'billiardgo'),
+        K.params([
+            { key: 'pocket_pts', label: '盤外に出した石の得点', min: 1, max: 5, def: 1, unit: '点' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 120, max: 480, def: 240, unit: '手' },
+        ]),
         // 撞球処理を通常捕獲の前に挿入
         [K.ONE, K.CAPTURE_BLOCK, `            // 撞球碁: 打った石に隣接する敵石をその方向へ撞き飛ばす
             move.cells.forEach(p => {
@@ -23,7 +27,7 @@ module.exports = {
                         const qx = tx + dx, qy = ty + dy;
                         if (qx < 0 || qx >= BOARD_SIZE || qy < 0 || qy >= BOARD_SIZE) {
                             board[ai] = 0;
-                            captures[player]++;
+                            captures[player] += (P('pocket_pts') || 1);
                             // ポケットイン: 縁の手前まで滑らせてから白い弾けと得点表示
                             fxSlide(ai, ty * BOARD_SIZE + tx, 260);
                             fxBurst(ty * BOARD_SIZE + tx, '#f8fafc', 9, 1.5);
@@ -55,7 +59,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= 240 && !gameOver) {
+            if (history.length >= (P('ply_cap') || 240) && !gameOver) {
                 endGameByScore();
                 return;
             }

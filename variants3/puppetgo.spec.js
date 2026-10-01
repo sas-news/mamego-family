@@ -10,6 +10,7 @@ module.exports = {
     icon: 'puppetgo',
     spec: [
         ...K.rb('PUPPETGO', '傀儡碁', 'puppetgo'),
+        K.params([{ key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 2.2, def: 1.1, step: 0.05, hint: '交点数×倍率' }]),
         // 傀儡: 置くのは相手色の石 — 仮配置も相手色
         [K.ONE, `            cells.forEach(p => { tempBoard[p.y * BOARD_SIZE + p.x] = player; });`,
 `            cells.forEach(p => { tempBoard[p.y * BOARD_SIZE + p.x] = player === 1 ? 2 : 1; });`],
@@ -47,7 +48,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();

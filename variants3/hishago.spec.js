@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'hishago',
     spec: [
         ...K.rb('HISHAGO', '飛車碁', 'hishago'),
+        K.params([
+            { key: 'rook_interval', label: '飛車になる間隔', min: 2, max: 16, def: 6, unit: '手ごと' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 飛車: 6手ごとの着手が飛車となり4方向レイで孤立敵石を取る
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -57,7 +61,7 @@ module.exports = {
                 st.placed[player] = (st.placed[player] || 0) + 1;
                 const __p = move.cells[0];
                 const __pi = __p.y * BOARD_SIZE + __p.x;
-                if (st.placed[player] % 6 === 0) {
+                if (st.placed[player] % Math.max(1, P('rook_interval') || 6) === 0) {
                     st.rook[__pi] = 1;
                     const __e = BOARD_SIZE - 1;
                     [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {

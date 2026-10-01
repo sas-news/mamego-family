@@ -10,6 +10,9 @@ module.exports = {
     icon: 'vampirogo',
     spec: [
         ...K.rb('VAMPIROGO', '寄生碁', 'vampirogo'),
+        K.params([
+            { key: 'cap_moves', label: '打ち切り手数', min: 40, max: 300, step: 10, def: 140, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { vamps: [] }; // 寄生石 {i, owner}`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -62,7 +65,7 @@ module.exports = {
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

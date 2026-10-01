@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'resonancego',
     spec: [
         ...K.rb('RESONANCEGO', '共鳴碁', 'resonancego'),
+        K.params([
+            { key: 'reso_len', label: '共鳴に必要な連続数', min: 2, max: 6, def: 3, unit: '石' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 共鳴: 縦横に同色3個以上の直線列。共鳴石は敵連の呼吸を削る
         function computeResonance(bs) {
@@ -37,11 +41,11 @@ module.exports = {
                 // 横方向のラン
                 let run = 1;
                 while (x + run < BOARD_SIZE && bs[y * BOARD_SIZE + x + run] === v) run++;
-                if (run >= 3) for (let k = 0; k < run; k++) res.add(y * BOARD_SIZE + x + k);
+                if (run >= Math.max(2, P('reso_len') || 3)) for (let k = 0; k < run; k++) res.add(y * BOARD_SIZE + x + k);
                 // 縦方向のラン
                 run = 1;
                 while (y + run < BOARD_SIZE && bs[(y + run) * BOARD_SIZE + x] === v) run++;
-                if (run >= 3) for (let k = 0; k < run; k++) res.add((y + k) * BOARD_SIZE + x);
+                if (run >= Math.max(2, P('reso_len') || 3)) for (let k = 0; k < run; k++) res.add((y + k) * BOARD_SIZE + x);
             }
             return res;
         }`],

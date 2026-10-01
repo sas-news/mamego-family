@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('TETRISGO', '消滅列碁', 'tetrisgo'),
+        K.params([
+            { key: 'cell_score', label: '消えたマス1つあたりの得点', min: 0, max: 4, def: 1, unit: '点' },
+            { key: 'cap_rows', label: '打ち切り手数', min: 0, max: 8, def: 2, unit: '行', hint: '盤面+この行数' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
@@ -33,12 +37,12 @@ module.exports = {
                         fxText(y * BOARD_SIZE + Math.floor(BOARD_SIZE / 2), '+' + BOARD_SIZE + ' 列消滅!', '#a78bfa', 1300);
                     }
                 }
-                if (cleared > 0) { captures[player] += cleared; fxShake(5, 320); cleanUpPieces(); }
+                if (cleared > 0) { captures[player] += cleared * (P('cell_score') ?? 1); fxShake(5, 320); cleanUpPieces(); }
             }
 
 
             // 打ち切り終局: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)
-            if (history.length >= BOARD_SIZE * (BOARD_SIZE + 2)) {
+            if (history.length >= BOARD_SIZE * (BOARD_SIZE + (P('cap_rows') ?? 2))) {
                 endGameByScore();
                 return;
             }

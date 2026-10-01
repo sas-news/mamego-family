@@ -10,6 +10,11 @@ module.exports = {
     icon: 'spearheadgo',
     spec: [
         ...K.rb('SPEARHEADGO', '矛先碁', 'spearheadgo'),
+        K.params([
+            { key: 'spear_len', label: '矛に必要な連数', min: 3, max: 6, def: 3, unit: '連' },
+            { key: 'spear_reach', label: '矛の射程', min: 1, max: 8, def: 3, unit: 'マス' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         // 矛の貫き: 直線3連の完成で、延長線上3マス以内の敵石を貫いて取る
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -30,10 +35,10 @@ module.exports = {
                            board[fy * BOARD_SIZE + fx] === player) { fwd++; fx += dx; fy += dy; }
                     // 先端条件: 一方が2連以上でもう一方が0 → 空いている側へ矛を突き出す
                     let pdx = 0, pdy = 0;
-                    if (back >= 2 && fwd === 0) { pdx = dx; pdy = dy; }
-                    else if (fwd >= 2 && back === 0) { pdx = -dx; pdy = -dy; }
+                    if (back >= (P('spear_len') || 3) - 1 && fwd === 0) { pdx = dx; pdy = dy; }
+                    else if (fwd >= (P('spear_len') || 3) - 1 && back === 0) { pdx = -dx; pdy = -dy; }
                     else return;
-                    for (let k = 1; k <= 3; k++) {
+                    for (let k = 1; k <= (P('spear_reach') || 3); k++) {
                         const sx = p.x + pdx * k, sy = p.y + pdy * k;
                         if (sx < 0 || sx >= BOARD_SIZE || sy < 0 || sy >= BOARD_SIZE) break;
                         const si = sy * BOARD_SIZE + sx;
@@ -52,7 +57,7 @@ module.exports = {
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 endGameByScore();
                 return;
             }
@@ -76,7 +81,7 @@ module.exports = {
                             let len = 0, cx = x, cy = y;
                             while (cx >= 0 && cx < BOARD_SIZE && cy >= 0 && cy < BOARD_SIZE &&
                                    board[cy * BOARD_SIZE + cx] === pl) { len++; cx += dx; cy += dy; }
-                            if (len >= 3) {
+                            if (len >= (P('spear_len') || 3)) {
                                 ctx.strokeStyle = 'rgba(217, 119, 6, 0.7)';
                                 ctx.lineWidth = Math.max(1.5, cellSize * 0.1);
                                 ctx.beginPath();

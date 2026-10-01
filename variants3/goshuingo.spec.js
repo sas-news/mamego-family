@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'goshuingo',
     spec: [
         ...K.rb('GOSHUINGO', '集印碁', 'goshuingo'),
+        K.params([
+            { key: 'need_stamps', label: '満願成就に必要な朱印数', min: 2, max: 9, def: 5, unit: '個' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.3, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 集印: 星の点への着手で朱印を押す。朱印が5つ集まると即勝
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -57,7 +61,7 @@ module.exports = {
                 if (stars.includes(pi) && !st.got[player].includes(pi)) {
                     st.got[player].push(pi);
                     fxGlow(pi, '#dc2626', 1200);
-                    if (st.got[player].length >= 5) {
+                    if (st.got[player].length >= (P('need_stamps') || 5)) {
                         gameOver = true;
                         fxText(pi, '満願成就!', '#dc2626', 1600);
                         endGameByScore();
@@ -83,7 +87,7 @@ module.exports = {
                     ctx.restore();
                 });
             })`),
-        ...K.EVENT_CHIP_SPEC(`'御朱印 ' + st.got[turn].length + '/5'`),
+        ...K.EVENT_CHIP_SPEC(`'御朱印 ' + st.got[turn].length + '/' + (P('need_stamps') || 5)`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            集印碁: 星の点に着手すると御朱印を押す。5つ集めると満願成就で即勝<br>
             PC: クリックで配置<br>

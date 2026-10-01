@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,11 @@ module.exports = {
     icon: 'quartzgo',
     spec: [
         ...K.rb('QUARTZGO', '水晶碁', 'quartzgo'),
+        K.params([
+            { key: 'quartz_adj', label: '水晶化に必要な隣接味方数', min: 1, max: 4, def: 2, unit: '石' },
+            { key: 'quartz_bonus', label: '水晶1個の得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST('{ qz: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -54,7 +59,7 @@ module.exports = {
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 const adj = getNeighbors(mi).filter(n => board[n] === player).length;
-                if (adj >= 2 && !st.qz[mi]) {
+                if (adj >= Math.max(1, P('quartz_adj') || 2) && !st.qz[mi]) {
                     st.qz[mi] = 1;
                     fxGlow(mi, '#a5f3fc', 950);
                     fxText(mi, '結晶!', '#67e8f9', 1100);
@@ -94,8 +99,8 @@ module.exports = {
         [K.ONE, `            const territory = calculateTerritory();`,
 `            const territory = calculateTerritory();
             for (const k in st.qz) {
-                if (board[k] === 1) territory.black += 1;
-                else if (board[k] === 2) territory.white += 1;
+                if (board[k] === 1) territory.black += (P('quartz_bonus') ?? 1);
+                else if (board[k] === 2) territory.white += (P('quartz_bonus') ?? 1);
             }`],
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            水晶碁: 味方2石以上に接して置いた石は水晶に育つ。水晶は終局時+1目<br>

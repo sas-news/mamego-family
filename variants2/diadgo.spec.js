@@ -9,12 +9,22 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('DIADGO', '斜連碁', 'diadgo'),
+        K.params([
+            { key: 'domino_shape', label: 'ドミノの向き', options: [{v:'diag',l:'斜めのみ'},{v:'both',l:'斜め+縦横'}], def: 'diag' },
+        ]),
         [K.ONE, `            ORIENTATIONS[type] = list;
         });`, `            ORIENTATIONS[type] = list;
         });
 
         // このバリアントの専用ピース形 (回転=⟳ボタン・Rキー・右クリック・ホイール)
-        ORIENTATIONS.STONE = [[[0,0],[1,1]],[[0,1],[1,0]]];`],
+        // 向きは設定で変更可: '斜めのみ'(def) / '斜め+縦横'
+        function applyDominoShape() {
+            ORIENTATIONS.STONE = (P('domino_shape') || 'diag') === 'both'
+                ? [[[0,0],[1,1]],[[0,1],[1,0]],[[0,0],[0,1]],[[0,0],[1,0]]]
+                : [[[0,0],[1,1]],[[0,1],[1,0]]];
+        }
+        applyDominoShape();
+        function onVariantParam(p) { if (p.key === 'domino_shape') applyDominoShape(); }`],
         [K.ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`, `        const PIECE_SIZE = 1;`],
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
 

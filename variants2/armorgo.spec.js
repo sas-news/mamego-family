@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('ARMORGO', '鎧碁', 'armorgo'),
+        K.params([
+            { key: 'armor_layers', label: '装甲の枚数', min: 1, max: 3, def: 1, unit: '枚' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0, max: 400, def: 0, unit: '手', hint: '0=制限なし' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let armorMap = {}; // 装甲が残っている石 idx→1 (1度目の包囲では剥がれるだけ)`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -33,7 +37,7 @@ module.exports = {
             armorMap = (data.armorMap && typeof data.armorMap === 'object') ? { ...data.armorMap } : {};`],
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
 `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
-            move.cells.forEach(p => { armorMap[p.y * BOARD_SIZE + p.x] = 1; });`],
+            move.cells.forEach(p => { armorMap[p.y * BOARD_SIZE + p.x] = (P('armor_layers') || 1); });`],
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 // 鎧碁: 装甲のある石は剥がれるだけで残る。装甲の無い石だけ取れる
@@ -41,7 +45,9 @@ module.exports = {
                 let peeled = 0;
                 captured.forEach(idx => {
                     if (armorMap[idx]) {
-                        delete armorMap[idx]; peeled++;
+                        armorMap[idx]--;
+                        if (armorMap[idx] <= 0) delete armorMap[idx];
+                        peeled++;
                         // 装甲が砕けて剥がれる演出
                         fxBurst(idx, '#93c5fd', 9, 1.3);
                         fxText(idx, '装甲!', '#bfdbfe', 800);
@@ -75,6 +81,17 @@ module.exports = {
                 ctx.restore();
             }`),
         [K.ONE, K.RV_ALGO, K.rv(['全ての石は配置時に装甲 (銀のリング) を持つ。','包囲された連は1度目は装甲が剥がれるだけで盤に残る。剥がれた後にもう一度包囲すると取れる。'])],
+        // 打ち切り手数 (0=制限なし): 設定で有効化すると超過時に強制採点
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

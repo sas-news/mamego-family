@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,10 @@ module.exports = {
     icon: 'kiteflygo',
     spec: [
         ...K.rb('KITEFLYGO', '凧揚碁', 'kiteflygo'),
+        K.params([
+            { key: 'kite_mult', label: '高度ボーナス倍率', min: 0, max: 4, def: 1, step: 0.5, hint: '侵入深度×この倍率' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         // 高度ボーナス: 双方の半分を跨ぐ連の侵入深度を採点に加算
         [K.ONE, `        function endGameByScore() {`,
 `        // 凧高度: 両半分を跨ぐ自連の敵陣侵入深度 (最高値)
@@ -47,7 +51,7 @@ module.exports = {
                     best = Math.max(best, depth);
                 }
             }
-            return Math.round(best);
+            return Math.round(best * (P('kite_mult') ?? 1));
         }
         function endGameByScore() {`],
         [K.ONE, `            const blackTotal = territory.black + captures[1];

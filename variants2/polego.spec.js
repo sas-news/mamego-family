@@ -9,6 +9,7 @@ module.exports = {
     kind: 'pole',
     spec: [
         ...K.rb('POLEGO', '極軸碁', 'polego'),
+        K.params([{ key: 'axis_r', label: '極軸の太さ', min: 0, max: 3, def: 0, unit: 'マス', hint: '0=中央1本線' }]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -18,7 +19,7 @@ module.exports = {
             {
                 const c = (BOARD_SIZE - 1) / 2;
                 for (const p of cells) {
-                    if (p.x === c || p.y === c) continue; // 極軸上は常に可
+                    if (Math.abs(p.x - c) <= (P('axis_r') || 0) || Math.abs(p.y - c) <= (P('axis_r') || 0)) continue; // 極軸上は常に可
                     const idx = p.y * BOARD_SIZE + p.x;
                     const touchOwn = getNeighbors(idx).some(n => board[n] === player);
                     if (!touchOwn) return false;
@@ -29,10 +30,11 @@ module.exports = {
                 const c = (BOARD_SIZE - 1) / 2;
                 ctx.save();
                 ctx.fillStyle = alphaColor(currentTheme.lineColor, 0.14);
-                ctx.fillRect(-cellSize, padding + (c - 0.5) * cellSize,
-                    padding * 2 + BOARD_SIZE * cellSize, cellSize);
-                ctx.fillRect(padding + (c - 0.5) * cellSize, -cellSize,
-                    cellSize, padding * 2 + BOARD_SIZE * cellSize);
+                const _ar = P('axis_r') || 0;
+                ctx.fillRect(-cellSize, padding + (c - 0.5 - _ar) * cellSize,
+                    padding * 2 + BOARD_SIZE * cellSize, cellSize * (1 + 2 * _ar));
+                ctx.fillRect(padding + (c - 0.5 - _ar) * cellSize, -cellSize,
+                    cellSize * (1 + 2 * _ar), padding * 2 + BOARD_SIZE * cellSize);
                 ctx.restore();
             }`),
         // 極軸: 中心から4方向へエネルギーの玉が流れる (十字軸から陣地が広がるルール)

@@ -10,6 +10,9 @@ module.exports = {
     icon: 'inkgo',
     spec: [
         ...K.rb('INKGO', '墨染碁', 'inkgo'),
+        K.params([
+            { key: 'ink_min', label: '滲みに必要な敵石数', min: 2, max: 4, def: 2, unit: '個' },
+        ]),
         // 滲み領域: 敵石が2個以上隣接し、味方石が0個の空点には着手不可
         [K.ONE, K.VALID_BOUNDS, K.VALID_BOUNDS + `
 
@@ -23,7 +26,7 @@ module.exports = {
                         if (board[n] === foe) ink++;
                         else if (board[n] === player) own++;
                     });
-                    if (ink >= 2 && own === 0) return false;
+                    if (ink >= (P('ink_min') || 2) && own === 0) return false;
                 }
             }`],
         // 滲み領域を墨色で塗る
@@ -37,8 +40,8 @@ module.exports = {
                         if (board[n] === 1) b++; else if (board[n] === 2) w++;
                     });
                     let f = null;
-                    if (b >= 2 && w === 0) f = 'rgba(15, 23, 42, 0.28)';
-                    else if (w >= 2 && b === 0) f = 'rgba(15, 23, 42, 0.14)';
+                    if (b >= (P('ink_min') || 2) && w === 0) f = 'rgba(15, 23, 42, 0.28)';
+                    else if (w >= (P('ink_min') || 2) && b === 0) f = 'rgba(15, 23, 42, 0.14)';
                     if (!f) continue;
                     const cx = padding + x * cellSize, cy = padding + y * cellSize;
                     ctx.fillStyle = f;

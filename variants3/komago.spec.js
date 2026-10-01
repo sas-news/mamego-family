@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'komago',
     spec: [
         ...K.rb('KOMAGO', '独楽碁', 'komago'),
+        K.params([
+            { key: 'spin_len', label: '回転が続く手数', min: 1, max: 12, def: 4, unit: '手' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 置いた石は回転を始める (生まれた手数を記録)
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -55,7 +59,7 @@ module.exports = {
             move.cells.forEach(p => { st.born[p.y * BOARD_SIZE + p.x] = history.length; });`],
         // 回転中の石は取れない (生まれてから4手分の間は免疫)
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent)
-                .filter(i => !(st.born[i] !== undefined && history.length - st.born[i] < 4));
+                .filter(i => !(st.born[i] !== undefined && history.length - st.born[i] < (P('spin_len') || 4)));
             if (captured.length > 0) {
                 captured.forEach(idx => { board[idx] = 0; delete st.born[idx]; });
                 captures[player] += captured.length;
@@ -68,7 +72,7 @@ module.exports = {
             {
                 ctx.save();
                 for (let i = 0; i < board.length; i++) {
-                    if ((board[i] === 1 || board[i] === 2) && st.born[i] !== undefined && history.length - st.born[i] < 4) {
+                    if ((board[i] === 1 || board[i] === 2) && st.born[i] !== undefined && history.length - st.born[i] < (P('spin_len') || 4)) {
                         const cx = padding + (i % BOARD_SIZE) * cellSize;
                         const cy = padding + Math.floor(i / BOARD_SIZE) * cellSize;
                         ctx.strokeStyle = 'rgba(56,189,248,0.85)';
@@ -83,7 +87,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'独楽: 直近4手の石は回転中'`),
+        ...K.EVENT_CHIP_SPEC(`'独楽: 直近' + (P('spin_len') || 4) + '手の石は回転中'`),
         [K.ONE, K.INFO_ALGO, `            独楽碁: 置いた石は独楽。回転中の4手分は取られず、止まると取れる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

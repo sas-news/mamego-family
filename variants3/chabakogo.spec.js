@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,11 @@ module.exports = {
     icon: 'chabakogo',
     spec: [
         ...K.rb('CHABAKOGO', '茶箱碁', 'chabakogo'),
+        K.params([
+            { key: 'chabako_need', label: '野点出発に必要な数', min: 3, max: 9, def: 5, unit: '個' },
+            { key: 'chabako_pts', label: '箱の中の石の得点', min: 0, max: 3, def: 1, unit: '目/個' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.8 },
+        ]),
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         // 茶箱区域: 中央3x3
         function chabakoCells() {
@@ -43,8 +48,8 @@ module.exports = {
         function endGameByScore() {`],
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
-`            const blackTotal = territory.black + captures[1] + chabakoCount(1);
-            const whiteTotal = territory.white + captures[2] + komi + chabakoCount(2);`],
+`            const blackTotal = territory.black + captures[1] + chabakoCount(1) * (P('chabako_pts') ?? 1);
+            const whiteTotal = territory.white + captures[2] + komi + chabakoCount(2) * (P('chabako_pts') ?? 1);`],
         [K.ONE, `                    <div class="my-1 border-b border-current/10"></div>`,
 `                    <div class="flex justify-between"><span>茶箱:</span> <strong>黒 \${chabakoCount(1)} / 白 \${chabakoCount(2)}</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
@@ -52,8 +57,8 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 茶箱ルール: 茶箱区域に自石5つ → 荷造り完了で野点出発 (即勝ち)
-            if (chabakoCount(player) >= 5) {
+            // 茶箱ルール: 茶箱区域に自石が規定数 → 荷造り完了で野点出発 (即勝ち)
+            if (chabakoCount(player) >= (P('chabako_need') || 5)) {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 fxGlow(mi, '#f59e0b', 950);
                 fxText(mi, '野点出発!', '#d97706', 1400);
@@ -79,7 +84,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'茶箱 黒' + chabakoCount(1) + '/白' + chabakoCount(2) + ' (5で野点)'`),
+        ...K.EVENT_CHIP_SPEC(`'茶箱 黒' + chabakoCount(1) + '/白' + chabakoCount(2) + ' (' + (P('chabako_need') || 5) + 'で野点)'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            茶箱碁: 中央3x3の茶箱に道具(石)を5つ詰めれば野点出発で即勝ち<br>
             PC: クリックで配置<br>

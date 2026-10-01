@@ -10,12 +10,16 @@ module.exports = {
     icon: 'magnetgo2',
     spec: [
         ...K.rb('MAGNETGO2', '極性碁', 'magnetgo2'),
+        K.params([
+            { key: 'repel_range', label: '同極反発の範囲', min: 1, max: 3, def: 1, hint: '同極の石から何マス先まで置けないか' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { pol: {} }; // 極性 idx -> 0:S / 1:N
         function nextPol() { return (history.length + 1) & 1; }
-        function nbr8(i) {
+        function nbr8(i, rr) {
             const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0, r = [];
-            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -rr; dy <= rr; dy++) for (let dx = -rr; dx <= rr; dx++) {
                 if (!dx && !dy) continue;
                 const nx = x + dx, ny = y + dy;
                 if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE) r.push(ny * BOARD_SIZE + nx);
@@ -47,7 +51,7 @@ module.exports = {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
                 const ip = p.y * BOARD_SIZE + p.x, pol = nextPol();
-                for (const n of nbr8(ip)) {
+                for (const n of nbr8(ip, Math.max(1, P('repel_range') || 1))) {
                     if ((board[n] === 1 || board[n] === 2) && st.pol[n] === pol) return false; // 同極反発
                 }
             }`],
@@ -110,7 +114,7 @@ module.exports = {
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;

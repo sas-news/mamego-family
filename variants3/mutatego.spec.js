@@ -10,6 +10,10 @@ module.exports = {
     icon: 'mutatego',
     spec: [
         ...K.rb('MUTATEGO', '変異碁', 'mutatego'),
+        K.params([
+            { key: 'parity', label: '変異の市松間隔', options: [{ v: 2, l: '偶数マスのみ' }, { v: 1, l: 'すべてのマス' }], def: 2, hint: '変異が現れるマスの周期性 (x+y mod N)' },
+            { key: 'cap', label: '打ち切り手数', min: 50, max: 300, def: 140, unit: '手' },
+        ]),
         // 捕獲後に偶数パリティのセルへ変異体 (5) を出現させる
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
@@ -19,7 +23,7 @@ module.exports = {
                 // 変異ルール: 偶数パリティ (x+y偶数) の取られたセルに中立変異体(5)が生まれる
                 captured.forEach(ci => {
                     const cx = ci % BOARD_SIZE, cy = Math.floor(ci / BOARD_SIZE);
-                    if ((cx + cy) % 2 === 0 && board[ci] === 0) {
+                    if ((cx + cy) % (P('parity') || 2) === 0 && board[ci] === 0) {
                         board[ci] = 5;
                         fxBurst(ci, '#c084fc', 6, 1.3);
                     }
@@ -49,7 +53,7 @@ module.exports = {
                 }
             }
             // 長期戦防止: 140手経過でその時点の地数判定
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= Math.max(1, P('cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         // 変異体 (board===5) の描画 — 紫のブロブ

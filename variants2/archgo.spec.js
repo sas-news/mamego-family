@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('ARCHGO', '拱碁', 'archgo'),
+        K.params([
+            { key: 'suff_min', label: '窒息領域の閾値', min: 2, max: 6, def: 3, unit: 'マス', hint: 'このマス数未満の連結空領域は死に領域' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0, max: 400, def: 0, unit: '手', hint: '0=制限なし' },
+        ]),
         [K.ONE, `            ORIENTATIONS[type] = list;
         });`, `            ORIENTATIONS[type] = list;
         });
@@ -114,7 +118,20 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
+        // 窒息領域の閾値は設定で調整可能
+        [K.ONE, `                if (region.length < PIECE_SIZE) {`, `                if (region.length < (P('suff_min') || PIECE_SIZE)) {`],
         [K.ONE, K.RV_ALGO, K.rv(['着手は1x3の橋ピース (回転=⟳ボタン・Rキー・右クリック・ホイール)。両端が空点なら、中点が自分の石でも上に架けられる。','自分の石を橋桁にして連を伸ばす。中点が敵石なら架けられない。'])],
+        // 打ち切り手数 (0=制限なし): 設定で有効化すると超過時に強制採点
+        [K.ONE, `        function executeMove(move, player) {`,
+`        let moveCapFired = false;
+        function executeMove(move, player) {
+            // 打ち切り手数: 設定で有効化した場合、長期戦は強制採点 (1局1回のみ)
+            if (moveCapFired && history.length === 0) moveCapFired = false;
+            if (!moveCapFired && (P('ply_cap') || 0) > 0 && history.length >= (P('ply_cap') || 0)) {
+                moveCapFired = true;
+                endGameByScore();
+                return;
+            }`],
         ...K.STONE_SPEC,
     ],
     test: `

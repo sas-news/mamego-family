@@ -10,28 +10,41 @@ module.exports = {
     icon: 'archipelagogo',
     spec: [
         ...K.rb('ARCHIPELAGOGO', '群島碁', 'archipelagogo'),
+        K.params([
+            { key: 'isle_radius', label: '島の半径', min: 0.05, max: 0.35, def: 0.155, step: 0.005, hint: '盤サイズ×係数' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.6, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 群島: 5つの島。島の中心に近いマスが陸、他は海
         const ISLE_F = [
             [0.24, 0.24], [0.76, 0.24], [0.24, 0.76], [0.76, 0.76], [0.5, 0.5],
         ];
-        const ISLE_R = BOARD_SIZE * 0.155;
+        const ISLE_R = () => BOARD_SIZE * (P('isle_radius') || 0.155);
         function isIsle(x, y) {
             return ISLE_F.some(([fx, fy]) =>
-                Math.hypot(x - fx * (BOARD_SIZE - 1), y - fy * (BOARD_SIZE - 1)) <= ISLE_R);
+                Math.hypot(x - fx * (BOARD_SIZE - 1), y - fy * (BOARD_SIZE - 1)) <= ISLE_R());
         }
         // 各島で盤中心に最も近いマスが「港」— 港同士は全て互いに近傍する
-        const ISLE_PORTS = [];
-        ISLE_F.forEach(([fx, fy]) => {
-            let best = -1, bd = 1e9;
-            for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
-                if (Math.hypot(x - fx * (BOARD_SIZE - 1), y - fy * (BOARD_SIZE - 1)) > ISLE_R) continue;
-                const dc = Math.hypot(x - (BOARD_SIZE - 1) / 2, y - (BOARD_SIZE - 1) / 2);
-                if (dc < bd) { bd = dc; best = y * BOARD_SIZE + x; }
-            }
-            if (best >= 0) ISLE_PORTS.push(best);
-        });
-        const PORT_SET = new Set(ISLE_PORTS);`],
+        let ISLE_PORTS = [];
+        let PORT_SET = new Set();
+        // 島の半径は設定で調整可能 (変更時に港を即時再構成)
+        function rebuildPorts() {
+            ISLE_PORTS = [];
+            ISLE_F.forEach(([fx, fy]) => {
+                let best = -1, bd = 1e9;
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (Math.hypot(x - fx * (BOARD_SIZE - 1), y - fy * (BOARD_SIZE - 1)) > ISLE_R()) continue;
+                    const dc = Math.hypot(x - (BOARD_SIZE - 1) / 2, y - (BOARD_SIZE - 1) / 2);
+                    if (dc < bd) { bd = dc; best = y * BOARD_SIZE + x; }
+                }
+                if (best >= 0) ISLE_PORTS.push(best);
+            });
+            PORT_SET = new Set(ISLE_PORTS);
+        }
+        rebuildPorts();
+        function onVariantParam(p) {
+            if (p.key === 'isle_radius') rebuildPorts();
+        }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 if (!isIsle(x, y)) board[y * BOARD_SIZE + x] = 3;
@@ -94,7 +107,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 endGameByScore();
                 return;
             }

@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'hanego',
     spec: [
         ...K.rb('HANEGO', 'ハネ碁', 'hanego'),
+        K.params([
+            { key: 'hane_bonus', label: 'ハネボーナス', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // ハネ判定: 着手点の左右 or 上下の両側が敵石 → +2目
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -61,8 +65,8 @@ module.exports = {
                 const __haneW = __at(__p.x - 1, __p.y) === opponent && __at(__p.x + 1, __p.y) === opponent;
                 const __haneH = __at(__p.x, __p.y - 1) === opponent && __at(__p.x, __p.y + 1) === opponent;
                 if (__haneW || __haneH) {
-                    st.bonus[player] = (st.bonus[player] || 0) + 2;
-                    fxText(__pi, 'ハネ +2', '#f472b6', 1100);
+                    st.bonus[player] = (st.bonus[player] || 0) + (P('hane_bonus') || 2);
+                    fxText(__pi, 'ハネ +' + (P('hane_bonus') || 2), '#f472b6', 1100);
                     fxShake(__pi, '#f472b6', 600);
                 }
             }

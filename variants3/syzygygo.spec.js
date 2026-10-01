@@ -64,20 +64,23 @@ module.exports = {
     icon: 'syzygygo',
     spec: [
         ...K.rb('SYZYGYGO', '交食碁', 'syzygygo'),
+        K.params([
+            { key: 'eclipse_interval', label: '交食の間隔', min: 5, max: 40, def: 15, unit: '手' },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `                captures[player] += captured.length;`, `                captures[player] += captured.length;
                 // 交食: 15の倍数手の取りは石1つにつき追加+1
-                if (history.length > 0 && history.length % 15 === 0) {
+                if (history.length > 0 && history.length % (P('eclipse_interval') || 15) === 0) {
                     st.score[player] += captured.length;
                 }`],
         K.CUE_GRID(`            // 交食: 15の倍数手では盤が薄暗くなる
-            if (history.length > 0 && history.length % 15 === 0) {
+            if (history.length > 0 && history.length % (P('eclipse_interval') || 15) === 0) {
                 ctx.fillStyle = 'rgba(15,23,42,0.22)';
                 ctx.fillRect(padding - cellSize / 2, padding - cellSize / 2, cellSize * BOARD_SIZE, cellSize * BOARD_SIZE);
             }`),
         ...GAME_OVER,
         ...SCORE_END,
-        ...K.EVENT_CHIP_SPEC(`'交食まで ' + (15 - (history.length % 15)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'交食まで ' + ((P('eclipse_interval') || 15) - (history.length % (P('eclipse_interval') || 15))) + '手'`),
         [K.ONE, K.INFO_ALGO, `                        交食碁: 15の倍数の手は交食。その着手で取った石は通常のアゲハマに加えて1つにつき+1点。<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

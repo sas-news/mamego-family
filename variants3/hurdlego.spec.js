@@ -10,6 +10,9 @@ module.exports = {
     icon: 'hurdlego',
     spec: [
         ...K.rb('HURDLEGO', '跳欄碁', 'hurdlego'),
+        K.params([
+            { key: 'jump_dist', label: '飛越距離', min: 2, max: 4, def: 2, hint: '何マス先まで跳べるか' },
+        ]),
         [K.ONE, '        function executeMove(move, player) {',
 `        // 跳欄: 自石の隣接点か、自石を1つ飛び越えた2マス先
         function hurdleSet(player) {
@@ -23,14 +26,18 @@ module.exports = {
                 getNeighbors(i).forEach(n => {
                     if (board[n] === 0) ok.add(n);
                 });
-                [[2, 0], [-2, 0], [0, 2], [0, -2]].forEach(([dx, dy]) => {
-                    const mx = x + dx / 2, my = y + dy / 2;
+                const jd = Math.max(1, Math.round(P('jump_dist') || 2)); // 飛越距離は設定で調整
+                [[jd, 0], [-jd, 0], [0, jd], [0, -jd]].forEach(([dx, dy]) => {
                     const nx = x + dx, ny = y + dy;
                     if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE) return;
-                    // 中間の石は何色でもよい (飛び越えるハードル)
+                    // 中間の石は何色でもよい (飛び越えるハードル) — 経路は全て埋まっている必要あり
                     const ni = ny * BOARD_SIZE + nx;
-                    const mi = my * BOARD_SIZE + mx;
-                    if (board[mi] !== 0 && board[ni] === 0) ok.add(ni);
+                    let gap = false;
+                    for (let k = 1; k < jd; k++) {
+                        const mi = (y + (dy * k) / jd) * BOARD_SIZE + (x + (dx * k) / jd);
+                        if (board[mi] === 0) { gap = true; break; }
+                    }
+                    if (!gap && board[ni] === 0) ok.add(ni);
                 });
             }
             if (ok.size === 0) return null; // 打てる場所がなければ自由

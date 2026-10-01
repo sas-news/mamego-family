@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'mochigomago',
     spec: [
         ...K.rb('MOCHIGOMAGO', '持駒碁', 'mochigomago'),
+        K.params([
+            { key: 'drop_cost', label: '持駒打ちのコスト', min: 1, max: 5, def: 1, unit: '枚', hint: '手番消費なしで打つために必要な持駒数' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 取り石は持駒ストックにも加算
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
@@ -65,7 +69,7 @@ module.exports = {
 
             // 持駒碁: 持駒打ちモードの着手は持駒を消費して手番を渡さない
             if (st.dropArm === player) {
-                st.mochi[player] = (st.mochi[player] || 0) - 1;
+                st.mochi[player] = (st.mochi[player] || 0) - (P('drop_cost') || 1);
                 st.dropArm = 0;
                 const __di = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 st.dropped[__di] = 1;
@@ -92,7 +96,7 @@ module.exports = {
         btnMochi.addEventListener('click', () => {
             soundManager.playClick();
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
-            if ((st.mochi[turn] || 0) <= 0) return;
+            if ((st.mochi[turn] || 0) < (P('drop_cost') || 1)) return;
             st.dropArm = st.dropArm === turn ? 0 : turn;
             render();
             updateUI();

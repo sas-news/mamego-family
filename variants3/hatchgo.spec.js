@@ -10,6 +10,11 @@ module.exports = {
     icon: 'hatchgo',
     spec: [
         ...K.rb('HATCHGO', '孵卵碁', 'hatchgo'),
+        K.params([
+            { key: 'hatch_age', label: '孵るまでの手数', min: 4, max: 40, def: 14, step: 2, unit: '手' },
+            { key: 'hatch_bonus', label: '孵った卵の得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.8, step: 0.05 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let hatchDetail = { 1: 0, 2: 0 }; // 直近終局で孵った卵の数`],
         [K.ONE, K.PIECES_PUSH, `            pieces.push({
@@ -27,18 +32,18 @@ module.exports = {
             pieces.forEach(pc => {
                 const alive = pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
                 if (!alive) return;
-                if (history.length - (pc.at || 0) < 14) return;
+                if (history.length - (pc.at || 0) < Math.max(1, P('hatch_age') || 14)) return;
                 const warm = pc.cells.some(p =>
                     getNeighbors(p.y * BOARD_SIZE + p.x).some(n => board[n] === pc.player));
                 if (!warm) return;
                 hatchDetail[pc.player]++;
-                if (pc.player === 1) territory.black++; else territory.white++;
+                if (pc.player === 1) territory.black += (P('hatch_bonus') || 1); else territory.white += (P('hatch_bonus') || 1);
             });`],
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -50,7 +55,7 @@ module.exports = {
             {
                 ctx.save();
                 pieces.forEach(pc => {
-                    if (history.length - (pc.at || 0) < 14) return;
+                    if (history.length - (pc.at || 0) < Math.max(1, P('hatch_age') || 14)) return;
                     pc.cells.forEach(c => {
                         const i = c.y * BOARD_SIZE + c.x;
                         if (board[i] !== pc.player) return;

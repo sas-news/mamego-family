@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り: 150手を超えたら即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= 150) {
+            if (!capFired && history.length >= (P('ply_cap') || 150)) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,7 @@ module.exports = {
     icon: 'potterygo',
     spec: [
         ...K.rb('POTTERYGO', '陶芸碁', 'potterygo'),
+        K.params([{ key: 'bake_turn', label: '焼成に必要な手数', min: 5, max: 40, def: 15, unit: '手' }, { key: 'bake_pts', label: '完成品の得点', min: 1, max: 9, def: 3, unit: '目' }, { key: 'ply_cap', label: '打ち切り手数', min: 60, max: 400, def: 150, unit: '手' }]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { age: {}, fired: {}, bonus: { 1: 0, 2: 0 } };
         // 窯 = 星の交点
@@ -67,10 +68,10 @@ module.exports = {
                     if (v !== 1 && v !== 2) return;
                     if (st.fired[i] || st.age[i] === undefined) return;
                     if (!KILNS.has(i)) { delete st.age[i]; return; } // 窯から外れた器は焼けない
-                    if (history.length - st.age[i] >= 15) {
+                    if (history.length - st.age[i] >= (P('bake_turn') || 15)) {
                         st.fired[i] = true;
                         delete st.age[i];
-                        st.bonus[v] += 3;
+                        st.bonus[v] += (P('bake_pts') || 3);
                         fxGlow(i, '#fbbf24', 1200);
                         fxText(i, '完成! +3目', '#fbbf24', 1200);
                     }

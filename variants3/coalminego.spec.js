@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'coalminego',
     spec: [
         ...K.rb('COALMINEGO', '炭鉱碁', 'coalminego'),
+        K.params([
+            { key: 'blast_cost', label: '爆破に必要な石炭', min: 1, max: 8, def: 3, unit: '個' },
+            { key: 'coal_yield', label: '石炭の採取量', min: 1, max: 3, def: 1, unit: '個/手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点数比)', min: 0.3, max: 1.5, step: 0.05, def: 0.9 },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 炭脈: 盤下に走る炭の鉱脈 (斜めのライン上)
@@ -57,7 +62,7 @@ module.exports = {
         }
         // 爆破: 3石炭で最も呼吸の浅い敵石1個を吹き飛ばす (手番を1つ消費)
         function coalBlast(player) {
-            if (st.coal[player] < 3) { fxText((BOARD_SIZE * BOARD_SIZE / 2) | 0, '石炭不足', '#fbbf24', 800); return; }
+            if (st.coal[player] < (P('blast_cost') || 3)) { fxText((BOARD_SIZE * BOARD_SIZE / 2) | 0, '石炭不足', '#fbbf24', 800); return; }
             const opp = player === 1 ? 2 : 1;
             let best = -1, bestLib = Infinity;
             for (let i = 0; i < board.length; i++) {
@@ -66,7 +71,7 @@ module.exports = {
                 if (l < bestLib) { bestLib = l; best = i; }
             }
             if (best < 0) return;
-            st.coal[player] -= 3;
+            st.coal[player] -= (P('blast_cost') || 3);
             board[best] = 0;
             captures[player]++;
             fxBurst(best, '#f97316', 16);
@@ -85,7 +90,7 @@ module.exports = {
 `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
             move.cells.forEach(p => {
                 const vi = p.y * BOARD_SIZE + p.x;
-                if (VEIN_SET.has(vi)) { st.coal[player]++; fxBurst(vi, '#78350f', 10); fxText(vi, '+石炭', '#fbbf24', 900); }
+                if (VEIN_SET.has(vi)) { st.coal[player] += (P('coal_yield') || 1); fxBurst(vi, '#78350f', 10); fxText(vi, '+石炭', '#fbbf24', 900); }
             });`],
         // 「爆破」ボタン (3石炭で最も弱い敵石を吹き飛ばす)
         [K.ONE, `            <button id="btnPass" class="flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold border rounded-xl hover:opacity-80 active:scale-95 transition-all shadow-sm">
@@ -102,6 +107,7 @@ module.exports = {
         const btnBlast = document.getElementById('btnBlast');`],
         [K.ONE, `        btnPass.addEventListener('click', handlePass);`,
 `        btnPass.addEventListener('click', handlePass);
+        btnBlast.textContent = '爆破 (' + (P('blast_cost') || 3) + '石炭)';
         btnBlast.addEventListener('click', () => {
             soundManager.playClick();
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;

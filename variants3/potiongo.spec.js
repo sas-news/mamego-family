@@ -35,7 +35,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -51,6 +51,7 @@ module.exports = {
     icon: 'potiongo',
     spec: [
         ...K.rb('POTIONGO', '薬草碁', 'potiongo'),
+        K.params([{ key: 'brew_pts', label: '調合の得点', min: 1, max: 9, def: 3, unit: '目' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 2.2, def: 1.1, step: 0.05, hint: '交点数×倍率' }]),
         ...PERSIST('{ brewPts: { 1: 0, 2: 0 }, brewed: {} }'),
         // 薬草ルール: 連の中に3種の材料が揃うと調合成功 (+3)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -68,8 +69,8 @@ module.exports = {
                 });
                 if (fresh && types[0] && types[1] && types[2]) {
                     grp.forEach(i => { st.brewed[i] = 1; });
-                    st.brewPts[player] += 3;
-                    fxText(i0, '調合成功+3', '#4ade80', 1200);
+                    st.brewPts[player] += (P('brew_pts') || 3);
+                    fxText(i0, '調合成功+' + (P('brew_pts') || 3), '#4ade80', 1200);
                     fxGlow(i0, '#22c55e', 800);
                 }
             }

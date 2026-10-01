@@ -10,15 +10,19 @@ module.exports = {
     icon: 'grovego',
     spec: [
         ...K.rb('GROVEGO', '木立碁', 'grovego'),
+        K.params([
+            { key: 'grove_r_pct', label: '木立の半径', min: 2, max: 30, def: 8.5, step: 0.5, unit: '%', hint: '盤サイズに対する割合' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.8, step: 0.05 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 木立: 5つの小さな林。着手不可・呼吸なしだが「伐採」で消える
         const GROVE_SEEDS = [
             [0.20, 0.28], [0.72, 0.16], [0.26, 0.74], [0.80, 0.66], [0.48, 0.42],
         ];
-        const GROVE_R = BOARD_SIZE * 0.085;
         function isGrove(x, y) {
+            const groveR = BOARD_SIZE * ((P('grove_r_pct') ?? 8.5) / 100);
             return GROVE_SEEDS.some(([fx, fy]) =>
-                Math.hypot(x - fx * (BOARD_SIZE - 1), y - fy * (BOARD_SIZE - 1)) <= GROVE_R);
+                Math.hypot(x - fx * (BOARD_SIZE - 1), y - fy * (BOARD_SIZE - 1)) <= groveR);
         }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
@@ -77,7 +81,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

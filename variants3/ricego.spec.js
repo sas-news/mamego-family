@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'ricego',
     spec: [
         ...K.rb('RICEGO', '蔵米碁', 'ricego'),
+        K.params([
+            { key: 'winter_interval', label: '冬の間隔', min: 8, max: 60, def: 24, unit: '手' },
+            { key: 'tribute', label: '冬の納米量', min: 0, max: 9, def: 3, unit: '俵' },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // アゲハマは米として蔵に入る
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
@@ -63,12 +68,13 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 冬の納米: 24手ごと。米3俵、不足分だけ自石が飢える
-            if (history.length > 0 && history.length % 24 === 0) {
+            // 冬の納米: 定期的。米を納め、不足分だけ自石が飢える
+            if (history.length > 0 && history.length % Math.max(1, P('winter_interval') || 24) === 0) {
+                const trib = Math.max(0, P('tribute') ?? 3);
                 [1, 2].forEach(pl => {
-                    const pay = Math.min(3, st.rice[pl]);
+                    const pay = Math.min(trib, st.rice[pl]);
                     st.rice[pl] -= pay;
-                    let missing = 3 - pay;
+                    let missing = trib - pay;
                     if (missing > 0) {
                         const own = [];
                         board.forEach((v, i) => { if (v === pl) own.push(i); });

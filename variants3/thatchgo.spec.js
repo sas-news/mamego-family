@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,10 @@ module.exports = {
     icon: 'thatchgo',
     spec: [
         ...K.rb('THATCHGO', '茅葺碁', 'thatchgo'),
+        K.params([
+            { key: 'thatch_bonus', label: '茅葺の得点', min: 0, max: 10, def: 3, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.9, hint: '交点数比' },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -75,7 +79,7 @@ module.exports = {
             const tx = tIdx % BOARD_SIZE, ty = (tIdx / BOARD_SIZE) | 0;
             if (ty > 0 && tx > 0 && tx < BOARD_SIZE - 1
                 && board[tIdx - BOARD_SIZE - 1] === player && board[tIdx - BOARD_SIZE + 1] === player) {
-                st.score[player] += 3;
+                st.score[player] += (P('thatch_bonus') ?? 3);
             }
 
             turn = opponent;`],

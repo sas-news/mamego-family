@@ -10,6 +10,12 @@ module.exports = {
     icon: 'tarotgo',
     spec: [
         ...K.rb('TAROTGO', '占札碁', 'tarotgo'),
+        K.params([
+            { key: 'sun_gain', label: '太陽の加点', min: 0, max: 6, def: 2, unit: '目' },
+            { key: 'star_gain', label: '星の加点', min: 0, max: 6, def: 1, unit: '目' },
+            { key: 'fate_gain', label: '運命の加点', min: 0, max: 6, def: 1, unit: '目', hint: '双方に加算' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.75, hint: '交点数比' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { lastCard: '' }; // 直近に引いたタロット`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -45,22 +51,22 @@ module.exports = {
                 const names = ['太陽', '星', '月', '塔', '運命'];
                 st.lastCard = names[card];
                 const ci = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                if (card === 0) { captures[player] += 2; fxText(ci, '太陽 +2', '#fbbf24', 1200); }
-                else if (card === 1) { captures[player] += 1; fxText(ci, '星 +1', '#a5b4fc', 1200); }
+                if (card === 0) { captures[player] += (P('sun_gain') ?? 2); fxText(ci, '太陽 +2', '#fbbf24', 1200); }
+                else if (card === 1) { captures[player] += (P('star_gain') ?? 1); fxText(ci, '星 +1', '#a5b4fc', 1200); }
                 else if (card === 3 && board[ci] === player) {
                     // 塔: 打った石が崩れる (盤から消える)
                     board[ci] = 0;
                     fxBurst(ci, '#94a3b8', 8, 1.5);
                     fxText(ci, '塔: 石が崩れた', '#f87171', 1200);
                 } else if (card === 4) {
-                    captures[player] += 1; captures[opponent] += 1;
+                    captures[player] += (P('fate_gain') ?? 1); captures[opponent] += (P('fate_gain') ?? 1);
                     fxText(ci, '運命: 双方+1', '#c084fc', 1200);
                 }
                 cleanUpPieces();
             }
 
             // 打ち切り終局: 交点数の0.75倍の手数を超えたら強制終局して採点
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 endGameByScore();
                 return;
             }

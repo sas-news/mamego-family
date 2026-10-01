@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * ((P('cap_pct') ?? 75) / 100))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'dynamitego',
     spec: [
         ...K.rb('DYNAMITEGO', '爆破解碁', 'dynamitego'),
+        K.params([
+            { key: 'blast_r', label: '爆破半径', min: 1, max: 2, def: 1, hint: '1=3x3、2=5x5' },
+            { key: 'cap_pct', label: '打ち切り手数', min: 50, max: 150, def: 75, unit: '%', hint: '盤面交点数に対する割合' },
+        ]),
         ...ST(ST_INIT),
 
         // 起爆: armed状態で置いた石は3x3を爆破する
@@ -62,8 +66,9 @@ module.exports = {
                 fxGlow(ci, '#fbbf24', 700);
                 fxShake(8, 380);
                 fxText(ci, 'BOOM!', '#fb923c', 900);
-                for (let dy = -1; dy <= 1; dy++) {
-                    for (let dx = -1; dx <= 1; dx++) {
+                const br = P('blast_r') || 1;
+                for (let dy = -br; dy <= br; dy++) {
+                    for (let dx = -br; dx <= br; dx++) {
                         const nx = bc.x + dx, ny = bc.y + dy;
                         if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) continue;
                         const i0 = ny * BOARD_SIZE + nx;

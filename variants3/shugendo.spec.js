@@ -47,6 +47,9 @@ module.exports = {
     icon: 'shugendo',
     spec: [
         ...K.rb('SHUGENDO', '修験碁', 'shugendo'),
+        K.params([
+            { key: 'asc_pts', label: '修行石1つの法力点', min: 0, max: 6, def: 2, unit: '点' },
+        ]),
         ...ST(ST_INIT),
         // 行場一覧ヘルパー
         [K.ONE, `        function endGameByScore() {`, `        // 行場: 四隅の星 (天元を除く星の点)
@@ -61,7 +64,7 @@ module.exports = {
             shugendoSites().forEach(i => {
                 if (st.asc[i] === pl && board[i] === pl) n++;
             });
-            return n * 2;
+            return n * (P('asc_pts') ?? 2);
         }
 
         function endGameByScore() {`],

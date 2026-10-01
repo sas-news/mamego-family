@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,10 @@ module.exports = {
     icon: 'sokuryogo',
     spec: [
         ...K.rb('SOKURYUGO', '測量碁', 'sokuryogo'),
+        K.params([
+            { key: 'survey_pts', label: '測量点 (行・列それぞれ)', min: 0, max: 5, def: 1, unit: '点' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });
             // 測量: その行・列に初めて自石が置かれると基点+1ずつ
@@ -75,7 +79,7 @@ module.exports = {
             for (let y = 0; y < BOARD_SIZE; y++) {
                 if (y !== sY && board[y * BOARD_SIZE + sX] === player) colFirst = false;
             }
-            st.score[player] += (rowFirst ? 1 : 0) + (colFirst ? 1 : 0);`],
+            st.score[player] += ((rowFirst ? 1 : 0) + (colFirst ? 1 : 0)) * (P('survey_pts') ?? 1);`],
         ...K.STONE_MARKS_SPEC(`            // 測量: 測量済みの行・列に薄い基線
             {
                 ctx.save();

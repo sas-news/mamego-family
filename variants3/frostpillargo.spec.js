@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,13 +47,17 @@ module.exports = {
     icon: 'frostpillargo',
     spec: [
         ...K.rb('FROSTPILLARGO', '霜柱碁', 'frostpillargo'),
+        K.params([
+            { key: 'frost_interval', label: '霜柱の周期', min: 6, max: 90, def: 24, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (盤面比)', min: 0.3, max: 1.5, step: 0.05, def: 0.75 },
+        ]),
         ...ST(ST_INIT),
         // 霜柱: 24手毎に全石が1段上へ持ち上がる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 霜柱: 24手ごとの早朝に全石が1段上へ持ち上がる (上が空いていれば)
-            if (history.length > 0 && history.length % 24 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('frost_interval') || 24) === 0) {
                 let lifted = 0;
                 // 上から順に処理 (持ち上げた先の石を連鎖しないよう上から)
                 for (let y = 1; y < BOARD_SIZE; y++) {
@@ -86,7 +90,7 @@ module.exports = {
         // 霜柱の予兆 (持ち上げ予告の上向き矢印)
         ...K.CUE_STARS(`
             // 霜柱予告: 次の早朝で持ち上がる石の上に薄い矢印
-            if (24 - (history.length % 24) <= 3) {
+            if ((P('frost_interval') || 24) - (history.length % (P('frost_interval') || 24)) <= 3) {
                 ctx.fillStyle = 'rgba(125,211,252,0.5)';
                 for (let i = BOARD_SIZE; i < board.length; i++) {
                     if ((board[i] === 1 || board[i] === 2) && board[i - BOARD_SIZE] === 0) {
@@ -101,7 +105,7 @@ module.exports = {
                     }
                 }
             }`),
-        ...K.EVENT_CHIP_SPEC(`'霜柱まで ' + (24 - history.length % 24) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'霜柱まで ' + ((P('frost_interval') || 24) - history.length % (P('frost_interval') || 24)) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            霜柱碁: 24手毎の早朝に霜柱が立ち、全石が上へ1段持ち上がる (上が空いていれば)<br>
             PC: クリックで配置<br>

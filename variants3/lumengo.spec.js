@@ -10,7 +10,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -67,7 +67,12 @@ module.exports = {
     icon: 'lumengo',
     spec: [
         ...K.rb('LUMENGO', '光彩碁', 'lumengo'),
-        // 光彩採点: 空点ごとに両色の光量を比較 (明るい側が5%以上優勢なら地)
+        K.params([
+            { key: 'lumen_margin', label: '地の確定マージン', min: 1, max: 1.4, def: 1.05, step: 0.05, hint: '光量比がこの倍率を超えたら地になる' },
+            { key: 'light_decay', label: '光の減衰指数', min: 1, max: 3, def: 2, step: 0.5, hint: '距離の何乗で光量が減るか' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 1.1, step: 0.05, hint: '交点数×倍率' },
+        ]),
+        // 光彩採点: 空点ごとに両色の光量を比較 (明るい側が優勢なら地)
         [K.ONE, CALCT, `        function calculateTerritory() {
             // 光彩モデル: 各空点への光量 L = Σ1/(d^2+1) を両色で比較
             const bx = [], wx = [];
@@ -81,10 +86,12 @@ module.exports = {
                 if (board[i] !== 0) continue;
                 const x = i % BOARD_SIZE, y = (i / BOARD_SIZE) | 0;
                 let lb = 0, lw = 0;
-                bx.forEach(([sx, sy]) => { const d2 = (sx - x) * (sx - x) + (sy - y) * (sy - y); lb += 1 / (d2 + 1); });
-                wx.forEach(([sx, sy]) => { const d2 = (sx - x) * (sx - x) + (sy - y) * (sy - y); lw += 1 / (d2 + 1); });
-                if (lb > lw * 1.05) blackTerritory++;
-                else if (lw > lb * 1.05) whiteTerritory++;
+                const pw = Math.max(1, P('light_decay') || 2);
+                bx.forEach(([sx, sy]) => { const d2 = Math.pow(Math.abs(sx - x), pw) + Math.pow(Math.abs(sy - y), pw); lb += 1 / (d2 + 1); });
+                wx.forEach(([sx, sy]) => { const d2 = Math.pow(Math.abs(sx - x), pw) + Math.pow(Math.abs(sy - y), pw); lw += 1 / (d2 + 1); });
+                const mg = Math.max(1, P('lumen_margin') || 1.05);
+                if (lb > lw * mg) blackTerritory++;
+                else if (lw > lb * mg) whiteTerritory++;
             }
             return { black: blackTerritory, white: whiteTerritory };
         }`],

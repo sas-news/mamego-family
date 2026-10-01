@@ -35,7 +35,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -51,6 +51,10 @@ module.exports = {
     icon: 'antcolonygo',
     spec: [
         ...K.rb('ANTCOLONYGO', '蟻群碁', 'antcolonygo'),
+        K.params([
+            { key: 'food_pts', label: '餌場の得点', min: 1, max: 12, def: 4, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.5, max: 2.2, def: 1.1, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...PERSIST('{ fed: {}, foodPts: { 1: 0, 2: 0 } }'),
         [K.ONE, `        function isValidPlacement(cells, player) {`,
 `        // 蟻群: 四隅の餌場
@@ -65,8 +69,8 @@ module.exports = {
                 const i0 = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
                 if (FOOD().includes(i0) && board[i0] === player && !st.fed[i0]) {
                     st.fed[i0] = player;
-                    st.foodPts[player] += 4;
-                    fxText(i0, '餌獲得+4', '#fb923c', 1300);
+                    st.foodPts[player] += (P('food_pts') || 4);
+                    fxText(i0, '餌獲得+' + (P('food_pts') || 4), '#fb923c', 1300);
                     fxBurst(i0, '#f97316', 10);
                 }
             }

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,15 +27,19 @@ module.exports = {
     icon: 'piergo',
     spec: [
         ...K.rb('PIERGO', '橋脚碁', 'piergo'),
+        K.params([{ key: 'pier_pos', label: '橋脚の位置', min: 0.1, max: 0.5, step: 0.02, def: 0.28, hint: '盤辺からの比率' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.8, def: 0.9, step: 0.05, hint: '交点数×倍率' }]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 橋脚: 川面に立つ5本の脚。その点の石は根を張って取られない
-        const PIER_SET = new Set();
-        {
+        let PIER_SET = new Set();
+        function rebuildPier() {
+            PIER_SET = new Set();
             const m = Math.floor(BOARD_SIZE / 2);
-            const q = Math.max(1, Math.round(BOARD_SIZE * 0.28));
+            const q = Math.max(1, Math.round(BOARD_SIZE * (P('pier_pos') || 0.28)));
             [[q, m], [m, q], [m, BOARD_SIZE - 1 - q], [BOARD_SIZE - 1 - q, m]]
                 .forEach(([x, y]) => PIER_SET.add(y * BOARD_SIZE + x));
-        }`],
+        }
+        rebuildPier();
+        function onVariantParam() { rebuildPier(); }`],
         // 橋脚の石は取られない — 捕獲走査から除外 (連もそこで切れる)
         [K.ONE, `                if (boardState[i] === player && !visited[i]) {`,
 `                if (boardState[i] === player && !visited[i] && !PIER_SET.has(i)) {`],

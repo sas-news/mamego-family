@@ -9,6 +9,9 @@ module.exports = {
     kind: 'sloth',
     spec: [
         ...K.rb('SLOTHGO', '遅滞碁', 'slothgo'),
+        K.params([
+            { key: 'recent_n', label: '封鎖する直近の手数', min: 1, max: 4, def: 2, unit: '手' },
+        ]),
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
                 if (p.x < 0 || p.x >= BOARD_SIZE || p.y < 0 || p.y >= BOARD_SIZE) return false;
                 if (board[p.y * BOARD_SIZE + p.x] !== 0) return false;
@@ -18,8 +21,9 @@ module.exports = {
             {
                 const recent = [];
                 if (lastMove && lastMove.cells.length > 0) recent.push(lastMove.cells[0]);
-                if (history.length > 0) {
-                    const lm = history[history.length - 1].lastMove;
+                const _rn = Math.max(1, (P('recent_n') || 2) - 1);
+                for (let k = history.length - 1; k >= 0 && recent.length <= _rn; k--) {
+                    const lm = history[k].lastMove;
                     if (lm && lm.cells.length > 0) recent.push(lm.cells[0]);
                 }
                 for (const m of recent) {
@@ -32,8 +36,9 @@ module.exports = {
             {
                 const rec = [];
                 if (lastMove && lastMove.cells.length > 0) rec.push(lastMove.cells[0]);
-                if (history.length > 0) {
-                    const lm = history[history.length - 1].lastMove;
+                const _rn2 = Math.max(1, (P('recent_n') || 2) - 1);
+                for (let k = history.length - 1; k >= 0 && rec.length <= _rn2; k--) {
+                    const lm = history[k].lastMove;
                     if (lm && lm.cells.length > 0) rec.push(lm.cells[0]);
                 }
                 ctx.save();

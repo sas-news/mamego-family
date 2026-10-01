@@ -10,14 +10,19 @@ module.exports = {
     icon: 'atollgo',
     spec: [
         ...K.rb('ATOLLGO', '環礁碁', 'atollgo'),
+        K.params([
+            { key: 'lagoon_r', label: '潟の半径', min: 0.05, max: 0.4, def: 0.19, step: 0.01, hint: '盤サイズ×係数' },
+            { key: 'ocean_r', label: '環礁の外径', min: 0.2, max: 0.55, def: 0.42, step: 0.01, hint: '盤サイズ×係数' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.6, def: 0.8, step: 0.05, hint: '交点数×倍率' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 環礁: 中心からの距離が [内径, 外径] の帯だけが陸地
         const ATOLL_C = (BOARD_SIZE - 1) / 2;
-        const ATOLL_R1 = BOARD_SIZE * 0.19; // 潟 (内側の海)
-        const ATOLL_R2 = BOARD_SIZE * 0.42; // 外洋
+        const ATOLL_R1 = () => BOARD_SIZE * (P('lagoon_r') || 0.19); // 潟 (内側の海)
+        const ATOLL_R2 = () => BOARD_SIZE * (P('ocean_r') || 0.42); // 外洋
         function isAtollLand(x, y) {
             const d = Math.hypot(x - ATOLL_C, y - ATOLL_C);
-            return d >= ATOLL_R1 && d <= ATOLL_R2;
+            return d >= ATOLL_R1() && d <= ATOLL_R2();
         }`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
@@ -38,7 +43,7 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.8))) {
                 endGameByScore();
                 return;
             }

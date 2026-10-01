@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('MOLDGO', '黴碁', 'moldgo'),
+        K.params([
+            { key: 'spread_prob', label: '増殖確率', min: 0.25, max: 1, def: 1, step: 0.05, hint: '孤立石1個につき増殖する確率' },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
@@ -22,6 +25,7 @@ module.exports = {
                 }
                 let spread = 0;
                 loners.forEach(l => {
+                    if (Math.random() >= (P('spread_prob') ?? 1)) return;
                     const spot = getNeighbors(l).find(n => board[n] === 0);
                     if (spot !== undefined) {
                         board[spot] = player; spread++;

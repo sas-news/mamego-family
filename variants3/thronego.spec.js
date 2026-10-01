@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -25,7 +25,7 @@ const WIN = `        // 昇殿勝利: 殿上5点 (中央3x3の十字形) の3点
             ];
             let n = 0;
             spots.forEach(([x, y]) => { if (board[y * BOARD_SIZE + x] === player) n++; });
-            return n >= 3;
+            return n >= (P('need') || 3);
         }`;
 module.exports = {
     file: 'thronego.html',
@@ -37,6 +37,10 @@ module.exports = {
     icon: 'thronego',
     spec: [
         ...K.rb('THRONEGO', '昇殿碁', 'thronego'),
+        K.params([
+            { key: 'need', label: '即位に必要な殿上箇所', min: 1, max: 5, def: 3, unit: '箇所' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 1.5, step: 0.1, def: 0.75, hint: '交点数比' },
+        ]),
         // 殿上判定関数を挿入 (winByRule と共に)
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + WIN + `
         function endGameByScore() {`],

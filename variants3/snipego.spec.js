@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'snipego',
     spec: [
         ...K.rb('SNIPEGO', '狙撃碁', 'snipego'),
+        K.params([
+            { key: 'snipe_pts', label: '撃墜のアゲハマ', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 狙撃的中: 狙われた点への着手は着弾せず撃墜される (狙撃手のアゲハマ+1)
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -56,7 +60,7 @@ module.exports = {
                 if ((st.snipe[3 - player] || -1) === pi) {
                     st.snipe[3 - player] = -1;
                     __sniped = true;
-                    captures[3 - player]++; // 撃墜された石は狙撃手のアゲハマ
+                    captures[3 - player] += (P('snipe_pts') ?? 1); // 撃墜された石は狙撃手のアゲハマ
                     fxBurst(pi, '#22d3ee', 12, 2.0);
                     fxText(pi, '狙撃!', '#22d3ee', 1300);
                     fxShake(4, 300);

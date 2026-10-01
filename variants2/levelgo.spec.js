@@ -9,6 +9,10 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('LEVELGO', '成長碁', 'levelgo'),
+        K.params([
+            { key: 'lv_gain', label: '成長量', min: 1, max: 3, def: 1, hint: '取った時に上がるレベル' },
+            { key: 'lv_bonus', label: 'レベル加点係数', min: 0, max: 3, def: 1, step: 0.5, hint: '終局時 (Lv-1)×係数が目に加算' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let levelMap = {}; // 石のレベル idx→Lv (取ると隣接自石がLvUP)`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -42,7 +46,7 @@ module.exports = {
                 captured.forEach(idx => {
                     getNeighbors(idx).forEach(n => {
                         if (board[n] === player) {
-                            levelMap[n] = (levelMap[n] || 1) + 1;
+                            levelMap[n] = (levelMap[n] || 1) + (P('lv_gain') || 1);
                             fxGlow(n, 'rgba(245,215,110,0.95)', 700);
                             fxText(n, 'LvUP', '#eab308', 900);
                         }
@@ -55,7 +59,7 @@ module.exports = {
             }`],
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
-`            const levelBonus = (p) => { let s = 0; for (const k in levelMap) { if (board[k] === p) s += (levelMap[k] || 1) - 1; } return s; };
+`            const levelBonus = (p) => { let s = 0; for (const k in levelMap) { if (board[k] === p) s += ((levelMap[k] || 1) - 1) * (P('lv_bonus') || 1); } return s; };
             const blackTotal = territory.black + captures[1] + levelBonus(1);
             const whiteTotal = territory.white + captures[2] + komi + levelBonus(2);`],
         ...K.STONE_MARKS_SPEC(`            // Lv2以上の石にレベル数を描く

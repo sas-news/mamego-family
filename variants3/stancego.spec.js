@@ -47,6 +47,10 @@ module.exports = {
     icon: 'stancego',
     spec: [
         ...K.rb('STANCEGO', '駆引碁', 'stancego'),
+        K.params([
+            { key: 'thrust_mul', label: '突き・相討ちの倍率', min: 1, max: 4, def: 2 },
+            { key: 'ukemi_pts', label: '受け流しのボーナス', min: 0, max: 5, def: 1, unit: '点' },
+        ]),
         ...ST(ST_INIT),
         // 構えの組合せ: 強vs弱=突き(2倍) / 強vs強=相討ち(2倍+自石1つ代償) / 弱vs強=受け流し(+1) / 弱vs弱=通常
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
@@ -55,9 +59,9 @@ module.exports = {
                 const mine = st.stance[player], theirs = st.stance[opponent];
                 let gain = captured.length;
                 let note = '';
-                if (mine === 1 && theirs === 0) { gain += captured.length; note = '突き!'; }
+                if (mine === 1 && theirs === 0) { gain += captured.length * ((P('thrust_mul') || 2) - 1); note = '突き!'; }
                 else if (mine === 1 && theirs === 1) {
-                    gain += captured.length; note = '相討ち!';
+                    gain += captured.length * ((P('thrust_mul') || 2) - 1); note = '相討ち!';
                     // 無謀な突進の代償: 自分の石も1つ取られる
                     const own = [];
                     board.forEach((v, i) => { if (v === player) own.push(i); });
@@ -67,7 +71,7 @@ module.exports = {
                         captures[opponent]++;
                     }
                 }
-                else if (mine === 0 && theirs === 1) { gain += 1; note = '受け流し!'; }
+                else if (mine === 0 && theirs === 1) { gain += (P('ukemi_pts') ?? 1); note = '受け流し!'; }
                 captures[player] += gain;
                 if (note) fxText(move.cells[0].y * BOARD_SIZE + move.cells[0].x, note, '#f43f5e', 1200);
                 soundManager.playCapture();

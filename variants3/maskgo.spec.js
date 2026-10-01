@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'maskgo',
     spec: [
         ...K.rb('MASKGO', '覆面碁', 'maskgo'),
+        K.params([
+            { key: 'mask_turns', label: '覆面の手数', min: 1, max: 12, def: 4, hint: '置いてから覆面が剥がれるまでの手数' },
+            { key: 'cap_ratio', label: '打ち切り手数', min: 0.5, max: 2.5, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 覆面: 配置した石に覆面がかかる (4手で剥がれる)
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -61,7 +65,7 @@ module.exports = {
             Object.keys(st.mask || {}).forEach(k => {
                 const i = +k;
                 if (board[i] !== 1 && board[i] !== 2) { delete st.mask[i]; return; }
-                if (history.length - st.mask[i] >= 4) { fxGlow(i, '#facc15', 500); delete st.mask[i]; }
+                if (history.length - st.mask[i] >= Math.max(1, P('mask_turns') || 4)) { fxGlow(i, '#facc15', 500); delete st.mask[i]; }
             });
 
             turn = opponent;`],

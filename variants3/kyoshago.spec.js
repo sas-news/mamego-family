@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_factor') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'kyoshago',
     spec: [
         ...K.rb('KYOSHAGO', '香車碁', 'kyoshago'),
+        K.params([
+            { key: 'lance_interval', label: '香車が出る間隔', min: 2, max: 15, def: 6, unit: '手' },
+            { key: 'cap_factor', label: '打ち切り手数係数', min: 0.4, max: 2.5, def: 0.9, step: 0.05, hint: '交点数×この係数で強制終局' },
+        ]),
         ...ST(ST_INIT),
         // 香車: 6手ごとの着手が香車。敵陣方向1レイで最初の孤立敵石を取る
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -57,7 +61,7 @@ module.exports = {
                 st.placed[player] = (st.placed[player] || 0) + 1;
                 const __p = move.cells[0];
                 const __pi = __p.y * BOARD_SIZE + __p.x;
-                if (st.placed[player] % 6 === 0) {
+                if (st.placed[player] % Math.max(1, P('lance_interval') || 6) === 0) {
                     st.lance[__pi] = 1;
                     const __e = BOARD_SIZE - 1;
                     const __dy = player === 1 ? 1 : -1; // 黒は下へ、白は上へ

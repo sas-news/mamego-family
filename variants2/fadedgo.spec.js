@@ -9,11 +9,16 @@ module.exports = {
     kind: 'fade',
     spec: [
         ...K.rb('FADEDGO', '褪色碁', 'fadedgo'),
+        K.params([
+            { key: 'fade_rate', label: '褪色の速さ', min: 0.02, max: 0.2, def: 0.07, step: 0.01, hint: '1手ごとの濃さ低下' },
+            { key: 'fade_min', label: '褪色の下限', min: 0.1, max: 0.6, def: 0.22, step: 0.02 },
+            { key: 'ring_age', label: '年輪マークの出る手数', min: 5, max: 40, def: 11, unit: '手' },
+        ]),
         [K.ONE, '        function drawBoardElements(padding, cellSize) {',
 `        // 褪色碁: 置いてから時間が経つほど石は薄くなる (下限0.22)
         function fadeAlpha(pc) {
             const age = pc.at === undefined ? 99 : history.length - pc.at;
-            return Math.max(0.22, 1 - age * 0.07);
+            return Math.max(P('fade_min') || 0.22, 1 - age * (P('fade_rate') || 0.07));
         }
 
         function drawBoardElements(padding, cellSize) {`],
@@ -34,7 +39,7 @@ module.exports = {
                 ctx.setLineDash([cellSize * 0.07, cellSize * 0.07]);
                 ctx.lineWidth = Math.max(1.1, cellSize * 0.04);
                 pieces.forEach(pc => {
-                    if (pc.at === undefined || history.length - pc.at < 11) return;
+                    if (pc.at === undefined || history.length - pc.at < Math.max(1, P('ring_age') || 11)) return;
                     pc.cells.forEach(p => {
                         if (board[p.y * BOARD_SIZE + p.x] === 0) return;
                         ctx.beginPath();

@@ -9,6 +9,10 @@ module.exports = {
     kind: 'jackpot',
     spec: [
         ...K.rb('JACKPOTGO', '百倍碁', 'jackpotgo'),
+        K.params([
+            { key: 'mult_step', label: '倍率上昇幅', min: 1, max: 3, def: 1 },
+            { key: 'mult_max', label: '倍率上限', min: 2, max: 20, def: 9 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let mult = { 1: 1, 2: 1 }; // 取り倍率 (連続キャプチャで+1)`],
         [K.ONE, K.RESET_HELD, `            heldPieces = { 1: null, 2: null };
@@ -43,7 +47,7 @@ module.exports = {
                     fxShake(4, 280);
                     fxText(ci, 'JACKPOT ×' + mult[player] + '!', '#facc15', 1300);
                 }
-                mult[player] = Math.min(mult[player] + 1, 9);        // 連続キャプチャで倍率上昇
+                mult[player] = Math.min(mult[player] + (P('mult_step') || 1), P('mult_max') || 9); // 連続キャプチャで倍率上昇
                 soundManager.playCapture();
                 cleanUpPieces();
             } else {

@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'capego',
     spec: [
         ...K.rb('CAPEGO', '岬碁', 'capego'),
+        K.params([
+            { key: 'cape_pt', label: '岬の制海点', min: 1, max: 5, def: 2, unit: '点' },
+            { key: 'cape_liberty', label: '岬の呼吸ボーナス', min: 1, max: 3, def: 1 },
+            { key: 'cap_ratio', label: '打ち切り手数係数', min: 0.4, max: 1.5, def: 0.9, step: 0.05, hint: '交点数×この値で強制採点' },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 海と岬: 盤の外周全てが海。四辺の中央だけが突出した岬 (唯一の外周立地)
@@ -75,7 +80,7 @@ module.exports = {
 
                     if (!hasLiberty) {`,
 `                        });
-                        if (CAPE_TIP.has(curr)) liberties++; // 岬の石は波に強い
+                        if (CAPE_TIP.has(curr)) liberties += (P('cape_liberty') || 1); // 岬の石は波に強い
                     }
 
                     if (liberties <= 0) {`],
@@ -83,7 +88,7 @@ module.exports = {
             }
             return liberties;`,
 `                });
-                if (CAPE_TIP.has(curr)) liberties++; // 岬の石は波に強い
+                if (CAPE_TIP.has(curr)) liberties += (P('cape_liberty') || 1); // 岬の石は波に強い
             }
             return liberties;`],
         // 制海: 岬に置くと+2点
@@ -92,9 +97,9 @@ module.exports = {
             move.cells.forEach(p => {
                 const ti = p.y * BOARD_SIZE + p.x;
                 if (CAPE_TIP.has(ti)) {
-                    st.score[player] += 2;
+                    st.score[player] += (P('cape_pt') || 2);
                     fxGlow(ti, '#38bdf8', 900);
-                    fxText(ti, '制海+2', '#38bdf8', 1200);
+                    fxText(ti, '制海+' + (P('cape_pt') || 2), '#38bdf8', 1200);
                 }
             });`],
         // 海の描画 + 岬の旗印

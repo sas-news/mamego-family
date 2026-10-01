@@ -9,10 +9,11 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('PONDGO', '池庭碁', 'pondgo'),
+        K.params([{ key: 'pond_ratio', label: '池の大きさ', min: 0.5, max: 2, step: 0.05, def: 1, hint: '盤幅の1/4を1とする' }]),
         // 中央に正方形の池
         [K.ONE, K.RESET_BOARD, `            board = Array(BOARD_SIZE * BOARD_SIZE).fill(0);
             {
-                const c = Math.floor(BOARD_SIZE / 2), k = Math.floor(BOARD_SIZE / 4);
+                const c = Math.floor(BOARD_SIZE / 2), k = Math.floor(BOARD_SIZE / 4 * (P('pond_ratio') || 1));
                 for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                     if (Math.abs(x - c) <= k && Math.abs(y - c) <= k) board[y * BOARD_SIZE + x] = 3;
                 }

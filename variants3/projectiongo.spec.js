@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -75,13 +75,14 @@ module.exports = {
     icon: 'projectiongo',
     spec: [
         ...K.rb('PROJECTIONGO', '投影碁', 'projectiongo'),
+        K.params([{ key: 'light_every', label: '光源の回転間隔', min: 4, max: 40, def: 16, unit: '手' }, { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 1.5, def: 0.75, step: 0.05, hint: '交点数×倍率' }]),
         ...ST(ST_INIT),
         // 着手毎に影を再投影 + 16手毎に光源が回転
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 光源回転: 16手ごとに影の落ちる向きが変わる
-            if (history.length > 0 && history.length % 16 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('light_every') || 16) === 0) {
                 st.light = (st.light + 1) % 4;
                 fxText(Math.floor(BOARD_SIZE / 2) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2), '光が回る', '#fde68a', 1300);
             }
@@ -91,7 +92,7 @@ module.exports = {
 
             turn = opponent;`],
         // 影石の描画補助 (取られた影の掃除は reproject と cleanUpPieces が担う)
-        ...K.EVENT_CHIP_SPEC(`'光源 ' + ['北', '東', '南', '西'][st.light] + ' 残 ' + (16 - history.length % 16) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'光源 ' + ['北', '東', '南', '西'][st.light] + ' 残 ' + ((P('light_every') || 16) - history.length % (P('light_every') || 16)) + '手'`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            投影碁: 全ての石が光と反対側のマスに影石を落とす。光源は16手毎に回る<br>
             PC: クリックで配置<br>

@@ -47,6 +47,9 @@ module.exports = {
     icon: 'scrapgo',
     spec: [
         ...K.rb('SCRAPGO', '再資源碁', 'scrapgo'),
+        K.params([
+            { key: 'scrap_cost', label: '再生石の錬成コスト', min: 1, max: 8, def: 3, unit: '個' },
+        ]),
         ...ST(ST_INIT),
         // スクラップ: 取られた側がアゲハマの数だけ資材を得る
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
@@ -95,8 +98,8 @@ module.exports = {
         btnRecycle.addEventListener('click', () => {
             soundManager.playClick();
             if (gameOver || gamePhase !== 'playing' || !isMyTurn()) return;
-            if (st.armed[turn] || st.scrap[turn] < 3) return;
-            st.scrap[turn] -= 3;
+            if (st.armed[turn] || st.scrap[turn] < Math.max(1, P('scrap_cost') || 3)) return;
+            st.scrap[turn] -= Math.max(1, P('scrap_cost') || 3);
             st.armed[turn] = true;
             render();
             updateUI();

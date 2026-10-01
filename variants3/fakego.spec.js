@@ -11,13 +11,13 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('ply_cap') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
             }`],
 ];
-const ST_INIT = `{ fake: { 1: -1, 2: -1 }, first: { 1: true, 2: true } }`;
+const ST_INIT = `{ fake: { 1: -1, 2: -1 }, cnt: { 1: 0, 2: 0 } }`;
 const ST = (init) => [
     [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `\n        let st = ${init};`],
     [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `\n            st = ${init};`],
@@ -47,16 +47,20 @@ module.exports = {
     icon: 'fakego',
     spec: [
         ...K.rb('FAKEGO', '偽石碁', 'fakego'),
+        K.params([
+            { key: 'fake_move', label: '偽石になる着手', options: [{ v: 1, l: '1手目' }, { v: 2, l: '2手目' }, { v: 3, l: '3手目' }, { v: 5, l: '5手目' }], def: 1 },
+            { key: 'ply_cap', label: '打ち切り手数', min: 0.4, max: 3, def: 0.75, step: 0.05, hint: '交点数×倍率' },
+        ]),
         ...ST(ST_INIT),
         // 偽石: 各側の最初の着手は偽石。取られてもアゲハマにならず、その時点で正体が暴かれる
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
 `            move.cells.forEach(cell => {
                 board[cell.y * BOARD_SIZE + cell.x] = player;
-                if (st.first[player]) {
-                    st.first[player] = false;
-                    st.fake[player] = cell.y * BOARD_SIZE + cell.x;
-                }
-            });`],
+            });
+            st.cnt[player] = (st.cnt[player] || 0) + 1;
+            if (st.cnt[player] === Math.max(1, P('fake_move') || 1) && st.fake[player] < 0) {
+                st.fake[player] = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
+            }`],
         [K.ONE, K.CAPTURE_BLOCK, `            let captured = getCapturedStones(board, opponent);
             let exposed = false;
             if (captured.length > 0 && captured.includes(st.fake[opponent])) {
@@ -89,7 +93,7 @@ module.exports = {
                     ctx.restore();
                 }
             })`),
-        ...K.EVENT_CHIP_SPEC(`st.first[turn] ? '最初の石は偽石' : ''`),
+        ...K.EVENT_CHIP_SPEC(`(st.cnt[turn] || 0) < (P('fake_move') || 1) ? (P('fake_move') || 1) + '手目の石は偽石' : ''`),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, `            偽石碁: 各側の最初の石は偽物。取られると正体が暴かれ、取った側はアゲハマにならない<br>
             PC: クリックで配置<br>
