@@ -92,6 +92,18 @@
         .fav-star.faved { color: #f59e0b; opacity: 1; text-shadow: 0 0 9px rgba(251, 191, 36, .85); }
         #favFilterBtn.fav-on { background: #f59e0b; color: #fff7ed; border-color: #d97706; }
         #favFilterBtn.fav-on > span:first-child { color: #fff7ed; }
+        #backToTop {
+            position: fixed; right: 16px; bottom: 16px; z-index: 30;
+            width: 52px; height: 52px; border-radius: 9999px;
+            background: linear-gradient(180deg, #fbbf24, #d97706);
+            color: #fff7ed; font-size: 22px; font-weight: 800;
+            border: 3px solid #92400e; box-shadow: 0 4px 0 #92400e, 0 8px 20px rgba(146, 64, 14, .45);
+            opacity: 0; pointer-events: none; transform: translateY(12px);
+            transition: opacity .25s, transform .25s;
+        }
+        #backToTop.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        #backToTop:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #92400e, 0 12px 26px rgba(146, 64, 14, .5); }
+        #backToTop:active { transform: translateY(1px); box-shadow: 0 2px 0 #92400e; }
         .roulette-dice { display: inline-block; }
         #spinBtn.spinning .roulette-dice { animation: diceShake .5s linear infinite; }
         @keyframes diceShake {
@@ -135,6 +147,9 @@
         <!-- 全ゲーム一覧 -->
         <div id="gameGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
         <p id="gameNoResults" class="hidden w-full text-center text-sm opacity-60 py-6">該当する囲碁がありません</p>
+
+        <!-- 一番上に戻る -->
+        <button id="backToTop" type="button" title="一番上に戻る" aria-label="一番上に戻る">↑</button>
 
         <!-- MAMEGO (原作) -->
         <a href="https://cerevisiae-fii.github.io/mamego/" class="group w-full bg-white/60 hover:bg-white/90 rounded-2xl border border-dashed border-[#cbb07a] transition-all p-4 flex items-center gap-4">
@@ -9764,6 +9779,13 @@ seg(5,0.8,4.5,2.4,'#60a5fa',1.5);
         document.getElementById('closeBtn').addEventListener('click', hideResult);
         document.getElementById('resultBackdrop').addEventListener('click', hideResult);
         document.addEventListener('keydown', e => { if (e.key === 'Escape') hideResult(); });
+
+        // ---- 一番上に戻る ----
+        const backToTop = document.getElementById('backToTop');
+        const updateTopBtn = () => backToTop.classList.toggle('show', window.scrollY > 500);
+        window.addEventListener('scroll', updateTopBtn, { passive: true });
+        updateTopBtn();
+        backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
     </script>
 </body>
 </html>
