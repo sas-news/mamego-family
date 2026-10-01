@@ -1,10 +1,9 @@
-import json, re, os
+import json, re, os, asyncio
 
 REPO = "sas-news/mamego-family"
 BRANCH = "devin/params-all"
-
-# バッチ構成をビルド: variants2+variants3 の spec を45個ずつ + gen_variants.js (wave1) を54個ずつ
 _repo = "/home/ubuntu/repos/mamego-family"
+
 spec_files = sorted(os.path.basename(f)[:-8]
     for f in os.listdir(f"{_repo}/variants2") + os.listdir(f"{_repo}/variants3")
     if f.endswith('.spec.js'))
@@ -45,7 +44,7 @@ COMMON = """## 目的
 
 ## 注意
 - spec フォーマット: spec は [モード, アンカー, 置換テキスト] のタプル列。K.params() はタプルを1個返すので spec 配列にそのまま挿入する。
-- `K.params` はモジュール関数 (destructure不要、`K.params(...)` と書く)。
+- `K.params` はモジュール関数 (destructure不要、`K.params(...)` と書く)。wave1 (gen_variants.js) でも `K.params(...)` と書くこと。
 - P() は使用点で呼ぶ。`const X = P('x')` をトップレベルでやると設定変更が反映されないので避ける (起動時値で固定される)。実行時評価される場所 (関数内・着手処理内) で呼ぶこと。
 - 設定UIは min/max/step のスライダーまたは options セレクトのみ。自由テキスト入力は不可。
 """
@@ -64,30 +63,42 @@ def prompt_for(bid, info):
 
 結果は structured output で: batch="{bid}", pushed=true/false, done=[パラメータ化できたfile名], skipped=[諦めたfile名+理由], notes=留意点。"""
 
-register_workflow({
+META = {
     "name": "params-fanout",
     "description": "全バリアントに VPARAMS 設定パラメータを子セッション並列で追加 (20 spec×45 + 2 wave1×54)",
+    "product": REPO,
+    "soft_time_limit_minutes": 60,
     "phases": [
-        {"id": "implement", "label": "params", "agent_count": len(batches),
+        {"title": "implement", "detail": "各バッチのバリアントへ K.params + P() パラメータ化→生成→sim検証→push",
+         "count": len(batches),
          "labels": list(batches.keys())},
     ],
-    "outputs": SCHEMA,
-})
+}
 
 async def run_batch(bid, info):
     try:
-        r = await agent(prompt_for(bid, info),
-                        label=bid, phase="implement",
-                        structured_output_schema=SCHEMA,
-                        soft_time_limit_minutes=60)
+        r = await agent(
+            prompt_for(bid, info),
+            phase="implement",
+            schema=SCHEMA,
+            label=bid,
+            repos=[REPO],
+        )
         log(f"{bid}: pushed={r['pushed']} done={len(r['done'])} skipped={len(r['skipped'])}")
         return r
-    except Exception as e:
+    except WorkflowAgentError as e:
         log(f"{bid}: agent failed — {e}")
-        return {"batch": bid, "pushed": False, "done": [], "skipped": info["files"], "notes": str(e)}
+        return {"batch": bid, "pushed": False, "done": [], "skipped": info["files"],
+                "notes": f"agent error: {e}"}
 
 async def main():
+    await register_workflow(META)
     log(f"batches: {json.dumps({b: len(v['files']) for b, v in batches.items()})}")
     results = await parallel([(lambda b=b, v=v: run_batch(b, v)) for b, v in batches.items()])
     total = sum(len(r["done"]) for r in results)
     log(f"DONE. parametrized: {total}")
+    for r in results:
+        if r["skipped"]:
+            log(f"  {r['batch']} skipped: {r['skipped']}")
+
+asyncio.run(main())
