@@ -76,20 +76,29 @@ META = {
 }
 
 async def run_batch(bid, info):
-    try:
-        r = await agent(
-            prompt_for(bid, info),
-            phase="implement",
-            schema=SCHEMA,
-            label=bid,
-            repos=[REPO],
-        )
-        log(f"{bid}: pushed={r['pushed']} done={len(r['done'])} skipped={len(r['skipped'])}")
-        return r
-    except WorkflowAgentError as e:
-        log(f"{bid}: agent failed — {e}")
-        return {"batch": bid, "pushed": False, "done": [], "skipped": info["files"],
-                "notes": f"agent error: {e}"}
+    # 同時起動上限(429)に当たったら空きが出るまでバックオフ再試行
+    for attempt in range(40):
+        try:
+            r = await agent(
+                prompt_for(bid, info),
+                phase="implement",
+                schema=SCHEMA,
+                label=bid,
+                repos=[REPO],
+            )
+            log(f"{bid}: pushed={r['pushed']} done={len(r['done'])} skipped={len(r['skipped'])}")
+            return r
+        except WorkflowAgentError as e:
+            msg = str(e)
+            if '429' in msg or 'Too Many' in msg:
+                await asyncio.sleep(90 + (hash(bid) % 60))
+                continue
+            log(f"{bid}: agent failed — {e}")
+            return {"batch": bid, "pushed": False, "done": [], "skipped": info["files"],
+                    "notes": f"agent error: {e}"}
+    log(f"{bid}: gave up after retries")
+    return {"batch": bid, "pushed": False, "done": [], "skipped": info["files"],
+            "notes": "429 retry budget exhausted"}
 
 async def main():
     await register_workflow(META)
