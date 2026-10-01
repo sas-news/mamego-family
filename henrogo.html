@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"win_sites","label":"満願に必要な札所数","min":2,"max":8,"def":8,"unit":"か所"},{"key":"step_bonus","label":"札所1か所の得点","min":0,"max":5,"def":1,"unit":"点"},{"key":"cap_ratio","label":"打ち切り手数 (交点比)","min":0.3,"max":1.5,"def":0.75,"step":0.05}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1816,7 +1816,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1874,14 +1874,14 @@
             {
                 const sites = henroSites();
                 const cell = move.cells[0];
-                if (st.step[player] < 8) {
+                if (st.step[player] < Math.min(8, P('win_sites') || 8)) {
                     const nxt = sites[st.step[player]];
                     if (cell.x === nxt.x && cell.y === nxt.y) {
                         st.step[player]++;
                         const i = cell.y * BOARD_SIZE + cell.x;
                         fxGlow(i, '#fda4af', 900);
                         fxText(i, '第' + st.step[player] + '番', '#fb7185', 1200);
-                        if (st.step[player] >= 8) {
+                        if (st.step[player] >= Math.min(8, P('win_sites') || 8)) {
                             winByRule(player, '満願勝ち', '8札所を全て巡り満願しました');
                             return;
                         }
@@ -2262,8 +2262,8 @@
             gameOver = true;
             const territory = calculateTerritory();
 
-            const blackTotal = territory.black + captures[1] + st.step[1];
-            const whiteTotal = territory.white + captures[2] + komi + st.step[2];
+            const blackTotal = territory.black + captures[1] + st.step[1] * (P('step_bonus') || 1);
+            const whiteTotal = territory.white + captures[2] + komi + st.step[2] * (P('step_bonus') || 1);
             const diff = Math.abs(blackTotal - whiteTotal);
 
             let winnerTitle = '';
@@ -2785,7 +2785,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('札所: 黒' + st.step[1] + '/8 白' + st.step[2] + '/8');
+                const et = gameOver ? '' : ('札所: 黒' + st.step[1] + '/' + Math.min(8, P('win_sites') || 8) + ' 白' + st.step[2] + '/' + Math.min(8, P('win_sites') || 8));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

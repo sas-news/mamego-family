@@ -35,7 +35,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -64,6 +64,12 @@ module.exports = {
     icon: 'hashirago',
     spec: [
         ...K.rb('HASHIRAGO', '柱間碁', 'hashirago'),
+        K.params([
+            { key: 'min_dist', label: '加点に必要な柱間の距離', min: 1, max: 6, def: 2, unit: '点' },
+            { key: 'beam_cap', label: '方向あたりの得点上限', min: 1, max: 8, def: 3, unit: '目' },
+            { key: 'total_cap', label: '1手の合計上限', min: 1, max: 16, def: 4, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST(ST_INIT, '', ''),
         [K.ONE, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -80,12 +86,12 @@ module.exports = {
                     if (x < 0 || y < 0 || x >= BOARD_SIZE || y >= BOARD_SIZE) break;
                     const v = board[y * BOARD_SIZE + x];
                     if (v !== 0) {
-                        if (v === player && s >= 2) hPts += Math.min(s - 1, 3);
+                        if (v === player && s >= (P('min_dist') || 2)) hPts += Math.min(s - (P('min_dist') || 2) + 1, P('beam_cap') || 3);
                         break;
                     }
                 }
             });
-            st.score[player] += Math.min(hPts, 4);
+            st.score[player] += Math.min(hPts, P('total_cap') || 4);
 
             turn = opponent;`],
         ...K.STONE_MARKS_SPEC(`            // 柱間: 直線上で見える自石同士を細い梁で結ぶ

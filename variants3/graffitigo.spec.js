@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'graffitigo',
     spec: [
         ...K.rb('GRAFFITIGO', '落書碁', 'graffitigo'),
+        K.params([
+            { key: 'clean_bonus', label: '消去ボーナス', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.3, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 補助関数をページスコープへ注入
         [K.ONE, `        function executeMove(move, player) {`, `        // 落書きが散らばる点 (固定)
@@ -87,16 +91,16 @@ const GRAFFITI = [
                 getNeighbors(pi).forEach(n => {
                     if (!st.cleaned[n] && GRAFFITI.includes(n)) {
                         st.cleaned[n] = 1;
-                        captures[player]++;
+                        captures[player] += (P('clean_bonus') || 1);
                         wiped++;
-                        fxText(n, '消去 +1', '#60a5fa', 1000);
+                        fxText(n, '消去 +' + (P('clean_bonus') || 1), '#60a5fa', 1000);
                     }
                 });
                 if (GRAFFITI.includes(pi) && !st.cleaned[pi]) {
                     st.cleaned[pi] = 1;
-                    captures[player]++;
+                    captures[player] += (P('clean_bonus') || 1);
                     wiped++;
-                    fxText(pi, '消去 +1', '#60a5fa', 1000);
+                    fxText(pi, '消去 +' + (P('clean_bonus') || 1), '#60a5fa', 1000);
                 }
                 if (wiped) fxSplash(pi, '#60a5fa', 8);
             }

@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,10 @@ module.exports = {
     icon: 'hijackgo',
     spec: [
         ...K.rb('HIJACKGO', '逆手碁', 'hijackgo'),
+        K.params([
+            { key: 'counter_count', label: '反撃で置ける石の数', min: 1, max: 3, def: 1, unit: '個' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.3, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 逆手: 相手が仕掛けた点に打つと、隣接空点に反撃の自石を無料で配置
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -59,10 +63,11 @@ module.exports = {
                     st.trap[3 - player] = -1;
                     const free = getNeighbors(ti).filter(n => board[n] === 0);
                     if (free.length > 0) {
-                        const ci = free[0];
-                        board[ci] = 3 - player; // 仕掛けた側の反撃石
+                        free.slice(0, Math.max(1, P('counter_count') || 1)).forEach(ci => {
+                            board[ci] = 3 - player; // 仕掛けた側の反撃石
+                            fxText(ci, '逆手!', '#fb923c', 1200);
+                        });
                         fxBurst(ti, '#fb923c', 10, 1.8);
-                        fxText(ci, '逆手!', '#fb923c', 1200);
                     } else {
                         // 反撃の余地がない (四方敵石) — 相手の石ごと捕まえる
                         board[ti] = 0;

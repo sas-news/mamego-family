@@ -9,6 +9,9 @@ module.exports = {
     kind: 'crown',
     spec: [
         ...K.rb('HILLGO', '丘陵碁', 'hillgo'),
+        K.params([
+            { key: 'hill_range', label: '丘の広さ (天元からの距離)', min: 0, max: 4, def: 0, unit: '点', hint: '0=天元1点のみ' },
+        ]),
         // winByRule() を追加
         [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
         function endGameByScore() {`],
@@ -16,12 +19,19 @@ module.exports = {
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 丘陵ルール: 天元を自分の石で占めていれば即勝利
+            // 丘陵ルール: 天元 (設定で広めも可) を自分の石で占めていれば即勝利
             {
-                const center = Math.floor(BOARD_SIZE / 2) * BOARD_SIZE + Math.floor(BOARD_SIZE / 2);
-                if (board[center] === player) {
-                    fxGlow(center, '#facc15', 950);
-                    fxText(center, '丘制圧!', '#facc15', 1400);
+                const cc = Math.floor(BOARD_SIZE / 2);
+                const hr = Math.max(0, P('hill_range') ?? 0);
+                let hill = -1;
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== player) continue;
+                    const hx2 = i % BOARD_SIZE, hy2 = Math.floor(i / BOARD_SIZE);
+                    if (Math.abs(hx2 - cc) + Math.abs(hy2 - cc) <= hr) { hill = i; break; }
+                }
+                if (hill >= 0) {
+                    fxGlow(hill, '#facc15', 950);
+                    fxText(hill, '丘制圧!', '#facc15', 1400);
                     fxShake(6, 360);
                     winByRule(player, '丘占拠勝ち', '天元の丘を占拠しました'); return;
                 }

@@ -10,6 +10,10 @@ module.exports = {
     icon: 'guerrillago',
     spec: [
         ...K.rb('GUERRILLAGO', '遊撃碁', 'guerrillago'),
+        K.params([
+            { key: 'raid_count', label: '遊撃兵1人の襲撃数', min: 1, max: 4, def: 1, unit: '個' },
+            { key: 'cap_moves', label: '打ち切り手数', min: 50, max: 500, def: 140, step: 10, unit: '手' },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { guer: [] }; // 遊撃兵: {i:盤面idx, owner} — 持ち主の次手番の最初に襲撃`],
         [K.ONE, K.RESET_BOARD, K.RESET_BOARD + `
@@ -52,20 +56,20 @@ module.exports = {
                 let hit = false;
                 st.guer.forEach(g => {
                     if (g.owner !== opponent || board[g.i] !== g.owner) return;
-                    const vic = getNeighbors(g.i).find(n => board[n] === player);
-                    if (vic != null) {
+                    const vics = getNeighbors(g.i).filter(n => board[n] === player).slice(0, Math.max(1, P('raid_count') || 1));
+                    vics.forEach(vic => {
                         board[vic] = 0; captures[g.owner]++;
                         fxBurst(vic, '#f97316', 9, 1.6);
                         fxText(g.i, '遊撃!', '#fb923c', 1000);
                         hit = true;
-                    }
+                    });
                 });
                 st.guer = st.guer.filter(g => g.owner !== opponent && board[g.i] === g.owner);
                 if (hit) { fxShake(4, 260); cleanUpPieces(); }
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,

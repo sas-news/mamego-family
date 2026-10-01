@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -25,7 +25,7 @@ const YAKU_FN = `        // 手役: 3連以上の並び +(長さ-2)、2×2ブロ
                 let run = 0;
                 for (let x = 0; x <= BOARD_SIZE; x++) {
                     if (x < BOARD_SIZE && board[y * BOARD_SIZE + x] === pl) { run++; continue; }
-                    if (run >= 3) bonus += run - 2;
+                    if (run >= (P('run_min') || 3)) bonus += run - ((P('run_min') || 3) - 1);
                     run = 0;
                 }
             }
@@ -34,7 +34,7 @@ const YAKU_FN = `        // 手役: 3連以上の並び +(長さ-2)、2×2ブロ
                 let run = 0;
                 for (let y = 0; y <= BOARD_SIZE; y++) {
                     if (y < BOARD_SIZE && board[y * BOARD_SIZE + x] === pl) { run++; continue; }
-                    if (run >= 3) bonus += run - 2;
+                    if (run >= (P('run_min') || 3)) bonus += run - ((P('run_min') || 3) - 1);
                     run = 0;
                 }
             }
@@ -43,7 +43,7 @@ const YAKU_FN = `        // 手役: 3連以上の並び +(長さ-2)、2×2ブロ
                 for (let x = 0; x + 1 < BOARD_SIZE; x++) {
                     if (board[y * BOARD_SIZE + x] === pl && board[y * BOARD_SIZE + x + 1] === pl &&
                         board[(y + 1) * BOARD_SIZE + x] === pl && board[(y + 1) * BOARD_SIZE + x + 1] === pl) {
-                        bonus += 3;
+                        bonus += (P('block_bonus') || 3);
                     }
                 }
             }
@@ -60,6 +60,11 @@ module.exports = {
     icon: 'handrankgo',
     spec: [
         ...K.rb('HANDRANKGO', '手役碁', 'handrankgo'),
+        K.params([
+            { key: 'run_min', label: '役になる連の長さ', min: 2, max: 6, def: 3, unit: '連' },
+            { key: 'block_bonus', label: '2×2ブロックの得点', min: 0, max: 10, def: 3, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.3, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         [K.ONE, '        function updateUI() {', YAKU_FN + `
         function updateUI() {`],
         // 終局時: 役ボーナスを合計に加算

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"need_stamps","label":"満願成就に必要な朱印数","min":2,"max":9,"def":5,"unit":"個"},{"key":"cap_ratio","label":"打ち切り手数 (交点比)","min":0.3,"max":1.5,"def":0.75,"step":0.05}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1818,7 +1818,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1877,7 +1877,7 @@
                 if (stars.includes(pi) && !st.got[player].includes(pi)) {
                     st.got[player].push(pi);
                     fxGlow(pi, '#dc2626', 1200);
-                    if (st.got[player].length >= 5) {
+                    if (st.got[player].length >= (P('need_stamps') || 5)) {
                         gameOver = true;
                         fxText(pi, '満願成就!', '#dc2626', 1600);
                         endGameByScore();
@@ -2759,7 +2759,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('御朱印 ' + st.got[turn].length + '/5');
+                const et = gameOver ? '' : ('御朱印 ' + st.got[turn].length + '/' + (P('need_stamps') || 5));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

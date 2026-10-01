@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'handcuffgo',
     spec: [
         ...K.rb('HANDCUFFGO', '手錠碁', 'handcuffgo'),
+        K.params([
+            { key: 'cuff_interval', label: '手錠の掛かる間隔', min: 2, max: 12, def: 5, unit: '個ごと' },
+            { key: 'cuff_ttl', label: '手錠の持続期間', min: 3, max: 48, def: 12, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.3, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 5個毎に手錠 + 隣接配置で錠が外れる
         [K.ONE, `            move.cells.forEach(p => { board[p.y * BOARD_SIZE + p.x] = player; });`,
@@ -56,9 +61,9 @@ module.exports = {
             });
             // 手錠: 5個置くごとに今置いた石に錠が掛かる (12手)
             st.placed[player]++;
-            if (st.placed[player] % 5 === 0) {
+            if (st.placed[player] % Math.max(1, P('cuff_interval') || 5) === 0) {
                 const li = move.cells[move.cells.length - 1].y * BOARD_SIZE + move.cells[move.cells.length - 1].x;
-                st.cuffs[li] = history.length + 12;
+                st.cuffs[li] = history.length + Math.max(1, P('cuff_ttl') || 12);
                 fxText(li, '錠!', '#f59e0b', 1100);
             }
             // 錠の解除: 自石の隣に置くとその石の錠が外れる (連鎖はしない)

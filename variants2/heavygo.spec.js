@@ -9,6 +9,9 @@ module.exports = {
     kind: 'stone',
     spec: [
         ...K.rb('HEAVYGO', '重碁', 'heavygo'),
+        K.params([
+            { key: 'heavy_ratio', label: '捕獲に必要な接し石の倍率', min: 1, max: 4, def: 2, step: 0.5, unit: '倍' },
+        ]),
         [K.ONE, K.CAPTURE_BLOCK, `            const captured = getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 // 重碁: 連1石につき接する敵石2個が必要。足りなければ重くて取れない
@@ -29,7 +32,7 @@ module.exports = {
                     }
                     const foes = new Set();
                     group.forEach(c => getNeighbors(c).forEach(n => { if (board[n] === player) foes.add(n); }));
-                    if (foes.size >= group.length * 2) doomed.push(...group);
+                    if (foes.size >= group.length * (P('heavy_ratio') || 2)) doomed.push(...group);
                 }
                 if (doomed.length > 0) {
                     doomed.forEach(idx => board[idx] = 0);

@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"tsubo_inset","label":"四隅の経穴の位置","min":1,"max":6,"def":3,"unit":"路目","hint":"角からの距離"},{"key":"cap_ratio","label":"打ち切り手数 (交点比)","min":0.4,"max":1.5,"def":0.8,"step":0.05}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -641,7 +641,8 @@
         function tsuboIdxs() {
             const n = BOARD_SIZE;
             const c = Math.floor(n / 2);
-            const pts = [[3, 3], [n - 4, 3], [3, n - 4], [n - 4, n - 4], [c, 1], [c, n - 2]];
+            const o = Math.max(1, Math.min(c - 1, P('tsubo_inset') || 3));
+            const pts = [[o, o], [n - 1 - o, o], [o, n - 1 - o], [n - 1 - o, n - 1 - o], [c, 1], [c, n - 2]];
             return pts.map(([x, y]) => y * n + x);
         }
         let pieces = []; // [{ id, player, type, rot, cells:[{x,y}...] }]
@@ -1817,7 +1818,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;

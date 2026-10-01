@@ -10,6 +10,10 @@ module.exports = {
     icon: 'goldenrepairgo',
     spec: [
         ...K.rb('GOLDENREPAIRGO', '金継碁', 'goldenrepairgo'),
+        K.params([
+            { key: 'gold_bonus', label: '修復ボーナス', min: 0, max: 6, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.8, step: 0.05 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let st = { site: { 1: {}, 2: {} }, gold: {} }; // 欠けた跡と金継ぎ修復済みの位置
         let goldDetail = { 1: 0, 2: 0 };`],
@@ -61,7 +65,7 @@ module.exports = {
             }
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -76,8 +80,8 @@ module.exports = {
             Object.keys(st.gold).forEach(k => {
                 const i = +k, ow = st.gold[i];
                 if (board[i] !== ow) return;
-                goldDetail[ow] += 2;
-                if (ow === 1) territory.black += 2; else territory.white += 2;
+                goldDetail[ow] += (P('gold_bonus') || 2);
+                if (ow === 1) territory.black += (P('gold_bonus') || 2); else territory.white += (P('gold_bonus') || 2);
             });`],
         ...K.STONE_MARKS_SPEC(`            // 金継ぎ修復石: 金の亀裂筋
             {

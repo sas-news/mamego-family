@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,10 @@ module.exports = {
     icon: 'higanbanago',
     spec: [
         ...K.rb('HIGANBANAGO', '彼岸花碁', 'higanbanago'),
+        K.params([
+            { key: 'hib_interval', label: '彼岸花の間隔', min: 2, max: 16, def: 6, unit: '手ごと' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST('{ hib: {}, poi: {} }'),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -53,7 +57,7 @@ module.exports = {
             // 彼岸花碁: 6手ごとの着手は彼岸花。隣の敵石に毒を置く
             {
                 const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;
-                if (history.length % 6 === 0) {
+                if (history.length % Math.max(1, P('hib_interval') || 6) === 0) {
                     st.hib[mi] = 1;
                     getNeighbors(mi).forEach(n => {
                         if (board[n] === opponent) {

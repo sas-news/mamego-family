@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"grudge_ttl","label":"怨念の残存期間","min":3,"max":48,"def":12,"unit":"手"},{"key":"grudge_bonus","label":"怨念1マスの得点","min":0,"max":5,"def":1,"unit":"目"},{"key":"cap_ratio","label":"打ち切り手数 (交点比)","min":0.5,"max":2,"def":1.1,"step":0.05}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1855,7 +1855,7 @@
             if (captured.length > 0) {
                 captured.forEach(idx => {
                     board[idx] = 0;
-                    st.grudge[idx] = { expire: history.length + 12, by: opponent };
+                    st.grudge[idx] = { expire: history.length + Math.max(1, P('grudge_ttl') || 12), by: opponent };
                 });
                 captures[player] += captured.length;
                 fxText(captured[0], '怨念!', '#7e22ce', 1200);
@@ -1879,7 +1879,7 @@
             });
 
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -2236,7 +2236,7 @@
             const territory = calculateTerritory();
 
             let grB = 0, grW = 0;
-            Object.values(st.grudge).forEach(g => { if (g.by === 1) grB++; else grW++; });
+            Object.values(st.grudge).forEach(g => { if (g.by === 1) grB += (P('grudge_bonus') || 1); else grW += (P('grudge_bonus') || 1); });
             const blackTotal = territory.black + captures[1] + grB;
             const whiteTotal = territory.white + captures[2] + grW + komi;
             const diff = Math.abs(blackTotal - whiteTotal);

@@ -10,12 +10,17 @@ module.exports = {
     icon: 'gravwellgo',
     spec: [
         ...K.rb('GRAVWELLGO', '重力井碁', 'gravwellgo'),
+        K.params([
+            { key: 'pull_interval', label: '引き寄せの間隔', min: 1, max: 5, def: 1, unit: '手ごと' },
+            { key: 'sweep_max', label: '窒息判定の繰り返し回数', min: 1, max: 6, def: 3, unit: '回' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.8, step: 0.05 },
+        ]),
         // 重力井: 着手後、全石が中心へ1マス引き寄せられる (中心に近い順)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
-            // 重力井: 全石が中心へ1マス引き寄せられる
-            {
+            // 重力井: 全石が中心へ1マス引き寄せられる (間隔は設定で調整)
+            if (history.length % Math.max(1, P('pull_interval') || 1) === 0) {
                 const cc = Math.floor(BOARD_SIZE / 2);
                 const dist = i => Math.abs(i % BOARD_SIZE - cc) + Math.abs(Math.floor(i / BOARD_SIZE) - cc);
                 const order = [];
@@ -47,7 +52,7 @@ module.exports = {
                 });
                 cleanUpPieces();
                 // 引き寄せで窒息した連は落下死 (両者共通)
-                for (let sweep = 0; sweep < 3; sweep++) {
+                for (let sweep = 0; sweep < Math.max(1, P('sweep_max') || 3); sweep++) {
                     let any = false;
                     [1, 2].forEach(p => {
                         const dead = getCapturedStones(board, p);
@@ -63,7 +68,7 @@ module.exports = {
             }
 
             // 打ち切り: 長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }

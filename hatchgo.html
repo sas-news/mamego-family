@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"hatch_age","label":"孵るまでの手数","min":4,"max":40,"def":14,"step":2,"unit":"手"},{"key":"hatch_bonus","label":"孵った卵の得点","min":0,"max":5,"def":1,"unit":"目"},{"key":"cap_ratio","label":"打ち切り手数 (交点比)","min":0.4,"max":1.5,"def":0.8,"step":0.05}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1329,7 +1329,7 @@
             {
                 ctx.save();
                 pieces.forEach(pc => {
-                    if (history.length - (pc.at || 0) < 14) return;
+                    if (history.length - (pc.at || 0) < Math.max(1, P('hatch_age') || 14)) return;
                     pc.cells.forEach(c => {
                         const i = c.y * BOARD_SIZE + c.x;
                         if (board[i] !== pc.player) return;
@@ -1867,7 +1867,7 @@
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 満局打ち切り: 交点数の8割を超える長期戦は即採点終局
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 endGameByScore();
                 return;
             }
@@ -2225,12 +2225,12 @@
             pieces.forEach(pc => {
                 const alive = pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] === pc.player);
                 if (!alive) return;
-                if (history.length - (pc.at || 0) < 14) return;
+                if (history.length - (pc.at || 0) < Math.max(1, P('hatch_age') || 14)) return;
                 const warm = pc.cells.some(p =>
                     getNeighbors(p.y * BOARD_SIZE + p.x).some(n => board[n] === pc.player));
                 if (!warm) return;
                 hatchDetail[pc.player]++;
-                if (pc.player === 1) territory.black++; else territory.white++;
+                if (pc.player === 1) territory.black += (P('hatch_bonus') || 1); else territory.white += (P('hatch_bonus') || 1);
             });
 
             const blackTotal = territory.black + captures[1];

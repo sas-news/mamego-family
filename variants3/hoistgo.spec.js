@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -46,6 +46,11 @@ module.exports = {
     icon: 'hoistgo',
     spec: [
         ...K.rb('HOISTGO', '吊上碁', 'hoistgo'),
+        K.params([
+            { key: 'hoist_max', label: '吊り上げられる敵石の最大数', min: 1, max: 4, def: 1, unit: '個' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.3, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
+
 
         // 吊上げ: 着手点に敵石が1個だけ隣接 → その敵石を外側へ1マス移動
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -56,19 +61,20 @@ module.exports = {
                 const bc = move.cells[0];
                 const pi = bc.y * BOARD_SIZE + bc.x;
                 const foes = getNeighbors(pi).filter(n => board[n] === opponent);
-                if (foes.length === 1) {
-                    const fi = foes[0];
-                    const dx = (fi % BOARD_SIZE) - bc.x, dy = Math.floor(fi / BOARD_SIZE) - bc.y;
-                    const tx = (fi % BOARD_SIZE) + dx, ty = Math.floor(fi / BOARD_SIZE) + dy;
-                    if (tx >= 0 && ty >= 0 && tx < BOARD_SIZE && ty < BOARD_SIZE) {
-                        const ti = ty * BOARD_SIZE + tx;
-                        if (board[ti] === 0) {
-                            board[ti] = opponent;
-                            board[fi] = 0;
-                            fxSlide(fi, ti, 420);
-                            fxText(ti, '吊上!', '#f472b6', 1100);
+                if (foes.length >= 1 && foes.length <= Math.max(1, P('hoist_max') || 1)) {
+                    foes.forEach(fi => {
+                        const dx = (fi % BOARD_SIZE) - bc.x, dy = Math.floor(fi / BOARD_SIZE) - bc.y;
+                        const tx = (fi % BOARD_SIZE) + dx, ty = Math.floor(fi / BOARD_SIZE) + dy;
+                        if (tx >= 0 && ty >= 0 && tx < BOARD_SIZE && ty < BOARD_SIZE) {
+                            const ti = ty * BOARD_SIZE + tx;
+                            if (board[ti] === 0) {
+                                board[ti] = opponent;
+                                board[fi] = 0;
+                                fxSlide(fi, ti, 420);
+                                fxText(ti, '吊上!', '#f472b6', 1100);
+                            }
                         }
-                    }
+                    });
                 }
             }
 

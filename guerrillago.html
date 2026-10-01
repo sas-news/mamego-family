@@ -318,7 +318,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"raid_count","label":"遊撃兵1人の襲撃数","min":1,"max":4,"def":1,"unit":"個"},{"key":"cap_moves","label":"打ち切り手数","min":50,"max":500,"def":140,"step":10,"unit":"手"}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1883,20 +1883,20 @@
                 let hit = false;
                 st.guer.forEach(g => {
                     if (g.owner !== opponent || board[g.i] !== g.owner) return;
-                    const vic = getNeighbors(g.i).find(n => board[n] === player);
-                    if (vic != null) {
+                    const vics = getNeighbors(g.i).filter(n => board[n] === player).slice(0, Math.max(1, P('raid_count') || 1));
+                    vics.forEach(vic => {
                         board[vic] = 0; captures[g.owner]++;
                         fxBurst(vic, '#f97316', 9, 1.6);
                         fxText(g.i, '遊撃!', '#fb923c', 1000);
                         hit = true;
-                    }
+                    });
                 });
                 st.guer = st.guer.filter(g => g.owner !== opponent && board[g.i] === g.owner);
                 if (hit) { fxShake(4, 260); cleanUpPieces(); }
             }
 
             // 打ち切り終局
-            if (history.length >= 140) { endGameByScore(); return; }
+            if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;
             updateUI();

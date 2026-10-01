@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,11 @@ module.exports = {
     icon: 'himonogo',
     spec: [
         ...K.rb('HIMONOGO', '干物碁', 'himonogo'),
+        K.params([
+            { key: 'dry_interval', label: '干し上がる間隔', min: 2, max: 20, def: 8, unit: '手ごと' },
+            { key: 'dry_bonus', label: '乾物1枚の得点', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 干場: 盤の上下端の列 (海風の通る軒下)
@@ -62,7 +67,7 @@ module.exports = {
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 干物: 8手ごとに干場の石が乾物になる
-            if (history.length > 0 && history.length % 8 === 0) {
+            if (history.length > 0 && history.length % Math.max(1, P('dry_interval') || 8) === 0) {
                 Object.keys(st.dried).forEach(k => { if (board[+k] !== 1 && board[+k] !== 2) delete st.dried[k]; });
                 let dried = 0;
                 HIBA_SET.forEach(i => {
@@ -82,7 +87,7 @@ module.exports = {
             const b = { 1: 0, 2: 0 };
             Object.keys(st.dried || {}).forEach(k => {
                 const i = +k;
-                if (board[i] === 1 || board[i] === 2) b[board[i]] += 2;
+                if (board[i] === 1 || board[i] === 2) b[board[i]] += (P('dry_bonus') || 2);
             });
             return b;
         }
@@ -138,7 +143,7 @@ module.exports = {
                 });
                 ctx.restore();
             }`),
-        ...K.EVENT_CHIP_SPEC(`'干し上がりまで ' + (8 - (history.length % 8)) + ' 手'`),
+        ...K.EVENT_CHIP_SPEC(`'干し上がりまで ' + (Math.max(1, P('dry_interval') || 8) - (history.length % Math.max(1, P('dry_interval') || 8))) + ' 手'`),
         [K.ONE, K.INFO_ALGO, `            干物碁: 上下端の干場の石は8手ごとに乾物になり終局時+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],

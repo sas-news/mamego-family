@@ -319,7 +319,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"port_bonus","label":"帰港1回のアゲハマ","min":0,"max":8,"def":2,"unit":"目"},{"key":"port_win","label":"即勝ちに必要な帰港数","min":2,"max":10,"def":5,"unit":"回"},{"key":"cap_ratio","label":"打ち切り手数 (交点比)","min":0.3,"max":1.5,"def":0.75,"step":0.05}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1811,7 +1811,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1869,11 +1869,11 @@
                 const home = player === 1 ? BOARD_SIZE - 1 : 0;
                 if (y === home) {
                     st.port[player]++;
-                    captures[player] += 2;
+                    captures[player] += (P('port_bonus') ?? 2);
                     const pi = y * BOARD_SIZE + move.cells[0].x;
                     fxText(pi, '帰港!', '#0ea5e9', 1300);
                     fxGlow(pi, '#0ea5e9', 900);
-                    if (st.port[player] >= 5) {
+                    if (st.port[player] >= Math.max(1, P('port_win') || 5)) {
                         gameOver = true;
                         endGameByScore();
                         return;
@@ -2754,7 +2754,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ('帰港 ' + st.port[turn] + '/5');
+                const et = gameOver ? '' : ('帰港 ' + st.port[turn] + '/' + Math.max(1, P('port_win') || 5));
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

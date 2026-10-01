@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -48,11 +48,16 @@ module.exports = {
     icon: "hakubogo",
     spec: [
         ...K.rb("Hakubo-Go", "薄暮碁", "hakubogo"),
+        K.params([
+            { key: 'dusk_period', label: '薄暮の周期', min: 8, max: 40, def: 16, step: 2, unit: '手' },
+            { key: 'dusk_len', label: '薄暮の長さ', min: 1, max: 10, def: 4, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.3, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         ...PERSIST("{ dorm: {} }"),
-        [K.ONE, K.CAPTURE_BLOCK, "            // 薄暮碁: 周期の12-15手目は薄暮。着手は紛れ石 (持ち主不明) になる\n            const dusk = (history.length % 16) >= 12;\n            const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;\n            if (dusk) {\n                board[mi] = 4;\n                st.dorm[mi] = player;\n                fxGlow(mi, '#c4b5fd', 700);\n                fxText(mi, '紛れ', '#a78bfa', 900);\n                soundManager.playPlace();\n            } else {\n                const captured = getCapturedStones(board, opponent);\n                if (captured.length > 0) {\n                    captured.forEach(idx => board[idx] = 0);\n                    captures[player] += captured.length;\n                    soundManager.playCapture();\n                    cleanUpPieces();\n                } else {\n                    soundManager.playPlace();\n                }\n            }"],
-        [K.ONE, K.TURN_FLIP, "            consecutivePasses = 0;\n            holdUsed = false; // 着手でホールド権利が戻る\n\n            // 夜明け: 周期頭で紛れ石の持ち主が明らかになる\n            if (history.length % 16 === 0 && st.dorm) {\n                Object.keys(st.dorm).forEach(k => {\n                    const i = +k;\n                    if (board[i] === 4) { board[i] = st.dorm[k]; fxGlow(i, '#fbbf24', 700); }\n                    delete st.dorm[k];\n                });\n                cleanUpPieces();\n            }\n\n            turn = opponent;"],
+        [K.ONE, K.CAPTURE_BLOCK, "            // 薄暮碁: 周期の12-15手目は薄暮。着手は紛れ石 (持ち主不明) になる\n            const __dp = Math.max(2, P('dusk_period') || 16);\n            const dusk = (history.length % __dp) >= __dp - Math.min(__dp - 1, Math.max(1, P('dusk_len') || 4));\n            const mi = move.cells[0].y * BOARD_SIZE + move.cells[0].x;\n            if (dusk) {\n                board[mi] = 4;\n                st.dorm[mi] = player;\n                fxGlow(mi, '#c4b5fd', 700);\n                fxText(mi, '紛れ', '#a78bfa', 900);\n                soundManager.playPlace();\n            } else {\n                const captured = getCapturedStones(board, opponent);\n                if (captured.length > 0) {\n                    captured.forEach(idx => board[idx] = 0);\n                    captures[player] += captured.length;\n                    soundManager.playCapture();\n                    cleanUpPieces();\n                } else {\n                    soundManager.playPlace();\n                }\n            }"],
+        [K.ONE, K.TURN_FLIP, "            consecutivePasses = 0;\n            holdUsed = false; // 着手でホールド権利が戻る\n\n            // 夜明け: 周期頭で紛れ石の持ち主が明らかになる\n            if (history.length % Math.max(2, P('dusk_period') || 16) === 0 && st.dorm) {\n                Object.keys(st.dorm).forEach(k => {\n                    const i = +k;\n                    if (board[i] === 4) { board[i] = st.dorm[k]; fxGlow(i, '#fbbf24', 700); }\n                    delete st.dorm[k];\n                });\n                cleanUpPieces();\n            }\n\n            turn = opponent;"],
         [K.ONE, K.FX_BOOT, K.FX_BOOT + "\n        // 紛れ石: 薄暮に霞む持ち主不明の石\n        obstaclePainter = (val, cx, cy, cs, idx) => {\n            if (val !== 4) return false;\n            const own = st.dorm ? st.dorm[idx] : 0;\n            ctx.save();\n            ctx.globalAlpha = 0.55;\n            ctx.fillStyle = own === 1 ? currentTheme.p1Fill : own === 2 ? currentTheme.p2Fill : '#9ca3af';\n            ctx.beginPath(); ctx.arc(cx, cy, cs * 0.34, 0, Math.PI * 2); ctx.fill();\n            ctx.globalAlpha = 0.8;\n            ctx.strokeStyle = '#a78bfa'; ctx.lineWidth = Math.max(1, cs * 0.05);\n            ctx.setLineDash([cs * 0.12, cs * 0.08]);\n            ctx.beginPath(); ctx.arc(cx, cy, cs * 0.40, 0, Math.PI * 2); ctx.stroke();\n            ctx.restore();\n            return true;\n        };"],
-        ...K.EVENT_CHIP_SPEC("(history.length % 16) >= 12 ? '薄暮' : '薄暮まで' + (16 - history.length % 16) + '手'"),
+        ...K.EVENT_CHIP_SPEC("(history.length % Math.max(2, P('dusk_period') || 16)) >= Math.max(2, P('dusk_period') || 16) - Math.min(Math.max(2, P('dusk_period') || 16) - 1, Math.max(1, P('dusk_len') || 4)) ? '薄暮' : '薄暮まで' + (Math.max(2, P('dusk_period') || 16) - history.length % Math.max(2, P('dusk_period') || 16)) + '手'"),
         ...GAME_OVER,
         [K.ONE, K.INFO_ALGO, "16手周期の12〜15手目は薄暮。この間の着手は持ち主が見分けにくい「紛れ石」となり、取りにも呼吸にも効かない。周期頭の夜明けに正体を現す。"],
         [K.ONE, K.RV_ALGO, K.rv(["薄暮期 (12-15手目) の着手は持ち主不明の紛れ石",

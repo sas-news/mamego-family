@@ -317,7 +317,7 @@
         // === バリアント固有パラメータ ===
         // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
         // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
-        const VPARAMS = [];
+        const VPARAMS = [{"key":"dew_period","label":"白露の周期","min":8,"max":40,"def":16,"step":2,"unit":"手"},{"key":"dew_len","label":"白露の長さ","min":1,"max":10,"def":4,"unit":"手"},{"key":"cap_ratio","label":"打ち切り手数 (交点比)","min":0.3,"max":1.5,"def":0.75,"step":0.05}];
         const VPAR_MAP = {};
         const VPAR_SAVED = (() => {
             try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
@@ -1151,7 +1151,7 @@
             ctx.restore();
 
             // 露の朝は盤面を薄青く濡らす
-            if ((history.length % 16) <= 3) {
+            if ((history.length % Math.max(2, P('dew_period') || 16)) <= Math.min(Math.max(2, P('dew_period') || 16), Math.max(1, P('dew_len') || 4)) - 1) {
                 ctx.save();
                 ctx.fillStyle = 'rgba(147,197,253,0.12)';
                 ctx.fillRect(padding - cellSize / 2, padding - cellSize / 2, BOARD_SIZE * cellSize, BOARD_SIZE * cellSize);
@@ -1809,7 +1809,7 @@
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -1845,7 +1845,8 @@
             // 捕獲処理
             const opponent = player === 1 ? 2 : 1;
             // 白露碁: 周期の頭4手は露で石が重く、取れない
-            const dew = (history.length % 16) <= 3;
+            const __dp = Math.max(2, P('dew_period') || 16);
+            const dew = (history.length % __dp) <= Math.min(__dp, Math.max(1, P('dew_len') || 4)) - 1;
             const captured = dew ? [] : getCapturedStones(board, opponent);
             if (captured.length > 0) {
                 captured.forEach(idx => board[idx] = 0);
@@ -2735,7 +2736,7 @@
             else if (gameMode === 'online') gameModeBadge.textContent = `オンライン (${myOnlineRole === 1 ? '黒' : '白'})`;
 
             if (eventChip) {
-                const et = gameOver ? '' : ((history.length % 16) <= 3 ? '白露の朝' : '露まで' + (16 - history.length % 16) + '手');
+                const et = gameOver ? '' : ((history.length % Math.max(2, P('dew_period') || 16)) <= Math.min(Math.max(2, P('dew_period') || 16), Math.max(1, P('dew_len') || 4)) - 1 ? '白露の朝' : '露まで' + (Math.max(2, P('dew_period') || 16) - history.length % Math.max(2, P('dew_period') || 16)) + '手');
                 eventChip.textContent = et;
                 eventChip.style.display = et ? '' : 'none';
             }

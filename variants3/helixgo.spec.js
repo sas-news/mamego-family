@@ -12,7 +12,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -28,6 +28,9 @@ module.exports = {
     icon: 'helixgo',
     spec: [
         ...K.rb('HELIXGO', '螺旋階碁', 'helixgo'),
+        K.params([
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 螺旋レール: 外周から内へ巻く順列と、その逆引き表
         let _spiral = null, _spiralPos = null, _spiralSz = 0;

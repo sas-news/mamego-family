@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,12 +27,17 @@ module.exports = {
     icon: 'harikyugo',
     spec: [
         ...K.rb('HARIKYUGO', '鍼灸碁', 'harikyugo'),
+        K.params([
+            { key: 'tsubo_inset', label: '四隅の経穴の位置', min: 1, max: 6, def: 3, unit: '路目', hint: '角からの距離' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.8, step: 0.05 },
+        ]),
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         // 経穴の点: 斜め四隅の星 + 上下中央のツボ
         function tsuboIdxs() {
             const n = BOARD_SIZE;
             const c = Math.floor(n / 2);
-            const pts = [[3, 3], [n - 4, 3], [3, n - 4], [n - 4, n - 4], [c, 1], [c, n - 2]];
+            const o = Math.max(1, Math.min(c - 1, P('tsubo_inset') || 3));
+            const pts = [[o, o], [n - 1 - o, o], [o, n - 1 - o], [n - 1 - o, n - 1 - o], [c, 1], [c, n - 2]];
             return pts.map(([x, y]) => y * n + x);
         }`],
         // 経穴ガード: 経穴を含む敵連は気が通って取られない

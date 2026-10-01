@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止)
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.8)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.8))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -27,6 +27,12 @@ module.exports = {
     icon: 'harmonygo',
     spec: [
         ...K.rb('HARMONYGO', '和声碁', 'harmonygo'),
+        K.params([
+            { key: 'consonant_bonus', label: '協和 (3・5連) の得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'perfect_bonus', label: '完全協和 (7連) の得点', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'dissonant_bonus', label: '不協和 (2・6連) の献上点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.8, step: 0.05 },
+        ]),
         // 和声ルール: 着手した連の大きさで協和/不協和が決まる
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
@@ -37,15 +43,15 @@ module.exports = {
                 if (board[mi] === player) {
                     const s = getConnectedGroup(mi, player).length;
                     if (s === 3 || s === 5) {
-                        captures[player]++;
+                        captures[player] += (P('consonant_bonus') || 1);
                         fxGlow(mi, '#4ade80', 650);
-                        fxText(mi, '協和音 +' + 1, '#4ade80', 1100);
+                        fxText(mi, '協和音 +' + (P('consonant_bonus') || 1), '#4ade80', 1100);
                     } else if (s === 7) {
-                        captures[player] += 2;
+                        captures[player] += (P('perfect_bonus') || 2);
                         fxGlow(mi, '#facc15', 800);
-                        fxText(mi, '完全協和 +2', '#facc15', 1300);
+                        fxText(mi, '完全協和 +' + (P('perfect_bonus') || 2), '#facc15', 1300);
                     } else if (s === 2 || s === 6) {
-                        captures[opponent]++;
+                        captures[opponent] += (P('dissonant_bonus') || 1);
                         fxText(mi, '不協和…', '#f87171', 1100);
                     }
                 }

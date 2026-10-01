@@ -35,7 +35,7 @@ const PASS_END = [K.ONE, `            if (consecutivePasses >= 2) {
 
 const CAP = `
             // 打ち切り: 交点数x1.1を超えた長期戦は採点終局 (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 return;
             }
@@ -86,6 +86,11 @@ module.exports = {
     icon: 'grudgego',
     spec: [
         ...K.rb('GRUDGEGO', '怨念碁', 'grudgego'),
+        K.params([
+            { key: 'grudge_ttl', label: '怨念の残存期間', min: 3, max: 48, def: 12, unit: '手' },
+            { key: 'grudge_bonus', label: '怨念1マスの得点', min: 0, max: 5, def: 1, unit: '目' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.5, max: 2, def: 1.1, step: 0.05 },
+        ]),
         ...PERSIST('{ grudge: {} }'),
         // 怨念のマスには着手できない
         [K.ONE, K.VALID_BOUNDS, `            for (const p of cells) {
@@ -134,7 +139,7 @@ module.exports = {
             if (captured.length > 0) {
                 captured.forEach(idx => {
                     board[idx] = 0;
-                    st.grudge[idx] = { expire: history.length + 12, by: opponent };
+                    st.grudge[idx] = { expire: history.length + Math.max(1, P('grudge_ttl') || 12), by: opponent };
                 });
                 captures[player] += captured.length;
                 fxText(captured[0], '怨念!', '#7e22ce', 1200);
@@ -157,7 +162,7 @@ ${CAP}
         [K.ONE, `            const blackTotal = territory.black + captures[1];
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            let grB = 0, grW = 0;
-            Object.values(st.grudge).forEach(g => { if (g.by === 1) grB++; else grW++; });
+            Object.values(st.grudge).forEach(g => { if (g.by === 1) grB += (P('grudge_bonus') || 1); else grW += (P('grudge_bonus') || 1); });
             const blackTotal = territory.black + captures[1] + grB;
             const whiteTotal = territory.white + captures[2] + grW + komi;`],
         [K.ONE, `                    <div class="flex justify-between font-bold border-t pt-1"><span>黒合計:</span> <span>\${blackTotal}</span></div>`,

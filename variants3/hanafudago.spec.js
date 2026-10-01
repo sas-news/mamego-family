@@ -11,7 +11,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 打ち切り手数: 長期戦は強制採点 (終局不能の防止・1局1回のみ)
             if (moveCapFired && history.length === 0) moveCapFired = false;
-            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.75)) {
+            if (!moveCapFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.75))) {
                 moveCapFired = true;
                 endGameByScore();
                 return;
@@ -57,6 +57,11 @@ module.exports = {
     icon: 'hanafudago',
     spec: [
         ...K.rb('HANAFUDAGO', '花合碁', 'hanafudago'),
+        K.params([
+            { key: 'card_bonus', label: '札1枚の得点', min: 0, max: 5, def: 1, unit: '点' },
+            { key: 'season_bonus', label: '季節そろいボーナス', min: 0, max: 30, def: 9, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.3, max: 1.5, def: 0.75, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         [K.ONE, '        function updateUI() {', HANA_FN + `
         function updateUI() {`],
@@ -79,12 +84,12 @@ module.exports = {
             let hanaB = 0, hanaW = 0;
             for (let m2 = 0; m2 < 12; m2++) {
                 const ow = st.claim[hanaI[m2]];
-                if (ow === 1) hanaB++; else if (ow === 2) hanaW++;
+                if (ow === 1) hanaB += (P('card_bonus') || 1); else if (ow === 2) hanaW += (P('card_bonus') || 1);
             }
             for (let s2 = 0; s2 < 4; s2++) {
                 const set = [st.claim[hanaI[s2 * 3]], st.claim[hanaI[s2 * 3 + 1]], st.claim[hanaI[s2 * 3 + 2]]];
                 if (set[0] !== undefined && set[0] === set[1] && set[1] === set[2]) {
-                    if (set[0] === 1) hanaB += 9; else hanaW += 9;
+                    if (set[0] === 1) hanaB += (P('season_bonus') || 9); else hanaW += (P('season_bonus') || 9);
                 }
             }
             const blackTotal = territory.black + captures[1] + hanaB;

@@ -31,7 +31,7 @@ const GAME_OVER = [
         function executeMove(move, player) {
             // 満局打ち切り: 交点数の0.9倍の手数で即採点終局
             if (capFired && history.length === 0) capFired = false;
-            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 0.9)) {
+            if (!capFired && history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 0.9))) {
                 capFired = true;
                 endGameByScore();
                 return;
@@ -47,6 +47,12 @@ module.exports = {
     icon: 'gotego',
     spec: [
         ...K.rb('GOTEGO', '後手碁', 'gotego'),
+        K.params([
+            { key: 'ote_bonus', label: '応手ボーナス (黒)', min: 0, max: 8, def: 2, unit: '目' },
+            { key: 'ote_bonus_white', label: '応手ボーナス (白)', min: 0, max: 10, def: 3, unit: '目' },
+            { key: 'rescue_lib', label: '救出に必要な呼吸点', min: 1, max: 4, def: 2, unit: '点' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.4, max: 1.5, def: 0.9, step: 0.05 },
+        ]),
         ...ST(ST_INIT),
         // 応手ボーナス: アタリだった自軍連を呼吸2以上に救出 → +2 (白は後手救済で +3)
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
@@ -60,8 +66,8 @@ module.exports = {
                 getNeighbors(__pi).forEach(__n => {
                     if (__pre[__n] === player && getLiberties(__pre, __n) <= 1) __rescued = true;
                 });
-                if (__rescued && getLiberties(board, __pi) >= 2) {
-                    const __g = player === 2 ? 3 : 2; // 後手の白は+3目
+                if (__rescued && getLiberties(board, __pi) >= (P('rescue_lib') || 2)) {
+                    const __g = player === 2 ? (P('ote_bonus_white') || 3) : (P('ote_bonus') || 2); // 後手の白は多め
                     st.bonus[player] = (st.bonus[player] || 0) + __g;
                     fxText(__pi, '応手 +' + __g, '#34d399', 1100);
                     fxGlow(__pi, '#34d399', 800);

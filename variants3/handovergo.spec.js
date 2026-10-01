@@ -10,11 +10,15 @@ module.exports = {
     icon: 'handovergo',
     spec: [
         ...K.rb('HANDOVERGO', '引継碁', 'handovergo'),
+        K.params([
+            { key: 'flip_interval', label: '引継の間隔', min: 4, max: 30, def: 10, step: 2, unit: '手' },
+            { key: 'cap_ratio', label: '打ち切り手数 (交点比)', min: 0.5, max: 2, def: 1.1, step: 0.05 },
+        ]),
         [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
             holdUsed = false; // 着手でホールド権利が戻る
 
             // 引継: 10手ごとに盤面の全石の色が反転する (周期は両者共通)
-            if (history.length % 10 === 0) {
+            if (history.length % Math.max(1, P('flip_interval') || 10) === 0) {
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] === 1) board[i] = 2;
                     else if (board[i] === 2) board[i] = 1;
@@ -26,7 +30,7 @@ module.exports = {
             }
 
             // 打ち切り: 交点数x1.1を超えた長期戦は死に石選択へ (終局不能の防止)
-            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * 1.1)) {
+            if (history.length >= Math.ceil(BOARD_SIZE * BOARD_SIZE * (P('cap_ratio') || 1.1))) {
                 endGameByScore();
                 if (gameMode === 'online' && onlineRoomId) syncOnlineState();
                 saveState();
@@ -34,7 +38,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        ...K.EVENT_CHIP_SPEC(`'引継まで ' + (10 - (history.length % 10)) + '手'`),
+        ...K.EVENT_CHIP_SPEC(`'引継まで ' + (Math.max(1, P('flip_interval') || 10) - (history.length % Math.max(1, P('flip_interval') || 10))) + '手'`),
         [K.ONE, K.RV_ALGO, K.rv([
             '引継: 10手ごとに盤面の全ての石の色が反転する (黒⇔白の総入替)。',
             '築いた地は相手に引き継がれる。反転のタイミングを読んで石を配置しよう。',
