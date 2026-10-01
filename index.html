@@ -84,7 +84,7 @@
         }
         /* お気に入り */
         .fav-star {
-            font-size: 17px; line-height: 1; align-self: flex-start;
+            font-size: 17px; line-height: 1; align-self: center;
             color: #cbb07a; opacity: .45; padding: 3px 2px;
             transition: transform .15s, opacity .15s, color .15s;
         }
@@ -1353,7 +1353,7 @@
                 updateFavCount();
                 if (favOnly) applyGameFilter(searchInput.value);
             });
-            a.appendChild(cv); a.appendChild(body); a.appendChild(arrow); a.appendChild(star);
+            a.appendChild(star); a.appendChild(cv); a.appendChild(body); a.appendChild(arrow);
             grid.appendChild(a);
             a._icon = v.icon || v.kind;
             a._iconCv = cv;
@@ -3260,12 +3260,12 @@
                 }
                 case 'ampgo': {
 // 増幅器の三角記号と波形
-ctx.strokeStyle='#a78bfa'; ctx.lineWidth=1.8;
-ctx.beginPath();
-ctx.moveTo(cell*1.4,cell*1.8);
-ctx.lineTo(cell*1.4,cell*4.2);
-ctx.lineTo(cell*4.2,cell*3);
-ctx.closePath(); ctx.stroke();
+c.strokeStyle='#a78bfa'; c.lineWidth=1.8;
+c.beginPath();
+c.moveTo(cell*1.4,cell*1.8);
+c.lineTo(cell*1.4,cell*4.2);
+c.lineTo(cell*4.2,cell*3);
+c.closePath(); c.stroke();
 seg(0.4,2.4,1.4,2.4,'#a78bfa',1.4);
 seg(0.4,3.6,1.4,3.6,'#a78bfa',1.4);
 seg(4.2,3,5.6,3,'#facc15',1.6);
@@ -3328,12 +3328,12 @@ seg(5.6,3,5.9,3.6,'#facc15',1.4);
                 }
                 case 'arcirisgo': {
 // 虹の弧と両端の石
-ctx.strokeStyle='rgba(248,113,113,0.85)'; ctx.lineWidth=2.0;
-ctx.beginPath(); ctx.arc(cell*3,cell*4.6,cell*3.0,Math.PI,0); ctx.stroke();
-ctx.strokeStyle='rgba(251,191,36,0.85)';
-ctx.beginPath(); ctx.arc(cell*3,cell*4.6,cell*2.4,Math.PI,0); ctx.stroke();
-ctx.strokeStyle='rgba(74,222,128,0.85)';
-ctx.beginPath(); ctx.arc(cell*3,cell*4.6,cell*1.8,Math.PI,0); ctx.stroke();
+c.strokeStyle='rgba(248,113,113,0.85)'; c.lineWidth=2.0;
+c.beginPath(); c.arc(cell*3,cell*4.6,cell*3.0,Math.PI,0); c.stroke();
+c.strokeStyle='rgba(251,191,36,0.85)';
+c.beginPath(); c.arc(cell*3,cell*4.6,cell*2.4,Math.PI,0); c.stroke();
+c.strokeStyle='rgba(74,222,128,0.85)';
+c.beginPath(); c.arc(cell*3,cell*4.6,cell*1.8,Math.PI,0); c.stroke();
 dot(0.6,4.6,P1,P1S,cell*0.45,1);
 dot(5.4,4.6,P1,P1S,cell*0.45,1);
 dot(3,1.7,P2,P2S,cell*0.4,1);
@@ -3630,8 +3630,8 @@ dot(3,1.7,P2,P2S,cell*0.4,1);
                 }
                 case 'boushugo': {
 // 大地に蒔かれる種と芽
-ctx.fillStyle='rgba(120,80,40,0.5)';
-ctx.fillRect(0,cell*3.8,cell*6,cell*2.2);
+c.fillStyle='rgba(120,80,40,0.5)';
+c.fillRect(0,cell*3.8,cell*6,cell*2.2);
 seg(0.6,3.8,5.4,3.8,'rgba(90,60,30,0.8)',1.4);
 dot(1.6,4.4,'#a16207','#713f12',cell*0.24,1);
 dot(3.1,4.6,'#a16207','#713f12',cell*0.24,1);
@@ -3709,8 +3709,8 @@ dot(3.75,2.15,'#86efac','#166534',cell*0.16,1);
                 }
                 case 'byakuyago': {
 // 白夜の太陽と消えた夜帯
-ctx.fillStyle='rgba(30,27,75,0.35)';
-ctx.fillRect(0,0,cell*6,cell*1.6);
+c.fillStyle='rgba(30,27,75,0.35)';
+c.fillRect(0,0,cell*6,cell*1.6);
 dot(3,0.9,'#fde68a','#d97706',cell*0.55,1);
 seg(1,0.9,5,0.9,'rgba(253,224,71,0.7)',1.4);
 dot(1.5,3.6,P1,P1S,cell*0.5,1);
@@ -3936,8 +3936,8 @@ dot(5.0,3.4,P1,P1S,cell*0.42,1);
                 }
                 case 'circuitgo': {
 // 中央コアと回路配線
-ctx.strokeStyle='rgba(74,222,128,0.9)'; ctx.lineWidth=1.8;
-ctx.strokeRect(cell*1.6,cell*1.6,cell*2.8,cell*2.8);
+c.strokeStyle='rgba(74,222,128,0.9)'; c.lineWidth=1.8;
+c.strokeRect(cell*1.6,cell*1.6,cell*2.8,cell*2.8);
 dot(3,3,'#4ade80','#166534',cell*0.45,1);
 seg(0.4,3,1.6,3,'#4ade80',1.6);
 seg(4.4,3,5.6,3,'#4ade80',1.6);
@@ -4162,10 +4162,10 @@ dot(5.2,0.9,P2,P2S,cell*0.35,1);
                 }
                 case 'daikango': {
 // 氷に閉じた石と融け出す石
-ctx.fillStyle='rgba(186,230,253,0.6)';
-ctx.fillRect(cell*1.2,cell*2.4,cell*1.8,cell*1.8);
-ctx.strokeStyle='#38bdf8'; ctx.lineWidth=1.6;
-ctx.strokeRect(cell*1.2,cell*2.4,cell*1.8,cell*1.8);
+c.fillStyle='rgba(186,230,253,0.6)';
+c.fillRect(cell*1.2,cell*2.4,cell*1.8,cell*1.8);
+c.strokeStyle='#38bdf8'; c.lineWidth=1.6;
+c.strokeRect(cell*1.2,cell*2.4,cell*1.8,cell*1.8);
 dot(2.1,3.3,P1,P1S,cell*0.38,1);
 dot(4.3,3.4,P2,P2S,cell*0.5,1);
 seg(4.3,2.4,4.3,1.6,'#fbbf24',1.6);
@@ -4326,15 +4326,15 @@ seg(4.6,1.9,4.3,1.6,'#fbbf24',1.6);
                 }
                 case 'dischargego': {
 // 稲妻と打たれる石
-ctx.fillStyle='#facc15';
-ctx.beginPath();
-ctx.moveTo(cell*3.4,cell*0.4);
-ctx.lineTo(cell*2.2,cell*2.6);
-ctx.lineTo(cell*3.1,cell*2.6);
-ctx.lineTo(cell*2.0,cell*4.6);
-ctx.lineTo(cell*3.9,cell*2.0);
-ctx.lineTo(cell*3.0,cell*2.0);
-ctx.closePath(); ctx.fill();
+c.fillStyle='#facc15';
+c.beginPath();
+c.moveTo(cell*3.4,cell*0.4);
+c.lineTo(cell*2.2,cell*2.6);
+c.lineTo(cell*3.1,cell*2.6);
+c.lineTo(cell*2.0,cell*4.6);
+c.lineTo(cell*3.9,cell*2.0);
+c.lineTo(cell*3.0,cell*2.0);
+c.closePath(); c.fill();
 dot(1.4,4.8,P1,P1S,cell*0.42,1);
 dot(4.6,4.9,P2,P2S,cell*0.42,1);
                     break;
@@ -4983,8 +4983,8 @@ dot(3.05,2.2,'#fde68a','#f59e0b',cell*0.12,1);
 dot(1.4,1.4,'#fde68a','#d97706',cell*0.55,1);
 dot(4.6,4.6,'#fde68a','#d97706',cell*0.55,1);
 dot(3,3,'#fef3c7','#fbbf24',cell*0.4,1);
-ctx.strokeStyle='rgba(251,191,36,0.7)'; ctx.lineWidth=1.3;
-ctx.beginPath(); ctx.arc(cell*3,cell*3,cell*1.9,0,Math.PI*2); ctx.stroke();
+c.strokeStyle='rgba(251,191,36,0.7)'; c.lineWidth=1.3;
+c.beginPath(); c.arc(cell*3,cell*3,cell*1.9,0,Math.PI*2); c.stroke();
 dot(3.6,4.6,P1,P1S,cell*0.4,1);
 dot(1.4,2.6,P2,P2S,cell*0.4,1);
                     break;
@@ -4995,18 +4995,18 @@ dot(3,1.6,'#fde68a','#d97706',cell*0.7,1);
 seg(1.2,1.6,4.8,1.6,'rgba(217,119,6,0.6)',1.2);
 seg(3,0.2,3,3,'rgba(217,119,6,0.6)',1.2);
 dot(3,4.2,P1,P1S,cell*0.5,1);
-ctx.fillStyle='rgba(0,0,0,0.35)';
-ctx.beginPath();
-ctx.moveTo(cell*3,cell*4.4);
-ctx.lineTo(cell*4.6,cell*5.4);
-ctx.lineTo(cell*2.6,cell*5.6);
-ctx.closePath(); ctx.fill();
+c.fillStyle='rgba(0,0,0,0.35)';
+c.beginPath();
+c.moveTo(cell*3,cell*4.4);
+c.lineTo(cell*4.6,cell*5.4);
+c.lineTo(cell*2.6,cell*5.6);
+c.closePath(); c.fill();
                     break;
                 }
                 case 'getsureigo': {
 // 月齢と夜の帯
-ctx.fillStyle='rgba(30,27,75,0.75)';
-ctx.fillRect(0,0,cell*6,cell*2.2);
+c.fillStyle='rgba(30,27,75,0.75)';
+c.fillRect(0,0,cell*6,cell*2.2);
 dot(4.6,1.1,'#fde68a','#d97706',cell*0.55,1);
 dot(4.85,0.9,'rgba(30,27,75,0.9)','rgba(30,27,75,0.9)',cell*0.5,1);
 dot(1.5,3.4,P1,P1S,cell*0.5,1);
@@ -5143,12 +5143,12 @@ dot(2.2,1.6,'#e0e7ff','#818cf8',cell*0.06,1);
                 }
                 case 'greenflashgo': {
 // 落日のグリーンフラッシュ
-ctx.fillStyle='rgba(30,58,95,0.9)';
-ctx.fillRect(0,cell*3.4,cell*6,cell*2.6);
-ctx.fillStyle='#fb923c';
-ctx.beginPath(); ctx.arc(cell*3,cell*3.4,cell*1.3,Math.PI,0); ctx.fill();
-ctx.fillStyle='#4ade80';
-ctx.fillRect(cell*2.2,cell*2.0,cell*1.6,cell*0.28);
+c.fillStyle='rgba(30,58,95,0.9)';
+c.fillRect(0,cell*3.4,cell*6,cell*2.6);
+c.fillStyle='#fb923c';
+c.beginPath(); c.arc(cell*3,cell*3.4,cell*1.3,Math.PI,0); c.fill();
+c.fillStyle='#4ade80';
+c.fillRect(cell*2.2,cell*2.0,cell*1.6,cell*0.28);
 dot(1.2,4.6,P1,P1S,cell*0.4,1);
 dot(4.8,4.8,P2,P2S,cell*0.4,1);
                     break;
@@ -5177,8 +5177,8 @@ dot(4.8,4.8,P2,P2S,cell*0.4,1);
                 }
                 case 'hakubogo': {
 // 薄暮の空と霞む石
-ctx.fillStyle='rgba(167,139,250,0.35)';
-ctx.fillRect(0,0,cell*6,cell*6);
+c.fillStyle='rgba(167,139,250,0.35)';
+c.fillRect(0,0,cell*6,cell*6);
 dot(3,1.4,'#fb923c','#ea580c',cell*0.55,1);
 dot(2,3.6,P1,P1S,cell*0.5,0.55);
 dot(4,3.8,P2,P2S,cell*0.5,0.55);
@@ -5513,9 +5513,9 @@ seg(4,1.15,4,1.38,'#93c5fd',1.2);
                 }
                 case 'inductiongo': {
 // コイルと引き寄せられる石
-ctx.strokeStyle='#c084fc'; ctx.lineWidth=1.6;
-ctx.beginPath(); ctx.arc(cell*1.6,cell*3,cell*0.9,0,Math.PI*2); ctx.stroke();
-ctx.beginPath(); ctx.arc(cell*2.6,cell*3,cell*0.9,0,Math.PI*2); ctx.stroke();
+c.strokeStyle='#c084fc'; c.lineWidth=1.6;
+c.beginPath(); c.arc(cell*1.6,cell*3,cell*0.9,0,Math.PI*2); c.stroke();
+c.beginPath(); c.arc(cell*2.6,cell*3,cell*0.9,0,Math.PI*2); c.stroke();
 dot(1.6,3,P1,P1S,cell*0.4,1);
 dot(2.6,3,P1,P1S,cell*0.4,1);
 dot(5.0,3,P2,P2S,cell*0.45,1);
@@ -5577,8 +5577,8 @@ seg(4.1,3.2,3.9,3,'#c084fc',1.6);
                 case 'insulatorgo': {
 // 白い陶器の絶縁石と電流の分断
 dot(3,3,P1,P1S,cell*0.55,1);
-ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=2.2;
-ctx.beginPath(); ctx.arc(cell*3,cell*3,cell*0.85,0,Math.PI*2); ctx.stroke();
+c.strokeStyle='#e2e8f0'; c.lineWidth=2.2;
+c.beginPath(); c.arc(cell*3,cell*3,cell*0.85,0,Math.PI*2); c.stroke();
 seg(0.5,1.2,2.0,1.2,'#facc15',1.5);
 seg(4.0,1.2,5.5,1.2,'#facc15',1.5);
 seg(2.0,1.2,2.0,2.2,'#facc15',1.5);
@@ -5862,9 +5862,9 @@ seg(4.0,1.2,4.0,2.2,'#facc15',1.5);
                 }
                 case 'keichitsugo': {
 // 土から目覚める蟲と伏せ石
-ctx.fillStyle='rgba(110,80,50,0.75)';
-ctx.beginPath(); ctx.arc(cell*2,cell*4.6,cell*1.7,Math.PI,0); ctx.fill();
-ctx.beginPath(); ctx.arc(cell*4.2,cell*4.8,cell*1.3,Math.PI,0); ctx.fill();
+c.fillStyle='rgba(110,80,50,0.75)';
+c.beginPath(); c.arc(cell*2,cell*4.6,cell*1.7,Math.PI,0); c.fill();
+c.beginPath(); c.arc(cell*4.2,cell*4.8,cell*1.3,Math.PI,0); c.fill();
 dot(2,3.4,P1,P1S,cell*0.5,1);
 dot(4.2,3.9,P2,P2S,cell*0.45,1);
 seg(2.6,1.6,3.6,1.2,'#4ade80',1.6);
@@ -6316,10 +6316,10 @@ dot(3.85,2.9,'#86efac','#166534',cell*0.16,1);
                 }
                 case 'magnetpolego': {
 // N極とS極の磁石
-ctx.fillStyle='#ef4444';
-ctx.fillRect(cell*1.4,cell*2.0,cell*1.6,cell*0.9);
-ctx.fillStyle='#3b82f6';
-ctx.fillRect(cell*3.0,cell*2.0,cell*1.6,cell*0.9);
+c.fillStyle='#ef4444';
+c.fillRect(cell*1.4,cell*2.0,cell*1.6,cell*0.9);
+c.fillStyle='#3b82f6';
+c.fillRect(cell*3.0,cell*2.0,cell*1.6,cell*0.9);
 txt('N',2.2,2.15,'#fff',cell*0.7);
 txt('S',3.8,2.15,'#fff',cell*0.7);
 seg(1.4,4.4,4.6,4.4,'rgba(120,120,120,0.7)',1.2);
@@ -7170,8 +7170,8 @@ dot(4.6,4,P1,P1S,cell*0.42,1);
                 }
                 case 'polarnightgo': {
 // 極夜の星空と沈む盤
-ctx.fillStyle='rgba(15,23,42,0.92)';
-ctx.fillRect(0,0,cell*6,cell*6);
+c.fillStyle='rgba(15,23,42,0.92)';
+c.fillRect(0,0,cell*6,cell*6);
 dot(1.2,1.0,'#e0e7ff','#818cf8',cell*0.09,1);
 dot(3.4,0.7,'#e0e7ff','#818cf8',cell*0.07,1);
 dot(4.8,1.5,'#e0e7ff','#818cf8',cell*0.08,1);
@@ -7796,10 +7796,10 @@ dot(5.1,3,P2,P2S,cell*0.35,1);
                 case 'sekkigo': {
 // 四半分に色分けされた節気盤と太陽
 const q = [[P1,'rgba(74,222,128,0.85)'],[P2S,'rgba(250,204,21,0.85)'],[P1S,'rgba(248,113,113,0.85)'],[P2,'rgba(96,165,250,0.85)']];
-ctx.fillStyle=q[0][1]; ctx.fillRect(0,0,cell*3,cell*3);
-ctx.fillStyle=q[1][1]; ctx.fillRect(cell*3,0,cell*3,cell*3);
-ctx.fillStyle=q[2][1]; ctx.fillRect(0,cell*3,cell*3,cell*3);
-ctx.fillStyle=q[3][1]; ctx.fillRect(cell*3,cell*3,cell*3,cell*3);
+c.fillStyle=q[0][1]; c.fillRect(0,0,cell*3,cell*3);
+c.fillStyle=q[1][1]; c.fillRect(cell*3,0,cell*3,cell*3);
+c.fillStyle=q[2][1]; c.fillRect(0,cell*3,cell*3,cell*3);
+c.fillStyle=q[3][1]; c.fillRect(cell*3,cell*3,cell*3,cell*3);
 dot(3,3,'#fde68a','#b45309',cell*0.55,1);
 seg(1,3,5,3,'rgba(120,60,10,0.8)',1.2);
 seg(3,1,3,5,'rgba(120,60,10,0.8)',1.2);
@@ -8499,10 +8499,10 @@ seg(3.7,2.3,2.3,3.7,'#bae6fd',1.2);
                 }
                 case 'sunpillargo': {
 // 縦に立つ光柱と石
-ctx.fillStyle='rgba(253,224,71,0.45)';
-ctx.fillRect(cell*2.2,0,cell*1.6,cell*6);
-ctx.strokeStyle='rgba(251,191,36,0.9)'; ctx.lineWidth=1.4;
-ctx.strokeRect(cell*2.2,0,cell*1.6,cell*6);
+c.fillStyle='rgba(253,224,71,0.45)';
+c.fillRect(cell*2.2,0,cell*1.6,cell*6);
+c.strokeStyle='rgba(251,191,36,0.9)'; c.lineWidth=1.4;
+c.strokeRect(cell*2.2,0,cell*1.6,cell*6);
 dot(3,1.2,P1,P1S,cell*0.42,1);
 dot(3,2.8,P1,P1S,cell*0.42,1);
 dot(3,4.4,P1,P1S,cell*0.42,1);
@@ -9226,10 +9226,10 @@ dot(5.2,3.0,P2,P2S,cell*0.4,1);
                 case 'unengo': {
 // 月と暈の輪、雨の前兆
 dot(3,2.2,'#fde68a','#d97706',cell*0.6,1);
-ctx.strokeStyle='rgba(165,180,252,0.8)'; ctx.lineWidth=1.4;
-ctx.beginPath(); ctx.arc(cell*3,cell*2.2,cell*1.5,0,Math.PI*2); ctx.stroke();
-ctx.strokeStyle='rgba(165,180,252,0.4)';
-ctx.beginPath(); ctx.arc(cell*3,cell*2.2,cell*2.0,0,Math.PI*2); ctx.stroke();
+c.strokeStyle='rgba(165,180,252,0.8)'; c.lineWidth=1.4;
+c.beginPath(); c.arc(cell*3,cell*2.2,cell*1.5,0,Math.PI*2); c.stroke();
+c.strokeStyle='rgba(165,180,252,0.4)';
+c.beginPath(); c.arc(cell*3,cell*2.2,cell*2.0,0,Math.PI*2); c.stroke();
 seg(1,4.2,0.5,5.4,'#60a5fa',1.4);
 seg(3,4.0,2.5,5.2,'#60a5fa',1.4);
 seg(5,4.2,4.5,5.4,'#60a5fa',1.4);
@@ -9272,8 +9272,8 @@ seg(5,4.2,4.5,5.4,'#60a5fa',1.4);
                 }
                 case 'usuigo': {
 // 泥に沈む石と雨の帯
-ctx.fillStyle='rgba(146,64,14,0.55)';
-ctx.fillRect(0,cell*3.4,cell*6,cell*2.6);
+c.fillStyle='rgba(146,64,14,0.55)';
+c.fillRect(0,cell*3.4,cell*6,cell*2.6);
 dot(2,3.1,P1,P1S,cell*0.5,1);
 dot(4,3.3,P2,P2S,cell*0.42,1);
 seg(1,0.8,0.5,2.4,'#60a5fa',1.5);
@@ -9663,7 +9663,7 @@ seg(5,0.8,4.5,2.4,'#60a5fa',1.5);
             const rcv = document.getElementById('resultIcon');
             const rcx = rcv.getContext('2d');
             rcx.clearRect(0, 0, rcv.width, rcv.height);
-            drawIcon(rcx, v.icon || v.kind, 112);
+            try { drawIcon(rcx, v.icon || v.kind, 112); } catch (e) { /* アイコン失敗でも結果は出す */ }
             document.getElementById('resultName').textContent = v.name;
             document.getElementById('resultJp').textContent = v.jp;
             document.getElementById('resultDesc').textContent = v.desc;
@@ -9719,16 +9719,18 @@ seg(5,0.8,4.5,2.4,'#60a5fa',1.5);
 
             let i = 0, sparkleAt = 0;
             function step() {
-                const g = pool[seq[i]]._game;
-                setRoul(g);
-                roulPrev.textContent = pool[seq[(i - 1 + seq.length) % seq.length]]._game.name;
-                roulNext.textContent = pool[seq[(i + 1) % seq.length]]._game.name;
-                roulCard.classList.remove('roul-tick');
-                void roulCard.offsetWidth;
-                roulCard.classList.add('roul-tick');
-                tick(700 + i * 8, 0.04, 0.05);
-                const now = performance.now();
-                if (now - sparkleAt > 90) { sparkleAt = now; spawnTwinkle(); }
+                try { // 1件の描画失敗で演出全体が固まらないようにする
+                    const g = pool[seq[i]]._game;
+                    setRoul(g);
+                    roulPrev.textContent = pool[seq[(i - 1 + seq.length) % seq.length]]._game.name;
+                    roulNext.textContent = pool[seq[(i + 1) % seq.length]]._game.name;
+                    roulCard.classList.remove('roul-tick');
+                    void roulCard.offsetWidth;
+                    roulCard.classList.add('roul-tick');
+                    tick(700 + i * 8, 0.04, 0.05);
+                    const now = performance.now();
+                    if (now - sparkleAt > 90) { sparkleAt = now; spawnTwinkle(); }
+                } catch (e) { /* skip */ }
                 i++;
                 if (i < seq.length) {
                     const f = i / seq.length;
