@@ -7,6 +7,8 @@
 
 ## ゲーム一覧
 
+全リストは自動生成の [VARIANTS.md](VARIANTS.md) を参照。以下は代表例。
+
 ### ピース系 (連結碁石)
 
 | ゲーム | 内容 |
@@ -144,8 +146,30 @@
 - 9・13・19路 (ALGO は 13/19/25路) の盤サイズ
 - 各画面右上の「?」ボタンでルールモーダル (基本ルール + 派生ルール + 操作説明)
 
+## サイト機能
+
+- **共通ナビ** — 全ゲーム上部に「← 一覧 / ★お気に入り / 🎲ランダム / 🔗シェア / 🐞バグ報告」 (`tools/inject-site.js` で注入)
+- **お気に入り** — `localStorage('mamego-favs')`。index で絞り込み可。★押下で GoatCounter に `fav/<slug>` イベント送信
+- **ランキング** — index の「🏆人気順」。GoatCounter イベントを夜間 Action (`nightly-ranking.yml`) が集計 → `ranking.js` コミット
+- **NEW/調整中バッジ** — 追加30日以内は NEW、`tools/health-flags.json` に書いたゲームは「調整中」
+- **OGP** — 全ページに og:title/description/`og/<slug>.png` カード (`tools/og-image.js` で生成)
+- **sitemap.xml / robots.txt** — `tools/build-manifest.js` で自動生成
+- **バグ報告** — 🐞ボタンで診断情報 (slug/ビルド/盤サイズ/UA) をコピーし prefilled issue へ。`game:<slug>` ラベル自動付与 (`issue-game-label.yml`)
+- **アナリティクス** — `site-config.js` の `goat` にサイトコードを入れると GoatCounter が有効化
+
 ## 開発
 
-- `gen_variants.js` — バリアント HTML を ALGO ベース (通常囲碁エンジン) から生成 (`node gen_variants.js`)
+- `npm run gen` — 生成チェーン一式: `gen_variants.js` (wave1) → `gen_wave2.js` → `gen_wave3.js` → `gen_wave3_index.js` (index/icon-draw 更新) → `tools/build-manifest.js` (games.json/games.js/VARIANTS.md/sitemap/robots) → `tools/inject-site.js` (全HTMLへ共通部品注入)
+- `npm run og` — OGPカード `og/*.png` を生成 (要 `npm install`・CJKフォント・ImageMagick)
+- `npm run ranking` — GoatCounter 集計 → ranking.js (要 `GOATCOUNTER_CODE`/`GOATCOUNTER_TOKEN`)
 - `node test-logic.js` / `node test-algo.js` — TETOGO/ALGO のルールエンジンテスト (vm + DOM スタブ)
 - `node test-variants.js` — 全バリアントの起動 + 固有ルールのスモークテスト
+- `tools/sim-game.js` — ランダム対局シミュレーション (健全性チェック)
+- `tools/health-flags.json` — 「調整中」バッジの手動フラグ (`{"file.html": "理由"}`)
+
+生成物の再ビルドは `regen-assets.yml` が push 時に自動化。必要な Actions 変数:
+
+| 種別 | 名前 | 用途 |
+|---|---|---|
+| Secret | `GOATCOUNTER_TOKEN` | ranking 集計 API |
+| Variable | `GOATCOUNTER_CODE` | GoatCounter サイトコード |

@@ -1,0 +1,50 @@
+name: nightly-ranking
+
+# 毎日 JST 05:00 (UTC 20:00) に GoatCounter のイベントを集計し ranking.js をコミットする。
+# 必要な設定 (未設定なら何もせず終了):
+#   Settings → Secrets and variables → Actions
+#     Secret : GOATCOUNTER_TOKEN  (GoatCounter の API トークン)
+#     Variable: GOATCOUNTER_CODE  (GoatCounter のサイトコード)
+on:
+  schedule:
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ranking:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build ranking
+        if: vars.GOATCOUNTER_CODE != '' && secrets.GOATCOUNTER_TOKEN != ''
+        env:
+          GOATCOUNTER_CODE: ${{ vars.GOATCOUNTER_CODE }}
+          GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
+        run: node tools/build-ranking.js
+
+      - name: Skip notice
+        if: vars.GOATCOUNTER_CODE == '' || secrets.GOATCOUNTER_TOKEN == ''
+        run: echo "GOATCOUNTER_CODE / GOATCOUNTER_TOKEN 未設定のため集計スキップ (設定後に自動で動きます)"
+
+      - name: Commit ranking.js
+        if: vars.GOATCOUNTER_CODE != '' && secrets.GOATCOUNTER_TOKEN != ''
+        run: |
+          if git diff --quiet ranking.js ranking.json 2>/dev/null; then
+            echo "no change"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add ranking.js ranking.json
+            git commit -m "ranking: $(date -u +%Y-%m-%d) 集計"
+            git push
+          fi

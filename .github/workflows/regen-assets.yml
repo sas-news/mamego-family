@@ -1,0 +1,57 @@
+name: regen-assets
+
+# ゲーム生成の入力 (spec / gen系 / テンプレ / ツール) が main に push されたら
+# 生成チェーンを回し、生成物 (HTML, games.json, og/*.png 等) をコミットし直す。
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'algo.html'
+      - 'gen_*.js'
+      - 'variants2/**'
+      - 'variants3/**'
+      - 'icon-draw.js'
+      - 'tools/**'
+      - 'site-*.js'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regen-assets
+  cancel-in-progress: false
+
+jobs:
+  regen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install deps (node-canvas + フォント + ImageMagick)
+        run: |
+          npm ci --no-audit --no-fund
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk imagemagick
+
+      - name: Regenerate games + manifest + inject + og images
+        run: npm run gen && npm run og
+
+      - name: Commit regenerated assets
+        run: |
+          if git status --porcelain | grep -q .; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A '*.html' 'games.json' 'games.js' 'VARIANTS.md' 'sitemap.xml' 'robots.txt' 'og/' 'icon-draw.js'
+            git commit -m "regen: 生成物の再構築 ($(git rev-parse --short HEAD))"
+            git push
+          else
+            echo "no changes"
+          fi

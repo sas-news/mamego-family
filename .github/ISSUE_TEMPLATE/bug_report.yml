@@ -1,0 +1,44 @@
+name: 🐞 バグ報告
+description: 変則碁シリーズのバグ・不具合の報告
+title: "[ゲーム名] 何が起きたか一言で"
+labels: ["bug"]
+body:
+  - type: input
+    id: game
+    attributes:
+      label: ゲーム
+      description: どのゲームで起きましたか (例: GO / normgo.html)。分からなければ「不明」
+      placeholder: "例: gravitygo"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: 何が起きたか
+      description: 起きたこと・期待していた動作を書いてください
+      placeholder: "例: パスを2回したのに終局しなかった。地の集計画面に進むはず"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 再現手順
+      description: 分かる範囲で。盤サイズ・対戦モード (ローカル/AI/オンライン) などもあると助かります
+      placeholder: "1. 19路で開始\n2. AI対戦モード\n3. …"
+    validations:
+      required: false
+  - type: textarea
+    id: env
+    attributes:
+      label: 環境・診断情報
+      description: ゲーム内の🐞ボタン →「診断情報をコピー」で取得した内容があれば貼ってください (空でもOK)
+      placeholder: "game: GRAVGO\nfile: gravgo.html\nua: …"
+    validations:
+      required: false
+  - type: checkboxes
+    id: notice
+    attributes:
+      label: 確認
+      options:
+        - label: 同じ内容のissueが既にないか検索しました
+          required: true
