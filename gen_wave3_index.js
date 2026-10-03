@@ -6,6 +6,7 @@ const path = require('path');
 const specsDir = path.join(__dirname, 'variants3');
 const iconsDir = path.join(specsDir, 'icons');
 const indexPath = path.join(__dirname, 'index.html');
+const iconsPath = path.join(__dirname, 'icon-draw.js');
 
 const specs = fs.readdirSync(specsDir)
     .filter(f => f.endsWith('.spec.js')).sort()
@@ -37,14 +38,16 @@ const ICON_END = '                // == WAVE3 ICONS END ==';
 const iconBlock = [ICON_BEGIN, cases.join('\n'), ICON_END].join('\n');
 
 let html = fs.readFileSync(indexPath, 'utf8');
+let iconJs = fs.readFileSync(iconsPath, 'utf8');
 const strip = (s, b, e) => s.replace(new RegExp(`${b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s\\S]*?${e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\n?`, 'm'), '');
 
-// 既存ブロックを除去してから再挿入
+// 既存ブロックを除去してから再挿入 (カタログ行は index.html、アイコン case は icon-draw.js)
 html = strip(html, CATALOG_BEGIN.trim(), CATALOG_END.trim());
-html = strip(html, ICON_BEGIN.trim(), ICON_END.trim());
+iconJs = strip(iconJs, ICON_BEGIN.trim(), ICON_END.trim());
 if (!html.includes('                    ];')) throw new Error('GAMES配列終端アンカーが見つかりません');
 html = html.replace('                    ];', catalogBlock + '\n                    ];');
-html = html.replace('                default: // 未定義kind: 石+スパークル (wave2汎用)', iconBlock + '\n                default: // 未定義kind: 石+スパークル (wave2汎用)');
+iconJs = iconJs.replace('                default: // 未定義kind: 石+スパークル (wave2汎用)', iconBlock + '\n                default: // 未定義kind: 石+スパークル (wave2汎用)');
 
 fs.writeFileSync(indexPath, html);
+fs.writeFileSync(iconsPath, iconJs);
 console.log(`index.html: ${specs.length} catalog rows, ${Object.keys(iconBodies).length} icon cases injected`);

@@ -1,0 +1,19 @@
+name: 💡 要望・新ゲーム案
+description: 新しい変則碁のアイデアや機能要望
+title: "[要望] 内容を一言で"
+labels: ["enhancement"]
+body:
+  - type: input
+    id: game
+    attributes:
+      label: 対象ゲーム (あれば)
+      placeholder: "例: gravitygo / サイト全体 / 新ゲーム案"
+    validations:
+      required: false
+  - type: textarea
+    id: idea
+    attributes:
+      label: 内容
+      description: ルール案・欲しい機能など自由に
+    validations:
+      required: true

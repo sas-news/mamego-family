@@ -1,0 +1,16 @@
+{
+  "name": "mamego-family",
+  "private": true,
+  "description": "変則碁シリーズ — 静的HTML変則囲碁コレクション",
+  "scripts": {
+    "gen": "node gen_variants.js && node gen_wave2.js && node gen_wave3.js && node gen_wave3_index.js && node tools/build-manifest.js && node tools/inject-site.js",
+    "manifest": "node tools/build-manifest.js",
+    "inject": "node tools/inject-site.js",
+    "og": "node tools/og-image.js",
+    "ranking": "node tools/build-ranking.js",
+    "test": "node test-variants.js && node test-algo.js && node test-logic.js"
+  },
+  "devDependencies": {
+    "canvas": "^3.1.0"
+  }
+}

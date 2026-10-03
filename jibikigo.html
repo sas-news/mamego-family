@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>JIBIKIGO - 地引碁</title>
+    <!-- MAMEGO:META -->
+    <meta name="description" content="1手で4個以上獲れば大漁。獲った石は終局時に2倍計上される。 — 地引碁の変則囲碁。全1000種の変則碁シリーズ。">
+    <link rel="canonical" href="https://sas-news.github.io/mamego-family/jibikigo.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="変則碁シリーズ MAMEGO family">
+    <meta property="og:title" content="JIBIKIGO - 地引碁 | 変則碁シリーズ">
+    <meta property="og:description" content="1手で4個以上獲れば大漁。獲った石は終局時に2倍計上される。 — 地引碁の変則囲碁。全1000種の変則碁シリーズ。">
+    <meta property="og:url" content="https://sas-news.github.io/mamego-family/jibikigo.html">
+    <meta property="og:image" content="https://sas-news.github.io/mamego-family/og/jibikigo.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="mamego-build" content="75bb708">
+    <!-- /MAMEGO:META -->
+
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -35,6 +49,27 @@
 
     <!-- メインコンテンツ領域 -->
     <div class="w-full max-w-xl flex flex-col items-center gap-4 sm:gap-5">
+    <!-- MAMEGO:NAV -->
+        <style>
+            .mg-nav-btn{width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;border-radius:.5rem;border:1px solid;color:inherit;opacity:.75;transition:all .15s;cursor:pointer;background:transparent;font-size:.95rem;line-height:1}
+            .mg-nav-btn:hover{opacity:1;transform:scale(1.08)}
+            .mg-nav-btn.mg-faved{color:#f59e0b;opacity:1;text-shadow:0 0 8px rgba(251,191,36,.85)}
+        </style>
+        <nav class="w-full flex items-center justify-between text-xs sm:text-sm font-bold" aria-label="サイトナビ">
+            <a href="index.html" class="px-2.5 py-1.5 rounded-lg border border-current/25 hover:bg-black/10 active:scale-95 transition-all" title="ゲーム一覧に戻る">← 一覧</a>
+            <div class="relative flex items-center gap-1">
+                <button id="mgFav" title="お気に入り" class="mg-nav-btn" aria-label="お気に入り">★</button>
+                <a id="mgRand" href="#" title="別の碁をランダムで" class="mg-nav-btn" aria-label="ランダム">🎲</a>
+                <button id="mgShare" title="シェア" class="mg-nav-btn" aria-label="シェア">🔗</button>
+                <button id="mgBug" title="バグ報告" class="mg-nav-btn" aria-label="バグ報告">🐞</button>
+                <div id="mgBugMenu" class="hidden absolute right-0 top-full mt-1 z-50 bg-white text-neutral-900 rounded-xl border border-neutral-300 shadow-lg p-1 min-w-[11rem]">
+                    <button data-report="github" class="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100">GitHubで報告</button>
+                    <button data-report="form" class="hidden w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100">フォームで報告</button>
+                    <button data-report="copy" class="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100">診断情報をコピー</button>
+                </div>
+            </div>
+        </nav>
+    <!-- /MAMEGO:NAV -->
 
         <!-- ヘッダー: タイトル & 設定歯車ボタン -->
         <header class="w-full flex items-center justify-between pt-1">
@@ -164,6 +199,11 @@
             スマホ: 1タップ目プレビュー、2タップ目確定
         </p>
     </div>
+    <!-- MAMEGO:FOOT -->
+    <footer class="w-full text-center text-[10px] opacity-50 leading-relaxed">
+        変則碁シリーズ · <a href="index.html" class="underline">全ゲーム一覧</a> · <a href="https://github.com/sas-news/mamego-family" class="underline" target="_blank" rel="noopener">GitHub</a> · <a href="#" id="mgFootBug" class="underline">バグ報告</a>
+    </footer>
+    <!-- /MAMEGO:FOOT -->
 
     <!-- 【ルールモーダル】 -->
     <div id="rulesModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] hidden">
@@ -2806,5 +2846,11 @@
             }
         };
     </script>
+    <!-- MAMEGO:SCRIPTS -->
+    <script src="site-config.js"></script>
+    <script src="games.js"></script>
+    <script src="site-common.js"></script>
+    <!-- /MAMEGO:SCRIPTS -->
+
 </body>
 </html>

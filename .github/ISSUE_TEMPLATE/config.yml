@@ -1,0 +1,6 @@
+blank_issues_enabled: true
+# Googleフォーム等の別窓口を用意したら contact_links に追加する:
+# contact_links:
+#   - name: フォームで報告 (GitHubアカウント不要)
+#     url: <GoogleフォームのURL>
+#     about: アカウントなしで送りたい場合はこちら
