@@ -184,6 +184,7 @@
         <!-- 全ゲーム一覧 -->
         <div id="gameGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
         <p id="gameNoResults" class="hidden w-full text-center text-sm opacity-60 py-6">該当する囲碁がありません</p>
+        <button id="gameMoreBtn" type="button" class="hidden w-full py-2.5 rounded-xl border border-[#cbb07a] bg-white/60 hover:bg-white/90 text-sm font-bold transition-all">もっとみる</button>
 
         <!-- 一番上に戻る -->
         <button id="backToTop" type="button" title="一番上に戻る" aria-label="一番上に戻る">↑</button>
@@ -1303,10 +1304,13 @@
         }, { rootMargin: '300px 0px' });
         const gameCountEl = document.getElementById('gameCount');
         const noResultsEl = document.getElementById('gameNoResults');
+        const moreBtn = document.getElementById('gameMoreBtn');
         const searchInput = document.getElementById('gameSearch');
         const searchClear = document.getElementById('gameSearchClear');
         const favFilterBtn = document.getElementById('favFilterBtn');
         const favCountEl = document.getElementById('favCount');
+        const INITIAL_SHOW = 12; // 「もっとみる」前の初期表示件数
+        let showAll = false;
         gameCountEl.textContent = `全${GAMES.length}種`;
 
         // お気に入り (localStorage永続化。ゲームのfile名を保持)
@@ -1343,22 +1347,27 @@
         }
         function applyGameFilter(q) {
             const terms = normSearch(q).split(/\s+/).filter(Boolean);
-            let shown = 0;
-            tiles.forEach(t => {
-                const hit = (!favOnly || favs.has(t._game.file)) &&
-                    (!terms.length || terms.every(term => t._hay.includes(term) || subseqHit(term, t._hay)));
-                t.style.display = hit ? '' : 'none';
-                if (hit) shown++;
-            });
             const hasQuery = terms.length > 0;
+            // 現在のDOM順 (並び替え反映済み) でヒットしたタイルを集める
+            const hits = [...grid.children].filter(t => t._game &&
+                (!favOnly || favs.has(t._game.file)) &&
+                (!terms.length || terms.every(term => t._hay.includes(term) || subseqHit(term, t._hay))));
+            // 絞り込みなしの通常表示だけ先頭INITIAL_SHOW件に制限 (検索/★フィルタ時は全件)
+            const limited = !showAll && !hasQuery && !favOnly && hits.length > INITIAL_SHOW;
+            tiles.forEach(t => { t.style.display = 'none'; });
+            hits.forEach((t, i) => { t.style.display = (limited && i >= INITIAL_SHOW) ? 'none' : ''; });
+            const shown = limited ? INITIAL_SHOW : hits.length;
             noResultsEl.textContent = (favOnly && !favs.size)
                 ? 'お気に入りはまだありません — 各タイルの ★ で登録できます'
                 : '該当する囲碁がありません';
-            noResultsEl.classList.toggle('hidden', shown > 0);
+            noResultsEl.classList.toggle('hidden', hits.length > 0);
             searchClear.classList.toggle('hidden', !hasQuery);
-            gameCountEl.textContent = favOnly ? `★${shown}件 / 全${GAMES.length}種`
-                : (hasQuery ? `${shown}件 / 全${GAMES.length}種` : `全${GAMES.length}種`);
+            moreBtn.textContent = `もっとみる (残り${hits.length - INITIAL_SHOW}種)`;
+            moreBtn.classList.toggle('hidden', !limited);
+            gameCountEl.textContent = favOnly ? `★${hits.length}件 / 全${GAMES.length}種`
+                : ((hasQuery || limited) ? `${shown}件 / 全${GAMES.length}種` : `全${GAMES.length}種`);
         }
+        moreBtn.addEventListener('click', () => { showAll = true; applyGameFilter(searchInput.value); });
         searchInput.addEventListener('input', e => applyGameFilter(e.target.value));
         searchClear.addEventListener('click', () => { searchInput.value = ''; applyGameFilter(''); searchInput.focus(); });
         GAMES.forEach((v, idx) => {
@@ -1466,9 +1475,10 @@
                 : sortMode === 'new' ? '追加日が新しい順'
                 : '人気順は全ユーザーの★を毎日集計';
         }
-        sortPopBtn.addEventListener('click', () => { sortMode = sortMode === 'pop' ? '' : 'pop'; applySort(); });
-        sortNewBtn.addEventListener('click', () => { sortMode = sortMode === 'new' ? '' : 'new'; applySort(); });
+        sortPopBtn.addEventListener('click', () => { sortMode = sortMode === 'pop' ? '' : 'pop'; applySort(); applyGameFilter(searchInput.value); });
+        sortNewBtn.addEventListener('click', () => { sortMode = sortMode === 'new' ? '' : 'new'; applySort(); applyGameFilter(searchInput.value); });
         applySort();
+        applyGameFilter('');
 
         // ---- ドミノ碁豆 (MAMEGO アイコン) ----
         drawIcon(document.getElementById('iconMamego').getContext('2d'), 'mame', 96);
