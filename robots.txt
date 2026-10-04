@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sas-news.github.io/mamego-family/sitemap.xml
