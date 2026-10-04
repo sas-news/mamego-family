@@ -15,7 +15,7 @@
     <meta property="og:image" content="https://sas-news.github.io/mamego-family/og/checkergo.png">
     <meta property="og:locale" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="mamego-build" content="581cdd4">
+    <meta name="mamego-build" content="773174d">
     <!-- /MAMEGO:META -->
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -51,21 +51,28 @@
     <div class="w-full max-w-xl flex flex-col items-center gap-4 sm:gap-5">
     <!-- MAMEGO:NAV -->
         <style>
-            .mg-nav-btn{width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;border-radius:.5rem;border:1px solid;color:inherit;opacity:.75;transition:all .15s;cursor:pointer;background:transparent;font-size:.95rem;line-height:1}
-            .mg-nav-btn:hover{opacity:1;transform:scale(1.08)}
-            .mg-nav-btn.mg-faved{color:#f59e0b;opacity:1;text-shadow:0 0 8px rgba(251,191,36,.85)}
+            .mg-menu-btn{display:flex;align-items:center;gap:.3rem;padding:.4rem .7rem;border-radius:.5rem;border:1px solid;color:inherit;opacity:.8;transition:all .15s;cursor:pointer;background:transparent;font:inherit;font-weight:700;font-size:inherit;line-height:1}
+            .mg-menu-btn:hover{opacity:1}
+            .mg-menu-btn svg{width:1.05em;height:1.05em}
+            .mg-menu-btn svg path{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+            .mg-menu-btn.mg-faved{color:#d97706;border-color:#d97706;opacity:1}
+            .mg-menu-btn.mg-faved svg path{fill:currentColor}
+            .mg-menu-item{display:block;width:100%;text-align:left;padding:.55rem .8rem;border-radius:.5rem;border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit;cursor:pointer;white-space:nowrap;text-decoration:none}
+            .mg-menu-item:hover{background:rgba(0,0,0,.07)}
+            .mg-menu-item.hidden{display:none}
         </style>
         <nav class="w-full flex items-center justify-between text-xs sm:text-sm font-bold" aria-label="サイトナビ">
             <a href="index.html" class="px-2.5 py-1.5 rounded-lg border border-current/25 hover:bg-black/10 active:scale-95 transition-all" title="ゲーム一覧に戻る">← 一覧</a>
-            <div class="relative flex items-center gap-1">
-                <button id="mgFav" title="お気に入り" class="mg-nav-btn" aria-label="お気に入り">★</button>
-                <a id="mgRand" href="#" title="別の碁をランダムで" class="mg-nav-btn" aria-label="ランダム">🎲</a>
-                <button id="mgShare" title="シェア" class="mg-nav-btn" aria-label="シェア">🔗</button>
-                <button id="mgBug" title="バグ報告" class="mg-nav-btn" aria-label="バグ報告">🐞</button>
-                <div id="mgBugMenu" class="hidden absolute right-0 top-full mt-1 z-50 bg-white text-neutral-900 rounded-xl border border-neutral-300 shadow-lg p-1 min-w-[11rem]">
-                    <button data-report="github" class="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100">GitHubで報告</button>
-                    <button data-report="form" class="hidden w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100">フォームで報告</button>
-                    <button data-report="copy" class="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100">診断情報をコピー</button>
+            <div class="relative flex items-center gap-1.5">
+                <button id="mgFav" class="mg-menu-btn" title="お気に入りに追加" aria-label="お気に入りに追加" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.8 5.7 6.3.9-4.6 4.4 1.1 6.2L12 17.4l-5.6 3-1.1-6.2-4.6-4.4 6.3-.9z"/></svg></button>
+                <button id="mgShare" class="mg-menu-btn" title="リンクをコピー" aria-label="リンクをコピー"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11.5M7.8 7.7L12 3.5l4.2 4.2M5 12.5v6.5a1.5 1.5 0 001.5 1.5h11a1.5 1.5 0 001.5-1.5v-6.5"/></svg></button>
+                <button id="mgMenuBtn" class="mg-menu-btn" title="メニュー" aria-label="メニュー" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></svg></button>
+                <div id="mgMenu" class="hidden absolute right-0 top-full mt-1 z-50 bg-white text-neutral-900 rounded-xl border border-neutral-300 shadow-lg p-1 min-w-[12rem]" role="menu">
+                    <a id="mgRand" href="#" class="mg-menu-item" role="menuitem">ランダムなゲームへ</a>
+                    <div class="my-1 border-t border-neutral-200" role="separator"></div>
+                    <button data-report="github" class="mg-menu-item" role="menuitem">バグをGitHubで報告</button>
+                    <button data-report="form" class="mg-menu-item hidden" role="menuitem">バグをフォームで報告</button>
+                    <button data-report="copy" class="mg-menu-item" role="menuitem">診断情報をコピー</button>
                 </div>
             </div>
         </nav>
