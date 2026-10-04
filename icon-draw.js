@@ -52,6 +52,7 @@
         }
 
         function drawIcon(c, kind, W) {
+            const ctx = c; // spec のアイコンコードは ctx 名を仮定しているため別名を用意
             const cell = gridLines(c, W, 6);
             const R = cell * 0.42;
             const at = (gx, gy) => ({ x: cell + gx * cell, y: cell + gy * cell });
