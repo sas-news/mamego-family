@@ -111,10 +111,31 @@
         });
     }
 
-    // ---- ナビ配線 ----
+    // ---- ナビ配線 (文字ラベルのメニュー) ----
+    var menuBtn = document.getElementById('mgMenuBtn');
+    var menu = document.getElementById('mgMenu');
+    var closeMenu = function () {
+        if (menu) menu.classList.add('hidden');
+        if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+    };
+    if (menuBtn && menu) {
+        menuBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var open = menu.classList.toggle('hidden') === false;
+            menuBtn.setAttribute('aria-expanded', String(open));
+        });
+        document.addEventListener('click', function (e) {
+            if (!menu.contains(e.target) && e.target !== menuBtn) closeMenu();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeMenu();
+        });
+    }
     var favBtn = document.getElementById('mgFav');
     if (favBtn) {
-        var syncFav = function () { favBtn.classList.toggle('mg-faved', isFav()); };
+        var syncFav = function () {
+            favBtn.textContent = isFav() ? 'お気に入りを解除' : 'お気に入りに追加';
+        };
         syncFav();
         favBtn.addEventListener('click', function () {
             var on = toggleFav(); syncFav();
@@ -132,6 +153,7 @@
     }
     var shareBtn = document.getElementById('mgShare');
     if (shareBtn) {
+        if (navigator.share) shareBtn.textContent = 'このページをシェア';
         shareBtn.addEventListener('click', function () {
             var text = titleText + ' | 変則碁シリーズ';
             if (navigator.share) {
@@ -141,30 +163,22 @@
                     toast(ok ? 'シェア用にURLをコピーしました' : 'コピーに失敗しました');
                 });
             }
+            closeMenu();
         });
     }
-    // バグ報告メニュー (GitHub / フォーム / コピー)
-    var bugBtn = document.getElementById('mgBug');
-    if (bugBtn) {
-        var menu = document.getElementById('mgBugMenu');
-        var closeMenu = function () { if (menu) menu.classList.add('hidden'); };
-        bugBtn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            if (menu) { menu.classList.toggle('hidden'); }
-            else { report('github'); }
-        });
-        document.addEventListener('click', closeMenu);
-        if (menu) {
-            var gh = menu.querySelector('[data-report="github"]');
-            var fm = menu.querySelector('[data-report="form"]');
-            var cp = menu.querySelector('[data-report="copy"]');
-            if (gh) gh.addEventListener('click', function () { closeMenu(); report('github'); });
-            if (fm) {
-                if (SITE.reportForm) fm.addEventListener('click', function () { closeMenu(); report('form'); });
-                else fm.classList.add('hidden');
-            }
-            if (cp) cp.addEventListener('click', function () { closeMenu(); report('copy'); });
+    // バグ報告項目 (GitHub / フォーム / コピー) — メニュー内の data-report ボタン
+    if (menu) {
+        var gh = menu.querySelector('[data-report="github"]');
+        var fm = menu.querySelector('[data-report="form"]');
+        var cp = menu.querySelector('[data-report="copy"]');
+        if (gh) gh.addEventListener('click', function () { closeMenu(); report('github'); });
+        if (fm) {
+            if (SITE.reportForm) {
+                fm.classList.remove('hidden');
+                fm.addEventListener('click', function () { closeMenu(); report('form'); });
+            } else fm.classList.add('hidden');
         }
+        if (cp) cp.addEventListener('click', function () { closeMenu(); report('copy'); });
     }
     var footBug = document.getElementById('mgFootBug');
     if (footBug) footBug.addEventListener('click', function (e) { e.preventDefault(); report('github'); });
