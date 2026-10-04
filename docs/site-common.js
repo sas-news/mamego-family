@@ -135,9 +135,11 @@
     if (favBtn) {
         var syncFav = function () {
             var on = isFav();
-            favBtn.textContent = on ? 'お気に入り済み' : 'お気に入り';
             favBtn.classList.toggle('mg-faved', on);
             favBtn.setAttribute('aria-pressed', String(on));
+            var label = on ? 'お気に入りから外す' : 'お気に入りに追加';
+            favBtn.title = label;
+            favBtn.setAttribute('aria-label', label);
         };
         syncFav();
         favBtn.addEventListener('click', function () {
@@ -156,7 +158,7 @@
     }
     var shareBtn = document.getElementById('mgShare');
     if (shareBtn) {
-        if (navigator.share) shareBtn.textContent = 'このページをシェア';
+        if (navigator.share) { shareBtn.title = 'このページをシェア'; shareBtn.setAttribute('aria-label', 'このページをシェア'); }
         shareBtn.addEventListener('click', function () {
             var text = titleText + ' | 変則碁シリーズ';
             if (navigator.share) {
