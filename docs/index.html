@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>変則碁シリーズ - ゲーム一覧</title>
+    <!-- MAMEGO:META -->
+    <meta name="description" content="碁のルールを変えたブラウザゲーム集。全1000種、無料・インストール不要・ランダムで未知の碁に出会える。">
+    <link rel="canonical" href="https://sas-news.github.io/mamego-family/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="変則碁シリーズ MAMEGO family">
+    <meta property="og:title" content="変則碁シリーズ MAMEGO family">
+    <meta property="og:description" content="碁のルールを変えたブラウザゲーム集。全1000種、無料・インストール不要・ランダムで未知の碁に出会える。">
+    <meta property="og:url" content="https://sas-news.github.io/mamego-family/">
+    <meta property="og:image" content="https://sas-news.github.io/mamego-family/og/index.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="mamego-build" content="581cdd4">
+    <!-- /MAMEGO:META -->
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .roulette-btn {
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            box-shadow: 0 4px 0 #92400e, 0 8px 20px rgba(217, 119, 6, .45);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+        }
+        .roulette-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #92400e, 0 12px 28px rgba(217, 119, 6, .55); }
+        .roulette-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #92400e, 0 4px 12px rgba(217, 119, 6, .4); }
+        .roulette-btn:disabled { opacity: .55; pointer-events: none; }
+        #gameGrid.spinning { pointer-events: none; }
+        #gameGrid.spinning a.tile { opacity: .55; filter: saturate(.6); }
+        #gameGrid a.tile { position: relative; }
+        .tile.lit {
+            opacity: 1 !important; filter: none !important;
+            background: #fff; transform: scale(1.06); z-index: 5;
+            box-shadow: 0 0 0 3px #f59e0b, 0 0 22px 8px rgba(251, 191, 36, .85);
+        }
+        .tile.sparkle { opacity: 1 !important; background: #fffbeb; box-shadow: 0 0 0 2px #fde68a, 0 0 14px 4px rgba(253, 230, 138, .8); }
+        .tile.winner {
+            opacity: 1 !important; filter: none !important;
+            background: #fff; z-index: 6; transform: scale(1.07);
+            animation: winnerPulse .5s ease-in-out 3;
+            box-shadow: 0 0 0 4px #f59e0b, 0 0 34px 12px rgba(251, 191, 36, .95);
+        }
+        @keyframes winnerPulse {
+            0%, 100% { box-shadow: 0 0 0 3px #f59e0b, 0 0 20px 6px rgba(251, 191, 36, .7); transform: scale(1.06); }
+            50% { box-shadow: 0 0 0 5px #fbbf24, 0 0 46px 18px rgba(251, 191, 36, 1); transform: scale(1.11); }
+        }
+        .twinkle-star {
+            position: absolute; color: #fbbf24; pointer-events: none; z-index: 7;
+            text-shadow: 0 0 6px #fff, 0 0 10px #fde68a;
+            animation: twinkle .45s ease-in-out both;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0; transform: scale(.3) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.15) rotate(25deg); }
+            100% { opacity: 0; transform: scale(.6) rotate(45deg); }
+        }
+        .modal-card { animation: modalIn .4s cubic-bezier(.2, 1.5, .35, 1) both; }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(28px) scale(.8); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .confetti {
+            position: fixed; width: 8px; height: 8px; z-index: 60; pointer-events: none;
+            animation: confettiFly var(--d, 900ms) cubic-bezier(.15, .6, .4, 1) forwards;
+        }
+        @keyframes confettiFly {
+            to { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(.25); opacity: 0; }
+        }
+        /* ルーレット中央スロット (個数に関係なく必ず視界中央で回る) */
+        .roul-ghost {
+            opacity: .55; transform: scale(.85); max-width: 70vw;
+            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        #roulCard.roul-tick { animation: roulTick .09s linear; }
+        @keyframes roulTick {
+            0% { transform: translateY(-7px) scale(.99); }
+            100% { transform: translateY(0) scale(1); }
+        }
+        #roulCard.roul-final {
+            animation: roulFinal .45s cubic-bezier(.2, 1.6, .35, 1);
+            box-shadow: 0 0 0 4px #f59e0b, 0 0 44px 14px rgba(251, 191, 36, .95);
+        }
+        @keyframes roulFinal {
+            0% { transform: scale(1.14); }
+            100% { transform: scale(1); }
+        }
+        .search-shake { animation: shakeX .4s; }
+        @keyframes shakeX {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); } 75% { transform: translateX(6px); }
+        }
+        /* お気に入り */
+        .fav-star {
+            font-size: 17px; line-height: 1; align-self: center;
+            color: #cbb07a; opacity: .45; padding: 3px 2px;
+            transition: transform .15s, opacity .15s, color .15s;
+        }
+        .fav-star:hover { opacity: 1; transform: scale(1.3); }
+        .fav-star.faved { color: #f59e0b; opacity: 1; text-shadow: 0 0 9px rgba(251, 191, 36, .85); }
+        #favFilterBtn.fav-on { background: #f59e0b; color: #fff7ed; border-color: #d97706; }
+        #favFilterBtn.fav-on > span:first-child { color: #fff7ed; }
+        /* 並び替え + タイルバッジ */
+        .sort-btn.sort-on { background: #f59e0b; color: #fff7ed; border-color: #d97706; }
+        .sort-btn.sort-on:hover, #favFilterBtn.fav-on:hover { background: #f59e0b; color: #fff7ed; }
+        .tile-badge {
+            font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px;
+            line-height: 1.5; white-space: nowrap; align-self: baseline;
+        }
+        .badge-new { background: #16a34a; color: #fff; }
+        .badge-fix { background: #dc2626; color: #fff; }
+        .rank-badge { color: #b45309; font-size: 11px; font-weight: 800; min-width: 2.6em; align-self: center; }
+        #backToTop {
+            position: fixed; right: 16px; bottom: 16px; z-index: 30;
+            width: 52px; height: 52px; border-radius: 9999px;
+            background: linear-gradient(180deg, #fbbf24, #d97706);
+            color: #fff7ed; font-size: 22px; font-weight: 800;
+            border: 3px solid #92400e; box-shadow: 0 4px 0 #92400e, 0 8px 20px rgba(146, 64, 14, .45);
+            opacity: 0; pointer-events: none; transform: translateY(12px);
+            transition: opacity .25s, transform .25s;
+        }
+        #backToTop.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        #backToTop:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #92400e, 0 12px 26px rgba(146, 64, 14, .5); }
+        #backToTop:active { transform: translateY(1px); box-shadow: 0 2px 0 #92400e; }
+        .roulette-dice { display: inline-block; }
+        #spinBtn.spinning .roulette-dice { animation: diceShake .5s linear infinite; }
+        @keyframes diceShake {
+            0% { transform: rotate(0deg) scale(1); } 25% { transform: rotate(-18deg) scale(1.15); }
+            50% { transform: rotate(0deg) scale(1); } 75% { transform: rotate(18deg) scale(1.15); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[#f4e4bc] text-[#3e2211] flex flex-col items-center p-4 sm:p-8 select-none">
+
+    <div class="w-full max-w-2xl flex flex-col items-center gap-6">
+
+        <header class="text-center flex flex-col gap-1 pt-2">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-wider">変則碁シリーズ</h1>
+            <p class="text-sm opacity-70">碁のルールに「つながったピース」を持ち込んだ派生ゲーム一覧</p>
+        </header>
+
+        <!-- おまかせルーレット -->
+        <button id="spinBtn" class="roulette-btn w-full sm:w-auto text-[#fff7ed] rounded-2xl px-8 py-3.5 transition-all flex items-center justify-center gap-3 mx-auto">
+            <span class="roulette-dice text-3xl">🎲</span>
+            <span class="flex flex-col items-start leading-tight">
+                <span class="font-extrabold text-lg sm:text-xl tracking-widest">おまかせルーレット</span>
+                <span class="text-[10px] font-bold opacity-80 tracking-wider"><span id="gameCount"></span>からランダムで1つ選ぶ</span>
+            </span>
+        </button>
+
+        <!-- 囲碁検索 + お気に入りフィルタ -->
+        <div class="w-full flex gap-2">
+            <div class="flex-1 relative">
+                <input id="gameSearch" type="search" placeholder="囲碁を検索… (例: 引力, GO, 壁)" autocomplete="off"
+                    class="w-full rounded-xl border border-[#cbb07a] bg-white/80 px-4 py-2.5 text-sm font-bold placeholder:font-normal placeholder:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#a8842f]/60" />
+                <button id="gameSearchClear" type="button" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-lg opacity-40 hover:opacity-80">✕</button>
+            </div>
+            <button id="favFilterBtn" type="button" title="お気に入りだけ表示"
+                class="shrink-0 rounded-xl border border-[#cbb07a] bg-white/80 px-3 text-sm font-bold hover:bg-white transition-all flex items-center gap-1">
+                <span class="text-[#f59e0b]">★</span>お気に入り<span id="favCount" class="text-[11px] opacity-60"></span>
+            </button>
+        </div>
+
+        <!-- 並び替え -->
+        <div class="w-full flex items-center gap-2 text-[11px]">
+            <button id="sortPopBtn" type="button" title="全ユーザーのお気に入り・対局数で並ぶ (毎日集計)"
+                class="sort-btn rounded-lg border border-[#cbb07a] bg-white/80 px-2.5 py-1.5 font-bold hover:bg-white transition-all flex items-center gap-1">
+                <span class="text-[#f59e0b]">🏆</span>人気順<span id="popInfo" class="opacity-60"></span>
+            </button>
+            <button id="sortNewBtn" type="button" title="追加が新しい順"
+                class="sort-btn rounded-lg border border-[#cbb07a] bg-white/80 px-2.5 py-1.5 font-bold hover:bg-white transition-all flex items-center gap-1">
+                <span class="text-[#16a34a]">✦</span>新着順
+            </button>
+            <span id="rankNote" class="opacity-50 ml-auto hidden sm:block"></span>
+        </div>
+
+        <!-- 全ゲーム一覧 -->
+        <div id="gameGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+        <p id="gameNoResults" class="hidden w-full text-center text-sm opacity-60 py-6">該当する囲碁がありません</p>
+
+        <!-- 一番上に戻る -->
+        <button id="backToTop" type="button" title="一番上に戻る" aria-label="一番上に戻る">↑</button>
+
+        <!-- MAMEGO (原作) -->
+        <a href="https://cerevisiae-fii.github.io/mamego/" target="_blank" rel="noopener" class="group w-full bg-white/60 hover:bg-white/90 rounded-2xl border border-dashed border-[#cbb07a] transition-all p-4 flex items-center gap-4">
+            <canvas id="iconMamego" width="96" height="96" class="shrink-0 rounded-xl bg-[#e8c88b] w-14 h-14"></canvas>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-xl font-extrabold tracking-wide opacity-80">MAMEGO</h2>
+                    <span class="text-xs font-bold opacity-60">マメ碁</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#3e2211] text-[#f4e4bc] font-bold">原作</span>
+                </div>
+                <p class="text-xs sm:text-sm opacity-75 mt-1 leading-relaxed">
+                    1×2 の「碁豆」を配置するオリジナル (このシリーズの元ネタ)。<br>
+                    原作プレイページへ移動します。
+                </p>
+            </div>
+            <span class="text-2xl opacity-30 group-hover:opacity-70 group-hover:translate-x-1 transition-all">↗</span>
+        </a>
+
+        <footer class="text-[11px] opacity-50 text-center leading-relaxed pt-2 pb-4">
+            共通ルール: 連で呼吸点を確保 / 囲まれると取り / コウ・自殺手禁止 / パス×2で終局→地集計+コミ<br>
+            ローカル・AI・オンライン対戦対応<br>
+            <span class="inline-flex gap-2 mt-1">
+                <a class="underline" href="https://github.com/sas-news/mamego-family" target="_blank" rel="noopener">GitHub</a>·
+                <a class="underline" href="https://github.com/sas-news/mamego-family/issues/new?template=bug_report.yml" target="_blank" rel="noopener">バグ報告</a>·
+                <a class="underline" href="https://github.com/sas-news/mamego-family/blob/main/VARIANTS.md" target="_blank" rel="noopener">全ゲーム目録</a>
+            </span>
+        </footer>
+    </div>
+
+    <!-- ルーレット演出オーバーレイ (視界中央のスロット) -->
+    <div id="roulOverlay" class="fixed inset-0 z-40 hidden items-center justify-center pointer-events-none">
+        <div class="flex flex-col items-center gap-1.5">
+            <div id="roulPrev" class="roul-ghost text-xs sm:text-sm font-bold px-4 py-1 rounded-full bg-white/60 border border-[#cbb07a]"></div>
+            <div id="roulCard" class="bg-[#fdf6e3] border-4 border-[#f59e0b] rounded-2xl shadow-2xl px-6 py-4 flex items-center gap-4 min-w-[16rem] max-w-[86vw]">
+                <canvas id="roulIcon" width="64" height="64" class="rounded-xl bg-[#e4bb70] w-14 h-14 shrink-0"></canvas>
+                <div class="min-w-0">
+                    <div id="roulName" class="text-xl font-extrabold tracking-wide truncate"></div>
+                    <div id="roulJp" class="text-xs font-bold opacity-60 truncate"></div>
+                </div>
+            </div>
+            <div id="roulNext" class="roul-ghost text-xs sm:text-sm font-bold px-4 py-1 rounded-full bg-white/60 border border-[#cbb07a]"></div>
+        </div>
+    </div>
+
+    <!-- ルーレット結果モーダル -->
+    <div id="resultModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div id="resultBackdrop" class="absolute inset-0 bg-[#3e2211]/60 backdrop-blur-[3px]"></div>
+        <div class="modal-card relative bg-[#fdf6e3] rounded-3xl border-4 border-[#f59e0b] shadow-2xl p-6 w-full max-w-sm text-center flex flex-col items-center gap-3">
+            <div class="text-[11px] font-extrabold tracking-[0.3em] text-[#b45309]">★ 結果発表 ★</div>
+            <canvas id="resultIcon" width="112" height="112" class="rounded-2xl bg-[#e4bb70] w-24 h-24 shadow-md"></canvas>
+            <div>
+                <div class="flex items-baseline justify-center gap-2">
+                    <span id="resultName" class="text-2xl font-extrabold tracking-wide"></span>
+                    <span id="resultJp" class="text-sm font-bold opacity-60"></span>
+                </div>
+                <p id="resultDesc" class="text-xs sm:text-sm opacity-70 mt-1.5 leading-relaxed"></p>
+            </div>
+            <a id="resultLink" href="#" class="roulette-btn w-full text-[#fff7ed] font-extrabold text-lg rounded-2xl py-3 tracking-[0.3em] transition-all">遊ぶ ▶</a>
+            <div class="flex gap-2 w-full">
+                <button id="retryBtn" class="flex-1 bg-white/80 border border-[#cbb07a] rounded-xl py-2 text-sm font-bold hover:bg-white transition-all">もう一度回す</button>
+                <button id="closeBtn" class="flex-1 bg-white/40 border border-[#cbb07a] rounded-xl py-2 text-sm font-bold hover:bg-white/70 transition-all">閉じる</button>
+            </div>
+        </div>
+    </div>
+    <!-- MAMEGO:SCRIPTS -->
+    <script src="site-config.js"></script>
+    <script src="games.js"></script>
+    <script src="ranking.js"></script>
+    <script src="site-common.js"></script>
+    <!-- /MAMEGO:SCRIPTS -->
+
+<script src="icon-draw.js"></script>
+    <script>
+
+        // ---- ゲーム一覧 ----
+        // すべて「通常の囲碁」の拡張・派生形 (ベースは標準ルール)
+        const GAMES = [
+            { file: 'normgo.html',  name: 'GO',       jp: '通常碁',       desc: '標準的な囲碁そのもの。他の派生のベース', kind: 'stone' },
+            { file: 'tetogo.html',  name: 'TETOGO',   jp: 'テトリス碁',   desc: 'テトロミノ「碁テト」7種 (I/O/T/L/J/S/Z)。回転・ホールド・NEXT', kind: 'tetromino' },
+            { file: 'algo.html',    name: 'ALGO',     jp: 'アルカン碁',   desc: 'アルカン分子「碁カン」(C₄〜C₆)。球棒モデル+碁カン図鑑', kind: 'alkane' },
+            { file: 'pengo.html',   name: 'PENGO',    jp: 'ペン碁',       desc: 'ペントミノ12種 (5マス)。窒息領域は5マス未満', kind: 'pento' },
+            { file: 'cyclogo.html', name: 'CYCLOGO',  jp: 'シクロ碁',     desc: 'シクロアルカン「碁クロ」。環を含む分子ピース', kind: 'cyclo' },
+            { file: 'alkenego.html',name: 'ALKENEGO', jp: 'アルケン碁',   desc: '剛直な二重・三重結合。回転できない碁ケン', kind: 'alkene' },
+            { file: 'polygo.html',  name: 'POLYGO',   jp: 'ポリ碁',       desc: '毎手自分で4連の鎖を描く。自由な形のポリマー', kind: 'poly' },
+            { file: 'torusgo.html', name: 'TORUSGO',  jp: 'トーラス碁',   desc: '上下左右の端が繋がる。隅も辺もない盤面', kind: 'torus' },
+            { file: 'diago.html',   name: 'DIAGO',    jp: '斜め碁',       desc: '近傍は8方向。斜めの連も繋がる強結合ルール', kind: 'diag' },
+            { file: 'wallgo.html',  name: 'WALLGO',   jp: '迷路碁',       desc: 'ランダムな壁マス。置けない・呼吸点にもならない', kind: 'wall' },
+            { file: 'gravgo.html',  name: 'GRAVGO',   jp: '重力碁',       desc: '石は最下段か石の直上のみ。下から積み上げる碁', kind: 'grav' },
+            { file: 'spawngo.html', name: 'SPAWNGO',  jp: '繁殖碁',       desc: '自分の石に隣接する空点にしか置けない', kind: 'spawn' },
+            { file: 'mirrgo.html',  name: 'MIRRGO',   jp: '対称碁',       desc: '着手が縦中央線で鏡映され両側に置かれる', kind: 'mirror' },
+            { file: 'twicego.html', name: 'TWICEGO',  jp: '二手碁',       desc: '各手番で2石ずつ置く。途中パスで残り放棄', kind: 'twice' },
+            { file: 'kinggo.html',  name: 'KINGGO',   jp: '王碁',         desc: '最初に置いた石が王。王を取られると即負け', kind: 'king' },
+            { file: 'maxgo.html',   name: 'MAXGO',    jp: '先取碁',       desc: '先に10石取った側が即勝利。地勝負も有効', kind: 'max' },
+            { file: 'sandgo.html',  name: 'SANDGO',   jp: 'ハサミ碁',     desc: '敵石を上下/左右に挟むと呼吸点に関係なく取れる', kind: 'sand' },
+            { file: 'reversego.html', name: 'REVERSEGO', jp: '反転碁',    desc: 'ハサミで敵石が自分の色に寝返る', kind: 'sand' },
+            { file: 'pushgo.html',  name: 'PUSHGO',   jp: '押し碁',       desc: '置いた石が隣接する敵石を1マス押す', kind: 'push' },
+            { file: 'attractgo.html', name: 'ATTRACTGO', jp: '吸引碁',    desc: '置いた石が直線2マス先の敵石を引き寄せる', kind: 'pull' },
+            { file: 'turngo.html',  name: 'TURNGO',   jp: '回転碁',       desc: '着手ごとに盤面が90°時計回りに回転', kind: 'turn' },
+            { file: 'nogo.html',    name: 'NOGO',     jp: '禁取碁',       desc: '取る手は禁止。合法手がなくなった側が負け', kind: 'no' },
+            { file: 'limitgo.html', name: 'LIMITGO',  jp: '詰み碁',       desc: '置ける場所がなくなった側が即負け', kind: 'limit' },
+            { file: 'growgo.html',  name: 'GROWGO',   jp: '増殖碁',       desc: '着手ごとに石が隣の空点へ増殖する', kind: 'grow' },
+            { file: 'molego.html',  name: 'MOLEGO',   jp: 'もぐら碁',     desc: '着手ごとに石がランダムに隣へ移動', kind: 'mole' },
+            { file: 'blastgo.html', name: 'BLASTGO',  jp: '爆撃碁',       desc: '隣接する敵石の連を無条件で破壊', kind: 'blast' },
+            { file: 'handigo.html', name: 'HANDIGO',  jp: '置碁',         desc: 'ハンデ置碁 (2〜9子)。置碁時はコミ0.5目', kind: 'handi' },
+            { file: 'decaygo.html', name: 'DECAYGO',  jp: '崩壊碁',       desc: '碁石に寿命。打ってから8手で崩壊・消滅', kind: 'decay' },
+            { file: 'lifego.html',  name: 'LIFEGO',   jp: '生命碁',       desc: '着手ごとに盤面全体がライフゲーム1世代進化', kind: 'life' },
+            { file: 'rushgo.html',  name: 'RUSHGO',   jp: 'スピード碁',   desc: '1手ごとの制限時間。時間切れは自動パス', kind: 'rush' },
+            { file: '3dgo.html',    name: '3DGO',     jp: '立体碁',       desc: '3層盤面。上下の層も連・呼吸点になる', kind: 'd3' },
+            { file: 'asymgo.html',  name: 'ASYMGO',   jp: '非対称碁',     desc: '黒=直鎖アルカン、白=分枝アルカン', kind: 'asym' },
+            { file: 'draftgo.html', name: 'DRAFTGO',  jp: 'ドラフト碁',   desc: '対局前に碁カンを交互ドラフト。獲得3種のみ出現', kind: 'draft' },
+            { file: 'graphgo.html', name: 'GRAPHGO',  jp: 'グラフ碁',     desc: '盤面そのものが分子グラフ。結合(辺)だけが道', kind: 'graph' },
+            { file: 'mamego.html',  name: 'MAMEGO',   jp: '豆碁',         desc: '原作再実装。ドミノ「碁豆」のみを置く連結碁', kind: 'domino' },
+            { file: 'triogo.html',  name: 'TRIOGO',   jp: 'トリオ碁',     desc: '碁リオ=トリオミノ2種 (直鎖I・曲がりL)', kind: 'trio' },
+            { file: 'kogo.html',    name: 'KOGO',     jp: '孤立碁',       desc: '自分の石に隣接して置けない。全石が孤立単石', kind: 'iso' },
+            { file: 'ringo.html',   name: 'RINGO',    jp: '環状碁',       desc: '中央3×3が壁のドーナツ状盤面', kind: 'ring' },
+            { file: 'crossgo.html', name: 'CROSSGO',  jp: '十字碁',       desc: '四隅が削れた十字形の盤面', kind: 'cross' },
+            { file: 'livego.html',  name: 'LIVEGO',   jp: '活石碁',       desc: '地でなく盤上の生き石の数で勝負', kind: 'live' },
+            { file: 'fusego.html',  name: 'FUSEGO',   jp: '融合碁',       desc: '隣接した敵石が中立ブロックに「中和」される', kind: 'fuse' },
+            { file: 'wormgo.html',  name: 'WORMGO',   jp: '転送碁',       desc: 'ワームホールペア (◎) 同士が遠隔近傍として繋がる', kind: 'worm' },
+            { file: 'gravego.html', name: 'GRAVEGO',  jp: '墓標碁',       desc: '取られたマスは空点に戻らず墓標(壁)になる', kind: 'grave' },
+            { file: 'reapgo.html',  name: 'REAPGO',   jp: '連取碁',       desc: '敵石を取るともう1手打てる。連鎖可', kind: 'reap' },
+            { file: 'quadgo.html',  name: 'QUADGO',   jp: '四方碁',       desc: '碁カク=2×2ブロックのみ。大きいが置き場が限られる', kind: 'quad' },
+            { file: 'circlego.html',name: 'CIRCLEGO', jp: '円盤碁',       desc: '隅のない円形盤面', kind: 'circle' },
+            { file: 'lavago.html',  name: 'LAVAGO',   jp: '溶岩碁',       desc: '8手ごとに外周が溶岩に沈む。盤面はどんどん狭く', kind: 'lava' },
+            { file: 'halfgo.html',  name: 'HALFGO',   jp: '陣地碁',       desc: '黒は左半分、白は右半分のみ。中央列は共通', kind: 'half' },
+            { file: 'sparsego.html',name: 'SPARSEGO', jp: '離散碁',       desc: 'どの石の隣にも置けない。全石孤立の静かな碁', kind: 'sparse' },
+            { file: 'firstgo.html', name: 'FIRSTGO',  jp: '一撃碁',       desc: '最初に敵石を1個取った側が即勝利', kind: 'first' },
+            { file: 'treasurego.html', name: 'TREASUREGO', jp: '宝碁',    desc: '星マス (◆) を全方向囲むと終局時+5点', kind: 'treasure' },
+            { file: 'darkgo.html',  name: 'DARKGO',   jp: '暗闇碁',       desc: '自分の石の近くしか見えないフォグ・オブ・ウォー', kind: 'dark' },
+            { file: 'orbitgo.html', name: 'ORBITGO',  jp: '周回碁',       desc: '着手ごとに外周リングの石が1マスずつ時計回りに移動', kind: 'orbit' },
+            { file: 'selfgo.html',  name: 'SELFGO',   jp: '自爆碁',       desc: '自殺手が合法。自連が消えて相手のアゲハマに', kind: 'self' },
+            { file: 'stargo.html',  name: 'STARGO',   jp: '星碁',         desc: '碁ホシ=十字形5連結のみ。四方に腕を伸ばす', kind: 'star' },
+            { file: 'biggo.html',   name: 'BIGGO',    jp: '巨大碁',       desc: '碁オオ=3×3ブロック9連結。窒息領域<9の高速碁', kind: 'big' },
+            { file: 'connectgo.html', name: 'CONNECTGO', jp: '連絡碁',    desc: '黒は上下辺、白は左右辺を連結すれば即勝利', kind: 'connect' },
+            { file: 'centgo.html',  name: 'CENTGO',   jp: '中心碁',       desc: '中心からの円内のみ配置可。6手ごとに半径拡大', kind: 'cent' },
+            { file: 'switchgo.html',name: 'SWITCHGO', jp: '転換碁',       desc: '12手ごとに盤上の全石の色が反転', kind: 'switch' },
+            { file: 'thundergo.html', name: 'THUNDERGO', jp: '雷碁',      desc: '10手ごとに雷がランダムな小さな連を破壊', kind: 'thunder' },
+            { file: 'cylindgo.html',name: 'CYLINDGO', jp: '円筒碁',       desc: '左右の端がループして繋がる円筒盤', kind: 'cyl' },
+            { file: 'moebiusgo.html', name: 'MOEBIUSGO', jp: 'メビウス碁', desc: '左端↔右端が上下反転して繋がるメビウス帯', kind: 'moebius' },
+            { file: 'quartergo.html', name: 'QUARTERGO', jp: '象限碁',    desc: '着手はその手番の象限のみ。手番ごとに回転', kind: 'quarter' },
+            { file: 'escapego.html', name: 'ESCAPEGO', jp: '脱出碁',      desc: '辺に接する連は不死。辺への接続が死活を決める', kind: 'escape' },
+            { file: 'siphongo.html', name: 'SIPHONGO', jp: '吸収碁',      desc: '取った敵連は消えず自分の色に変わる', kind: 'siphon' },
+            { file: 'monogo.html',  name: 'MONOGO',   jp: '単石碁',       desc: '2石以上の連は不死。取れるのは孤立単石のみ', kind: 'mono' },
+            { file: 'reggo.html',   name: 'REGGO',    jp: '上限碁',       desc: '自分の連は最大3石まで。4連以上は禁止', kind: 'reg' },
+            { file: 'antigravgo.html', name: 'ANTIGRAVGO', jp: '反重力碁', desc: '上向き重力。最上段か石の直下のみ配置可', kind: 'antigrav' },
+            { file: 'fourgo.html',  name: 'FOURGO',   jp: '四方重力碁',   desc: '重力方向が手番ごとに回転 (下→左→上→右)', kind: 'four' },
+            { file: 'pushchaingo.html', name: 'PUSHCHAINGO', jp: '連鎖押し碁', desc: '押した敵石が敵石をさらに押す連鎖', kind: 'pushchain' },
+            { file: 'twilightgo.html', name: 'TWILIGHTGO', jp: '黄昏碁',  desc: '昼=自由配置、夜=自石隣接のみ。12手周期', kind: 'twilight' },
+            { file: 'hydrago.html', name: 'HYDRAGO',  jp: 'ヒドラ碁',     desc: '取られた石は隣の空点に1回だけ復活', kind: 'hydra' },
+            { file: 'ghostgo.html', name: 'GHOSTGO',  jp: '幽霊碁',       desc: '取られたマスは幽霊となり6手間塞がる', kind: 'ghost' },
+            { file: 'kleingo.html', name: 'KLEINGO',  jp: 'クライン碁',   desc: 'クライン瓶: 横反転+縦ループの両軸トポロジー', kind: 'klein' },
+            { file: 'zombego.html', name: 'ZOMBEGO',  jp: 'ゾンビ碁',     desc: '取られた石は徘徊する中立ゾンビ壁になる', kind: 'zombie' },
+            { file: 'relaygo.html', name: 'RELAYGO',  jp: '追撃碁',       desc: '相手の直前着手から距離4以内にしか置けない', kind: 'relay' },
+            { file: 'sumgo.html',   name: 'SUMGO',    jp: '実子碁',       desc: '得点=地+生き石+アゲハマの中国式風', kind: 'sum' },
+            { file: 'fuelgo.html',  name: 'FUELGO',   jp: '燃料碁',       desc: '遠くに置くほど燃料を消費。切れると隣接のみ', kind: 'fuel' },
+            { file: 'stripego.html', name: 'STRIPEGO', jp: '縞碁',        desc: '奇数行は壁。偶数行のレーン上のみで戦う', kind: 'stripe' },
+            { file: 'driftgo.html', name: 'DRIFTGO',  jp: '漂流碁',       desc: '8手ごとに全石がランダム方向へ1マス流れる', kind: 'drift' },
+            { file: 'lastgo.html',  name: 'LASTGO',   jp: '終着碁',       desc: '終局時に最後に石を置いた側が勝つ', kind: 'last' },
+            { file: 'eyego.html',   name: 'EYEGO',    jp: '眼碁',         desc: '最初に眼を作った側が即勝利', kind: 'eye' },
+            { file: 'brawlgo.html', name: 'BRAWLGO',  jp: '乱闘碁',       desc: '周囲3方向以上が敵の石は個別に取れる', kind: 'brawl' },
+            { file: 'chaingo.html', name: 'CHAINGO',  jp: '連鎖爆発碁',   desc: '取った空点の8方向の敵石も連鎖爆発 (最大8石)', kind: 'chain' },
+            { file: 'finitego.html', name: 'FINITEGO', jp: '有限碁',      desc: '各プレイヤーの石は最大12個。最古が消える', kind: 'finite' },
+            { file: 'copygo.html',  name: 'COPYGO',   jp: '模倣碁',       desc: '相手の直前着手の点対称位置にしか打てない', kind: 'copy' },
+            { file: 'swampgo.html', name: 'SWAMPGO',  jp: '沼碁',         desc: '沼地の石は6手で沈む', kind: 'swamp' },
+            { file: 'tidego.html',  name: 'TIDEGO',   jp: '潮汐碁',       desc: '10手ごとに外周が水没↔復活', kind: 'tide' },
+            { file: 'pulsego.html', name: 'PULSEGO',  jp: '脈動碁',       desc: '6手ごとに全連が呼吸点へ1石伸びる', kind: 'pulse' },
+            { file: 'recyclego.html', name: 'RECYCLEGO', jp: '再生碁',    desc: '取られた石は10手後に1回だけ復活', kind: 'recycle' },
+            { file: 'libgo.html',   name: 'LIBGO',    jp: '呼吸碁',       desc: '得点=自連の呼吸点合計+アゲハマ', kind: 'lib' },
+            { file: 'stonerain.html', name: 'STONERAIN', jp: '石雨碁',    desc: '9手ごとにランダムな空点へ壁が降る', kind: 'rain' },
+            { file: 'splitgo.html', name: 'SPLITGO',  jp: '分裂碁',       desc: '7石以上の連は半分が敵色に分裂', kind: 'split' },
+            { file: 'minigo.html',  name: 'MINIGO',   jp: '少子碁',       desc: '得点が少ない側が勝つ (ミゼール)', kind: 'mini' },
+            { file: 'grenadego.html', name: 'GRENADEGO', jp: '榴弾碁',    desc: '取られた連は爆発し8方向の石を道連れ (最大8個)', kind: 'grenade' },
+            { file: 'infectgo.html', name: 'INFECTGO', jp: '感染碁',      desc: '7手ごとに孤立石が隣の敵石を感染', kind: 'infect' },
+            { file: 'bondgo.html',  name: 'BONDGO',   jp: '結合碁',       desc: '敵連を取ると接触自石も道連れ', kind: 'bond' },
+            { file: 'rimgo.html',   name: 'RIMGO',    jp: '淵碁',         desc: '外周の地は2倍計算', kind: 'rim' },
+            { file: 'budgetgo.html', name: 'BUDGETGO', jp: '手数碁',      desc: '60手で自動終局して得点計算', kind: 'budget' },
+            { file: 'frontgo.html', name: 'FRONTGO',  jp: '前線碁',       desc: '前線が下へ進み後方の石は確定', kind: 'front' },
+            { file: 'chargego.html', name: 'CHARGEGO', jp: '溜め碁',      desc: 'パスで溜まり次の石が5手間不死', kind: 'charge' },
+            { file: 'shufflego.html', name: 'SHUFFLEGO', jp: '混成碁',    desc: '15手ごとに全石が50%で色反転', kind: 'shuffle' },
+            { file: 'taxgo.html',   name: 'TAXGO',    jp: '関税碁',       desc: '敵陣半分への着手は相手に+1目', kind: 'tax' },
+            { file: 'greedgo.html', name: 'GREEDGO',  jp: '強欲碁',       desc: 'アタリ状態なら取る手しか打てない', kind: 'greed' },
+            { file: 'crosswallgo.html', name: 'CROSSWALLGO', jp: '十字壁碁', desc: '中央十字の壁で盤が4区域に分断', kind: 'crosswall' },
+            { file: 'polargo.html', name: 'POLARGO',  jp: '極地碁',       desc: '外周1周の回廊のみ有効', kind: 'polar' },
+            { file: 'microgo.html', name: 'MICROGO',  jp: '微細碁',       desc: '5・7・9路の小盤囲碁', kind: 'micro' },
+            { file: 'jumpgo.html', name: 'JUMPGO',   jp: '跳躍碁',       desc: '自石からちょうど距離2の点のみ (無ければ自由)', kind: 'jump' },
+            { file: 'nokogo.html', name: 'NOKOGO',   jp: '劫無碁',       desc: 'コウ禁止がない — 再現は自由', kind: 'noko' },
+            { file: 'chaoticgo.html', name: 'CHAOTICGO', jp: '混沌碁',   desc: '漂流・潮汐・壁落下が周期的に襲う', kind: 'chaos' },
+            // ==== WAVE2 GAMES BEGIN ====
+            { file: 'alchego.html', name: 'ALCHEGO', jp: '錬成碁', desc: '取ると最も危ない自石1個が取跡へ転移する。弱い石を錬成で救う。', kind: 'stone', icon: 'alchego' },
+            { file: 'alterngo.html', name: 'ALTERNGO', jp: '番兵碁', desc: '黒は偶数行、白は奇数行を守る番兵。交互の行で睨み合う碁。', kind: 'sentry' },
+            { file: 'archergo.html', name: 'ARCHERGO', jp: '弓兵碁', desc: '置いた石が矢を放つ: 4方向3マス以内の最初の敵石を射抜く。', kind: 'stone', icon: 'archergo' },
+            { file: 'archgo.html', name: 'ARCHGO', jp: '拱碁', desc: '石の上に橋を架ける3連ピース。自石を橋桁にして渡る。', kind: 'stone', icon: 'archgo' },
+            { file: 'armorgo.html', name: 'ARMORGO', jp: '鎧碁', desc: '全ての石は装甲付き。1度目の包囲では装甲が剥がれるだけ。', kind: 'stone', icon: 'armorgo' },
+            { file: 'bankgo.html', name: 'BANKGO', jp: '銀行碁', desc: 'アゲハマは預金。自分の手番ごとに残高の1/5が利子として増える。', kind: 'bank' },
+            { file: 'barbgo.html', name: 'BARBGO', jp: '槍碁', desc: '1x5の槍ピースだけを置く碁。長い槍で盤を貫く。', kind: 'stone', icon: 'barbgo' },
+            { file: 'betgo.html', name: 'BETGO', jp: '賭碁', desc: '置いた石が相手の次の一手を生き延びれば賭け的中で+1点が溜まる。', kind: 'bet' },
+            { file: 'billiardgo.html', name: 'BILLIARDGO', jp: '撞球碁', desc: '打った石の隣の敵石を撞き飛ばす。他石の手前で止まり、盤外に出れば得点。', kind: 'stone', icon: 'billiardgo' },
+            { file: 'bingogo.html', name: 'BINGOGO', jp: 'ビンゴ碁', desc: '中央5×5のビンゴカード。縦横斜めのラインを全て自石で埋めれば即勝ち。', kind: 'bingo' },
+            { file: 'bishopgo.html', name: 'BISHOPGO', jp: '角行碁', desc: '着手は自石と同じ斜線上のみ。角行のように盤を斜めに結ぶ。', kind: 'bishop' },
+            { file: 'blackjackgo.html', name: 'BLACKJACKGO', jp: '廿一碁', desc: '打つたびに1〜11のカードを引く。合計21を超えたらバースト負け。', kind: 'stone', icon: 'blackjackgo' },
+            { file: 'blindgo.html', name: 'BLINDGO', jp: '盲点碁', desc: '盤の対角に死角エリア。自分の死角に置いた石は自分にも見えない。', kind: 'blind' },
+            { file: 'blockgo.html', name: 'BLOCKGO', jp: '塊碁', desc: '毎手どんな4連テトロミノでも置ける碁。', kind: 'stone', icon: 'blockgo' },
+            { file: 'bombgo.html', name: 'BOMBGO', jp: '爆弾碁', desc: '各側4手目は爆弾石。着地点の3x3を爆破する (1回だけ)。', kind: 'bomb' },
+            { file: 'bordergo.html', name: 'BORDERGO', jp: '国境碁', desc: '着手は敵石に接する点のみ。国境線でしか石は生まれない。', kind: 'border' },
+            { file: 'bouncego.html', name: 'BOUNCEGO', jp: '跳弾碁', desc: '石は斜めに投げ込まれ、壁や石に当たると跳ね返り、行き止まりで静止。', kind: 'stone', icon: 'bouncego' },
+            { file: 'bridgego.html', name: 'BRIDGEGO', jp: '架橋碁', desc: '中央の海峡で断たれた2大陸。唯一の橋を巡る攻防。', kind: 'stone', icon: 'bridgego' },
+            { file: 'burygo.html', name: 'BURYGO', jp: '埋蔵碁', desc: '4手ごとの石は埋められる。4手の間は誰の石か分からない。', kind: 'bury' },
+            { file: 'camogo.html', name: 'CAMOGO', jp: '迷彩碁', desc: '置いた石は5手の間だけ敵色に化ける。見た目を信じるな。', kind: 'camo' },
+            { file: 'cardgo.html', name: 'CARDGO', jp: '札碁', desc: '手番ごとに札を引く。恵みは取り2倍、呪いは取り不可。', kind: 'card' },
+            { file: 'cavego.html', name: 'CAVEGO', jp: '洞窟碁', desc: '岩壁が区画を分ける洞窟盤。石の周りだけ灯りが届く探検フィールド。', kind: 'stone', icon: 'cavego' },
+            { file: 'cellgo.html', name: 'CELLGO', jp: '細胞碁', desc: '7連のハニカム細胞ピースだけを置く碁。', kind: 'stone', icon: 'cellgo' },
+            { file: 'centrifugo.html', name: 'CENTRIFUGO', jp: '遠心碁', desc: '遠心力で全石が外へ放られる。盤端に渋滞した石は呼吸を失いやすい。', kind: 'stone', icon: 'centrifugo' },
+            { file: 'centripetgo.html', name: 'CENTRIPETGO', jp: '求心碁', desc: '盤の中心が重力源。着手ごとに全石が1マス中心へ引き寄せられる。', kind: 'stone', icon: 'centripetgo' },
+            { file: 'chambergo.html', name: 'CHAMBERGO', jp: '四室碁', desc: '十字の隔壁で4部屋に分割。扉を巡る城攻めの碁。', kind: 'stone', icon: 'chambergo' },
+            { file: 'checkergo.html', name: 'CHECKERGO', jp: '市松碁', desc: '市松の黒マスにしか置けない。全ての石が孤立する緊張の碁。', kind: 'stone', icon: 'checkergo' },
+            { file: 'chessgo.html', name: 'CHESSGO', jp: '騎士碁', desc: '初手の石が王冠を被る王。王の連が取られたら即負けのチェック碁。', kind: 'crown' },
+            { file: 'classgo.html', name: 'CLASSGO', jp: '職業碁', desc: '石に職業: 戦士(普通)/弓兵(3マス射抜き)/僧侶(不死)。⟳ボタン・Rキーで切替。', kind: 'stone', icon: 'classgo' },
+            { file: 'cloakgo.html', name: 'CLOAKGO', jp: '隠密碁', desc: '各側の最初の3石は不可視の隠密石。布石が読めない序盤戦。', kind: 'cloak' },
+            { file: 'clockgo.html', name: 'CLOCKGO', jp: '時計碁', desc: '盤は12の時刻区域。着手可の区域は1手ごとに時計回りに進む。', kind: 'clock' },
+            { file: 'contractgo.html', name: 'CONTRACTGO', jp: '請負碁', desc: '各陣営にランダムな秘密目標 (角3箇所/星3箇所/四辺制覇)。先に達成で即勝ち。', kind: 'contract' },
+            { file: 'conveyorgo.html', name: 'CONVEYORGO', jp: '搬送碁', desc: '中央行は石を右へ運ぶベルトコンベア。右端で降りるか渋滞する。', kind: 'stone', icon: 'conveyorgo' },
+            { file: 'corego.html', name: 'COREGO', jp: '内核碁', desc: '着手は中央5x5の内核のみ。周縁は虚空、全ての闘争は核の中。', kind: 'core' },
+            { file: 'cornergo.html', name: 'CORNERGO', jp: '隅田川碁', desc: '着手は四隅の洲か自石に隣接する点。隅から川が広がるように染まる。', kind: 'corner' },
+            { file: 'crowngo.html', name: 'CROWNGO', jp: '王冠碁', desc: '天元は王座。終局時に天元の石を持つ側が+3点の王冠ボーナスを得る。', kind: 'crown' },
+            { file: 'crumbgo.html', name: 'CRUMBGO', jp: '崩落碁', desc: '全ての連は3手ごとに端から1石ずつ崩れていく。240手で自動終局。', kind: 'stone', icon: 'crumbgo' },
+            { file: 'curlgo.html', name: 'CURLGO', jp: '氷壺碁', desc: '石はハウス中心へ向かって滑る。終局時、中心に最も近い石に+5目。', kind: 'stone', icon: 'curlgo' },
+            { file: 'cursego.html', name: 'CURSEGO', jp: '呪碁', desc: '石を取られた側は呪われる。次の1手は取跡の点にしか打てない。', kind: 'stone', icon: 'cursego' },
+            { file: 'dartsgo.html', name: 'DARTSGO', jp: '的碁', desc: '天元に近い石ほど高得点 (中心3点・1距離2点・2距離1点)。', kind: 'dart' },
+            { file: 'decoygo.html', name: 'DECOYGO', jp: '囮碁', desc: '5手ごとの石は偽物。3手後に消えて盤面が変わる。', kind: 'decoy' },
+            { file: 'diadgo.html', name: 'DIADGO', jp: '斜連碁', desc: '斜めに触れ合う2石のドミノを置く碁。連は繋がらない。', kind: 'stone', icon: 'diadgo' },
+            { file: 'dicego.html', name: 'DICEGO', jp: '賽碁', desc: '手番ごとに賽が振られる。出目6は取り2倍、出目1は取り不可。', kind: 'dice' },
+            { file: 'dimgo.html', name: 'DIMGO', jp: '薄暮碁', desc: '明るいのは中央だけ。外周の石は薄暮に霞んで読みにくい。', kind: 'dusk' },
+            { file: 'distgo.html', name: 'DISTGO', jp: '距離碁', desc: '自陣の端からの距離が得点。黒は下へ、白は上へ進軍するほど加点。', kind: 'dist' },
+            { file: 'dotgo.html', name: 'DOTGO', jp: '双点碁', desc: '1手で離れた2点に同時着手。2クリックで確定。', kind: 'stone', icon: 'dotgo' },
+            { file: 'dualgo.html', name: 'DUALGO', jp: '双王碁', desc: '最初の2石は王冠付きの王。両方守れ — どちらか取られたら即負け。', kind: 'dual' },
+            { file: 'dynastygo.html', name: 'DYNASTYGO', jp: '王朝碁', desc: '石を取られない手番が5連続するごとに+5点の王朝ボーナス。', kind: 'dynasty' },
+            { file: 'echogo.html', name: 'ECHOGO', jp: '残響碁', desc: '着手は自分の前の一手の周囲2マス以内。残響が連なって陣地になる。', kind: 'echo' },
+            { file: 'echolocgo.html', name: 'ECHOLOCGO', jp: '反響碁', desc: '敵石は闇の中。自石の反響が届く2マス以内だけ見える。', kind: 'echo' },
+            { file: 'edgego.html', name: 'EDGEGO', jp: '辺縁碁', desc: '着手は端から2マス以内の帯のみ。盤中央は不毛の死域。', kind: 'edge' },
+            { file: 'elastgo.html', name: 'ELASTGO', jp: '伸縮碁', desc: '伸び縮みするピース。1〜3連の長さを選んで置く。', kind: 'stone', icon: 'elastgo' },
+            { file: 'escalgo.html', name: 'ESCALGO', jp: '昇降碁', desc: '中央列は循環エスカレーター。石は上へ運ばれ、天辺から底へ回る。', kind: 'stone', icon: 'escalgo' },
+            { file: 'expandgo.html', name: 'EXPANDGO', jp: '拡大碁', desc: '5手ごとに盤が外周へ拡大して最大19路になる。石は中心寄りに残る。', kind: 'stone', icon: 'expandgo' },
+            { file: 'fadedgo.html', name: 'FADEDGO', jp: '褪色碁', desc: '石は古いほど薄く褪せる。盤面の「年齢」が一目で分かる。', kind: 'fade' },
+            { file: 'fallgo.html', name: 'FALLGO', jp: '落下碁', desc: '重力の盤。置いた石は列の底へ落ちて積み上がり、上はいつも空く。', kind: 'stone', icon: 'fallgo' },
+            { file: 'fatego.html', name: 'FATEGO', jp: '運命碁', desc: '10手ごとの運命の手で着手側に+2目。5手前から告知される。', kind: 'fate' },
+            { file: 'firego.html', name: 'FIREGO', jp: '燎原碁', desc: '左上角の火点から1手ごとに火が燃え広がる。焼けた石はアゲハマに。', kind: 'stone', icon: 'firego' },
+            { file: 'fishgo.html', name: 'FISHGO', jp: '釣碁', desc: '着手点から直線を伸ばし、2マス以上先の敵石を釣り上げてアゲハマに。', kind: 'stone', icon: 'fishgo' },
+            { file: 'fissurego.html', name: 'FISSUREGO', jp: '断裂碁', desc: '取られた連の亀裂が走る。取跡に接する敵連は直線状に2石まで裂ける。', kind: 'stone', icon: 'fissurego' },
+            { file: 'flaggo.html', name: 'FLAGGO', jp: '旗碁', desc: '初手の石が旗。旗の連を敵陣端まで繋げば勝ち。旗を取られると負け。', kind: 'flag' },
+            { file: 'flankgo.html', name: 'FLANKGO', jp: '側面碁', desc: '着手は敵石の上下左右のみ。敵の側面に正対して食い込む碁。', kind: 'flank' },
+            { file: 'flipgo.html', name: 'FLIPGO', jp: '挟撃碁', desc: '敵石を縦か横に両挟みすれば返る。盤全体を走査する挟撃判定。', kind: 'stone', icon: 'flipgo' },
+            { file: 'floatgo.html', name: 'FLOATGO', jp: '浮遊碁', desc: '連ごと上へ浮く浮力の盤。天井で連は寄せ集まり、呼吸点が歪む。', kind: 'stone', icon: 'floatgo' },
+            { file: 'flockgo.html', name: 'FLOCKGO', jp: '群行碁', desc: '連は鳥の群れ。3手ごと全連がまるごと1マス、盤の中心へ向かって進む。', kind: 'stone', icon: 'flockgo' },
+            { file: 'floodgo.html', name: 'FLOODGO', jp: '洪水碁', desc: '下から水位が上がる。2手ごとに1段沈む。水没域は打てず石は流される。', kind: 'stone', icon: 'floodgo' },
+            { file: 'fortgo.html', name: 'FORTGO', jp: '城塞碁', desc: '取跡が自分の城壁になる。残った城壁は1つ1目の得点。', kind: 'stone', icon: 'fortgo' },
+            { file: 'fragilego.html', name: 'FRAGILEGO', jp: '脆碁', desc: '呼吸点2以下の敵連は砕けて取られる。早死にの碁。', kind: 'stone', icon: 'fragilego' },
+            { file: 'gachago.html', name: 'GACHAGO', jp: '抽選碁', desc: '石はガチャ供給。SSRの石は取り3倍、Rの石は2倍の豪運。', kind: 'gacha' },
+            { file: 'geargo.html', name: 'GEARGO', jp: '歯車碁', desc: '3手ごとに外輪が順回り・内輪が逆回りに1コマ回転する歯車盤。', kind: 'stone', icon: 'geargo' },
+            { file: 'gemgo.html', name: 'GEMGO', jp: '宝石碁', desc: '取られた石は宝石に結晶化。永久の壁として盤上に残る。', kind: 'stone', icon: 'gemgo' },
+            { file: 'geysergo.html', name: 'GEYSERGO', jp: '間欠泉碁', desc: '四つの星は間欠泉。5手ごとに噴火して乗った石を吹き飛ばす。', kind: 'stone', icon: 'geysergo' },
+            { file: 'glassgo.html', name: 'GLASSGO', jp: '硝子碁', desc: '砕けた石は周囲の石も連鎖して割る。取りが大火事になる。', kind: 'stone', icon: 'glassgo' },
+            { file: 'goalgo.html', name: 'GOALGO', jp: '得点碁', desc: '中央3×3のゴールに石を入れるたび+1ゴール。得点は取られても残る。', kind: 'goal' },
+            { file: 'golfgo.html', name: 'GOLFGO', jp: '球碁', desc: '盤上の旗を石で押さえればホールインワン。手数がそのままスコア。', kind: 'stone', icon: 'golfgo' },
+            { file: 'gomokugo.html', name: 'GOMOKUGO', jp: '五目碁', desc: '縦横斜めに5連を作れば即勝ち。通常の地取り勝負も残る。', kind: 'stone', icon: 'gomokugo' },
+            { file: 'halogo.html', name: 'HALOGO', jp: '環碁', desc: '中空3x3の環ピースだけを置く碁。置くだけで壁ができる。', kind: 'stone', icon: 'halogo' },
+            { file: 'harborgo.html', name: 'HARBORGO', jp: '港碁', desc: '辺で取られた石は空いている港から再入港する。辺の石はしぶとい。', kind: 'stone', icon: 'harborgo' },
+            { file: 'heavygo.html', name: 'HEAVYGO', jp: '重碁', desc: '取るには敵石数の2倍で接し囲む。大きな塊はほぼ不死身。', kind: 'stone', icon: 'heavygo' },
+            { file: 'hexgo.html', name: 'HEXGO', jp: '六角碁', desc: '6方向近傍の擬似六角盤。連の形が全部変わる。', kind: 'stone', icon: 'hexgo' },
+            { file: 'hexygo.html', name: 'HEXYGO', jp: '六角辺碁', desc: '6方向近傍の擬似六角盤。さらに辺の地は2倍計算で端の争いが熱い。', kind: 'stone', icon: 'hexygo' },
+            { file: 'hillgo.html', name: 'HILLGO', jp: '丘陵碁', desc: '天元の丘を占めた側が即勝利。普通の地取り勝負も残る。', kind: 'crown' },
+            { file: 'holego.html', name: 'HOLEGO', jp: '穴あき碁', desc: '盤にポツポツ空いた穴。置けない・呼吸にもならない欠損点。', kind: 'stone', icon: 'holego' },
+            { file: 'honeygo.html', name: 'HONEYGO', jp: '蜂巣碁', desc: '斜交する壁が六角の巣房を刻む。小部屋ごとの局地戦。', kind: 'stone', icon: 'honeygo' },
+            { file: 'hourgo.html', name: 'HOURGO', jp: '砂時計碁', desc: '中央1点で上下が細く繋がる砂時計盤。咽喉を制する者が盤を制す。', kind: 'stone', icon: 'hourgo' },
+            { file: 'icego.html', name: 'ICEGO', jp: '氷上碁', desc: '盤面は氷。打った石は直前の自石との位置関係の向きに滑り続ける。', kind: 'stone', icon: 'icego' },
+            { file: 'illusiongo.html', name: 'ILLUSIONGO', jp: '幻影碁', desc: '中央の帯は幻影地帯。そこに置いた石は敵色に見える。', kind: 'illusion' },
+            { file: 'invadergo.html', name: 'INVADERGO', jp: '侵攻碁', desc: '4手ごとに敵ブロックが上端から降下。下をふさがれたら終わり。', kind: 'stone', icon: 'invadergo' },
+            { file: 'islego.html', name: 'ISLEGO', jp: '諸島碁', desc: '海に浮かぶ3島。島同士は1マスの橋でしか行き来できない。', kind: 'stone', icon: 'islego' },
+            { file: 'isolatego.html', name: 'ISOLATEGO', jp: '孤点碁', desc: '市松の半分は斜めだけ、半分は直交だけに繋がる2重格子盤。', kind: 'stone', icon: 'isolatego' },
+            { file: 'itemgo.html', name: 'ITEMGO', jp: '道具碁', desc: '5手ごとに盤上へアイテム出現。隣に置けば拾って+1目。', kind: 'item' },
+            { file: 'jackpotgo.html', name: 'JACKPOTGO', jp: '百倍碁', desc: '取りが続くほど倍率アップ。連続キャプチャでアゲハマが何倍にもなる。', kind: 'jackpot' },
+            { file: 'kamigo.html', name: 'KAMIGO', jp: '特攻碁', desc: '敵に完全に囲まれた点へ特攻。自分の石は散るが隣接敵連も爆破する。', kind: 'stone', icon: 'kamigo' },
+            { file: 'knightgo.html', name: 'KNIGHTGO', jp: '桂馬碁', desc: '着手は自石から桂馬飛びの点のみ。駒が跳ねるように石が盤を飛ぶ。', kind: 'knight' },
+            { file: 'leashgo.html', name: 'LEASHGO', jp: '繋留碁', desc: '着手は最古の自石から3マス以内。古い石に繋留されてしか広がれない。', kind: 'leash' },
+            { file: 'leechgo.html', name: 'LEECHGO', jp: '吸生碁', desc: '取った分だけ自分の連が呼吸点へ肥大成長する。', kind: 'stone', icon: 'leechgo' },
+            { file: 'levelgo.html', name: 'LEVELGO', jp: '成長碁', desc: '敵を取ると周りの自石がLvUP。終局時にレベルが目に加算。', kind: 'stone', icon: 'levelgo' },
+            { file: 'lgo.html', name: 'LGO', jp: '拐碁', desc: 'L字3連ピースだけを置く碁。曲がり連で呼吸点が散る。', kind: 'stone', icon: 'lgo' },
+            { file: 'linkgo.html', name: 'LINKGO', jp: '架橋碁', desc: '黒は上下・白は左右の辺を自石で結んだら即勝ち (Hexルール)。', kind: 'link' },
+            { file: 'longgo.html', name: 'LONGGO', jp: '長跳碁', desc: '着手は直近の自石から3マス以上離れた点のみ。石は跳躍する。', kind: 'jump' },
+            { file: 'loopgo.html', name: 'LOOPGO', jp: '周回碁', desc: '最外周からしか攻め込めない。石が置かれた環の1つ内側が次に解放される。', kind: 'loop' },
+            { file: 'magego.html', name: 'MAGEGO', jp: '魔導碁', desc: '着手毎に魔力が溜まり、5で火球が炸裂して敵石を焼く。', kind: 'stone', icon: 'magego' },
+            { file: 'magnetgo.html', name: 'MAGNETGO', jp: '磁石碁', desc: '石は磁石。異色と隣接すると反発し、同色から2マスの石は引き寄せられる。', kind: 'stone', icon: 'magnetgo' },
+            { file: 'mahjonggo.html', name: 'MAHJONGGO', jp: '雀碁', desc: '並びが役に。対子+1/刻子+3/槓子+6/5連以上は役満+10を終局加算。', kind: 'stone', icon: 'mahjonggo' },
+            { file: 'marketgo.html', name: 'MARKETGO', jp: '相場碁', desc: '石価は手数で乱高下。高値で置いた石が終局時にそのまま資産になる。', kind: 'market' },
+            { file: 'martyrgo.html', name: 'MARTYRGO', jp: '殉教碁', desc: '取られた連は道連れを出す。取跡に接する敵石は全て散る。', kind: 'stone', icon: 'martyrgo' },
+            { file: 'matchgo.html', name: 'MATCHGO', jp: '三消碁', desc: '同色3連の並びが消えて得点に。連を伸ばしすぎると自分も消える。', kind: 'stone', icon: 'matchgo' },
+            { file: 'mazego.html', name: 'MAZEGO', jp: '迷路碁', desc: '迷路状に掘り抜かれた盤。一本道を巡る追撃戦。', kind: 'stone', icon: 'mazego' },
+            { file: 'medigo.html', name: 'MEDIGO', jp: '治療碁', desc: '着手に接した自連は治癒される。治癒連は取られても1石だけ散る。', kind: 'stone', icon: 'medigo' },
+            { file: 'mergego.html', name: 'MERGEGO', jp: '併合碁', desc: '取った敵連は自分の色に染まって自連に吸収併合される。', kind: 'stone', icon: 'mergego' },
+            { file: 'meteorgo.html', name: 'METEORGO', jp: '隕石碁', desc: '7手ごとに隕石が落下し十字のクレーターができる。直撃した石は消える。', kind: 'stone', icon: 'meteorgo' },
+            { file: 'minego.html', name: 'MINEGO', jp: '採掘碁', desc: '取跡に鉱石が出る。鉱石の上に石を置くと拾って1目得点。', kind: 'stone', icon: 'minego' },
+            { file: 'miragego.html', name: 'MIRAGEGO', jp: '蜃気楼碁', desc: '石は3手の間だけ幻影。隣に置かれると蜃気楼は消える。', kind: 'mirage' },
+            { file: 'moatsgo.html', name: 'MOATSGO', jp: '堀碁', desc: '中央の郭を囲む環状の堀。内外が完全に分断された城の盤。', kind: 'stone', icon: 'moatsgo' },
+            { file: 'modgo.html', name: 'MODGO', jp: '剰余碁', desc: '着手点は (x+y) mod 3 が手数と一致する帯のみ。3手周期で許可域が回る。', kind: 'modulo' },
+            { file: 'moldgo.html', name: 'MOLDGO', jp: '黴碁', desc: '孤立した石は黴。手番の終わりに隣の空点へ1つ増殖する。', kind: 'stone', icon: 'moldgo' },
+            { file: 'nexusgo.html', name: 'NEXUSGO', jp: '結節碁', desc: '十字溝で隔てた4小盤。唯一の中央点が全てを結ぶ結節点。', kind: 'stone', icon: 'nexusgo' },
+            { file: 'numbgo.html', name: 'NUMBGO', jp: '数読碁', desc: '全ての連の呼吸点数が見える。アタリはもう見逃さない。', kind: 'number' },
+            { file: 'omnigo.html', name: 'OMNIGO', jp: '全能碁', desc: '6手ごとにイベント襲来。侵攻ブロック→流星で石消滅→全石反転の周期。', kind: 'stone', icon: 'omnigo' },
+            { file: 'orbitalgo.html', name: 'ORBITALGO', jp: '衛星碁', desc: '全石が衛星。着手ごとに自分の軌道リングを反時計回りに1マス公転する。', kind: 'stone', icon: 'orbitalgo' },
+            { file: 'ossugo.html', name: 'OSSUGO', jp: '白骨碁', desc: '取られた石は白骨として残る。置けない障害物で数手で風化する。', kind: 'stone', icon: 'ossugo' },
+            { file: 'outgo.html', name: 'OUTGO', jp: '前哨碁', desc: '星点を保持し続けると得点が溜まる。前哨基地を巡る攻防。', kind: 'star' },
+            { file: 'overgo.html', name: 'OVERGO', jp: '大差碁', desc: '勢力差(盤上の石+アゲハマ)が10以上開いた時点で即勝負あり。', kind: 'over' },
+            { file: 'pacgo.html', name: 'PACGO', jp: '喰碁', desc: '中立パックマンが斜め巡回。止まった点の石は色問わず食べられる。', kind: 'stone', icon: 'pacgo' },
+            { file: 'pacigo.html', name: 'PACIGO', jp: '平和碁', desc: '一度も取らなかった側が勝つ。取り合いになると通常の地取り勝負に戻る。', kind: 'peace' },
+            { file: 'pairgo.html', name: 'PAIRGO', jp: '対碁', desc: '桂馬の位置に離れた2石のペアを置く碁。', kind: 'stone', icon: 'pairgo' },
+            { file: 'parasitego.html', name: 'PARASITEGO', jp: '寄生碁', desc: '着手点に接する敵石は寄生で自色に変わる。敵連の内側から侵食する。', kind: 'stone', icon: 'parasitego' },
+            { file: 'paritygo.html', name: 'PARITYGO', jp: '偶奇碁', desc: '奇数手はx+yが奇数の点、偶数手は偶数の点のみ。市松に染め分かる盤。', kind: 'parity' },
+            { file: 'peakgo.html', name: 'PEAKGO', jp: '高峰碁', desc: '盤は山。上ほど標高が高く、終局時の自石の標高合計が得点になる。', kind: 'peak' },
+            { file: 'pentago.html', name: 'PENTAGO', jp: '五連碁', desc: '縦横斜めに5個連続で並べた側が即勝ち。取られて切れたら連ならない。', kind: 'penta' },
+            { file: 'phoenixgo.html', name: 'PHOENIXGO', jp: '不死鳥碁', desc: '取られた連は半分だけ散り、残り半分がその場で即復活する。', kind: 'stone', icon: 'phoenixgo' },
+            { file: 'piecechaingo.html', name: 'PIECECHAINGO', jp: '鎖碁', desc: '鎖で繋がった2石ピース。2マス内ならどんな間隔でも置ける。', kind: 'stone', icon: 'piecechaingo' },
+            { file: 'pinggo.html', name: 'PINGGO', jp: '乒乓碁', desc: 'ボールが盤を跳ね回り、当たった石を1マス押し出して跳ね返る。', kind: 'stone', icon: 'pinggo' },
+            { file: 'pinogo.html', name: 'PINOGO', jp: '擲碁', desc: '盤中央に10本のピン。石を隣に置いて倒せば1本1点。障害物にもなる。', kind: 'stone', icon: 'pinogo' },
+            { file: 'pinwheelgo.html', name: 'PINWHEELGO', jp: '風車碁', desc: '四隅を回転対称に削った風車形。非対称な地形が生む癖のある碁。', kind: 'stone', icon: 'pinwheelgo' },
+            { file: 'plaguego.html', name: 'PLAGUEGO', jp: '疫病碁', desc: '取跡は疫地。疫地に置いた石は手番の終わりに蝕まれて消える。', kind: 'stone', icon: 'plaguego' },
+            { file: 'poisongo.html', name: 'POISONGO', jp: '毒碁', desc: '取った連は猛毒。取跡に接した自分の連も全て毒死する。', kind: 'stone', icon: 'poisongo' },
+            { file: 'pokergo.html', name: 'POKERGO', jp: '扑克碁', desc: '各行の並びでポーカー役を作る。フルハウス+10、ファイブカード+20。', kind: 'stone', icon: 'pokergo' },
+            { file: 'polego.html', name: 'POLEGO', jp: '極軸碁', desc: '着手は中央十字線上か自石に隣接する点。十字の軸から陣地を育てる。', kind: 'pole' },
+            { file: 'pondgo.html', name: 'PONDGO', jp: '池庭碁', desc: '中央に広がる大きな池。池を囲む環状の庭で戦う。', kind: 'stone', icon: 'pondgo' },
+            { file: 'potgo.html', name: 'POTGO', jp: '壺碁', desc: 'アゲハマは壺に蓄積。3個以上の大取をした者が壺の中身を総取りする。', kind: 'pot' },
+            { file: 'primego.html', name: 'PRIMEGO', jp: '素数碁', desc: '着手点はx,yともに素数の交点のみ。疎らな星座を結ぶ碁。', kind: 'prime' },
+            { file: 'prophgo.html', name: 'PROPHGO', jp: '預言碁', desc: '15手ごとに予告された地点へ隕石が落ち、3x3の石を消し飛ばす。', kind: 'meteor' },
+            { file: 'pyrago.html', name: 'PYRAGO', jp: '金字塔碁', desc: '同心状の溝で3層に分かれたピラミッド盤。層ごとに独立した戦場。', kind: 'stone', icon: 'pyrago' },
+            { file: 'quakego.html', name: 'QUAKEGO', jp: '地震碁', desc: '6手ごとに大地震。全石がバラバラの方向へ1マス散らばる。', kind: 'stone', icon: 'quakego' },
+            { file: 'racego.html', name: 'RACEGO', jp: '競走碁', desc: '上下でも左右でも、対辺を自石で結んだ方が即勝ちの連結競走。', kind: 'link' },
+            { file: 'radargo.html', name: 'RADARGO', jp: '探知碁', desc: '敵石は霧の中。3手ごとのレーダーで一瞬だけ全て見える。', kind: 'radar' },
+            { file: 'railgo.html', name: 'RAILGO', jp: '環状線碁', desc: '最外周だけが左右・上下で環状に繋がる。端を越えて連が伸びる。', kind: 'stone', icon: 'railgo' },
+            { file: 'returgo.html', name: 'RETURGO', jp: '帰還碁', desc: '取られた石は手元に戻り、次の着手時に隣へ再打される。', kind: 'stone', icon: 'returgo' },
+            { file: 'reversigo.html', name: 'REVERSIGO', jp: '裏返碁', desc: '着手石と自石で直線挟みした敵石が全て自分の色に返る。', kind: 'stone', icon: 'reversigo' },
+            { file: 'rivergo.html', name: 'RIVERGO', jp: '大河碁', desc: '中央2行を流れる大河。乗った石は下流へ運ばれ、右端から流れ落ちる。', kind: 'stone', icon: 'rivergo' },
+            { file: 'rollgo.html', name: 'ROLLGO', jp: '転がり碁', desc: '盤は中央が谷底のV字斜面。着手ごと石は低い方へ1マス転がる。', kind: 'stone', icon: 'rollgo' },
+            { file: 'rookgo.html', name: 'ROOKGO', jp: '飛車碁', desc: '着手は自石と同じ行か列のみ。飛車のように盤を結ぶ。', kind: 'rook' },
+            { file: 'rotatego.html', name: 'ROTATEGO', jp: '環流碁', desc: '外周リングは時計回り、内周リングは反時計回りに1手ごと1マス環流。', kind: 'stone', icon: 'rotatego' },
+            { file: 'roulettego.html', name: 'ROULETTEGO', jp: '輪盤碁', desc: '毎手番、出目区域 (3x3) が金色に光る。区域内に打てば+2目ボーナス。', kind: 'stone', icon: 'roulettego' },
+            { file: 'rowgo.html', name: 'ROWGO', jp: '行進碁', desc: '着手は指定行のみ。対象行は着手ごとに上から下へ行進して回る。', kind: 'row' },
+            { file: 'rustgo.html', name: 'RUSTGO', jp: '錆碁', desc: '自分が着手するたび、相手の連 (2石以上) の端が1石ずつ錆びる。', kind: 'stone', icon: 'rustgo' },
+            { file: 'scarcego.html', name: 'SCARCEGO', jp: '寡占碁', desc: '各行に置ける石は合計4個まで。寡占された行は閉鎖される。', kind: 'scarce' },
+            { file: 'scattergo.html', name: 'SCATTERGO', jp: '散布碁', desc: '着手は自石からちょうど3マスの環状帯のみ。石は種を撒くように散る。', kind: 'scatter' },
+            { file: 'schrogo.html', name: 'SCHROGO', jp: '量子碁', desc: '3手ごとの石は量子の重ね合わせ。隣接で観測され色が確定する。', kind: 'quantum' },
+            { file: 'scoutgo.html', name: 'SCOUTGO', jp: '斥候碁', desc: '4手目の石は斥候。2手の間、敵の全石の呼吸数が暴かれる。', kind: 'scout' },
+            { file: 'sectorgo.html', name: 'SECTORGO', jp: '回転扇碁', desc: '盤は8つの扇区。着手可の扇区は1手ごとに隣へ回転する。', kind: 'fan' },
+            { file: 'shogigo.html', name: 'SHOGIGO', jp: '将棋碁', desc: '取った石は持ち駒。1個消費して敵石に打ち込み、自分の石に変える。', kind: 'stone', icon: 'shogigo' },
+            { file: 'slidego.html', name: 'SLIDEGO', jp: '滑走碁', desc: '盤は右下がりの滑り台。全石が1手ごとに斜め1マス滑って谷に集まる。', kind: 'stone', icon: 'slidego' },
+            { file: 'slinego.html', name: 'SLINEGO', jp: '直三碁', desc: '1x3直線ピースだけを置く碁。最小限の形で読み合う。', kind: 'stone', icon: 'slinego' },
+            { file: 'slitgo.html', name: 'SLITGO', jp: '切れ目碁', desc: '2本の行全体の切れ目で3帯に分断。帯ごとの独立戦。', kind: 'stone', icon: 'slitgo' },
+            { file: 'slotgo.html', name: 'SLOTGO', jp: '遊技碁', desc: '着手ごとにスロット。7手目はBARで取り3倍、3の倍数はCHERRYで2倍。', kind: 'slot' },
+            { file: 'slothgo.html', name: 'SLOTHGO', jp: '遅滞碁', desc: '直前2つの着手の行と列は封鎖される。熱した筋が冷めるまで打てない。', kind: 'sloth' },
+            { file: 'smokego.html', name: 'SMOKEGO', jp: '煙幕碁', desc: '6手ごとに煙幕が上がり、区内の石は3手の間見えなくなる。', kind: 'smoke' },
+            { file: 'snakego.html', name: 'SNAKEGO', jp: '蛇碁', desc: '5連の蛇 (W字) ピースだけを置く碁。', kind: 'stone', icon: 'snakego' },
+            { file: 'snatchgo.html', name: 'SNATCHGO', jp: '横取碁', desc: 'アタリの敵連は横取り。自連が接していれば最後の呼吸点を残したまま奪う。', kind: 'stone', icon: 'snatchgo' },
+            { file: 'spinngo.html', name: 'SPINNGO', jp: '自転碁', desc: '着手ごとに盤が90°自転する。自分の形も相手の形も丸ごと回る。', kind: 'stone', icon: 'spinngo' },
+            { file: 'spiralgo.html', name: 'SPIRALGO', jp: '螺旋碁', desc: '盤全体が1本の螺旋通路。近傍は前後2方向だけの1次元碁。', kind: 'stone', icon: 'spiralgo' },
+            { file: 'spongego.html', name: 'SPONGEGO', jp: '海綿碁', desc: '敵連を取ると即座にもう1手打てる。連取りで連打が止まらない。', kind: 'stone', icon: 'spongego' },
+            { file: 'stairgo.html', name: 'STAIRGO', jp: '階段碁', desc: '右へ行くほど高くなる階段盤。低い段からしか上へ登れない地形。', kind: 'stone', icon: 'stairgo' },
+            { file: 'sugorokugo.html', name: 'SUGOROKUGO', jp: '双六碁', desc: '盤面は螺旋の升目。着手ごとに1〜3進み、先に中央へ上がれば勝ち。', kind: 'stone', icon: 'sugorokugo' },
+            { file: 'surveygo.html', name: 'SURVEYGO', jp: '測量碁', desc: '自石の枠で囲んだ最大矩形の面積がボーナス。大きく測量せよ。', kind: 'survey' },
+            { file: 'swapgo.html', name: 'SWAPGO', jp: '入替碁', desc: '敵連を取ると自分の連と場所が入れ替わる。盤面が大転換する。', kind: 'stone', icon: 'swapgo' },
+            { file: 'sweepergo.html', name: 'SWEEPERGO', jp: '掃海碁', desc: '盤に地雷。空点の数字は周囲8マスの地雷数。踏むと石が吹き飛ぶ。', kind: 'stone', icon: 'sweepergo' },
+            { file: 'tectogo.html', name: 'TECTOGO', jp: '地殻碁', desc: '盤の左右半分が逆方向にずれる地殻断層。端の石は沈没してアゲハマに。', kind: 'stone', icon: 'tectogo' },
+            { file: 'tetrisgo.html', name: 'TETRISGO', jp: '消滅列碁', desc: '行が全て埋まると消滅して着手者の得点に。自石ごと消える諸刃の列消し。', kind: 'stone', icon: 'tetrisgo' },
+            { file: 'tgo.html', name: 'TGO', jp: '丁字碁', desc: 'T字4連ピースだけを置く碁。丁の字の分岐連。', kind: 'stone', icon: 'tgo' },
+            { file: 'tornago.html', name: 'TORNAGO', jp: '竜巻碁', desc: '竜巻が内側の環状コースを巡回。周囲8マスの石を巻き上げて旋回させる。', kind: 'stone', icon: 'tornago' },
+            { file: 'towergo.html', name: 'TOWERGO', jp: '塔碁', desc: '水平3層の塔。隣の層の同じ位置とだけ垂直に繋がる。', kind: 'stone', icon: 'towergo' },
+            { file: 'trapgo.html', name: 'TRAPGO', jp: '罠碁', desc: '6手ごとの石は空点風の罠。隣に来た敵石を道連れに起動する。', kind: 'trap' },
+            { file: 'trigo.html', name: 'TRIGO', jp: '三角碁', desc: '近傍が3方向の三角格子。呼吸点が少なく取り合いが激しい。', kind: 'stone', icon: 'trigo' },
+            { file: 'triplego.html', name: 'TRIPLEGO', jp: '三手碁', desc: '1手番で3石ずつ置く。3石置き切って初めて手番が相手に巡る。', kind: 'triple' },
+            { file: 'twingo.html', name: 'TWINGO', jp: '双子碁', desc: '隔壁で分かれた2盤。中央のワープ点だけが両盤を結ぶ。', kind: 'stone', icon: 'twingo' },
+            { file: 'vampgo.html', name: 'VAMPGO', jp: '吸血碁', desc: '取った石に接した自石は血を得て装甲化。次の包囲を1度耐える。', kind: 'stone', icon: 'vampgo' },
+            { file: 'vortexgo.html', name: 'VORTEXGO', jp: '渦模様碁', desc: '中心から渦を巻く腕状の壁。流れに沿って戦線が歪む。', kind: 'stone', icon: 'vortexgo' },
+            { file: 'votego.html', name: 'VOTEGO', jp: '選挙碁', desc: '9区画制。各区で石数が多い側がその区の空点を総取りする選挙制。', kind: 'vote' },
+            { file: 'wheelgo.html', name: 'WHEELGO', jp: '車輪碁', desc: '十字と斜め線だけ残した車輪盤。近傍はスポークに沿う前後のみ。', kind: 'stone', icon: 'wheelgo' },
+            { file: 'wildgo.html', name: 'WILDGO', jp: '無手碁', desc: '5手ごとのワイルド手は手番が変わらず連続2手。溜めて崩す大局観。', kind: 'stone', icon: 'wildgo' },
+            { file: 'windgo.html', name: 'WINDGO', jp: '風碁', desc: '着手ごとに全石が風向きへ1マス流れる。風は東→南→西→北と巡る。', kind: 'stone', icon: 'windgo' },
+            { file: 'winggo.html', name: 'WINGGO', jp: '翼碁', desc: '中央から両翼が伸びる5連ピースを置く碁。', kind: 'stone', icon: 'winggo' },
+            { file: 'xgo.html', name: 'XGO', jp: '叉字碁', desc: 'X字 (十字) 5連ピースだけを置く碁。', kind: 'stone', icon: 'xgo' },
+            { file: 'xraygo.html', name: 'XRAYGO', jp: '透視碁', desc: '敵石は不可視。2手目のX線でその時点の敵石だけ永久に見える。', kind: 'xray' },
+            { file: 'ziggo.html', name: 'ZIGGO', jp: '之字碁', desc: 'S字・Z字4連ピースだけを置く碁。ジグザグの連。', kind: 'stone', icon: 'ziggo' },
+            { file: 'zipgo.html', name: 'ZIPGO', jp: '縞封碁', desc: '奇数手は前の手の列、偶数手は行になぞられて指される縞模様の碁。', kind: 'zip' },
+            { file: 'zonego.html', name: 'ZONEGO', jp: '区域碁', desc: '盤は9区域。自分の石が相手より2個以上多い区域を「制圧」。5区域制圧で即勝ち。', kind: 'zone' },
+                                                                                                                                                // ==== WAVE3 GAMES BEGIN ====
+            { file: 'abyssgo.html', name: 'ABYSSGO', jp: '海底碁', desc: '深海の海嶺。熱水噴出孔の温もりの届く点 (チェビシェフ2以内) だけが呼吸点。', kind: 'stone', icon: 'abyssgo' },
+            { file: 'accelgo.html', name: 'ACCELGO', jp: '加速碁', desc: '自分の番で石を置き続けると3連続ごとに+1手の連打ボーナス。パスでリセット。', kind: 'stone', icon: 'accelgo' },
+            { file: 'afterimagego.html', name: 'AFTERIMAGEGO', jp: '残響碁', desc: '着手・消滅した場所に残響が残る。自分の残響の上に置くと共鳴石になり、終局時+1目。', kind: 'stone', icon: 'afterimagego' },
+            { file: 'agatego.html', name: 'AGATEGO', jp: '瑪瑙碁', desc: '味方3石に囲まれて置いた石は縞の層を持つ。層を持つ石は瑪瑙となり取られない。', kind: 'stone', icon: 'agatego' },
+            { file: 'alluvialgo.html', name: 'ALLUVIALGO', jp: '扇状碁', desc: '扇状地の盤。扇央は豊か(+1呼吸)、扇外の荒れ地は痩せる(-1呼吸)。', kind: 'stone', icon: 'alluvialgo' },
+            { file: 'ambergo.html', name: 'AMBERGO', jp: '琥珀碁', desc: '取られた石は消えず琥珀に封じ込められ、その場に永久の障害物として残る。', kind: 'stone', icon: 'ambergo' },
+            { file: 'ampgo.html', name: 'Amp-Go', jp: '増幅碁', desc: '2つの増幅点の周囲1マスに石がある側は、その手の取りが2倍になる。', kind: 'stone', icon: 'ampgo' },
+            { file: 'antcolonygo.html', name: 'ANTCOLONYGO', jp: '蟻群碁', desc: '四隅は餌場。石で占めると+4目。石の隣にはフェロモンの道が滲む。', kind: 'stone', icon: 'antcolonygo' },
+            { file: 'antiquego.html', name: 'ANTIQUEGO', jp: '骨董碁', desc: '石は骨董品。生き残った石は4手ごとに+1目。取られた石は価値0。', kind: 'stone', icon: 'antiquego' },
+            { file: 'apiarygo.html', name: 'APIARYGO', jp: '採蜜碁', desc: '中央の花畑と両隅の巣箱。連が両方に届くと8手ごとに蜜を貯めて+1点。', kind: 'stone', icon: 'apiarygo' },
+            { file: 'archedbeamgo.html', name: 'ARCHEDBEAMGO', jp: '虹梁碁', desc: '着手で横向き3連以上の虹梁が架かると+2。', kind: 'stone', icon: 'archedbeamgo' },
+            { file: 'archipelagogo.html', name: 'ARCHIPELAGOGO', jp: '群島碁', desc: '散在する5つの小島。各島の港は他島の港と直接近傍する (船渡し)。', kind: 'stone', icon: 'archipelagogo' },
+            { file: 'arcirisgo.html', name: 'Arc Iris-Go', jp: '虹弧碁', desc: '左右両端に届く7石以上の連を架けると虹の橋が完成し即勝ち。', kind: 'stone', icon: 'arcirisgo' },
+            { file: 'arithmeticgo.html', name: 'ARITHMETICGO', jp: '公差碁', desc: '自分の直前2手と同じ方向・同じ間隔 (等差) で打つと+2目の公差ボーナス。', kind: 'stone', icon: 'arithmeticgo' },
+            { file: 'armillarygo.html', name: 'ARMILLARYGO', jp: '渾天碁', desc: '盤に刻まれた2重の天環。環上への着手+1、環と経緯の交点は+2。', kind: 'stone', icon: 'armillarygo' },
+            { file: 'assaultgo.html', name: 'ASSAULTGO', jp: '突撃碁2', desc: '敵連に接した連は突撃状態。毎手、両軍の先鋒が1個ずつ削れて相手のアゲハマになる。', kind: 'stone', icon: 'assaultgo' },
+            { file: 'atollgo.html', name: 'ATOLLGO', jp: '環礁碁', desc: '環礁型の盤。中央の潟と外洋は着手もできず呼吸点にもならない。', kind: 'stone', icon: 'atollgo' },
+            { file: 'aurorago.html', name: 'AURORAGO', jp: '極光碁', desc: '各側5手ごとの着手は極光が現れ、全石に呼吸点+1。その手は取りが起きない。', kind: 'stone', icon: 'aurorago' },
+            { file: 'baggo.html', name: 'BAGGO', jp: '袋碁', desc: '取った敵石は袋に詰める。5個まで得点、溢れた分は重荷で-1目ずつ。', kind: 'stone', icon: 'baggo' },
+            { file: 'balltossgo.html', name: 'BALLTOSSGO', jp: '玉入碁', desc: '星点の3x3区域が「籠」。終局時に籠内の石が多い側が籠ごとに+2点。', kind: 'stone', icon: 'balltossgo' },
+            { file: 'bankedturngo.html', name: 'BANKEDTURNGO', jp: '保留碁', desc: '手番を「貯める」で銀行預け。「連打」で貯蓄分だけ連続着手できる。', kind: 'stone', icon: 'bankedturngo' },
+            { file: 'barrelgo.html', name: 'BARRELGO', jp: '樽酒碁', desc: '石は酒樽。24手留まると熟成 (金縁) し、熟成石1個につき終局時+1目。', kind: 'stone', icon: 'barrelgo' },
+            { file: 'barriergo.html', name: 'BARRIERGO', jp: '結界碁', desc: '結界石を3つ結ぶと結界が張られる。内部の空点と敵石が得点に。', kind: 'stone', icon: 'barriergo' },
+            { file: 'basaltgo.html', name: 'BASALTGO', jp: '玄武碁', desc: '全隣接点 (3方向以上) を味方で固めた石は柱状節理に固まる — 取れず終局時+1目。', kind: 'stone', icon: 'basaltgo' },
+            { file: 'basingo.html', name: 'BASINGO', jp: '窪地碁', desc: '中央の窪地は水が溜まる。窪地の空点は呼吸点にならず、水没石は溺れる。', kind: 'stone', icon: 'basingo' },
+            { file: 'batterygo.html', name: 'BATTERYGO', jp: '電池碁', desc: '石は充電3で着弾。敵に隣接して打つと放電し、切れた石は死滅する。', kind: 'stone', icon: 'batterygo' },
+            { file: 'battledorego.html', name: 'BATTLEDOREGO', jp: '羽根碁', desc: '石は羽根突きの羽。相手側の最奥ラインに届けるごとにラリー+1点。', kind: 'stone', icon: 'battledorego' },
+            { file: 'battlelinego.html', name: 'BATTLELINEGO', jp: '陣形碁', desc: '布陣で得点。直線4連の「槍陣」と2x2の「方陣」を完成させると各+1目。', kind: 'stone', icon: 'battlelinego' },
+            { file: 'baygo.html', name: 'BAYGO', jp: '湾岸碁', desc: '湾岸線の盤。船着き場に石を入港させるごとに+1点。', kind: 'stone', icon: 'baygo' },
+            { file: 'begomago.html', name: 'BEGOMAGO', jp: 'ベーゴマ碁', desc: '置いた石が敵石にぶつかって1マス押し出す。盤外へ弾き飛ばせばアゲハマに。', kind: 'stone', icon: 'begomago' },
+            { file: 'bellgo.html', name: 'BELLGO', jp: '釣鐘碁', desc: '釣鐘型の盤。石は斜面を転がり、鐘の縁か他の石に当たるまで滑る。', kind: 'stone', icon: 'bellgo' },
+            { file: 'bentogo.html', name: 'BENTOGO', jp: '弁当碁', desc: '12手ごとの開け弁当判定。4仕切りすべてに石が1個以上ある側がバランス点を得る。先に3点で幕の内勝ち。', kind: 'stone', icon: 'bentogo' },
+            { file: 'bidgo.html', name: 'BIDGO', jp: '入札碁', desc: '星点は入札点。占めるたびにアゲハマで代価を払い、値段は吊り上がる。', kind: 'stone', icon: 'bidgo' },
+            { file: 'biidamago.html', name: 'BIIDAMAGO', jp: 'ビー玉碁', desc: '星の点は穴。ビー玉を穴に入れると+2点、穴の中の石は呼吸+1。', kind: 'stone', icon: 'biidamago' },
+            { file: 'bingolinego.html', name: 'BINGOLINEGO', jp: '釣合碁', desc: '斜め(↘/↗)に自石が5個以上連なると連なりの長さだけビンゴボーナス地。', kind: 'stone', icon: 'bingolinego' },
+            { file: 'blindspotgo.html', name: 'BLINDSPOTGO', jp: '盲点碁', desc: '双方に1つずつ盲点を設定。その点の敵石は視界から消え、取りの判定にも効く。', kind: 'stone', icon: 'blindspotgo' },
+            { file: 'blockcitygo.html', name: 'BLOCKCITYGO', jp: '街区碁', desc: '盤は道路で区切られた街区状。終局時、各街区で石数多数の側が街区全域を領地とする。', kind: 'stone', icon: 'blockcitygo' },
+            { file: 'bloomgo.html', name: 'BLOOMGO', jp: '開花碁', desc: '12手周期の季節。春になると全ての連が「開花」して呼吸点+1。', kind: 'stone', icon: 'bloomgo' },
+            { file: 'bluffgo.html', name: 'BLUFFGO', jp: '詐称碁', desc: '石を取った手番が「虚勢」(取った石が自軍から孤立)だと見抜かれて-2目。', kind: 'stone', icon: 'bluffgo' },
+            { file: 'bonsaigo.html', name: 'BONSAIGO', jp: '盆栽碁', desc: '石は盆栽の枝。分岐と先端を持つ「整った樹形」の連は終局時+2目。', kind: 'stone', icon: 'bonsaigo' },
+            { file: 'bonshogo.html', name: 'BONSHOGO', jp: '鐘撞碁', desc: '天元は梵鐘。撞く(着手)と音が響き、周囲1目の石が1つ外へ押される。', kind: 'stone', icon: 'bonshogo' },
+            { file: 'borego.html', name: 'BOREGO', jp: '削岩碁', desc: '盤の外周は岩盤で置けない。岩に隣接して置くと削り取られ、新しい着手点が掘れる。', kind: 'stone', icon: 'borego' },
+            { file: 'borrowturngo.html', name: 'BORROWTURNGO', jp: '借用碁', desc: '「借用」で2手連続着手。ただし次の相手番は相手も2手連続になる前借り。', kind: 'stone', icon: 'borrowturngo' },
+            { file: 'bouncygo.html', name: 'BOUNCYGO', jp: '弾み碁', desc: '石は弾む。置くと反発して隣の全ての石 (両色) を1マス弾き飛ばす。', kind: 'stone', icon: 'bouncygo' },
+            { file: 'boundarygo.html', name: 'BOUNDARYGO', jp: '境界碁', desc: '着手点の隣の敵石1つにつき境界杭+1 (最大+3)。', kind: 'stone', icon: 'boundarygo' },
+            { file: 'boushugo.html', name: 'Boushu-Go', jp: '芒種碁', desc: '周期の5〜7手目に置く石は種として埋まり、8手後に芽を出して持ち主の石になる。', kind: 'stone', icon: 'boushugo' },
+            { file: 'branchgo.html', name: 'BRANCHGO', jp: '枝分碁', desc: '石は枝。3方向以上に自分の石が伸びる分岐点を作ると終局時+1目。', kind: 'stone', icon: 'branchgo' },
+            { file: 'brewgo.html', name: 'BREWGO', jp: '醸造碁', desc: '盤の醸造槽。麹の石が12手浸かると酒に変わり、終局時1個1点になる。', kind: 'stone', icon: 'brewgo' },
+            { file: 'brushgo.html', name: 'BRUSHGO', jp: '筆造碁', desc: '石は筆の穂先。縦横一直線に3つ以上揃った連は「良い筆」となり呼吸+2。', kind: 'stone', icon: 'brushgo' },
+            { file: 'bulletgo.html', name: 'BULLETGO', jp: '弾丸碁', desc: '各側5手目の石は弾丸。最も近い敵石へ弾を放ち、直線上を最大3個貫通。', kind: 'stone', icon: 'bulletgo' },
+            { file: 'bumpygo.html', name: 'BUMPYGO', jp: '凸凹碁', desc: '起伏のある盤。着いた石は低い方へ転がり、窪地に落ちると潰れることも。', kind: 'stone', icon: 'bumpygo' },
+            { file: 'bunkergo.html', name: 'BUNKERGO', jp: '地下壕碁', desc: '中央に屋根付きの地下壕。壕内の石は取られないが、壕からも攻められない。', kind: 'stone', icon: 'bunkergo' },
+            { file: 'burialgo.html', name: 'BURIALGO', jp: '墓穴碁', desc: '各側最初に石を取った場所は墓穴になり、二度と石は置けない。', kind: 'stone', icon: 'burialgo' },
+            { file: 'byakuyago.html', name: 'Byakuya-Go', jp: '白夜碁', desc: '常夜の上3行は取れないが、周期の白夜窓 (10-15手目) は夜が消えて全て取れる。', kind: 'stone', icon: 'byakuyago' },
+            { file: 'byoubugo.html', name: 'BYOUBUGO', jp: '屏風碁', desc: '横一線に4連以上並んだ石は「屏風」。その連は風を遮られて決して取られない。', kind: 'stone', icon: 'byoubugo' },
+            { file: 'calligraphygo.html', name: 'CALLIGRAPHYGO', jp: '書道碁', desc: '石は墨の筆跡。直前の自石に隣接して打つと一筆が伸び、最長の流れが得点。', kind: 'stone', icon: 'calligraphygo' },
+            { file: 'camelliago.html', name: 'CAMELLIAGO', jp: '椿碁', desc: '取られた石は散り際に椿の花を残す — 跡が空点のままなら所有者に終局時+1目。', kind: 'stone', icon: 'camelliago' },
+            { file: 'candlego.html', name: 'CANDLEGO', jp: '蝋燭碁', desc: '石は蝋燭。灯り(隣の空点)が1つしか無い孤立の蝋燭は、12手ごとの風で燃え尽きる。', kind: 'stone', icon: 'candlego' },
+            { file: 'candygo.html', name: 'CANDYGO', jp: '飴玉碁', desc: '同じ色が3個以上並ぶとポップして持ち主の得点に。連鎖ポップも起きる。', kind: 'stone', icon: 'candygo' },
+            { file: 'capego.html', name: 'CAPEGO', jp: '岬碁', desc: '盤外周は海、四方の岬だけが突出部。岬を占めると制海点+2。', kind: 'stone', icon: 'capego' },
+            { file: 'capsulego.html', name: 'CAPSULEGO', jp: 'カプセル碁', desc: '敵石を取るとカプセルが弾けて自分色の中身が近くの空きマスに飛び出す。', kind: 'stone', icon: 'capsulego' },
+            { file: 'carbongo.html', name: 'CARBONGO', jp: '炭素碁', desc: '盤中央の高圧区域で炭素の石はダイヤに変質。ダイヤは終局時に1個1点。', kind: 'stone', icon: 'carbongo' },
+            { file: 'caromgo.html', name: 'CAROMGO', jp: '撞球碁', desc: '石はビリヤード球。衝突で敵球を転がし、ポケット (盤端) に落とす。', kind: 'stone', icon: 'caromgo' },
+            { file: 'cartgo.html', name: 'CARTGO', jp: '荷車碁', desc: '荷車 (横に並んだ自石2連) は荷を運ぶ — 荷車の連が取られる時、積荷は相手に渡るが車は逃げる。', kind: 'stone', icon: 'cartgo' },
+            { file: 'castego.html', name: 'CASTEGO', jp: '階層碁', desc: '石は階級。4手ごとの着手は上級石 — 取られると2目分。数が少ないほど価値が高い。', kind: 'stone', icon: 'castego' },
+            { file: 'castleholdgo.html', name: 'CASTLEHOLDGO', jp: '篭城碁', desc: '四隅3x3は城。城内に完全に篭った連は取れないが、4手ごとに籠城兵糧を食う。', kind: 'stone', icon: 'castleholdgo' },
+            { file: 'catalystgo.html', name: 'CATALYSTGO', jp: '触媒碁', desc: '自分の6個目ごとの石は触媒。置くと隣接する敵石を自石に変質させる。', kind: 'stone', icon: 'catalystgo' },
+            { file: 'catcradlego.html', name: 'CATCRADLEGO', jp: 'あやと碁', desc: '自石2つ+敵石2つに触れる交差着手であやとり完成、+1目。', kind: 'stone', icon: 'catcradlego' },
+            { file: 'chabakogo.html', name: 'CHABAKOGO', jp: '茶箱碁', desc: '中央3x3の茶箱に道具(石)を5つ詰め込めば野点出発で即勝ち。詰めた石は+1目。', kind: 'stone', icon: 'chabakogo' },
+            { file: 'chainreact.html', name: 'CHAINREACT', jp: '連鎖碁', desc: '敵石を取ると爆発: 8近傍の敵石も連鎖して取られる。連鎖は最大2波まで。', kind: 'stone', icon: 'chainreact' },
+            { file: 'channelgo.html', name: 'CHANNELGO', jp: '媒介碁', desc: '石は媒介。同行・同列で視線の通った石同士は遠くても一つの連。', kind: 'stone', icon: 'channelgo' },
+            { file: 'chefgo.html', name: 'CHEFGO', jp: '料理碁', desc: '取った食材は調理済みで2倍。盤上に残った生の石は1個ごとに-0.5目。', kind: 'stone', icon: 'chefgo' },
+            { file: 'chickengo.html', name: 'CHICKENGO', jp: '養鶏碁', desc: '星の点は餌場。石が5手留まると隣に卵を産み、卵は6手で孵化して石になる。', kind: 'stone', icon: 'chickengo' },
+            { file: 'chisengo.html', name: 'CHISENGO', jp: '池泉碁', desc: '中央の十字形の池は打てない水場。池に面する景石ごとに+2目の庭師点。', kind: 'stone', icon: 'chisengo' },
+            { file: 'ciphergo.html', name: 'CIPHERGO', jp: '暗号碁', desc: '盤面は暗号文。石を置いた場所の数字が解読されて隠し得点になる。', kind: 'stone', icon: 'ciphergo' },
+            { file: 'circle2go.html', name: 'CIRCLE2GO', jp: '環状碁', desc: '自分の連で2点以上を囲む「環」を完成させると内部が得点になり、環の石は無敵になる。', kind: 'stone', icon: 'circle2go' },
+            { file: 'circuitgo.html', name: 'Circuit-Go', jp: '回路碁', desc: '中央3x3の電源コア。連に1石でもコアの石があれば通電して取られない。', kind: 'stone', icon: 'circuitgo' },
+            { file: 'cliffgo.html', name: 'CLIFFGO', jp: '岩壁碁', desc: '盤を横断する崖。縁の石は崖下へ落下して結合する。', kind: 'stone', icon: 'cliffgo' },
+            { file: 'cloudgo.html', name: 'CLOUDGO', jp: '雲碁', desc: '3つの浮遊島が細い筋で繋がる雲上盤。島を跨ぐ連絡線が生命線。', kind: 'stone', icon: 'cloudgo' },
+            { file: 'cloudseago.html', name: 'CLOUDSEAGO', jp: '雲海碁', desc: '中央を漂う雲の帯。雲に触れる連は霧で呼吸し取られない。雲は7手ごとに移動。', kind: 'stone', icon: 'cloudseago' },
+            { file: 'coalminego.html', name: 'COALMINEGO', jp: '炭鉱碁', desc: '炭脈に置くと石炭+1。3石炭で爆破 — 最も呼吸の浅い敵石1個を吹き飛ばす。', kind: 'stone', icon: 'coalminego' },
+            { file: 'cobwebgo.html', name: 'COBWEBGO', jp: '蛛網碁', desc: '蜘蛛の巣状の盤。環状筋と十字の放射筋の交点だけが着手点。', kind: 'stone', icon: 'cobwebgo' },
+            { file: 'collidego.html', name: 'COLLIDEGO', jp: '衝突碁', desc: '置いた石は中央へ向かう長軸方向に最大5マス滑る。敵石に衝突すると破壊してその場に止まる。', kind: 'stone', icon: 'collidego' },
+            { file: 'colonygo.html', name: 'COLONYGO', jp: '植民碁', desc: '盤は3x3の区域に分割。終局時、各区域で石数が多い側が区域全域を領地として得る。', kind: 'stone', icon: 'colonygo' },
+            { file: 'compassgo.html', name: 'COMPASSGO', jp: '方位碁', desc: '盤は八方位。外周の自石は方角で得点が違う — 四正方位 (東西南北) +3・四隅方位 +1。', kind: 'stone', icon: 'compassgo' },
+            { file: 'condensergo.html', name: 'Condenser-Go', jp: '蓄電碁', desc: '着手ごとに+1充電、8で自動放電して着手点の周囲3x3の敵石を打ち抜く。', kind: 'stone', icon: 'condensergo' },
+            { file: 'conductgo.html', name: 'CONDUCTGO', jp: '導電碁', desc: '盤の左右端は電極。両端に触れる連は短絡して呼吸点-2で弱化する。', kind: 'stone', icon: 'conductgo' },
+            { file: 'corridorgo.html', name: 'CORRIDORGO', jp: '渡廊碁', desc: '東西の庭園を1列の渡り廊下が結ぶ。廊下を制する者が両岸を制す。', kind: 'stone', icon: 'corridorgo' },
+            { file: 'counterpointgo.html', name: 'COUNTERPOINTGO', jp: '対位碁', desc: '同じ大きさ (2石以上) の連が2つできると輪唱が響き+2目。', kind: 'stone', icon: 'counterpointgo' },
+            { file: 'covego.html', name: 'COVEGO', jp: '入江碁', desc: '海岸線の凹凸盤。湾内の奥まった好地は呼吸点+1の安息地。', kind: 'stone', icon: 'covego' },
+            { file: 'cremationgo.html', name: 'CREMATIONGO', jp: '荼毘碁', desc: '取られた石は荼毘に付され灰を残す。供養で+1目を得る。灰は6手で風に還る。', kind: 'stone', icon: 'cremationgo' },
+            { file: 'crevicego.html', name: 'CREVICEGO', jp: '亀裂碁', desc: '盤の中央に亀裂。亀裂を挟む石は連にも呼吸も通らない (4行ごとに自然橋)。', kind: 'stone', icon: 'crevicego' },
+            { file: 'crisisgo.html', name: 'CRISISGO', jp: '危機碁', desc: '劣勢の側は1回だけ「捨身の一手」で2連続着手できる。', kind: 'rush', icon: 'crisisgo' },
+            { file: 'crown2go.html', name: 'CROWN2GO', jp: '戴冠碁', desc: '十字5連のどれかの角にもう1石置いて王冠形(菱6連)を完成させた側が即勝ち。', kind: 'stone', icon: 'crown2go' },
+            { file: 'crowngo2.html', name: 'CROWNGO2', jp: '王冠碁', desc: '歯形の外周環。凹部 (陥穽) に面する環状筋の石は呼吸点が1つ少ない。', kind: 'stone', icon: 'crowngo2' },
+            { file: 'crystalgo.html', name: 'CRYSTALGO', jp: '結晶碁', desc: '4個以上繋がった石は結晶化して不滅になるが、それ以上連にはならない。', kind: 'stone', icon: 'crystalgo' },
+            { file: 'currentgo.html', name: 'CURRENTGO', jp: '海流碁', desc: '5行おきの海流が8手ごとに石を1マス流す。盤外に流されると取られる。', kind: 'stone', icon: 'currentgo' },
+            { file: 'cylindergo.html', name: 'CYLINDERGO', jp: '中空碁', desc: '円筒の内側の盤。左右の端が繋がり、右端の隣は左端。', kind: 'stone', icon: 'cylindergo' },
+            { file: 'daikango.html', name: 'Daikan-Go', jp: '大寒碁', desc: '周期の最後4手は大寒期。その間の着手は凍結石となり、周期頭に融ける。', kind: 'stone', icon: 'daikango' },
+            { file: 'darwingo.html', name: 'DARWINGO', jp: '淘汰碁', desc: '8手ごとの自然選択で、2個以下かつ呼吸2以下の弱い連は死滅して相手のアゲハマになる。', kind: 'stone', icon: 'darwingo' },
+            { file: 'dashigo.html', name: 'DASHIGO', jp: '出汁碁', desc: '出汁区域 (琥珀の池) で終局を迎えた石は旨みが滲みて1石+1目。', kind: 'stone', icon: 'dashigo' },
+            { file: 'daynightgo.html', name: 'DAYNIGHTGO', jp: '二時碁', desc: '20手ごとに昼⇄夜が巡り、盤上の全石の持ち主が反転する。布石は寝返る。', kind: 'stone', icon: 'daynightgo' },
+            { file: 'debtgo.html', name: 'DEBTGO', jp: '貸付碁', desc: '「貸付」で相手色の石を置く。20手後に返済され、自石+利子1石に膨らむ。', kind: 'stone', icon: 'debtgo' },
+            { file: 'deckgo.html', name: 'DECKGO', jp: '山札碁', desc: '手番ごとに山札をめくる: 複製/爆破/交換/援軍のカード効果が石に適用される。', kind: 'stone', icon: 'deckgo' },
+            { file: 'decomposego.html', name: 'DECOMPOSEGO', jp: '腐生碁', desc: '取られた石は菌に分解され土壌になる。25手で肥えた空点に還る。', kind: 'stone', icon: 'decomposego' },
+            { file: 'deergo.html', name: 'DEERGO', jp: '鹿苑碁', desc: '星の上の石は角のある鹿。単独で鹿に隣接した敵石は角で跳ね返される。', kind: 'stone', icon: 'deergo' },
+            { file: 'defergo.html', name: 'DEFERGO', jp: '延期碁', desc: '着手を延期して貯蓄。利子が付き、貯蓄3点で1手の引出連打ができる。', kind: 'stone', icon: 'defergo' },
+            { file: 'delaygo.html', name: 'DELAYGO', jp: '遅延碁', desc: '着手は予約となり2手後に実体化する。先に埋まった場所の予約は消える。', kind: 'clock', icon: 'delaygo' },
+            { file: 'densitygo.html', name: 'DENSITYGO', jp: '濃度碁', desc: '9つのゾーンの占有率が8割を超えると相転移 — 多数派が少数派の石を全て取る。', kind: 'stone', icon: 'densitygo' },
+            { file: 'detectivego.html', name: 'DETECTIVEGO', jp: '推理碁', desc: '相手の次の最有力手を推理表示。相手がその近くに打てば読み的中で+2目。', kind: 'stone', icon: 'detectivego' },
+            { file: 'dewgo.html', name: 'DEWGO', jp: '露草碁', desc: '24手ごとの早朝に全石の周りへ露が降り、濡れた空点には10手の間打てない。', kind: 'stone', icon: 'dewgo' },
+            { file: 'dicebuildgo.html', name: 'DICEBUILDGO', jp: '骰子建築碁', desc: '着手ごとに出目(1-3)を振り、打った石の周りに出目-1個の石が自動増築される。', kind: 'stone', icon: 'dicebuildgo' },
+            { file: 'digitgo.html', name: 'DIGITGO', jp: '位取碁', desc: '取った石はその列の位取り値 (1・2・3目) になる。高位の石ほど取る価値が大きい。', kind: 'stone', icon: 'digitgo' },
+            { file: 'dilemmago.html', name: 'DILEMMAGO', jp: '囚人碁', desc: '12手ごとに囚人のジレンマ: 協力/裏切りの組合せで双方にボーナスが出る。', kind: 'stone', icon: 'dilemmago' },
+            { file: 'dischargego.html', name: 'Discharge-Go', jp: '放電碁', desc: '14手ごとの雷で、盤上で最も呼吸の少ない連が全滅して相手のアゲハマになる。', kind: 'stone', icon: 'dischargego' },
+            { file: 'divego.html', name: 'DIVEGO', jp: '潜水碁', desc: '敵石に完全包囲された点にも潜水着手できる。3手後に浮上して石になる。', kind: 'stone', icon: 'divego' },
+            { file: 'dividergo.html', name: 'Divider-Go', jp: '分圧碁', desc: '一手で2連以上取ると取り2倍。5石以上の連を取ると取りが減る。', kind: 'stone', icon: 'dividergo' },
+            { file: 'dohyogo.html', name: 'DOHYOGO', jp: '土俵碁', desc: '円形の土俵で闘う。置いた石に隣接し縁まで追い込まれた敵石は突き出されてアゲハマになる。', kind: 'stone', icon: 'dohyogo' },
+            { file: 'domgo.html', name: 'DOMGO', jp: '半球碁', desc: '中央が高いドーム盤。連に繋がらない孤立石は外へ向かって転がる。', kind: 'stone', icon: 'domgo' },
+            { file: 'dominiongo.html', name: 'DOMINIONGO', jp: '版図碁', desc: '終局時、盤上で最も大きな連結区域(連)を持つ側が勝ち。地より「繋がり」が全て。', kind: 'stone', icon: 'dominiongo' },
+            { file: 'dominogo.html', name: 'DOMINOGO', jp: '骨牌碁', desc: '同じ筋(x列)に自石を3個積むとドミノが倒れ、列の上下の空点に石が伝播する。', kind: 'stone', icon: 'dominogo' },
+            { file: 'dorodangogo.html', name: 'DORODANGOGO', jp: '泥団子碁', desc: '石は自分の手を重ねるほど磨かれて光る。磨き1段につき終局+0.5目 (最大5段)。', kind: 'stone', icon: 'dorodangogo' },
+            { file: 'doubledown.html', name: 'DOUBLEDOWN', jp: '倍返碁', desc: '各プレイヤーの最初の捕獲は「倍返し」となりアゲハマ2倍。', kind: 'rush', icon: 'doubledown' },
+            { file: 'dragon2go.html', name: 'DRAGON2GO', jp: '竜巻碁', desc: '15手ごとに竜巻が一段を横断。その段の石は色に関係なく全て吹き飛ばされる。', kind: 'stone', icon: 'dragon2go' },
+            { file: 'dreamgo.html', name: 'DREAMGO', jp: '夢幻碁', desc: '10手ごとに現実盤と夢盤が入れ替わる。夢で取ったアゲハマは現実に持ち帰る。', kind: 'stone', icon: 'dreamgo' },
+            { file: 'dropletgo.html', name: 'DROPLETGO', jp: '雫碁', desc: '石は水滴。同色に2面までなら合体できるが、3面以上の合体は表面張力で弾けて置けない。', kind: 'stone', icon: 'dropletgo' },
+            { file: 'droughtgo.html', name: 'DROUGHTGO', jp: '干ばつ碁', desc: '天元が水源。遠くの石は渇き、5手ごとに水源から遠い石が干上がる。', kind: 'weather', icon: 'droughtgo' },
+            { file: 'dualphasego.html', name: 'DUALPHASEGO', jp: '二相碁', desc: '市松模様の盤。白マスの石は呼吸2倍・黒マスの石は呼吸半分で数える。', kind: 'stone', icon: 'dualphasego' },
+            { file: 'dunego.html', name: 'DUNEGO', jp: '砂丘碁', desc: '流砂の砂丘地帯。7手ごとに砂丘が東へ流れ、乗った石は砂に呑まれる。', kind: 'stone', icon: 'dunego' },
+            { file: 'dungo.html', name: 'DUNGO', jp: '地下碁', desc: '4つの潜行点 (◎) に打った石は地下に潜って取られない・連にもならない。', kind: 'stone', icon: 'dungo' },
+            { file: 'dustbombgo.html', name: 'DUSTBOMBGO', jp: '粉塵碁', desc: '着手の隣の空点に粉塵が堆積。粉塵3の空点は爆発し3x3の敵石を吹き飛ばす (連鎖あり・自石は無事)。', kind: 'stone', icon: 'dustbombgo' },
+            { file: 'dynamitego.html', name: 'DYNAMITEGO', jp: '爆破解碁', desc: '「点火」で次の着手がダイナマイト化。着弾3x3の石を全て吹き飛ばす (各側1回)。', kind: 'stone', icon: 'dynamitego' },
+            { file: 'echo2go.html', name: 'ECHOGO', jp: '残響碁', desc: '自分の直前の手の座標が残響になり、次の自分の番では着手できない。', kind: 'weather', icon: 'echo2go' },
+            { file: 'eclipsego.html', name: 'ECLIPSEGO', jp: '日食碁', desc: '12手ごとの日食: 全石の色が反転しアゲハマも入れ替わる。', kind: 'weather', icon: 'eclipsego' },
+            { file: 'ehogo.html', name: 'EHOGO', jp: '恵方碁', desc: '恵方 (北→東→南→西の外2列帯) が3手ごとに回る。恵方に向かって置くと福+2点。', kind: 'stone', icon: 'ehogo' },
+            { file: 'ekidengo.html', name: 'EKIDENGO', jp: '継走碁', desc: '5手ごとに「たすき石」が現れる。取ると2個分・残ると+1点の特別石。', kind: 'stone', icon: 'ekidengo' },
+            { file: 'electiongo.html', name: 'ELECTIONGO', jp: '選挙碁', desc: '石は有権者。9つの選挙区で石の多い側が区を制して+4目。', kind: 'stone', icon: 'electiongo' },
+            { file: 'elementgo.html', name: 'ELEMENTGO', jp: '周期碁', desc: '交点は元素記号。結合対で+2、激反応対は両者消失する。', kind: 'stone', icon: 'elementgo' },
+            { file: 'embergo.html', name: 'EMBERGO', jp: '残火碁', desc: '取られた石の跡は2手間「余燼」として熱を持ち、取られた側は置けない。', kind: 'stone', icon: 'embergo' },
+            { file: 'embroiderygo.html', name: 'EMBROIDERYGO', jp: '刺繍碁', desc: '9つの図案枠。枠内の石多数が縫い取り、終局時+1目/枠。', kind: 'stone', icon: 'embroiderygo' },
+            { file: 'emergego.html', name: 'EMERGEGO', jp: '羽化碁', desc: '石は蛹。22手経つと羽化して別の空点へ飛び移る (各手番につき1匹)。', kind: 'stone', icon: 'emergego' },
+            { file: 'encorego.html', name: 'ENCOREGO', jp: '完奏碁', desc: '盤の8個の音符点を順番に自石で埋める。先に一曲完奏した側が勝ち (各+1目)。', kind: 'stone', icon: 'encorego' },
+            { file: 'erosiongo.html', name: 'EROSIONGO', jp: '浸食碁', desc: '25手ごとの増水で、川岸(上下端)の石が流れに攫われて消える。', kind: 'stone', icon: 'erosiongo' },
+            { file: 'escapego2.html', name: 'ESCAPEGO2', jp: '脱走碁', desc: '自分の連で盤の上下端を縦断すれば即勝ち。繋がらなければ地取り勝負。', kind: 'stone', icon: 'escapego2' },
+            { file: 'etogo.html', name: 'ETOGO', jp: '干支碁', desc: '置いた石に干支の印が12手周期で回る。終局時、盤上の干支の種類ごと+2点。', kind: 'stone', icon: 'etogo' },
+            { file: 'evacgo.html', name: 'EVACGO', jp: '避難碁', desc: '10手ごとに災害波が盤の半分を襲う。孤立した石は飲まれ、繋がった石と避難所脇の石は生き残る。', kind: 'stone', icon: 'evacgo' },
+            { file: 'excavatego.html', name: 'EXCAVATEGO', jp: '発掘碁', desc: '盤下に埋まる5つの埋蔵品マス。石を置いて掘り当て、先に3つ掘れば発掘勝ち。', kind: 'stone', icon: 'excavatego' },
+            { file: 'exchangego.html', name: 'EXCHANGEGO', jp: '両替碁', desc: '「両替」で自石1個を最大3個に分解。呼吸点の確保に役立つ。', kind: 'stone', icon: 'exchangego' },
+            { file: 'factorizego.html', name: 'FACTORIZEGO', jp: '素因数碁', desc: '素数番地は「素点」。素点に置くたび +1目。素点は薄い◆印。', kind: 'stone', icon: 'factorizego' },
+            { file: 'fakego.html', name: 'FAKEGO', jp: '偽石碁', desc: '最初の石は偽物。取られると正体が暴かれ、取った側はアゲハマにならない。', kind: 'stone', icon: 'fakego' },
+            { file: 'fastingo.html', name: 'FASTINGO', jp: '斎戒碁', desc: '6手ごとの斎戒手番は身を清めて縁 (外周2路) のみに打てる。', kind: 'stone', icon: 'fastingo' },
+            { file: 'faultgo.html', name: 'FAULTGO', jp: '断層碁', desc: '中央に断層。10手ごとの地震で右半分が1段ずれ、縁から落ちた石は呑まれる。', kind: 'stone', icon: 'faultgo' },
+            { file: 'feintgo.html', name: 'FEINTGO', jp: '囮碁', desc: '各1回「おとり」で幻の囮石を置ける。4手後に跡形もなく消える。', kind: 'stone', icon: 'feintgo' },
+            { file: 'fengshuigo.html', name: 'FENGSHUIGO', jp: '風水碁', desc: '気の井戸 (星の点) に立つ石は良い気に護られ、取られても盤に残る聖地となる。', kind: 'stone', icon: 'fengshuigo' },
+            { file: 'fermentgo.html', name: 'FERMENTGO', jp: '発酵碁', desc: '石は菌。15手経つと熟成して終局時+1目、30手経つと腐って盤から落ちる。', kind: 'stone', icon: 'fermentgo' },
+            { file: 'ferrygo.html', name: 'FERRYGO', jp: '渡船碁', desc: '盤中央の1列は川。同じ列の両岸に自石が立つと渡し船が通り、両岸の連が1つに結ばれる。', kind: 'stone', icon: 'ferrygo' },
+            { file: 'fibogo.html', name: 'FIBOGO', jp: 'フィボ碁', desc: '着手でできた連のサイズがフィボナッチ数 (2,3,5,8…) なら +2目。', kind: 'stone', icon: 'fibogo' },
+            { file: 'fireattackgo.html', name: 'FIREATTACKGO', jp: '火計碁', desc: '「火計」ボタンで構えた着手は焔石。隣接する敵連を全て焼き払う (各側1回)。', kind: 'stone', icon: 'fireattackgo' },
+            { file: 'firewatchgo.html', name: 'FIREWATCHGO', jp: '鎮火碁', desc: '盤の燃える8点。直上・隣に置くと放水して鎮火+1目 (各1回・両者共通)。', kind: 'stone', icon: 'firewatchgo' },
+            { file: 'fiveplanetgo.html', name: 'FIVEPLANETGO', jp: '五星碁', desc: '着手ごとに五行の型が巡る。連に3種で+3、5種全てで+8。', kind: 'stone', icon: 'fiveplanetgo' },
+            { file: 'flag2go.html', name: 'FLAG2GO', jp: '旗揚碁', desc: '自陣端の3つの旗点それぞれに、3連以上の自分の連を立てれば即勝ち。', kind: 'stone', icon: 'flag2go' },
+            { file: 'floatislego.html', name: 'FLOATISLEGO', jp: '浮島碁', desc: '4つの浮き島。中央の海峡は9手ごとの潮の満ち干で開いたり沈んだりする。', kind: 'stone', icon: 'floatislego' },
+            { file: 'fluidgo.html', name: 'FLUIDGO', jp: '流体碁', desc: '石は流体。着手のたび全石が下へ1マス流れ、低い側に集まる。', kind: 'stone', icon: 'fluidgo' },
+            { file: 'foggo2.html', name: 'FOGGO', jp: '濃霧碁', desc: '幅4列の霧の帯が盤を這う。霧の中には着手できず、中の石は不可視。', kind: 'weather', icon: 'foggo2' },
+            { file: 'foodchaingo.html', name: 'FOODCHAINGO', jp: '捕食碁', desc: '石は草→虫→鳥→獣の順に供給。置いた石は隣の下位の敵石を喰う。', kind: 'stone', icon: 'foodchaingo' },
+            { file: 'foresightgo.html', name: 'FORESIGHTGO', jp: '読合碁', desc: '相手の次の着手点を先読み宣言。的中すればその石は自分の色になる。', kind: 'stone', icon: 'foresightgo' },
+            { file: 'forkgo.html', name: 'FORKGO', jp: '分岐碁', desc: 'Y字に分岐した腕盤。分岐点を制する者が戦線を制する。', kind: 'stone', icon: 'forkgo' },
+            { file: 'formationgo.html', name: 'FORMATIONGO', jp: '密集碁', desc: '自石に隣接する点にしか置けない。全軍が1つの密集隊形で戦う碁。', kind: 'stone', icon: 'formationgo' },
+            { file: 'formularygo.html', name: 'FORMULARYGO', jp: '処方碁', desc: '黒の処方=横3連、白の処方=縦3連。完成で隣接する敵石を最大2個除去。', kind: 'stone', icon: 'formularygo' },
+            { file: 'fortressgo.html', name: 'FORTRESSGO', jp: '砦碁', desc: '3つの砦。砦内の石は攻撃不能だが、終局時に持ち主の地として数える。', kind: 'stone', icon: 'fortressgo' },
+            { file: 'fractalgo.html', name: 'FRACTALGO', jp: 'フラクタル碁', desc: 'シェルピンスキー自己相似パターンの交点に置くと +1目。同じ形が縮尺を変えて繰り返す盤。', kind: 'stone', icon: 'fractalgo' },
+            { file: 'framego.html', name: 'FRAMEGO', jp: '骨組碁', desc: '星点の石は柱、3連以上の直線は梁。建物の骨組みを作るほど得点。', kind: 'stone', icon: 'framego' },
+            { file: 'freezetaggo.html', name: 'FREEZETAGGO', jp: '氷鬼碁', desc: '2体の氷鬼が徘徊。触れた石は16手の間凍り、凍った石は連の呼吸を支える (+1)。', kind: 'stone', icon: 'freezetaggo' },
+            { file: 'frictiongo.html', name: 'Friction-Go', jp: '摩擦碁', desc: '敵石に接する着手で静電気+1、6で自動放電して3x3の敵石を打ち抜く。', kind: 'stone', icon: 'frictiongo' },
+            { file: 'frostpillargo.html', name: 'FROSTPILLARGO', jp: '霜柱碁', desc: '24手ごとの早朝に霜柱が立ち、全ての石が上へ1段持ち上がる (上が空いていれば)。', kind: 'stone', icon: 'frostpillargo' },
+            { file: 'fuhyogo.html', name: 'FUHYOGO', jp: '歩兵碁', desc: '敵陣2列に進んだ歩は成って +1目。成駒は取られても盤に残り、1手の猶予で助けられる。', kind: 'stone', icon: 'fuhyogo' },
+            { file: 'fukango.html', name: 'FUKANGO', jp: '封緘碁', desc: '8手ごとの石は蝋印 — 隣の空点を封じて打てなくする。封じた点は持ち主の得点。印を取れば開封。', kind: 'stone', icon: 'fukango' },
+            { file: 'fukuwaraigo.html', name: 'FUKUWARAIGO', jp: '福笑碁', desc: '盤の顔パーツ (目・鼻・口) に近い場所へ置くと得点。ピタリ賞は+2目。', kind: 'stone', icon: 'fukuwaraigo' },
+            { file: 'fulcrumgo.html', name: 'FULCRUMGO', jp: '梃碁', desc: '石は梃子。置くと隣の敵石を反対側へ跳ね飛ばす (盤端では盤外へ飛んで取る)。', kind: 'stone', icon: 'fulcrumgo' },
+            { file: 'fusebombgo.html', name: 'FUSEBOMBGO', jp: '導線碁', desc: '全ての石は導火線付き爆弾。置いてから5手後に爆発し、周囲3x3の石を吹き飛ばす。', kind: 'stone', icon: 'fusebombgo' },
+            { file: 'fusekigo.html', name: 'FUSEKIGO', jp: '布石碁', desc: '布石 (序盤18手) は1手ごとに +1目。以後の終盤戦では取り石1個が +1目。', kind: 'stone', icon: 'fusekigo' },
+            { file: 'fusumago.html', name: 'FUSUMAGO', jp: '襖張碁', desc: '自分の連が盤の左右両端に達すると襖完成で+10 (1回だけ)。', kind: 'stone', icon: 'fusumago' },
+            { file: 'gagakugo.html', name: 'GAGAKUGO', jp: '雅楽碁', desc: '石は笙・篳篥・箏の三種を順に担う。自連に三種揃うと雅楽が奏でられ+2目。', kind: 'stone', icon: 'gagakugo' },
+            { file: 'galaxygo.html', name: 'GALAXYGO', jp: '銀河碁', desc: '8手ごとに全石が中心の重力で1歩動く。コアの石は終局時1石+2目。', kind: 'stone', icon: 'galaxygo' },
+            { file: 'galego.html', name: 'GALEGO', jp: '木枯碁', desc: '12手ごとに木枯らし。全石が風下へ1マス流される。風向きは東→南→西→北とまわる。', kind: 'stone', icon: 'galego' },
+            { file: 'garapongo.html', name: 'GARAPONGO', jp: '宝籤碁', desc: '5手ごとにガラポンを回す。金+4目/白+2目/赤=敵石1個/ハズレ。両者同じ周期。', kind: 'stone', icon: 'garapongo' },
+            { file: 'genjitsugo.html', name: 'Genjitsu-Go', jp: '幻日碁', desc: '6手ごとに対蹠の幻日が巡り、幻日の周囲2マスにある敵石は眩んで取れない。', kind: 'stone', icon: 'genjitsugo' },
+            { file: 'geshigo.html', name: 'Geshi-Go', jp: '夏至碁', desc: '3手ごとに太陽が8方位を巡り、影が伸びる。影に入った敵石は取れない。', kind: 'stone', icon: 'geshigo' },
+            { file: 'getsureigo.html', name: 'Getsurei-Go', jp: '月齢碁', desc: '月齢30手周期で夜の帯の深さが0〜6行に変わる。夜の中の石は取れない。', kind: 'stone', icon: 'getsureigo' },
+            { file: 'ghostgo2.html', name: 'GHOSTGO2', jp: '幽体碁', desc: '打った石は3手間「幽霊状態」。取られないが呼吸も連結もしない。', kind: 'stone', icon: 'ghostgo2' },
+            { file: 'glaciergo.html', name: 'GLACIERGO', jp: '氷河碁', desc: '8手ごとに氷河が上端から1行ずつ盤を凍らせる。石は下へ押し流され、最下段は融けて消える。', kind: 'stone', icon: 'glaciergo' },
+            { file: 'glasswarego.html', name: 'GLASSWAREGO', jp: '硝子碁', desc: '硝子の石は置いてから8手の間「透明」: 取れず、隣の敵連に呼吸を見せる。', kind: 'stone', icon: 'glasswarego' },
+            { file: 'glazego.html', name: 'GLAZEGO', jp: '釉薬碁', desc: '釉薬の石は生乾きのうち取られると2個分。12手ごとの窯で色が確定する。', kind: 'stone', icon: 'glazego' },
+            { file: 'glowgo.html', name: 'GLOWGO', jp: '輝石碁', desc: '5個以上連なった連は輝く。輝いた連の捕獲はアゲハマ2倍。', kind: 'crown', icon: 'glowgo' },
+            { file: 'gnomongo.html', name: 'GNOMONGO', jp: '圭表碁', desc: '8手ごとに回る日影の方角へ敵石が隣接していれば+2。', kind: 'stone', icon: 'gnomongo' },
+            { file: 'goheigo.html', name: 'GOHEIGO', jp: '御幣碁', desc: '星位は御幣所。御幣所に立てた石の連は+1呼吸。御幣所の敵石を取ると+2目。', kind: 'stone', icon: 'goheigo' },
+            { file: 'goldenrepairgo.html', name: 'GOLDENREPAIRGO', jp: '金継碁', desc: '取られた連の跡を自分で打ち直すと金継ぎ修復 — 修復石は終局時+2目。', kind: 'stone', icon: 'goldenrepairgo' },
+            { file: 'gomago.html', name: 'GOMAGO', jp: '護摩碁', desc: '中央3x3は護摩壇。自分の護摩木(石)が3本たまると焚き上がって+4点。', kind: 'stone', icon: 'gomago' },
+            { file: 'goshuingo.html', name: 'GOSHUINGO', jp: '集印碁', desc: '御朱印(星の点)を巡る。着手または囲みで朱印を集め、5つ集めると即勝。', kind: 'stone', icon: 'goshuingo' },
+            { file: 'gotego.html', name: 'GOTEGO', jp: '後手碁', desc: '受けの碁: アタリにされた自軍連を繋いで救う「応手」で +2目 (後手の白は +3目)。', kind: 'stone', icon: 'gotego' },
+            { file: 'gradientgo.html', name: 'GRADIENTGO', jp: '勾配碁', desc: '置いた石は勾配を右下へ転がり落ち、止まった地点に定着する。', kind: 'stone', icon: 'gradientgo' },
+            { file: 'graffitigo.html', name: 'GRAFFITIGO', jp: '落書碁', desc: '盤の落書き点の隣に自石を置くと落書きが消えて+1目 (各1回・両者共通)。', kind: 'stone', icon: 'graffitigo' },
+            { file: 'gravwellgo.html', name: 'GRAVWELLGO', jp: '重力井碁', desc: '中央の重力源。着手のたび全石が中心へ1マス引き寄せられる。', kind: 'stone', icon: 'gravwellgo' },
+            { file: 'greenflashgo.html', name: 'Green Flash-Go', jp: 'グリーン碁', desc: '25手ごとに幻の点が4手だけ開き、そこには自殺手でも置ける。期終了でその石は消える。', kind: 'stone', icon: 'greenflashgo' },
+            { file: 'grovego.html', name: 'GROVEGO', jp: '木立碁', desc: '木立区域は着手不可。窒息した連は接する木立を1本伐って生き延びる。', kind: 'stone', icon: 'grovego' },
+            { file: 'grudgego.html', name: 'GRUDGEGO', jp: '怨念碁', desc: '取られた石は怨念となる。そのマスは打てず呼吸もしない。', kind: 'stone', icon: 'grudgego' },
+            { file: 'guerrillago.html', name: 'GUERRILLAGO', jp: '遊撃碁', desc: '敵陣に置いた石は遊撃兵。次の自分の手番の最初に隣接する敵石を1個襲う。', kind: 'stone', icon: 'guerrillago' },
+            { file: 'hakubogo.html', name: 'Hakubo-Go', jp: '薄暮碁', desc: '周期の最後4手は薄暮。その間の着手は「紛れ石」となり、夜明けに持ち主の色に戻る。', kind: 'stone', icon: 'hakubogo' },
+            { file: 'hakurogo.html', name: 'Hakuro-Go', jp: '白露碁', desc: '周期の最初4手は白露の朝。石が露で重くなり取れない。', kind: 'stone', icon: 'hakurogo' },
+            { file: 'hanafudago.html', name: 'HANAFUDAGO', jp: '花合碁', desc: '12箇所の月の札点に置くとその札を獲得。札+1点・季節3枚そろいで+9点。', kind: 'stone', icon: 'hanafudago' },
+            { file: 'handcuffgo.html', name: 'HANDCUFFGO', jp: '手錠碁', desc: '5個置くごとに置いた石に手錠。錠の石は12手の間取られないが、隣に自石を置くと外れる。', kind: 'stone', icon: 'handcuffgo' },
+            { file: 'handovergo.html', name: 'HANDOVERGO', jp: '引継碁', desc: '10手ごとに盤面の石色が総入替。築いた陣地は相手に引き継がれる。', kind: 'stone', icon: 'handovergo' },
+            { file: 'handrankgo.html', name: 'HANDRANKGO', jp: '手役碁', desc: '石の配置が役になる: 3連以上の並びと2×2ブロックで終局ボーナス。', kind: 'stone', icon: 'handrankgo' },
+            { file: 'hanego.html', name: 'HANEGO', jp: 'ハネ碁', desc: '対向する敵石の間へのハネ (突き出し) は局所的に強く +2目。', kind: 'stone', icon: 'hanego' },
+            { file: 'harikyugo.html', name: 'HARIKYUGO', jp: '鍼灸碁', desc: '6つの経穴(つぼ)を含む連は気が通って取られない。経穴に鍼を刺すと気が巡る。', kind: 'stone', icon: 'harikyugo' },
+            { file: 'harmonygo.html', name: 'HARMONYGO', jp: '和声碁', desc: '連の大きさが和音。3連・5連は協和+1目、7連で+2目。2連・6連は不協和で相手に+1。', kind: 'stone', icon: 'harmonygo' },
+            { file: 'harvestgo.html', name: 'HARVESTGO', jp: '収穫碁', desc: '12手ごとに季節が巡り、実りの象限で石が多い側が収穫点を得る。先に4点で豊作勝ち。', kind: 'stone', icon: 'harvestgo' },
+            { file: 'hashirago.html', name: 'HASHIRAGO', jp: '柱間碁', desc: '着手から四方向に見える最も近い自石までの距離で部屋点 (合計上限+4)。', kind: 'stone', icon: 'hashirago' },
+            { file: 'hatchgo.html', name: 'HATCHGO', jp: '孵卵碁', desc: '石は卵。仲間の隣で14手以上温めた卵は孵り、強い石になる (+1目)。', kind: 'stone', icon: 'hatchgo' },
+            { file: 'helixgo.html', name: 'HELIXGO', jp: '螺旋階碁', desc: '全交点が1本の螺旋レール。近傍は螺旋の前後だけ — 連は区間になる。', kind: 'stone', icon: 'helixgo' },
+            { file: 'henrogo.html', name: 'HENROGO', jp: '遍路碁', desc: '盤周の8札所を順に巡る遍路。8か所制覇 (満願) で即勝ち。', kind: 'stone', icon: 'henrogo' },
+            { file: 'herbalistgo.html', name: 'HERBALISTGO', jp: '本草碁', desc: '薬草点に置いて採集。3株で調合し全連+1呼吸の強壮剤。', kind: 'stone', icon: 'herbalistgo' },
+            { file: 'higanbanago.html', name: 'HIGANBANAGO', jp: '彼岸花碁', desc: '6手ごとの着手は彼岸花。隣の敵石に毒を置き、毒石は連の呼吸を共有できなくなる。', kind: 'stone', icon: 'higanbanago' },
+            { file: 'hijackgo.html', name: 'HIJACKGO', jp: '逆手碁', desc: '相手の着手点を先に指定。そこに打たれると隣接へ反撃の石を無料で置ける。', kind: 'stone', icon: 'hijackgo' },
+            { file: 'hikiyamago.html', name: 'HIKIYAMAGO', jp: '山車碁', desc: '5個以上の大きな連は「山車」となる。終局時、山車1台につき沿道の賑わい+4目。', kind: 'stone', icon: 'hikiyamago' },
+            { file: 'hilbertgo.html', name: 'HILBERTGO', jp: '充填碁', desc: '充填曲線の巡り順の先頭3点にしか着手できない。', kind: 'stone', icon: 'hilbertgo' },
+            { file: 'himonogo.html', name: 'HIMONOGO', jp: '干物碁', desc: '干場 (上下端の列) の石は8手ごとに干されて乾物に。終局時1枚+2目。', kind: 'stone', icon: 'himonogo' },
+            { file: 'hinadango.html', name: 'HINADANGO', jp: '雛壇碁', desc: '各行が雛壇の段。1行に4石以上かつ相手より多く並べた側が段ごとに+4点。', kind: 'stone', icon: 'hinadango' },
+            { file: 'hishago.html', name: 'HISHAGO', jp: '飛車碁', desc: '6手ごとの着手が飛車になる — 縦横4方向の最も近い孤立敵石を取る。', kind: 'stone', icon: 'hishago' },
+            { file: 'hoistgo.html', name: 'HOISTGO', jp: '吊上碁', desc: '置いた石に敵石がちょうど1個隣接すると、クレーンでその石を1マス外側へ吊り上げる。', kind: 'stone', icon: 'hoistgo' },
+            { file: 'homeportgo.html', name: 'HOMEPORTGO', jp: '帰港碁', desc: '自分の母港(黒は下辺・白は上辺)に石を帰すと+2アゲハマ。5回の帰港で即勝。', kind: 'stone', icon: 'homeportgo' },
+            { file: 'hominggo.html', name: 'HOMINGGO', jp: '帰巣碁', desc: '巣(天元)から遠い石は弱る。遠巣の石1つにつき連は余分な呼吸点を必要とする。', kind: 'stone', icon: 'hominggo' },
+            { file: 'horagaigo.html', name: 'HORAGAIGO', jp: '法螺碁', desc: '四辺の中央点は法螺貝。吹く(置く)と山伏が集まり即座に+3目のアゲハマ。', kind: 'stone', icon: 'horagaigo' },
+            { file: 'hoshitorigo.html', name: 'HOSHITORIGO', jp: '星取碁', desc: '敵石を取るたび星+1。自分の手番が連続して取れば連勝ボーナス+1。星1個=終局時1目。', kind: 'stone', icon: 'hoshitorigo' },
+            { file: 'hotarubigo.html', name: 'HOTARUBIGO', jp: '蛍火碁', desc: '四方すべてが空点の暗がりに佇む石は蛍火 — 終局時1個につき+0.5目の淡い光。', kind: 'stone', icon: 'hotarubigo' },
+            { file: 'hueshiftgo.html', name: 'HUESHIFTGO', jp: '色違碁', desc: '打つたび石の色合いが微妙にずれる。淡色石は取られると取った側に+1ボーナス。', kind: 'stone', icon: 'hueshiftgo' },
+            { file: 'hungergo.html', name: 'HUNGERGO', jp: '飢餓碁', desc: '盤に飢えたものがいる。6手ごとに最寄りの石を喰らい、そこへ移る。', kind: 'stone', icon: 'hungergo' },
+            { file: 'hurdlego.html', name: 'HURDLEGO', jp: '跳欄碁', desc: '着手は自石の隣か、自石を1つ飛び越えた直線2マス先のみ。打てる場所がなければ自由。', kind: 'stone', icon: 'hurdlego' },
+            { file: 'iaidogo.html', name: 'IAIDOGO', jp: '居合碁', desc: '各者1回の「抜刀」。抜刀手は四方の直線上で最初に出会う敵石を斬って取る。', kind: 'stone', icon: 'iaidogo' },
+            { file: 'iciclego.html', name: 'ICICLEGO', jp: '氷柱碁', desc: '陽射しが盤を西から東へ巡る。二度日に晒された氷柱の石は溶けて消える。', kind: 'stone', icon: 'iciclego' },
+            { file: 'ignitiongo.html', name: 'IGNITIONGO', jp: '点火碁', desc: '聖火台 (天元) の四方を自石で囲んで火を灯せば勝利。', kind: 'stone', icon: 'ignitiongo' },
+            { file: 'ikebanago.html', name: 'IKEBANAGO', jp: '生花碁', desc: '自石が縦3連(真)または斜め3連(副)を完成させると構図点。先に4点で生花勝ち。', kind: 'stone', icon: 'ikebanago' },
+            { file: 'indigogo.html', name: 'INDIGOGO', jp: '藍染碁', desc: '同色2方以上に囲まれた石は濃染。終局時に濃染1個+1目。', kind: 'stone', icon: 'indigogo' },
+            { file: 'indivisiblego.html', name: 'INDIVISIBLEGO', jp: '素数碁', desc: '石数が素数の連は分割不能 — 囲まれても1石ずつしか削られない。', kind: 'stone', icon: 'indivisiblego' },
+            { file: 'inductiongo.html', name: 'Induction-Go', jp: '誘導碁', desc: '着手者の3石以上の最大連がコイル化し、2マス離れた敵石を1マス引き寄せる。', kind: 'stone', icon: 'inductiongo' },
+            { file: 'inkgo.html', name: 'INKGO', jp: '墨染碁', desc: '敵石2個以上に接する空点は墨の滲み。味方石と接しない限り打てない。', kind: 'stone', icon: 'inkgo' },
+            { file: 'inletgo.html', name: 'INLETGO', jp: '入江碁', desc: '各辺に海の入り江。港内の好地は安全な停泊地 (+1呼吸・入港+1点)。', kind: 'stone', icon: 'inletgo' },
+            { file: 'inoshishigo.html', name: 'INOSHISHIGO', jp: '野猪碁', desc: '前の石と同じ行/列に3目以上離れて置くと猪が突進。間の敵石を掘り起こす。', kind: 'stone', icon: 'inoshishigo' },
+            { file: 'inougo.html', name: 'INOUGO', jp: '伊能碁', desc: '「自石のある行」の連続区間が伸びるたび差分加点。全行制覇で+15。', kind: 'stone', icon: 'inougo' },
+            { file: 'insectgo.html', name: 'INSECTGO', jp: '昆虫碁', desc: '石は打ってから3手で蛹、6手で成虫に変態。成虫は捕獲時に一度だけ2マス先へ飛んで逃げる。', kind: 'stone', icon: 'insectgo' },
+            { file: 'insulatorgo.html', name: 'Insulator-Go', jp: '絶縁碁', desc: '同色に隣接しない孤立着手は絶縁体となり8手間取れない。', kind: 'stone', icon: 'insulatorgo' },
+            { file: 'insurego.html', name: 'INSUREGO', jp: '保険碁', desc: '自石に保険をかけると、取られた時に保険金で近くの空点に復活する (最大2件)。', kind: 'stone', icon: 'insurego' },
+            { file: 'inversiongo.html', name: 'INVERSIONGO', jp: '逆転碁', desc: '地とアゲハマの合計が少ない側が勝つ逆転ルール。取りすぎると負ける。', kind: 'stone', icon: 'inversiongo' },
+            { file: 'irisgo.html', name: 'IRISGO', jp: '菖蒲碁', desc: '外周の石は菖蒲 — 菖蒲の隣の外周点には敵は寄りつけない (菖蒲を取る手は例外)。', kind: 'stone', icon: 'irisgo' },
+            { file: 'ishidorogo.html', name: 'ISHIDOROGO', jp: '灯籠碁', desc: '星点は庭灯籠。灯籠に火(石)を入れると夜の庭が照らされ、1基ごとに+6目。', kind: 'stone', icon: 'ishidorogo' },
+            { file: 'ittango.html', name: 'ITTANGO', jp: '一反碁', desc: '7手ごとに置く一反木綿は隣の敵石を包んで運び去る。包んだ石はアゲハマになる。', kind: 'stone', icon: 'ittango' },
+            { file: 'iwatogo.html', name: 'IWATOGO', jp: '天岩戸碁', desc: '盤中央の太陽。自石で隠せば盤は闇に包まれ、終局時に占める側は+4目の御光を得る。', kind: 'stone', icon: 'iwatogo' },
+            { file: 'jadego.html', name: 'JADEGO', jp: '翡翠碁', desc: '生き残った石ほど深い緑に磨かれる。8手超で+1目、16手超で+2目の磨きボーナス。', kind: 'stone', icon: 'jadego' },
+            { file: 'jengago.html', name: 'JENGAGO', jp: '抜積碁', desc: '「抜く」で自石を1個回収して+1目。抜いて自軍の連が分断されると塔崩壊で負け。', kind: 'stone', icon: 'jengago' },
+            { file: 'jibikigo.html', name: 'JIBIKIGO', jp: '地引碁', desc: '1手で4個以上獲れば大漁。獲った石は終局時に2倍計上される。', kind: 'stone', icon: 'jibikigo' },
+            { file: 'jittego.html', name: 'JITTEGO', jp: '十手碁', desc: '敵石に対向で挟まれた空点に打つと十手捕 — 挟んでいた2石を捕らえる。', kind: 'stone', icon: 'jittego' },
+            { file: 'jochigo.html', name: 'JOCHIGO', jp: '定置碁', desc: '定置網の区域。10手ごとの網上げで区域の石は全て獲られてしまう。', kind: 'stone', icon: 'jochigo' },
+            { file: 'josekigo.html', name: 'JOSEKIGO', jp: '定石碁', desc: '序盤24手のうちに隅の定石域へ置くと +1目。定石をなぞると互角に進む。', kind: 'stone', icon: 'josekigo' },
+            { file: 'joyago.html', name: 'JOYAGO', jp: '除夜碁', desc: '各側9手ごとに除夜の鐘が鳴り、孤立した敵石(煩悩)が全て祓われる。', kind: 'stone', icon: 'joyago' },
+            { file: 'judogo.html', name: 'JUDOGO', jp: '柔道碁', desc: '単石を取られた側は巴投げ — 取った側の隣の石を1個投げ飛ばして取り返す。', kind: 'stone', icon: 'judogo' },
+            { file: 'jumpropego.html', name: 'JUMPROPEGO', jp: '縄跳碁', desc: '石は縄跳び。敵石を跳び越えてその先の空点に着地する。', kind: 'stone', icon: 'jumpropego' },
+            { file: 'kadomatsugo.html', name: 'KADOMATSUGO', jp: '門松碁', desc: '自石の縦横3連以上は門松になり、1本+3点。竹の形を意識して打て。', kind: 'stone', icon: 'kadomatsugo' },
+            { file: 'kagogo.html', name: 'KAGOGO', jp: '駕籠碁', desc: '星は中立の要人。座の四方を自石で塞ぐと駕籠で担ぎ+2目。', kind: 'stone', icon: 'kagogo' },
+            { file: 'kagurago.html', name: 'KAGURAGO', jp: '神楽碁', desc: '対角の星に神(中立)がいる。神の隣に自石を3方以上置いて招くと+4点。', kind: 'stone', icon: 'kagurago' },
+            { file: 'kaikigo.html', name: 'KAIKIGO', jp: '回忌碁', desc: '7手ごとに回忌法要。取り石(故人)1つにつき徳+1点として双方に振り込まれる。', kind: 'stone', icon: 'kaikigo' },
+            { file: 'kajigo.html', name: 'KAJIGO', jp: '加持碁', desc: '4個以上の連は加持の祈りが届く — 終局時1連につき+2目の守護。', kind: 'stone', icon: 'kajigo' },
+            { file: 'kajirigo.html', name: 'KAJIRIGO', jp: '祝由碁', desc: '「祝由」で次の着手に呪力。隣接する弱った敵連 (呼吸≤2) を祓う (各側1回)。', kind: 'stone', icon: 'kajirigo' },
+            { file: 'kakinego.html', name: 'KAKINEGO', jp: '垣根碁', desc: '盤を四分割する垣根ライン(中央十字)に立てた石は、別天地を区切る垣根として+2目。', kind: 'stone', icon: 'kakinego' },
+            { file: 'kakugyogo.html', name: 'KAKUGYOGO', jp: '角行碁', desc: '6手ごとの着手が角行になる — 斜めレイが孤立敵石を貫き串刺しにする。', kind: 'stone', icon: 'kakugyogo' },
+            { file: 'kanjigo.html', name: 'KANJIGO', jp: '漢字碁', desc: '石の座る交点は漢字。味方同士で熟語を隣接成立させると+2目。', kind: 'stone', icon: 'kanjigo' },
+            { file: 'kappago.html', name: 'KAPPAGO', jp: '河童碁', desc: '外周の水辺にいる河童は元気 (+0.5目)。頭の水が干きた石 (四方が埋まる) は弱る (-0.5目)。', kind: 'stone', icon: 'kappago' },
+            { file: 'karesansuigo.html', name: 'KARESANSUIGO', jp: '枯山碁', desc: '石と砂紋の山水。一色だけで囲んだ空区域は「砂紋」となり地が2倍になる。', kind: 'stone', icon: 'karesansuigo' },
+            { file: 'karutago.html', name: 'KARUTAGO', jp: '歌牌碁', desc: '盤面に散らばる7枚の札マス。石で札を取り、先に4枚取った側が歌牌勝ち。', kind: 'stone', icon: 'karutago' },
+            { file: 'katsujigo.html', name: 'KATSUJIGO', jp: '活字碁', desc: '着手で自石の2x2ブロック(活字)が組み上がるごとに+3。', kind: 'stone', icon: 'katsujigo' },
+            { file: 'keepsakego.html', name: 'KEEPSAKEGO', jp: '形見碁', desc: '取られた石は形見として名残を残す。形見は終局時に亡き主の1目になる。', kind: 'stone', icon: 'keepsakego' },
+            { file: 'keichitsugo.html', name: 'Keichitsu-Go', jp: '啓蟄碁', desc: '周期の最後3手は着手が冬眠石になり、啓蟄の境界で一斉に目覚める。', kind: 'stone', icon: 'keichitsugo' },
+            { file: 'keimago.html', name: 'KEIMAGO', jp: 'ケイマ碁', desc: '自軍石から桂馬飛び (1×2) の点に置くケイマは速く +1目。', kind: 'stone', icon: 'keimago' },
+            { file: 'keirakugo.html', name: 'KEIRAKUGO', jp: '経絡碁', desc: '6つ以上繋がった連は「経絡」が通る。最長の連の長さ(上限12)が終局時の得点。', kind: 'stone', icon: 'keirakugo' },
+            { file: 'keisugo.html', name: 'KEISUGO', jp: '磬子碁', desc: '自分の5手ごとに磬(けいす)が鳴る。法会の節目に功徳として+3目のアゲハマ。', kind: 'stone', icon: 'keisugo' },
+            { file: 'kemarigo.html', name: 'KEMARIGO', jp: '蹴鞠碁', desc: '盤上に鞠が1個転がる。隣に石を置けば蹴って+1目、鞠は石の向こうへ跳ねる。', kind: 'stone', icon: 'kemarigo' },
+            { file: 'kendamago.html', name: 'KENDAMAGO', jp: 'けん玉碁', desc: '捕獲のたび技が進む。小皿+1→中皿+2→剣先+4のボーナス目。剣先で一段落。', kind: 'stone', icon: 'kendamago' },
+            { file: 'kendogo.html', name: 'KENDOGO', jp: '剣道碁', desc: '取りの規模が打突点 — 小手(1石)=1点、胴(2〜3石)=2点、面(4石以上)=3点。', kind: 'stone', icon: 'kendogo' },
+            { file: 'kenzokugo.html', name: 'KENZOKUGO', jp: '眷属碁', desc: '敵陣帯に単独で打ち込んだ石は眷属(使い魔)になる。毎ターン探索+1。', kind: 'stone', icon: 'kenzokugo' },
+            { file: 'kigogo.html', name: 'KIGOGO', jp: '揮毫碁', desc: '連を6・10・14石の大きさに伸ばすたび、その石数だけ揮毫得点。', kind: 'stone', icon: 'kigogo' },
+            { file: 'kikogo.html', name: 'KIKOGO', jp: '紀行碁', desc: '名所は5箇所。最初に石を据えた者がその地を記して+2目。', kind: 'stone', icon: 'kikogo' },
+            { file: 'kilngo.html', name: 'KILNGO', jp: '登窯碁', desc: '盤は下から5連房の登り窯。全石が最上段の連だけ焼き上がり+1呼吸。', kind: 'stone', icon: 'kilngo' },
+            { file: 'kingeneralgo.html', name: 'KINGENERALGO', jp: '金碁', desc: '同色4方向で囲んだ石は金将になる: +2目で、取ることのできない無敵区域。', kind: 'stone', icon: 'kingeneralgo' },
+            { file: 'kingyogo.html', name: 'KINGYOGO', jp: '金魚碁', desc: '石は金魚。網の強さを超える連は獲りきれず、余った分は逃げ出す。網は5手ごとに強化。', kind: 'stone', icon: 'kingyogo' },
+            { file: 'kingyosukuigo.html', name: 'KINGYOSUKUIGO', jp: '金魚すくい碁', desc: 'ポイで掬い上げた金魚は高く売れる。アゲハマ1個につき2目の得点。', kind: 'stone', icon: 'kingyosukuigo' },
+            { file: 'kitamaego.html', name: 'KITAMAEGO', jp: '北前碁', desc: '盤縁は日本海の航路。縁への着手で交易+1目、隅の港は+2目。', kind: 'stone', icon: 'kitamaego' },
+            { file: 'kitchengo.html', name: 'KITCHENGO', jp: '厨房碁', desc: '直列3連でオーダー完成+2、5連で大盛り+4。配置の美しさを競う。', kind: 'stone', icon: 'kitchengo' },
+            { file: 'kiteflygo.html', name: 'KITEFLYGO', jp: '凧揚碁', desc: '敵陣深くに伸びる連ほど凧が高い。採点時に最大高度がボーナス。', kind: 'stone', icon: 'kiteflygo' },
+            { file: 'kitsunego.html', name: 'KITSUNEGO', jp: '狐化碁', desc: '各側7手目は狐石。取られても化けて逃げ、相手のアゲハマにならない。', kind: 'stone', icon: 'kitsunego' },
+            { file: 'knight2go.html', name: 'KNIGHT2GO', jp: '跳馬碁', desc: '着手は自石の桂馬跳びの位置のみ。自石がない/跳べる場所がない時はどこでも置ける。', kind: 'stone', icon: 'knight2go' },
+            { file: 'koango.html', name: 'KOANGO', jp: '公案碁', desc: '2x2 を同色で満たすと公案が解ける — 終局時1枡につき+2目の悟り点。', kind: 'stone', icon: 'koango' },
+            { file: 'kochugo.html', name: 'KOCHUGO', jp: '講中碁', desc: '終局時、4石以上の連 (講) 1つごとに共同参拝の得点+3。', kind: 'stone', icon: 'kochugo' },
+            { file: 'kohaigo.html', name: 'KOHAIGO', jp: '光背碁', desc: '3x3全面を自石で固めると「光背」完成 — 仏が荘厳されて即勝ち。', kind: 'stone', icon: 'kohaigo' },
+            { file: 'koinoborigo.html', name: 'KOINOBORIGO', jp: '鯉幟碁', desc: '3石以上の連は鯉。着手のたび風(北→東→南→西)へ1マス泳ぐ。', kind: 'stone', icon: 'koinoborigo' },
+            { file: 'kokuugo.html', name: 'Kokuu-Go', jp: '穀雨碁', desc: '24手ごとの雨で双方の小さな連 (2石以下) が1石ずつ育つ。', kind: 'stone', icon: 'kokuugo' },
+            { file: 'komago.html', name: 'KOMAGO', jp: '独楽碁', desc: '置いた石は独楽。回転中の4手分は取られず、止まると取れる。', kind: 'stone', icon: 'komago' },
+            { file: 'kyokusuigo.html', name: 'KYOKUSUIGO', jp: '曲水碁', desc: '曲水を盃が流れる。岸の味方石に触れれば歌が成り+2目。流れ着けば沈む。', kind: 'stone', icon: 'kyokusuigo' },
+            { file: 'kyoshago.html', name: 'KYOSHAGO', jp: '香車碁', desc: '6手ごとの着手が香車になる — 敵陣へ向かう正面1方向だけの一撃で孤立敵石を取る。', kind: 'stone', icon: 'kyoshago' },
+            { file: 'kyudogo.html', name: 'KYUDOGO', jp: '弓道碁', desc: '着手は放たれる矢 — 四方の直線で3点以上離れ、途中が空の敵石を射抜く。', kind: 'stone', icon: 'kyudogo' },
+            { file: 'kyuseigo.html', name: 'KYUSEIGO', jp: '九星碁', desc: '天元の周囲8方位を吉方・凶方が毎手回る。吉方に置くと+2点、凶方に置いた石は消える。', kind: 'stone', icon: 'kyuseigo' },
+            { file: 'labyrinthgo.html', name: 'LABYRINTHGO', jp: '迷路碁', desc: '蛇行迷路。幅1の関門は自分の石に隣接する側からしか通れない。', kind: 'stone', icon: 'labyrinthgo' },
+            { file: 'lacquergo.html', name: 'LACQUERGO', jp: '漆器碁', desc: '漆の塗りが6手ごとに重なる。3重に塗り上がった石は堅く、二度と取られない。', kind: 'stone', icon: 'lacquergo' },
+            { file: 'lampgo.html', name: 'LAMPGO', jp: '燈火碁', desc: '灯りの届く範囲だけ着手可 — 自分の石の周囲2マスと中央の常夜灯の周り。', kind: 'stone', icon: 'lampgo' },
+            { file: 'lanternloopgo.html', name: 'LANTERNLOOPGO', jp: '巡灯碁', desc: '灯籠(星の点)を順に灯して一周させると即勝。灯し方は着手で進める。', kind: 'stone', icon: 'lanternloopgo' },
+            { file: 'lavaflowgo.html', name: 'LAVAFLOWGO', jp: '溶岩碁', desc: '打ったばかりの石は灼熱の溶岩 — 3手の間は取れない。冷えると岩盤に固まる。', kind: 'stone', icon: 'lavaflowgo' },
+            { file: 'layergo.html', name: 'LAYERGO', jp: '層積碁', desc: '盤は上下3層。層ボタンで層を選んで着手。同座標の縦貫は近傍扱い。', kind: 'stone', icon: 'layergo' },
+            { file: 'leafallgo.html', name: 'LEAFALLGO', jp: '落葉碁', desc: '30手ごとに秋。連なった石 (同じ色のグループ) は幹の1個を残して葉が落ちる。', kind: 'stone', icon: 'leafallgo' },
+            { file: 'levergo.html', name: 'LEVERGO', jp: '梃子碁', desc: '中央支点を挟んだ反対側の敵石が中央へ1マスずれる梃子。支点まで辿り着いた敵石は潰れて捕獲される。', kind: 'stone', icon: 'levergo' },
+            { file: 'librarygo.html', name: 'LIBRARYGO', jp: '蔵書碁', desc: '盤は3x3の書棚群。棚を自分色に分類すれば蔵書得点。', kind: 'stone', icon: 'librarygo' },
+            { file: 'limestonego.html', name: 'LIMESTONEGO', jp: '石灰碁', desc: '星の点は泉。泉に接した石は4手で水に溶け、その跡に鍾乳 (領地の印) を残す。', kind: 'stone', icon: 'limestonego' },
+            { file: 'liondancego.html', name: 'LIONDANCEGO', jp: '獅子舞碁', desc: '石は獅子頭。置くと隣の小さな敵連 (3石以下) に噛み付いて1石取る。', kind: 'stone', icon: 'liondancego' },
+            { file: 'lodestonego.html', name: 'LODESTONEGO', jp: '磁針碁', desc: '天元に近いほど指針点が高い (天元+4・隣+2・子午線上+1)。', kind: 'stone', icon: 'lodestonego' },
+            { file: 'longlinego.html', name: 'LONGLINEGO', jp: '延縄碁', desc: '5個以上の連は延縄。6手ごとに隣の敵の孤立石を釣り上げる。', kind: 'stone', icon: 'longlinego' },
+            { file: 'loomgo.html', name: 'LOOMGO', jp: '織物碁', desc: '石は織糸。縦と横の両方向に自分の糸が通る織り目を作ると終局時+1目。', kind: 'stone', icon: 'loomgo' },
+            { file: 'lotterygo.html', name: 'LOTTERYGO', jp: '宝籤碁', desc: '着手でくじ引き: 大当り=追加石、ハズレ=次の自分の手番スキップ、通常は何もなし。', kind: 'stone', icon: 'lotterygo' },
+            { file: 'lotusgo.html', name: 'LOTUSGO', jp: '蓮碁', desc: '石が取られた跡は泥。泥に置いた石は蓮に咲き、盤上に残れば終局時+2目。', kind: 'stone', icon: 'lotusgo' },
+            { file: 'lumengo.html', name: 'LUMENGO', jp: '光彩碁', desc: '石は光源。各空点をより明るく照らす側の地になる (光量は距離二乗で減衰)。', kind: 'stone', icon: 'lumengo' },
+            { file: 'lungego.html', name: 'LUNGEGO', jp: '突撃碁', desc: '着手で敵石に接すると突撃: 接した敵石が1マス後退。後退先が塞がれば潰れて取り。', kind: 'stone', icon: 'lungego' },
+            { file: 'lurego.html', name: 'LUREGO', jp: '擬餌碁', desc: '10手ごとの着手は擬餌。周囲2〜3マスの敵石を1マス引き寄せる。', kind: 'stone', icon: 'lurego' },
+            { file: 'magnetgo2.html', name: 'MAGNETGO2', jp: '極性碁', desc: '石は着手ごとに極性が反転。同極には近接できず、異極の斜めは磁力で結合する。', kind: 'stone', icon: 'magnetgo2' },
+            { file: 'magnetpolego.html', name: 'Magnet Pole-Go', jp: '磁石碁', desc: '石は着手ごとにN/S交互の極を持つ。同極の敵石は反発、異極は引き寄せる。', kind: 'stone', icon: 'magnetpolego' },
+            { file: 'magnetstormgo.html', name: 'MAGNETSTORMGO', jp: '磁暴碁', desc: '10手ごとの磁暴で、各石の極性が50%の確率でランダム反転する。', kind: 'weather', icon: 'magnetstormgo' },
+            { file: 'magnifygo.html', name: 'MAGNIFYGO', jp: '拡大碁', desc: '虫眼鏡が盤を巡る。拡大区域内での着手は1アゲハマの報酬、全体が見えにくい盤。', kind: 'stone', icon: 'magnifygo' },
+            { file: 'makiego.html', name: 'MAKIEGO', jp: '蒔絵碁', desc: '同色の石が隣接する辺1本ごとに金粉+0.25目。繋げるほど文様が豊かになる。', kind: 'stone', icon: 'makiego' },
+            { file: 'mandalago.html', name: 'MANDALAGO', jp: '曼荼羅碁', desc: '中心+四方の同色十字は完成した曼荼羅 — 1つにつき終局時+3目。', kind: 'stone', icon: 'mandalago' },
+            { file: 'mangekyogo.html', name: 'MANGEKYOGO', jp: '万華鏡碁', desc: '置いた石は中心で4重回転対称に写る。空いた位置に自石が咲いて模様になる。', kind: 'stone', icon: 'mangekyogo' },
+            { file: 'marblego.html', name: 'MARBLEGO', jp: '玉石碁', desc: '着手ごとに全ての石が列の底へ転がり落ちる。浮いた石は存在しない玉石の世界。', kind: 'stone', icon: 'marblego' },
+            { file: 'maskgo.html', name: 'MASKGO', jp: '覆面碁', desc: '置いてから4手の間、石に覆面がかかり誰の石か一目で分からない。', kind: 'stone', icon: 'maskgo' },
+            { file: 'meleego.html', name: 'MEELEGO', jp: '組討碁', desc: '敵連に接触して置くと組討ち。接触する両連の石が1個ずつ削り合って脱落する。', kind: 'stone', icon: 'meleego' },
+            { file: 'memorialgo.html', name: 'MEMORIALGO', jp: '供養碁', desc: '取られた石は祟りになる。敵がその地を踏むと終局時に+1目返す。', kind: 'stone', icon: 'memorialgo' },
+            { file: 'menkogo.html', name: 'MENKOGO', jp: '面子碁', desc: '石は面子。呼吸を失った敵の連は盤から除かず裏返って自分の色になる。', kind: 'stone', icon: 'menkogo' },
+            { file: 'meteoritego.html', name: 'METEORITEGO', jp: '隕鉄碁', desc: '5回目ごとの着手は隕鉄 — 硬くて取れず、隣の敵石に磁気の圧をかける。', kind: 'stone', icon: 'meteoritego' },
+            { file: 'meteorshowergo.html', name: 'METEORSHOWERGO', jp: '隕群碁', desc: '10手ごとに流星群が盤面に着弾。十字に石を蒸発させる (両者共通)。', kind: 'stone', icon: 'meteorshowergo' },
+            { file: 'miaigo.html', name: 'MIAIGO', jp: '見合碁', desc: '天元を挟む対称点は見合い — 片方を取ると反対側は次の相手の予約点になる。', kind: 'stone', icon: 'miaigo' },
+            { file: 'migrationgo.html', name: 'MIGRATIONGO', jp: '渡り碁', desc: '30手ごとの季節の変わり目に、全ての石が2列分だけ南↔北へ渡る。', kind: 'stone', icon: 'migrationgo' },
+            { file: 'mikoshigo.html', name: 'MIKOSHIGO', jp: '神輿碁', desc: '大連は神輿。6手ごとの揺れで各側の最大連の先端石が1つこぼれ落ちる。', kind: 'stone', icon: 'mikoshigo' },
+            { file: 'mimicrygo.html', name: 'MIMICRYGO', jp: '擬態碁', desc: '5手ごとに擬態石が供給される。擬態石は一度だけ取られるのを免れ、擬態が解ける。', kind: 'stone', icon: 'mimicrygo' },
+            { file: 'mindreadgo.html', name: 'MINDREADGO', jp: '読心碁', desc: '相手の次の着手点を予想して宣言。的中すれば相手の手は無効化される。', kind: 'stone', icon: 'mindreadgo' },
+            { file: 'mirage2go.html', name: 'MIRAGEGO', jp: '蜃気楼碁', desc: '各石の蜃気楼が1マス右にずれて映る。見えている位置は幻 — 実座標が真実。', kind: 'mirror', icon: 'mirage2go' },
+            { file: 'mirrorcraftgo.html', name: 'MIRRORCRAFTGO', jp: '鏡磨碁', desc: '石は鏡。敵石と接した鏡は敵の色を映し、敵連に取り込まれず取られにくくなる。', kind: 'stone', icon: 'mirrorcraftgo' },
+            { file: 'mirrorgo.html', name: 'MIRRORGO', jp: '鏡面碁', desc: '一手置くと左右対称の鏡像位置にも自動で石が生まれる。中央軸は映らない。', kind: 'stone', icon: 'mirrorgo' },
+            { file: 'mirrorstonego.html', name: 'MIRRORSTONEGO', jp: '鏡石碁', desc: '全ての石は鏡面。取られた連は隣の敵石1個を道連れに砕く。', kind: 'mirror', icon: 'mirrorstonego' },
+            { file: 'misogo.html', name: 'MISOGO', jp: '味噌碁', desc: '味噌樽に漬かった連は発酵して固くなり、二度と取られない。', kind: 'stone', icon: 'misogo' },
+            { file: 'missiongo.html', name: 'MISSIONGO', jp: '布教碁', desc: '取られる石は盤を離れず改宗して攻めた側の色に変わる。地取り布教合戦。', kind: 'stone', icon: 'missiongo' },
+            { file: 'mitatego.html', name: 'MITATEGO', jp: '見立碁', desc: '石が曲がってL字を成せば名物の見立て。終局時に角の連結1箇所+1目。', kind: 'stone', icon: 'mitatego' },
+            { file: 'moatgo.html', name: 'MOATGO', jp: '内堀碁', desc: '城を取り巻く内堀。堀に置いた石は流れに乗り、水門から流れ出る。', kind: 'stone', icon: 'moatgo' },
+            { file: 'mobiusgo.html', name: 'MOBIUSGO', jp: '帯環碁', desc: '左右の端が半回転して繋がるメビウス盤。端の先は反対側の端。', kind: 'stone', icon: 'mobiusgo' },
+            { file: 'mochigo.html', name: 'MOCHIGO', jp: '鏡餅碁', desc: '自分の石の上に重ね置きして段を増やす (最大3段)。取られるときは1段ずつ削られる。', kind: 'stone', icon: 'mochigo' },
+            { file: 'mochigomago.html', name: 'MOCHIGOMAGO', jp: '持駒碁', desc: '取った石は持駒。「持駒打ち」で手番を消費せず空点に打てる (連続で打てる強い手)。', kind: 'stone', icon: 'mochigomago' },
+            { file: 'mochitsukigo.html', name: 'MOCHITSUKIGO', jp: '餅搗碁', desc: '石は餅。自分の連に隣接して打つと、その連が空点へ1石伸びる。', kind: 'stone', icon: 'mochitsukigo' },
+            { file: 'mokugyogo.html', name: 'MOKUGYOGO', jp: '木魚碁', desc: '自分の前の石に隣接して打ち続けると木魚を叩くリズム。4拍ごとに読経が進み+2目。', kind: 'stone', icon: 'mokugyogo' },
+            { file: 'moltgo.html', name: 'MOLTGO', jp: '脱皮碁', desc: '石は脱皮する生き物。取られた場所に殻が残り、終局時に1つ+1目。', kind: 'stone', icon: 'moltgo' },
+            { file: 'momijigo.html', name: 'MOMIJIGO', jp: '紅葉碁', desc: '楓の石は時が経つほど紅く色づく — 古い石ほど終局時に高い得点。', kind: 'stone', icon: 'momijigo' },
+            { file: 'monogatarigo.html', name: 'MONOGATARIGO', jp: '物語碁', desc: '起・承・転・結 — 四隅を順に制すと物語が完結して+5目。', kind: 'stone', icon: 'monogatarigo' },
+            { file: 'monolithgo.html', name: 'MONOLITHGO', jp: '碑石碁', desc: '中央の石碑を4方で囲んだ側に、石碑が半径2以内の敵石を消し飛ばす力を貸す。', kind: 'stone', icon: 'monolithgo' },
+            { file: 'monsoongo.html', name: 'MONSOONGO', jp: '雨季碁', desc: '12手周期: 雨季は下2段が水没して着手不可、石は流出する。乾季で回復。', kind: 'weather', icon: 'monsoongo' },
+            { file: 'moonphasego.html', name: 'MOONPHASEGO', jp: '月相碁', desc: '29手周期の月相で石の強さが変わる。満月は取れず、新月はアゲハマ2倍。', kind: 'stone', icon: 'moonphasego' },
+            { file: 'morningglorygo.html', name: 'MORNINGGLORYGO', jp: '朝顔碁', desc: '石は朝顔 — 12手周期で咲いては萎れる。咲いた石だけ終局時+1目。古く孤立した石は枯れる。', kind: 'stone', icon: 'morningglorygo' },
+            { file: 'mosaicgo.html', name: 'MOSAICGO', jp: '嵌像碁', desc: '自石でV字の鶴模様 (5個) を完成させると嵌像勝ち。', kind: 'stone', icon: 'mosaicgo' },
+            { file: 'mosquitogo.html', name: 'MOSQUITOGO', jp: '吸血碁', desc: '置いた蚊(石)は隣の敵石から血(+1目)を吸う。吸われた敵石は憔悴する。', kind: 'stone', icon: 'mosquitogo' },
+            { file: 'mossgo.html', name: 'MOSSGO', jp: '苔庭碁', desc: '苔=石で庭を覆う碁。乾燥した最外周では8手ごとに苔が枯れて相手のアゲハマになる。', kind: 'stone', icon: 'mossgo' },
+            { file: 'mukaebigo.html', name: 'MUKAEBIGO', jp: '迎火碁', desc: '盤の精霊(中立)の隣に迎え火を点せ。隣接石が多い側が+4点で迎える。', kind: 'stone', icon: 'mukaebigo' },
+            { file: 'mummgo.html', name: 'MUMMGO', jp: '干乾碁', desc: '呼吸0の連はミイラ化して盤に残る。敵ミイラ連をクリックで回収する。', kind: 'stone', icon: 'mummgo' },
+            { file: 'murmurgo.html', name: 'MURMURGO', jp: '群鳥碁', desc: '孤立した石は鳥となり、自分の手番の終わりに最寄りの味方石へ1歩飛んで寄る。', kind: 'stone', icon: 'murmurgo' },
+            { file: 'mutatego.html', name: 'MUTATEGO', jp: '変異碁', desc: '取られたセルの半分に中立の変異体が生まれる。四方を塞がれた変異体は着手側に刈り取られる。', kind: 'stone', icon: 'mutatego' },
+            { file: 'myceliumgo.html', name: 'MYCELIUMGO', jp: '菌糸碁', desc: '打った石の菌糸が最も近い栄養源に向かって1歩伸びる。栄養源を3つ吸収すると勝ち。', kind: 'stone', icon: 'myceliumgo' },
+            { file: 'naildollgo.html', name: 'NAILDOLLGO', jp: '呪殺碁', desc: '9手ごとの着手は五寸釘。中心対称の位置にいる敵石を呪い殺す。', kind: 'stone', icon: 'naildollgo' },
+            { file: 'namakogo.html', name: 'NAMAKOGO', jp: '鼠壁碁', desc: '15手ごとに盤内の3x3で火事。2石以下の連は燃え落ちる。', kind: 'stone', icon: 'namakogo' },
+            { file: 'narikomago.html', name: 'NARIKOMAGO', jp: '成駒碁', desc: '敵陣最深部 (相手側3列) に打ち込んだ石は「成」って金の輝き +2目。', kind: 'stone', icon: 'narikomago' },
+            { file: 'narrativego.html', name: 'NARRATIVEGO', jp: '物語碁', desc: '12手ごとに章が刻まれる。各章はその間に多く取った側のもの。章×2目が結末で地に加わる。', kind: 'stone', icon: 'narrativego' },
+            { file: 'nashgo.html', name: 'NASHGO', jp: 'ナッシュ碁', desc: '両者の評価が最大の「均衡点」が常時公開。その点に置くと +2目。', kind: 'stone', icon: 'nashgo' },
+            { file: 'netgraphgo.html', name: 'NETGRAPHGO', jp: 'グラフ碁', desc: 'グラフ理論の碁: 同色3方向以上に接する高次数「ハブ石」を作ると +1目。', kind: 'stone', icon: 'netgraphgo' },
+            { file: 'novago.html', name: 'NOVAGO', jp: '客星碁', desc: '15手周期で空点に客星が現れる。6手以内に置くと+5。', kind: 'stone', icon: 'novago' },
+            { file: 'nucleationgo.html', name: 'NUCLEATIONGO', jp: '結晶碁', desc: '孤立して置いた石は結晶核。自分の手番ごとに核の隣へ結晶が1つ育つ (各核2個まで)。', kind: 'stone', icon: 'nucleationgo' },
+            { file: 'nurikabego.html', name: 'NURIKABEGO', jp: '塗壁碁', desc: '6手ごとに置く石は塗り壁に化ける。壁は取れず、呼吸も領地も塞ぐ。', kind: 'stone', icon: 'nurikabego' },
+            { file: 'oathgo.html', name: 'OATHGO', jp: '宣誓碁', desc: '中央列の刻文に自石を3箇所以上刻んだ側が誓いを守って勝利。', kind: 'stone', icon: 'oathgo' },
+            { file: 'obligego.html', name: 'OBLIGEGO', jp: '返礼碁', desc: '取られた側は返礼権を得る。権利+1手で敵石1個を引き取れる。', kind: 'stone', icon: 'obligego' },
+            { file: 'obsidiango.html', name: 'OBSIDIANGO', jp: '玻璃碁', desc: '玻璃の刃 — 着手は隣の敵石に傷を刻む。傷2つでその石は砕けて取られる。', kind: 'stone', icon: 'obsidiango' },
+            { file: 'offergo.html', name: 'OFFERGO', jp: '捧剣碁', desc: '祭壇 (天元) を含む自連が4石以上に育てば剣を捧げて勝利。', kind: 'stone', icon: 'offergo' },
+            { file: 'ohajikigo.html', name: 'OHAJIKIGO', jp: '御碁碁', desc: '石はおはじき。打った石に接した敵石を直線に弾き、行き止まりや盤外に当たれば取れる。', kind: 'stone', icon: 'ohajikigo' },
+            { file: 'oharaigo.html', name: 'OHARAIGO', jp: '大祓碁', desc: '18手ごとの大祓: 呼吸1以下の全ての連が穢れとして祓われる。', kind: 'stone', icon: 'oharaigo' },
+            { file: 'okagego.html', name: 'OKAGEGO', jp: 'お陰碁', desc: '中央5x5は神域。神域へ参拝(着手)するたび福が+2点たまる。', kind: 'stone', icon: 'okagego' },
+            { file: 'omenego.html', name: 'OMENEGO', jp: '面隠碁', desc: '4手ごとの着手はお面石 — 自分の石として動くが、終局時に敵色へ化けて正体を現す。', kind: 'stone', icon: 'omenego' },
+            { file: 'onmyogo.html', name: 'ONMYOGO', jp: '陰陽碁', desc: '列は五行 (木火土金水) が巡る。置いた石は右隣の敵石を砕き、左隣に敵石があれば自石が砕かれる。', kind: 'stone', icon: 'onmyogo' },
+            { file: 'oomagago.html', name: 'OOMAGAGO', jp: '大駒碁', desc: '2手目の石が大駒: 生誕時に8方向の孤立敵石を制圧。大駒を失うとアゲハマが半減する。', kind: 'stone', icon: 'oomagago' },
+            { file: 'opticalgo.html', name: 'OPTICALGO', jp: '錯視碁', desc: '幾何学錯視の盤。中央が拡大して見える視覚効果に惑わされる碁。', kind: 'stone', icon: 'opticalgo' },
+            { file: 'oracle2go.html', name: 'ORACLE2GO', jp: '神託碁', desc: '5手周期で示される神託の点の近くに打つと+2目のご利益。', kind: 'stone', icon: 'oracle2go' },
+            { file: 'orbit2go.html', name: 'ORBIT2GO', jp: '軌道碁', desc: '着手ごとに全ての石が中央を囲む軌道を時計回りに1歩周回。敵に衝突すると消滅する。', kind: 'stone', icon: 'orbit2go' },
+            { file: 'ordercardgo.html', name: 'ORDERCARDGO', jp: '手順碁', desc: '順番カードが指示する区域にしか打てない。4枚を使い切ると巡って再利用。', kind: 'stone', icon: 'ordercardgo' },
+            { file: 'oreveingo.html', name: 'OREVEINGO', jp: '鉱脈碁', desc: '着手で自分の石の4連以上の直線 (鉱脈) を完成させると鉱石を掘り当て終局時+1目。', kind: 'stone', icon: 'oreveingo' },
+            { file: 'origamigo.html', name: 'ORIGAMIGO', jp: '折形碁', desc: 'X字の折り目筋に石を置くと折点が灯る。折点を8つ灯した側が折形完成で勝ち。', kind: 'stone', icon: 'origamigo' },
+            { file: 'oshogo.html', name: 'OSHOGO', jp: '王将碁', desc: '各軍の最初の石は「王将」。王将が取られた側は即負け — 王を守り敵王を狩れ。', kind: 'stone', icon: 'oshogo' },
+            { file: 'otedamago.html', name: 'OTEDAMAGO', jp: '手玉碁', desc: '石はお手玉。前回の着手点に接して打ち続けると投げ上げ連続回数が伸び、最高回数が得点。', kind: 'stone', icon: 'otedamago' },
+            { file: 'outlastgo.html', name: 'OUTLASTGO', jp: '耐久碁', desc: 'パスは休養: パスした側の連は次の1手だけ呼吸点が+1され取られない。', kind: 'weather', icon: 'outlastgo' },
+            { file: 'owlgo.html', name: 'OWLGO', jp: '梟碁', desc: '各側4手ごとに訪れる「夜」。その手の梟は隣の敵石を1つ狩る。', kind: 'stone', icon: 'owlgo' },
+            { file: 'paintergo.html', name: 'PAINTERGO', jp: '絵画碁', desc: '前の自石と8近傍以内に筆を繋ぐと+1目。筆跡は盤上に残る。', kind: 'stone', icon: 'paintergo' },
+            { file: 'parallelgo.html', name: 'Parallel-Go', jp: '並列碁', desc: '3石以上の連を2つ以上持つ側は、長連が包囲されても片方が切れるだけで取れない。', kind: 'stone', icon: 'parallelgo' },
+            { file: 'parleygo.html', name: 'PARLEYGO', jp: '交渉碁', desc: '「休戦」を提案し、相手も応じればその場で境界確定。打てば破棄される。', kind: 'stone', icon: 'parleygo' },
+            { file: 'pasturego.html', name: 'PASTUREGO', jp: '放牧碁', desc: '石は羊。自分の地に接する自分の石は「柵の中の羊」として終局時+1目。', kind: 'stone', icon: 'pasturego' },
+            { file: 'pawnarmygo.html', name: 'PAWNARMYGO', jp: '歩兵碁', desc: '5手ごとの着手は大将石。大将は甲冑で最初の捕獲を1度耐える。', kind: 'stone', icon: 'pawnarmygo' },
+            { file: 'peelgo.html', name: 'PEELGO', jp: '剥落碁', desc: '置いてから35手で石の表面が剥落し、色の抜けた殻(置けない障害)として残る。', kind: 'stone', icon: 'peelgo' },
+            { file: 'pendulum2go.html', name: 'PENDULUM2GO', jp: '振子碁2', desc: '着手ごとに全ての石が水平に1マス揺れる。偶数手は右、奇数手は左。端や他石で止まる。', kind: 'stone', icon: 'pendulum2go' },
+            { file: 'pendulumgo.html', name: 'PENDULUMGO', jp: '振子碁', desc: '手番は振り子式: 黒,白,白,黒,黒,白,白,黒… の繰り返し。', kind: 'stone', icon: 'pendulumgo' },
+            { file: 'percussiongo.html', name: 'PERCUSSIONGO', jp: '打楽碁', desc: '着手は鼓の一打。8の倍数の手番は大太鼓 — 着手点から盤が震え、隣の孤立敵石が跳ねて消える。', kind: 'stone', icon: 'percussiongo' },
+            { file: 'pestilencego.html', name: 'PESTILENCEGO', jp: '黒死碁', desc: '盤中央から疫病が8手ごとに蔓延。感染マスは打てず呼吸もしない。', kind: 'stone', icon: 'pestilencego' },
+            { file: 'petalgo.html', name: 'PETALGO', jp: '花弁碁', desc: '中心から6弁の花形盤。弁の間の切れ目で分断される花の戦場。', kind: 'stone', icon: 'petalgo' },
+            { file: 'pharmacygo.html', name: 'PHARMACYGO', jp: '薬籠碁', desc: '石は生薬。同色の未調合3つ以上が直線に並ぶと調合され、+5目の薬になる。', kind: 'stone', icon: 'pharmacygo' },
+            { file: 'photosynthesisgo.html', name: 'PHOTOSYNTHESISGO', jp: '光合成碁', desc: '石は葉。盤中央の日当たり区域に石が1手留まるたび養分+1目を得る。', kind: 'stone', icon: 'photosynthesisgo' },
+            { file: 'piergo.html', name: 'PIERGO', jp: '橋脚碁', desc: '橋の上の碁。橋脚の点の石は絶対に取られない強い足場。', kind: 'stone', icon: 'piergo' },
+            { file: 'pilgrimgo.html', name: 'PILGRIMGO', jp: '巡礼碁', desc: '5つの聖地のうち3ヶ所を同時に制すると奉納達成で即勝利。', kind: 'stone', icon: 'pilgrimgo' },
+            { file: 'pinkygo.html', name: 'PINKYGO', jp: '指切碁', desc: '指切りを交わした点に打つと、その石が腐って相手のアゲハマになる。', kind: 'stone', icon: 'pinkygo' },
+            { file: 'planetarygo.html', name: 'PLANETARYGO', jp: '七曜碁', desc: '盤を7帯に分け、手数ごとに当番の曜が巡る。当番帯への着手+2。', kind: 'stone', icon: 'planetarygo' },
+            { file: 'plantgo.html', name: 'PLANTGO', jp: '植物碁', desc: '石は植物。6手ごとに日光ゾーン (盤左側) に触れる連が1つ芽を出して成長する。', kind: 'stone', icon: 'plantgo' },
+            { file: 'plastergo.html', name: 'PLASTERGO', jp: '左官碁', desc: '石は漆喰。辺に接した自軍の連は塗り固まり、壁として呼吸を与えない。', kind: 'stone', icon: 'plastergo' },
+            { file: 'platego.html', name: 'PLATEGO', jp: '皿回碁', desc: '孤立した自石は回転が落ち、4手で落ちて消える。連なれば安定。隣に置くと回し直し。', kind: 'stone', icon: 'platego' },
+            { file: 'polaritygo.html', name: 'POLARITYGO', jp: '磁界碁', desc: '偶数列はN極・奇数列はS極。縦の敵石は反発で押し退き、横に2マスの敵石は吸着で引き寄せられる。', kind: 'stone', icon: 'polaritygo' },
+            { file: 'polarnightgo.html', name: 'Polar Night-Go', jp: '極夜碁', desc: '周期の最後6手は極夜。日が昇らず、どんな石も取れない。', kind: 'stone', icon: 'polarnightgo' },
+            { file: 'pollengo.html', name: 'POLLENGO', jp: '花粉碁', desc: '風は一定方向に吹き、打った石から花粉が2マス飛ぶ。空きマスならそこに自分の石が芽吹く。', kind: 'stone', icon: 'pollengo' },
+            { file: 'possessgo.html', name: 'POSSESSGO', jp: '憑物碁', desc: '盤を漂う幽霊が、止まった石を乗っ取って色を反転させる。', kind: 'stone', icon: 'possessgo' },
+            { file: 'potholego.html', name: 'POTHOLEGO', jp: '甌穴碁', desc: '深い甌穴が盤に点在。隣に立つと落ち込み、落ちた石は不動の障害物になる。', kind: 'stone', icon: 'potholego' },
+            { file: 'potiongo.html', name: 'POTIONGO', jp: '薬草碁', desc: '葉・根・実の材料を同じ連に揃えるとポーション調合成功。', kind: 'stone', icon: 'potiongo' },
+            { file: 'potterygo.html', name: 'POTTERYGO', jp: '陶芸碁', desc: '石は陶器の素地。星(窯)の上で15手焼成すると完成し、+3目の金彩を得る。', kind: 'stone', icon: 'potterygo' },
+            { file: 'predatorgo.html', name: 'PREDATORGO', jp: '捕食碁', desc: '石の強さLvは1+隣接する味方の数 (最大3)。着手後、強い石は隣の弱い敵石を食べる。', kind: 'stone', icon: 'predatorgo' },
+            { file: 'pressgo.html', name: 'PRESSGO', jp: '圧延碁', desc: '「圧延」で自石を薄板に延ばす (隣接2空点へ拡大)。薄板の連は呼吸1でも割れる (各3回)。', kind: 'stone', icon: 'pressgo' },
+            { file: 'prisonergo.html', name: 'PRISONERGO', jp: '逆領碁', desc: '地は不要。敵の連を全呼吸点で監視して「監禁」すると石1つにつき+2。', kind: 'stone', icon: 'prisonergo' },
+            { file: 'prizeboardgo.html', name: 'PRIZEBOARDGO', jp: '宝盤碁', desc: '全着手点に1〜6の数字。終局時のルーレットの出目と同じ数字の占有点は+3。', kind: 'stone', icon: 'prizeboardgo' },
+            { file: 'probgo.html', name: 'PROBGO', jp: '確率碁', desc: '着手は約15%で隣の空点にズレる。狙い通りに置けるかは確率次第。', kind: 'stone', icon: 'probgo' },
+            { file: 'projectiongo.html', name: 'PROJECTIONGO', jp: '投影碁', desc: '石は影を落とす。光源が16手ごとに回り、影石の落ちる方向が変わる。', kind: 'stone', icon: 'projectiongo' },
+            { file: 'proofgo.html', name: 'PROOFGO', jp: '校閲碁', desc: '敵石で連への繋がりが1本だけの「誤植」に朱が入り+1目。1箇所につき1回。', kind: 'stone', icon: 'proofgo' },
+            { file: 'prunego.html', name: 'PRUNEGO', jp: '剪定碁', desc: '「剪定」→自石を選ぶと切り落とす (1手消費・各5回)。5石以上の樹形連は+2目。', kind: 'stone', icon: 'prunego' },
+            { file: 'pulleygo.html', name: 'PULLEYGO', jp: '滑車碁', desc: '縦軸で鏡映した位置の敵石が1段下がる滑車。盤の下に落ちた石はこちらのアゲハマになる。', kind: 'stone', icon: 'pulleygo' },
+            { file: 'puppetgo.html', name: 'PUPPETGO', jp: '傀儡碁', desc: '自分の手番で相手色の石を置く傀儡操作。置いた石が自分色の連を刈り取る。', kind: 'mirror', icon: 'puppetgo' },
+            { file: 'pushrowgo.html', name: 'PUSHROWGO', jp: '列推碁', desc: '着手した筋の敵石を遠ざかる向きに1マス押し出す。押し先が塞がっていれば潰れて取り。', kind: 'stone', icon: 'pushrowgo' },
+            { file: 'pyramid2go.html', name: 'PYRAMID2GO', jp: '三角碁', desc: '直角二等辺三角形の3頂点に石を置くと、その内部の敵石を全て取る。', kind: 'stone', icon: 'pyramid2go' },
+            { file: 'pyroclasticgo.html', name: 'PYROCLASTICGO', jp: '火砕碁', desc: '山頂から火砕流が斜面を駆け下りる。20手ごとの噴火で通路上の石は全て焼かれる。', kind: 'stone', icon: 'pyroclasticgo' },
+            { file: 'quarrygo.html', name: 'QUARRYGO', jp: '採石碁', desc: '4箇所の採石場は各3回まで石を掘り出せる。尽きると障害物に枯れる。', kind: 'stone', icon: 'quarrygo' },
+            { file: 'quartzgo.html', name: 'QUARTZGO', jp: '水晶碁', desc: '味方2石以上に寄り添って置いた石は水晶に育つ。水晶は終局時+1目。', kind: 'stone', icon: 'quartzgo' },
+            { file: 'radengo.html', name: 'RADENGO', jp: '螺鈿碁', desc: '敵石2個以上に接し味方の無い貝片は螺鈿として輝く — 終局時+1目。', kind: 'stone', icon: 'radengo' },
+            { file: 'raftgo.html', name: 'RAFTGO', jp: '筏碁', desc: '4つの筏がロープ橋で繋がる。5手ごとの潮汐で橋が架かったり沈んだりする。', kind: 'stone', icon: 'raftgo' },
+            { file: 'rainbowgo.html', name: 'RAINBOWGO', jp: '虹霓碁', desc: '24手周期で雨上がり (8手間) に虹が架かり、斜め隣接も連結になる。', kind: 'stone', icon: 'rainbowgo' },
+            { file: 'rammergo.html', name: 'RAMMERGO', jp: '重錘碁', desc: '置いた石は重い錘。同じ列の下の石を全て1段ずつ押し潰す (最下段は砕ける)。', kind: 'stone', icon: 'rammergo' },
+            { file: 'rampartgo.html', name: 'RAMPARTGO', jp: '石垣碁', desc: '2行の石垣が盤を分断。各側2個の梯子石だけが垣を越えられる。', kind: 'stone', icon: 'rampartgo' },
+            { file: 'raptorgo.html', name: 'RAPTORGO', jp: '猛禽碁', desc: '孤立した地点への着手は鷹の急降下。4目以内の孤立敵石を1つ狩る。', kind: 'stone', icon: 'raptorgo' },
+            { file: 'recallgo.html', name: 'RECALLGO', jp: '回想碁', desc: '各1回「回想」で自分の直近の着手まで盤面を巻き戻し、その後の全ての手を消す。', kind: 'stone', icon: 'recallgo' },
+            { file: 'regressgo.html', name: 'REGRESSGO', jp: '後退碁', desc: '30手ごとにルールが崩壊: コウ解禁→自殺手解禁→アゲハマ倍→崩壊終局。', kind: 'stone', icon: 'regressgo' },
+            { file: 'requiemgo.html', name: 'REQUIEMGO', jp: '鎮魂碁', desc: '盤に彷徨う霊 (中立石) がいる。四方を自石で囲んで鎮めると回向点を得る。', kind: 'stone', icon: 'requiemgo' },
+            { file: 'reservoirgo.html', name: 'RESERVOIRGO', jp: '貯水槽碁', desc: '着手ごとに水+1。満水(10)で下2段が氾濫して石が流される。「かんがい」で自石を守る。', kind: 'stone', icon: 'reservoirgo' },
+            { file: 'resistorgo.html', name: 'Resistor-Go', jp: '抵抗碁', desc: '6石以上の連を取ってもアゲハマは1個分しか増えない。', kind: 'stone', icon: 'resistorgo' },
+            { file: 'resonancego.html', name: 'RESONANCEGO', jp: '共鳴碁', desc: '同色石が直線に3個以上並ぶと共鳴し、接する敵石は呼吸が1つ減る。', kind: 'stone', icon: 'resonancego' },
+            { file: 'retreatgo.html', name: 'RETREATGO', jp: '退避碁', desc: 'アタリの孤立石は最後の呼吸点へ自動退避。追いかけっこの碁。', kind: 'stone', icon: 'retreatgo' },
+            { file: 'rhythmgo.html', name: 'RHYTHMGO', jp: '拍子碁', desc: '4拍子周期: 4拍目の手は強拍 — そのプレイヤーは続けてもう1石置ける。', kind: 'rush', icon: 'rhythmgo' },
+            { file: 'ricego.html', name: 'RICEGO', jp: '蔵米碁', desc: '取った石は米として蔵へ。24手毎の冬に米3俵を納め、不足分だけ自石が飢える。残り米は得点。', kind: 'stone', icon: 'ricego' },
+            { file: 'ridgego.html', name: 'RIDGEGO', jp: '山稜碁', desc: '中央の稜線に立つ石は呼吸点-2。稜を避けるか、制するか。', kind: 'stone', icon: 'ridgego' },
+            { file: 'rimmedgo.html', name: 'RIMMEDGO', jp: '覆輪碁', desc: '4個置くごとに石に縁取りが付く。縁同士が隣接して結合した石は一度だけ取りを耐える。', kind: 'stone', icon: 'rimmedgo' },
+            { file: 'ringtossgo.html', name: 'RINGTOSSGO', jp: '輪投碁', desc: '石は輪。着手が敵の連に触れると輪が掛かって得点 (同じ的は1回だけ)。', kind: 'stone', icon: 'ringtossgo' },
+            { file: 'rinshogo.html', name: 'RINSHOGO', jp: '臨書碁', desc: '天元の周囲8点が古典の手本。臨書(着手)で写すと得点。', kind: 'stone', icon: 'rinshogo' },
+            { file: 'ripplego.html', name: 'RIPPLEGO', jp: '同心碁', desc: '波紋は中心対称に干渉する — 対蹠点が5つ目の近傍。呼吸の場所が全部変わる。', kind: 'stone', icon: 'ripplego' },
+            { file: 'riverbridgego.html', name: 'RIVERBRIDGEGO', jp: '橋渡碁', desc: '盤を3行の川が分断。3本の橋だけが両岸を結ぶ。', kind: 'stone', icon: 'riverbridgego' },
+            { file: 'rokkigo.html', name: 'ROKKIGO', jp: '六曜碁', desc: '六曜が6手周期で回る。大安に置いた石は吉+2点、仏滅に置いた石は凶-1点。', kind: 'stone', icon: 'rokkigo' },
+            { file: 'rokurohigo.html', name: 'ROKUROHIGO', jp: '轆轤碁', desc: '各着手後、盤が轆轤のように90度回転する。', kind: 'stone', icon: 'rokurohigo' },
+            { file: 'roofgo.html', name: 'ROOFGO', jp: '屋根碁', desc: '下に広がる屋根型の盤。棟 (中央の頂線) の石は補強瓦で+2目。', kind: 'stone', icon: 'roofgo' },
+            { file: 'rosarygo.html', name: 'ROSARYGO', jp: '数珠碁', desc: '同色石で囲んだ空点は「念珠の環」— 環1つにつき+4目の功徳。', kind: 'stone', icon: 'rosarygo' },
+            { file: 'roulette2go.html', name: 'ROULETTE2GO', jp: '回転盤碁', desc: '盤は4象限。手番ごとにルーレットが回り、止まった象限にだけ着手できる。', kind: 'stone', icon: 'roulette2go' },
+            { file: 'rubberjumpgo.html', name: 'RUBBERJUMPGO', jp: 'ゴム跳碁', desc: '新しい石が敵連の列を跳び越える形 (自-敵+-自の直線) を作ると方向ごとに+1目。', kind: 'stone', icon: 'rubberjumpgo' },
+            { file: 'rustzonego.html', name: 'RUSTZONEGO', jp: '錆地帯碁', desc: '盤中央の錆地帯では石が腐食し、2回の錆周期で砕け落ちる。', kind: 'stone', icon: 'rustzonego' },
+            { file: 'ryoushigo.html', name: 'RYOUSHIGO', jp: '料紙碁', desc: '2行おきに厚料紙(呼吸+1/石)と薄料紙(作字点+1)が交互に並ぶ盤。', kind: 'stone', icon: 'ryoushigo' },
+            { file: 'saiseigo.html', name: 'SAISEIGO', jp: '再生碁', desc: '2個以上の連が取られても、呼吸のあれば断片1個が別個体として再生する (アゲハマは取った分)。', kind: 'stone', icon: 'saiseigo' },
+            { file: 'sakurago.html', name: 'SAKURAGO', jp: '桜碁', desc: '置いて6手で石は桜を散らして消え、散った跡と隣の空点が終局時の領地になる。', kind: 'stone', icon: 'sakurago' },
+            { file: 'salmonrungo.html', name: 'SALMONRUNGO', jp: '鮭遡碁', desc: '中央の川を石は遡る。6手ごとに上流へ進み、源流に着くと産卵+2目。', kind: 'stone', icon: 'salmonrungo' },
+            { file: 'saltfieldgo.html', name: 'SALTFIELDGO', jp: '塩田碁', desc: '盤の両端に塩田。10手ごとの天日で、田の中の石が塩の結晶になって+1点。', kind: 'stone', icon: 'saltfieldgo' },
+            { file: 'saltgo.html', name: 'SALTGO', jp: '塩碁', desc: '石は塩の結晶。潮溜まり (湿気区域) の石は8手ごとに溶けて消える。', kind: 'stone', icon: 'saltgo' },
+            { file: 'samsarago.html', name: 'SAMSARAGO', jp: '輪廻碁', desc: '取られた石は六道を廻り、近くの空き地に同じ色で再誕する。', kind: 'stone', icon: 'samsarago' },
+            { file: 'sashikogo.html', name: 'SASHIKOGO', jp: '刺子碁', desc: '同色2個が1点空けで並ぶと間は縫い目。相手は縫い目に打てない。', kind: 'stone', icon: 'sashikogo' },
+            { file: 'scalego.html', name: 'SCALEGO', jp: '音階碁', desc: '列は7つの音階 (ドレミファソラシ)。1段ずつ上行する旋律を5音つなぐと+3目。', kind: 'stone', icon: 'scalego' },
+            { file: 'scapegoatgo.html', name: 'SCAPEGOATGO', jp: '身代碁', desc: '初手の石は身代わり。それを含む連が取られても身代わり1個だけが死ぬ (各1回)。', kind: 'stone', icon: 'scapegoatgo' },
+            { file: 'scentgo.html', name: 'SCENTGO', jp: '香り碁', desc: '石に3種の香り。自分の3色の香りが盤上で揃うと調香が発動し+2アゲハマ。', kind: 'stone', icon: 'scentgo' },
+            { file: 'scissorgo.html', name: 'SCISSORGO', jp: '鋏碁', desc: '敵石を自石で挟むと鋏が入る。挟まれた敵石は切り落とされる。', kind: 'stone', icon: 'scissorgo' },
+            { file: 'scrabblogo.html', name: 'SCRABBLOGO', jp: '文字碁', desc: '石は文字タイル。着手で横向きに3つ以上自石が連なると、連の長さ-2目のボーナス。', kind: 'stone', icon: 'scrabblogo' },
+            { file: 'scrapgo.html', name: 'SCRAPGO', jp: '再資源碁', desc: '取られた石はスクラップとして自分に還る。3個で2連「再生石」を錬成できる。', kind: 'stone', icon: 'scrapgo' },
+            { file: 'scrollmountgo.html', name: 'SCROLLMOUNTGO', jp: '表具碁', desc: '中央列は床の間。3連以上の連を掛軸として掛けると長さ分の得点。', kind: 'stone', icon: 'scrollmountgo' },
+            { file: 'seachartgo.html', name: 'SEACHARTGO', jp: '海図碁', desc: '盤の左右両辺中央が港。両港を自連で結ぶと航路完成+12。', kind: 'stone', icon: 'seachartgo' },
+            { file: 'sealgo.html', name: 'SEALGO', jp: '札符碁', desc: '2個以上の自石に接して置いた石は封印され、取られなくなる。', kind: 'stone', icon: 'sealgo' },
+            { file: 'seamarkgo.html', name: 'SEAMARKGO', jp: '灯台碁', desc: '4隅の灯台の光 (3以内) にある連は安全で+1呼吸。', kind: 'stone', icon: 'seamarkgo' },
+            { file: 'sedimentgo.html', name: 'SEDIMENTGO', jp: '堆積碁', desc: '上下2行は川。石を取るたびに河口へ堆積し、三角州の新しい陸地が育つ。', kind: 'stone', icon: 'sedimentgo' },
+            { file: 'seedgo.html', name: 'SEEDGO', jp: '種子碁', desc: '打った石は「種」。3手後に発芽し、空いた近傍へ新しい石が生える。', kind: 'stone', icon: 'seedgo' },
+            { file: 'seizago.html', name: 'SEIZAGO', jp: '星座碁', desc: '石は星。4つ以上の連が一直線に並ぶと星座となり+4目。', kind: 'stone', icon: 'seizago' },
+            { file: 'sekkigo.html', name: 'Sekki-Go', jp: '節気碁', desc: '8手ごとに節気が進み、その季節の区画では石が「旬」で取れない。', kind: 'stone', icon: 'sekkigo' },
+            { file: 'sennichitego.html', name: 'SENNICHITEGO', jp: '千日碁', desc: '同一局面が3回現れたら千日手で引き分け (局面検出付き)。', kind: 'stone', icon: 'sennichitego' },
+            { file: 'senryugo.html', name: 'SENRYUGO', jp: '川柳碁', desc: '石が山なり (三連の山型) を成せばおかしみ点。終局時に1山+1目。', kind: 'stone', icon: 'senryugo' },
+            { file: 'sentego.html', name: 'SENTEGO', jp: '先手碁', desc: 'アタリをかけた側が先手権を握る。先手権を持って打つ次の一手は +2目。', kind: 'stone', icon: 'sentego' },
+            { file: 'senyakugo.html', name: 'SENYAKUGO', jp: '煎薬碁', desc: '味方の石と繋がらない単石は「生薬」。煎じるほど薬効が出て、単石ごとに+3目。', kind: 'stone', icon: 'senyakugo' },
+            { file: 'sequencego.html', name: 'SEQUENCEGO', jp: '数列碁', desc: '盤上の自分の石数がフィボナッチ数 (1,2,3,5,8,13…) に達するたび+2目。', kind: 'stone', icon: 'sequencego' },
+            { file: 'seriesgo.html', name: 'Series-Go', jp: '直列碁', desc: '横一列か縦一列に4石以上並んだ連は直列回路となり、取られない。', kind: 'stone', icon: 'seriesgo' },
+            { file: 'setgo.html', name: 'SETGO', jp: '集合碁', desc: '集合演算の地: 両勢力が接する領域 (積集合) は黒白で折半される。', kind: 'stone', icon: 'setgo' },
+            { file: 'shadowgo.html', name: 'SHADOWGO', jp: '影碁', desc: '北西の光源に照らされ、石は南東へ影を落とす。影のマスは敵の呼吸点にならない。', kind: 'stone', icon: 'shadowgo' },
+            { file: 'shatekigo.html', name: 'SHATEKIGO', jp: '射的碁', desc: '各側6手目は弾丸。着地点の8近傍から敵石を1つ撃ち落とし、景品で+1目。', kind: 'stone', icon: 'shatekigo' },
+            { file: 'sheergo.html', name: 'SHEERGO', jp: '透け碁', desc: '手番でない側の石は半透明に透け、アゲハマ表示も「約」の曖昧表示。正確な形勢は読めない。', kind: 'stone', icon: 'sheergo' },
+            { file: 'shellgo.html', name: 'SHELLGO', jp: '貝殻碁', desc: '連なった石は殻を共有して強化。取られる時は外側の半数だけが失われる。', kind: 'stone', icon: 'shellgo' },
+            { file: 'shiborigo.html', name: 'SHIBORIGO', jp: '絞染碁', desc: '全周を同色で絞った空点は絞り目。絞り目を持つ連は+1呼吸。', kind: 'stone', icon: 'shiborigo' },
+            { file: 'shichiyago.html', name: 'SHICHIYAGO', jp: '質屋碁', desc: '外周の石は質物。取られると資金化、期限切れは競売される。', kind: 'stone', icon: 'shichiyago' },
+            { file: 'shikigamigo.html', name: 'SHIKIGAMIGO', jp: '式神碁', desc: '8手ごとの着手は式神。斜め4方に接する敵石を使役し、終局時に1つ+1目。', kind: 'stone', icon: 'shikigamigo' },
+            { file: 'shimenawago.html', name: 'SHIMENAWAGO', jp: '注連碁', desc: '3連以上の連は注連縄。その結界 (内側の空点) には相手が侵入できない。', kind: 'stone', icon: 'shimenawago' },
+            { file: 'shimofurigo.html', name: 'Shimofuri-Go', jp: '霜降碁', desc: '18手ごとに霜が降り、友2個未満の外周石が凍死して相手のアゲハマになる。', kind: 'stone', icon: 'shimofurigo' },
+            { file: 'shinkirogo.html', name: 'SHINKIROGO', jp: '蜃気碁', desc: '相手の視界にだけ現れる蜃気楼の幻影。石を打つたび幻影が1つ実体化する。', kind: 'stone', icon: 'shinkirogo' },
+            { file: 'shinogigo.html', name: 'SHINOGIGO', jp: 'シノギ碁', desc: 'アタリの連をあえて放置して手番を回すとシノギ +1目 — 救出すれば放棄 (連ごとに1回)。', kind: 'stone', icon: 'shinogigo' },
+            { file: 'shintogo.html', name: 'SHINTOGO', jp: '神道碁', desc: '自石で3x3の環 (神域の注連縄) を張ると聖域点。3ヶ所の聖域で鎮座勝ち。', kind: 'stone', icon: 'shintogo' },
+            { file: 'shiohigo.html', name: 'SHIOHIGO', jp: '潮干碁', desc: '干潮 (12手周期) の間だけ浜に置ける。満潮で浜の石は拾われ持ち主+1目。', kind: 'stone', icon: 'shiohigo' },
+            { file: 'shiomachigo.html', name: 'SHIOMACHIGO', jp: '潮待碁', desc: '潮は毎手一列ずつ引く。干上がった行には打てない (列は順繰りに巡る)。', kind: 'stone', icon: 'shiomachigo' },
+            { file: 'shippogo.html', name: 'SHIPPOGO', jp: '七宝碁', desc: '四方すべてを同色の石で囲んだ石は七宝に彩られる — 終局時+0.5目。', kind: 'stone', icon: 'shippogo' },
+            { file: 'shojigo.html', name: 'SHOJIGO', jp: '建具碁', desc: '盤上の枠に石をはめて建具を作る。枠内の石は呼吸+1、枠を全て埋めると建具完成で得点。', kind: 'stone', icon: 'shojigo' },
+            { file: 'shoyugo.html', name: 'SHOYUGO', jp: '醤油碁', desc: '醤油蔵の石は6手ごとに熟成が進む。終局時に熟成度×1目の風味。', kind: 'stone', icon: 'shoyugo' },
+            { file: 'shrinkgo.html', name: 'SHRINKGO', jp: '縮小碁', desc: '10手ごとに盤の外周が崩落して縮む。縁の石は奈落に呑まれる。', kind: 'stone', icon: 'shrinkgo' },
+            { file: 'shugendo.html', name: 'SHUGENDO', jp: '修験碁', desc: '四隅の星は行場。行場で打った石は修行し、終局まで残れば+2点。', kind: 'stone', icon: 'shugendo' },
+            { file: 'siegego.html', name: 'SIEGEGO', jp: '攻城碁', desc: '城壁で二分された盤。敵本丸の城点に石を入れれば即勝利。', kind: 'stone', icon: 'siegego' },
+            { file: 'sigilgo.html', name: 'SIGILGO', jp: '印章碁', desc: '自分の石で3x3マスの印章を刻むと、その区域は二度と取られず+9点になる。', kind: 'stone', icon: 'sigilgo' },
+            { file: 'silkwormgo.html', name: 'SILKWORMGO', jp: '養蚕碁', desc: '桑畑の蚕は10手で繭を収穫して+1点。跡地にはまた蚕を放てる。', kind: 'stone', icon: 'silkwormgo' },
+            { file: 'simulgo.html', name: 'SIMULGO', jp: '見合碁', desc: '相手の直前の着手の点対称に打つと「見合い」— 双方の石が無効で消える。', kind: 'stone', icon: 'simulgo' },
+            { file: 'sinkinggo.html', name: 'SINKINGGO', jp: '水没碁', desc: 'ダムに沈む村。12手ごとに水位が1行上がり、沈んだ石は相手のアゲハマに。', kind: 'stone', icon: 'sinkinggo' },
+            { file: 'skeletongo.html', name: 'SKELETONGO', jp: '骨格碁', desc: '着手は2連結の「骨」ピース (回転ボタンで縦横)。終局時、石2個以上の連ごとに+2目。', kind: 'stone', icon: 'skeletongo' },
+            { file: 'skimminggo.html', name: 'SKIMMINGGO', jp: '水切碁', desc: '石は水切り石。置いた時の空き隣接数+1回だけ捕獲に耐える (跳ねる)。', kind: 'stone', icon: 'skimminggo' },
+            { file: 'sledgo.html', name: 'SLEDGO', jp: '橇碁', desc: '下半分は雪原。雪原の自石に向かって着手すると橇が滑り、直線上の孤立敵石を押し出す。', kind: 'stone', icon: 'sledgo' },
+            { file: 'slimego.html', name: 'SLIMEGO', jp: '粘体碁', desc: '取られた石の跡は粘液になり、相手は次の1手だけ置けない。', kind: 'stone', icon: 'slimego' },
+            { file: 'sluicego.html', name: 'SLUICEGO', jp: '水門碁', desc: '中央の水路を8手ごとの放水が洗う。水路の石は下流へ流される。', kind: 'stone', icon: 'sluicego' },
+            { file: 'snipego.html', name: 'SNIPEGO', jp: '狙撃碁', desc: '1手を使って狙撃点を設定。相手がその点に打つと石を撃ち落とす。', kind: 'stone', icon: 'snipego' },
+            { file: 'snowgo.html', name: 'SNOWGO', jp: '雪崩碁', desc: '8手ごとに雪線が1段下りる (最大4段)。雪線より上は凍結: 着手不可・連も取れない。', kind: 'weather', icon: 'snowgo' },
+            { file: 'snowpilego.html', name: 'SNOWPILEGO', jp: '積雪碁', desc: '30手ごとの大雪で全石が埋まり地形化。15手後の春に解けて復活する。', kind: 'stone', icon: 'snowpilego' },
+            { file: 'sojutsugo.html', name: 'SOJUTSUGO', jp: '槍術碁', desc: '3連以上の直線は槍 — 槍先から3点以内の正面には敵は踏み込めない。', kind: 'stone', icon: 'sojutsugo' },
+            { file: 'sokuryogo.html', name: 'SOKURYUGO', jp: '測量碁', desc: 'その行・列に初めて自石を置くと測量点+1ずつ。', kind: 'stone', icon: 'sokuryogo' },
+            { file: 'sometsukego.html', name: 'SOMETSUKEGO', jp: '青花碁', desc: '文様点を敵石で彩ると+2目。染付文様は終局まで青く残る。', kind: 'stone', icon: 'sometsukego' },
+            { file: 'sonatago.html', name: 'SONATAGO', jp: '楽章碁', desc: '連は楽章を追う: 呈示部(独立単石)→展開部(連結増殖)→再現部(同数の別連) で構成が完結し得点。', kind: 'stone', icon: 'sonatago' },
+            { file: 'songbirdgo.html', name: 'SONGBIRDGO', jp: '鳴禽碁', desc: '敵石のいない開けた場所に置くと石が囀り、縄張りを主張して+1目。', kind: 'stone', icon: 'songbirdgo' },
+            { file: 'sorobango.html', name: 'SOROBANGO', jp: '算盤碁', desc: '石は算盤の珠。同じ列に自石が5つ並ぶと繰上り、その5石を払って桁点+5。', kind: 'stone', icon: 'sorobango' },
+            { file: 'sotchigo.html', name: 'SOTCHIGO', jp: '装丁碁', desc: '着手の隣に四方を自石で囲まれた空点(綴じ目)ができると+3。', kind: 'stone', icon: 'sotchigo' },
+            { file: 'sparrgo.html', name: 'SPARRGO', jp: '対打碁', desc: '敵連に接する着手は対打になる。連の大きい方が勝ち、敗連は全滅。互角なら打ち込み石が弾かれる。', kind: 'stone', icon: 'sparrgo' },
+            { file: 'spearheadgo.html', name: 'SPEARHEADGO', jp: '矛先碁', desc: '着手で直線に3連以上を作ると矛になる。矛の延長線上3マス以内の敵石を貫いて取る。', kind: 'stone', icon: 'spearheadgo' },
+            { file: 'spellcirclego.html', name: 'SPELLCIRCLEGO', jp: '魔法陣碁', desc: '自石で2x2の魔法陣を描くと大魔法が発動。周囲の敵石を一掃する。', kind: 'stone', icon: 'spellcirclego' },
+            { file: 'spirego.html', name: 'SPIREGO', jp: '塔頂碁', desc: '塔の断面の盤。上に行くほど狭くなり、頂上は1点の争奪戦。', kind: 'stone', icon: 'spirego' },
+            { file: 'spitgo.html', name: 'SPITGO', jp: '砂州碁', desc: '中央の海を分断する砂州(連結部)。唯一の通路を巡る陸繋の争い。', kind: 'stone', icon: 'spitgo' },
+            { file: 'splitturngo.html', name: 'SPLITTURNGO', jp: '分掌碁', desc: '手番は2段構え: 配置フェーズと除去フェーズ (敵石1個除去) が交互。', kind: 'mirror', icon: 'splitturngo' },
+            { file: 'spokego.html', name: 'SPOKEGO', jp: '車軸碁', desc: '中心から放射する8本の筋のみ着手可能。車輪の軸上での接近戦。', kind: 'stone', icon: 'spokego' },
+            { file: 'spotgo.html', name: 'SPOTGO', jp: '勘所碁', desc: '星の「勘どころ」に置いた石は終局時に+2の直感ボーナスになる。', kind: 'stone', icon: 'spotgo' },
+            { file: 'springboardgo.html', name: 'SPRINGBOARDGO', jp: '跳床碁', desc: '中央斜め4ヶ所はトランポリン。そこに置いた石は盤端方向へ2マス跳ね飛ぶ。', kind: 'stone', icon: 'springboardgo' },
+            { file: 'springgo.html', name: 'SPRINGGO', jp: '季節碁', desc: '5手周期の季節: 春=石が芽吹く / 秋=アゲハマ無し / 冬=石は凍り取れない。', kind: 'weather', icon: 'springgo' },
+            { file: 'stairsgo.html', name: 'STAIRSGO', jp: '階段碁', desc: '階段状の盤。石は柱を落ちるように転がり、各列の踏み面に着地する。', kind: 'stone', icon: 'stairsgo' },
+            { file: 'stallgo.html', name: 'STALLGO', jp: '夜店碁', desc: '星の点が夜店の屋台。屋台を出し、客(石)を集めて得点。', kind: 'stone', icon: 'stallgo' },
+            { file: 'stampgo.html', name: 'STAMPGO', jp: '判子碁', desc: '石は判子。捺した点に印が残り、終局時に印のある点は1つ+1目。', kind: 'stone', icon: 'stampgo' },
+            { file: 'stancego.html', name: 'STANCEGO', jp: '駆引碁', desc: '強気/弱気を宣言。取りの瞬間の構えの組合せでアゲハマが変わる駆引の碁。', kind: 'stone', icon: 'stancego' },
+            { file: 'starcyclego.html', name: 'STARCYCLEGO', jp: '星霜碁', desc: '盤上の星が歳月で一巡し吉方が変わる。吉方の点に打つと1アゲハマの恵み。', kind: 'stone', icon: 'starcyclego' },
+            { file: 'stickygo.html', name: 'STICKYGO', jp: '粘着碁', desc: '敵石に接着した石は呼吸を吸い取られる。接触は互いを窒息させる粘着戦。', kind: 'stone', icon: 'stickygo' },
+            { file: 'stiltgo.html', name: 'STILTGO', jp: '竹馬碁', desc: '星点は竹馬の足場。星に置くと隣接する敵石を上から踏み潰す。', kind: 'stone', icon: 'stiltgo' },
+            { file: 'stonekickgo.html', name: 'STONEKICKGO', jp: '石蹴碁', desc: '置くと隣の味方石を蹴り飛ばす。盤端まで運ぶごとに+1点。', kind: 'stone', icon: 'stonekickgo' },
+            { file: 'stormgo.html', name: 'STORMGO', jp: '嵐碁', desc: '15手ごとの「嵐手番」は石ではなく壁を1個置く。', kind: 'wall', icon: 'stormgo' },
+            { file: 'stowagego.html', name: 'STOWAGEGO', jp: '積荷碁', desc: '自石が左右半分にほぼ均等 (差1以内・4個以上) に積まれると+2目。崩れると再挑戦。', kind: 'stone', icon: 'stowagego' },
+            { file: 'strathgo.html', name: 'STRATHGO', jp: '段丘2碁', desc: '河岸段丘の盤。上の段ほど古く硬い — 段の高さ分だけ呼吸点が増える。', kind: 'stone', icon: 'strathgo' },
+            { file: 'stratigraphygo.html', name: 'STRATIGRAPHYGO', jp: '層積碁', desc: '石は地層に沈積する。28手以上生き残った石は化石となり1つ+1目。', kind: 'stone', icon: 'stratigraphygo' },
+            { file: 'stringfieldgo.html', name: 'STRINGFIELDGO', jp: '絃楽碁', desc: '一直線3石以上の連は絃。絃を張ると両端に隣接する孤立敵石が振動で落ちる。', kind: 'stone', icon: 'stringfieldgo' },
+            { file: 'stripgo.html', name: 'STRIPGO', jp: '帯碁', desc: '幅5の帯盤は上下がループする無限戦線。帯を囲い込む閉塞戦。', kind: 'stone', icon: 'stripgo' },
+            { file: 'subsidencego.html', name: 'SUBSIDENCEGO', jp: '沈降碁', desc: '20手ごとに盤の外周が1列ずつ海に沈む。石ごと沈み、盤は徐々に小さくなる。', kind: 'stone', icon: 'subsidencego' },
+            { file: 'subzerogo.html', name: 'SUBZEROGO', jp: '氷点碁', desc: '中央4x4の氷点下区域の石は凍結し、取られることも囲みとしても動かない。', kind: 'stone', icon: 'subzerogo' },
+            { file: 'suggestiongo.html', name: 'SUGGESTIONGO', jp: '暗示碁', desc: '空点に暗示をかける。相手がそこに置くと暗示が功を奏し宣言者に1アゲハマ。', kind: 'stone', icon: 'suggestiongo' },
+            { file: 'sukigo.html', name: 'SUKIGO', jp: '数奇碁', desc: '数寄屋の庭 (二隅の区域) に孤石を置けば風流点+2目。', kind: 'stone', icon: 'sukigo' },
+            { file: 'sumigo.html', name: 'SUMIGO', jp: '墨摺碁', desc: '石は墨。硯の上で打つと濃く摺れ、濃い石は取られると2点のアゲハマになる。', kind: 'stone', icon: 'sumigo' },
+            { file: 'summitflaggo.html', name: 'SUMMITFLAGGO', jp: '登頂碁2', desc: '天元の山頂に旗(石)を立て、相手の1手を耐え抜けば登頂成功。中央を巡る攻防。', kind: 'stone', icon: 'summitflaggo' },
+            { file: 'summongo.html', name: 'SUMMONGO', jp: '召喚碁', desc: '2石以上を一括で取られると生贄が溜まる。召喚獣を呼び出せ。', kind: 'stone', icon: 'summongo' },
+            { file: 'sunflowergo.html', name: 'SUNFLOWERGO', jp: '向日葵碁', desc: '太陽の方角は8手ごとに北→東→南→西と回る。向いた先が空か味方の石は日向となり終局時+1目。', kind: 'stone', icon: 'sunflowergo' },
+            { file: 'sunpillargo.html', name: 'Sun Pillar-Go', jp: '光柱碁', desc: '縦筋に同色4石以上並ぶと光柱が立ち、その筋の石は取れない。', kind: 'stone', icon: 'sunpillargo' },
+            { file: 'supplylinego.html', name: 'SUPPLYLINEGO', jp: '兵糧碁', desc: '連は手番ごとに兵糧を食べる。兵糧が尽きると最大の連の兵士が脱走する。敵を取ると兵糧を鹵獲。', kind: 'stone', icon: 'supplylinego' },
+            { file: 'sutegomago.html', name: 'SUTEGOMAGO', jp: '捨駒碁', desc: '「捨駒」ボタンで次の石に印 — 取られたとき隣の呼吸1以下の敵連を道連れにする。', kind: 'stone', icon: 'sutegomago' },
+            { file: 'suzurigo.html', name: 'SUZURIGO', jp: '硯相碁', desc: '四分区の硯で墨を摺り、十分に溜まると盤上の着手で揮毫得点。', kind: 'stone', icon: 'suzurigo' },
+            { file: 'swapstonego.html', name: 'SWAPSTONEGO', jp: '交替石碁', desc: '石は置いてから5手ごとに色が反転。味方が敵に化ける。', kind: 'stone', icon: 'swapstonego' },
+            { file: 'symbiosisgo.html', name: 'SYMBIOSISGO', jp: '共生碁', desc: '自石と敵石は共生関係。取られた連に接した自石も連鎖して死ぬ。', kind: 'stone', icon: 'symbiosisgo' },
+            { file: 'symmetrygo.html', name: 'SYMMETRYGO', jp: '対称碁', desc: '中央縦軸で镜像の位置に自分の石があれば、置いた瞬間+2目の対称美ボーナス。', kind: 'stone', icon: 'symmetrygo' },
+            { file: 'syzygygo.html', name: 'SYZYGYGO', jp: '交食碁', desc: '15の倍数手は交食。その手で取った石は1つにつき+1点。', kind: 'stone', icon: 'syzygygo' },
+            { file: 'taggo.html', name: 'TAGGO', jp: '組手碁', desc: '左の手(L)・右の手(R)のタッグ戦。Lは左半分・Rは右半分にしか打てない (中央列は共用)。', kind: 'stone', icon: 'taggo' },
+            { file: 'taketombogo.html', name: 'TAKETOMBOGO', jp: '竹蜻碁', desc: '12手ごとに置いた石が竹とんぼのように回転して2つ先の空点へ飛ぶ。', kind: 'stone', icon: 'taketombogo' },
+            { file: 'takeyabugo.html', name: 'TAKEYABUGO', jp: '竹藪碁', desc: '孤立して置いた竹は地下茎を伸ばし、自分の手番に周囲8方向へ筍を1本出す (各竹1本まで)。', kind: 'stone', icon: 'takeyabugo' },
+            { file: 'takotsubogo.html', name: 'TAKOTSUBOGO', jp: '蛸壺碁', desc: '蛸壺に入った石は9手ごとの壺上げで獲られる。壺は4箇所。', kind: 'stone', icon: 'takotsubogo' },
+            { file: 'takuhatsugo.html', name: 'TAKUHATSUGO', jp: '托鉢碁', desc: '味方の石に隣接しない孤高の石は托鉢僧 — 終局時1個につき+1目の徳を積む。', kind: 'stone', icon: 'takuhatsugo' },
+            { file: 'takuhongo.html', name: 'TAKUHONGO', jp: '拓本碁', desc: '5石以上の敵連を取ると拓本(碑文点=石数)が得られる。', kind: 'stone', icon: 'takuhongo' },
+            { file: 'tamagushigo.html', name: 'TAMAGUSHIGO', jp: '玉串碁', desc: '「玉串」で任意の空点に石を奉納 (連結不要)。奉納石を含む連は神宿り+1呼吸。', kind: 'stone', icon: 'tamagushigo' },
+            { file: 'tanabatago.html', name: 'TANABATAGO', jp: '七夕碁', desc: '星の笹に石の短冊を吊るせ。終局時に星の上の自石1つにつき+2点。', kind: 'stone', icon: 'tanabatago' },
+            { file: 'tansugo.html', name: 'TANSUGO', jp: '箪笥碁', desc: '四隅の3x3は箪笥の引出し。自分の石を4つ以上収めた引出しごとに+7目。', kind: 'stone', icon: 'tansugo' },
+            { file: 'tanukigo.html', name: 'TANUKIGO', jp: '狸囃碁', desc: '味方2石以上の輪に置くと腹鼓。隣の孤立した敵石を1つ化かして連れ去る。', kind: 'stone', icon: 'tanukigo' },
+            { file: 'tanzakugo.html', name: 'TANZAKUGO', jp: '短冊碁', desc: '幅2の長い短冊盤。上下の端は折り返して繋がる輪環。', kind: 'stone', icon: 'tanzakugo' },
+            { file: 'targetgo.html', name: 'TARGETGO', jp: '的当碁', desc: '天元は射的台。天元に置くと十字に弾が飛び、各方角最初の敵石を撃墜。', kind: 'stone', icon: 'targetgo' },
+            { file: 'tarotgo.html', name: 'TAROTGO', jp: '占札碁', desc: '着手ごとにタロットを引く: 太陽/星/月/塔/運命の効果がその場で適用される。', kind: 'stone', icon: 'tarotgo' },
+            { file: 'tatego.html', name: 'TATEGO', jp: '楯碁', desc: '両側 (左右or上下) を同色で挟まれた石は楯。楯を含む連は+1呼吸。', kind: 'stone', icon: 'tatego' },
+            { file: 'temizugo.html', name: 'TEMIZUGO', jp: '手水碁', desc: '上下辺中央は手水舎。そこに打つとつながる自石すべてが清められ、終局に1石ごと+1点。', kind: 'stone', icon: 'temizugo' },
+            { file: 'templego.html', name: 'TEMPLEGO', jp: '寺院碁', desc: '中央3x3の寺院区域に接する自分の連が4石以上になった側が即勝ち。', kind: 'stone', icon: 'templego' },
+            { file: 'tenmokugo.html', name: 'TENMOKUGO', jp: '天目碁', desc: '天目の窯元 (星位) への着手で曜変: 盤のどこかの敵石1個が消えるか即+3目。', kind: 'stone', icon: 'tenmokugo' },
+            { file: 'termitego.html', name: 'TERMITAGO', jp: '蟻塚碁', desc: 'シロアリの通路 (壁) が盤を這い回り、通路上の石は食われて消える。', kind: 'wall', icon: 'termitego' },
+            { file: 'terracego.html', name: 'TERRACEGO', jp: '段丘碁', desc: '棚田状の3段盤。段差を挟む同色石は連にならない — 段差越しは重い手。', kind: 'stone', icon: 'terracego' },
+            { file: 'tesujigo.html', name: 'TESUJIGO', jp: '手筋碁', desc: '手筋が効く碁: 相手連をアタリにする手は +2目、自軍連同士を繋ぐ手は +1目。', kind: 'stone', icon: 'tesujigo' },
+            { file: 'thatchgo.html', name: 'THATCHGO', jp: '茅葺碁', desc: '斜め上左右に自石がある所へ葺くと+3。', kind: 'stone', icon: 'thatchgo' },
+            { file: 'threeleggo.html', name: 'THREELEGGO', jp: '二人三碁', desc: '自分の石がある限り、着手は必ず既存の石に隣接。繋がって歩く碁。', kind: 'stone', icon: 'threeleggo' },
+            { file: 'threewaygo.html', name: 'THREEWAYGO', jp: '三方碁', desc: '黒・白・赤の3人対局。順番に打ち、3人連続パスで終局。順位コミで後手を補正。', kind: 'stone', icon: 'threewaygo' },
+            { file: 'thronego.html', name: 'THRONEGO', jp: '昇殿碁', desc: '殿上5箇所 (中央十字) に自石を3箇所以上置いた側が即位して勝利。', kind: 'stone', icon: 'thronego' },
+            { file: 'thundercloudgo.html', name: 'THUNDERCLOUDGO', jp: '雷雲碁', desc: '雷雲が盤を漂い、16手ごとに落雷。雲の下の3x3の石が吹き飛ぶ。', kind: 'stone', icon: 'thundercloudgo' },
+            { file: 'tidepoolgo.html', name: 'TIDEPOOLGO', jp: '潮間碁', desc: '10手周期の潮汐: 満潮時は外周1段が水没し着手不可、石は流出する。', kind: 'weather', icon: 'tidepoolgo' },
+            { file: 'tightropego.html', name: 'TIGHTROPEGO', jp: '綱渡碁', desc: '中央横一列は綱。綱上の石は毎手自動で対岸へ歩き、渡りきると+2目。', kind: 'stone', icon: 'tightropego' },
+            { file: 'tilengo.html', name: 'TILENGO', jp: '敷詰碁', desc: '盤は7枚のタイルに分割。終局時、各タイルで石数多数の側がタイル全域を領地とする。', kind: 'stone', icon: 'tilengo' },
+            { file: 'tithego.html', name: 'TITHEGO', jp: '什一碁', desc: '3石以上を取ると約1割 (最低1個) が「税」として相手のアゲハマになる。', kind: 'stone', icon: 'tithego' },
+            { file: 'tobiishigo.html', name: 'TOBIISHIGO', jp: '飛石碁', desc: '自分の石に隣接する点には打てない — 全ての石は庭に散らばる飛石。', kind: 'stone', icon: 'tobiishigo' },
+            { file: 'tofugo.html', name: 'TOFUGO', jp: '豆腐碁', desc: 'にがりの点に触れる連は凝固して豆腐に。終局時1連につき+3目。', kind: 'stone', icon: 'tofugo' },
+            { file: 'tokogo.html', name: 'TOKOGO', jp: '床飾碁', desc: '上下辺の床の間(1x3)に軸と花=石を飾る。2石以上飾った床の間ごとに+6目。', kind: 'stone', icon: 'tokogo' },
+            { file: 'tokyogo.html', name: 'TOKYOGO', jp: '組物碁', desc: '自石に上下を挟まれた石は斗栱。組むと+2、その連は呼吸+1。', kind: 'stone', icon: 'tokyogo' },
+            { file: 'tollgo.html', name: 'TOLLGO', jp: '弔鐘碁', desc: '石が取られるたびに弔鐘が鳴り、全ての石が震源地から1歩ずつ外へ押される。', kind: 'stone', icon: 'tollgo' },
+            { file: 'tonego.html', name: 'TONEGO', jp: '音石碁', desc: '列ごとにドレミの音が割り当てられる。和音の同色隣接は+1目、不協和は-1目。', kind: 'stone', icon: 'tonego' },
+            { file: 'topspingo.html', name: 'TOPSPINGO', jp: '独楽碁', desc: '置いた石は独楽のように回転し、自分の次の2手の間は取れない。止まれば普通の石。', kind: 'stone', icon: 'topspingo' },
+            { file: 'tossengo.html', name: 'TOSSENGO', jp: '投扇碁', desc: '的に最も近い石の持ち主が、8手ごとの審判で+1目を得る投扇興。', kind: 'stone', icon: 'tossengo' },
+            { file: 'totalitygo.html', name: 'TOTALITYGO', jp: '日食碁', desc: '9手ごとの皆既日食で全石が影になり取れない。置いた石は次の1手も影に残る。', kind: 'stone', icon: 'totalitygo' },
+            { file: 'toujigo.html', name: 'TOUJIGO', jp: '湯治碁', desc: '上段の湯治場(温泉区域)に石を浸けると傷が癒え、浸かった石は終局時に+2目。', kind: 'stone', icon: 'toujigo' },
+            { file: 'tracego.html', name: 'TRACEGO', jp: '追跡碁', desc: '自陣の基点から石の連鎖を伸ばし、中央の目標物まで繋げた側が追跡成功で勝ち。', kind: 'stone', icon: 'tracego' },
+            { file: 'tradego.html', name: 'TRADEGO', jp: '交易碁', desc: '4つの港に石を置くと資金+1。2金で2連「大船石」を買える。', kind: 'stone', icon: 'tradego' },
+            { file: 'traitorgo.html', name: 'TRAITORGO', jp: '仮面碁', desc: '各1回、敵石1個を「隠し駒」に変えられる — 実は自石だったという裏切り。', kind: 'stone', icon: 'traitorgo' },
+            { file: 'trenchgo.html', name: 'TRENCHGO', jp: '海溝碁', desc: '中央を深い海溝が縦断する分断盤。左右は直接近傍しない。', kind: 'stone', icon: 'trenchgo' },
+            { file: 'trialgo.html', name: 'TRIALGO', jp: '試練碁', desc: '四辺の中点が関門。関門に自石を置けば+2目 (各関門1回・両者奪い合い)。', kind: 'stone', icon: 'trialgo' },
+            { file: 'trickgo.html', name: 'TRICKGO', jp: '悪戯碁', desc: '8手ごとに着手の隣へ悪戯インク。仕掛けた相手の次の1手だけその点は打てない。', kind: 'stone', icon: 'trickgo' },
+            { file: 'triggergo.html', name: 'TRIGGERGO', jp: '引金碁', desc: '盤の縁は引金。縁に置くとその列/行の石が全て連鎖爆発する。', kind: 'stone', icon: 'triggergo' },
+            { file: 'troopgo.html', name: 'TROOPGO', jp: '猿山碁', desc: '最大の連が猿の群れ。群れを自己最大に育てるたびボスへ貢物+1目。', kind: 'stone', icon: 'troopgo' },
+            { file: 'trumpgo.html', name: 'TRUMPGO', jp: '切札碁2', desc: '各1回「切り札」: その着手に隣接する敵の連を呼吸に関係なく全て取れる。', kind: 'stone', icon: 'trumpgo' },
+            { file: 'tsubogo.html', name: 'TSUBOGO', jp: '経穴碁', desc: '星の点は経穴。経穴を含む連は経脈が通り+2呼吸。', kind: 'stone', icon: 'tsubogo' },
+            { file: 'tsugitego.html', name: 'TSUGITEGO', jp: '継手碁', desc: '着手が離れた自連を2つ以上継ぐと継手報酬(継いだ数-1)x2。', kind: 'stone', icon: 'tsugitego' },
+            { file: 'tsuitatego.html', name: 'TSUITATEGO', jp: '衝立碁', desc: '「衝立」ボタンで構えると次の一手が一枚壁(視線を遮る衝立)になる。各側1回。', kind: 'stone', icon: 'tsuitatego' },
+            { file: 'tsukego.html', name: 'TSUKEGO', jp: 'ツケ碁', desc: 'ツケ (自軍に触れず敵石だけに接する着手) で触れた敵石を「封じ」る — 封じられた石には隣接着手できない。', kind: 'stone', icon: 'tsukego' },
+            { file: 'tsukemonogo.html', name: 'TSUKEMONOGO', jp: '漬物碁', desc: '糠床 (中央) に漬けた石は10手の間だけ取られない。漬かれば普通の石。', kind: 'stone', icon: 'tsukemonogo' },
+            { file: 'tsukimigo.html', name: 'TSUKIMIGO', jp: '月見碁', desc: '天元は月。月を囲む8座に団子(石)を供えておくと終局時に+1ずつ。', kind: 'stone', icon: 'tsukimigo' },
+            { file: 'tsukiyamago.html', name: 'TSUKIYAMAGO', jp: '築山碁', desc: '星点は築山候補地。半数以上を占拠すれば主景完成で即勝ち。占拠ごとに+4目。', kind: 'stone', icon: 'tsukiyamago' },
+            { file: 'tsukubaigo.html', name: 'TSUKUBAIGO', jp: '蹲踞碁', desc: '四隅の蹲踞(つくばい)に置くと手が清められ、取られた自石2つ分が帳消しになる。', kind: 'stone', icon: 'tsukubaigo' },
+            { file: 'tsukumogo.html', name: 'TSUKUMOGO', jp: '付喪碁', desc: '8手生き延びた古い石は付喪神に化けて敵色になる。育てるも捨てるも駆け引き。', kind: 'stone', icon: 'tsukumogo' },
+            { file: 'tsumego.html', name: 'TSUMEGO', jp: '詰碁', desc: 'アタリを3連続でかけ続ける「詰み」の連鎖を完成させると即勝ち。', kind: 'stone', icon: 'tsumego' },
+            { file: 'tsumikigo.html', name: 'TSUMIKIGO', jp: '積木碁', desc: '石は積み木。5-9石の連は安定して呼吸+1、10石以上の連は頭でっかちで呼吸-1。', kind: 'stone', icon: 'tsumikigo' },
+            { file: 'tsunatorigo.html', name: 'TSUNATORIGO', jp: '綱取碁', desc: '1手で5個以上の敵石を取る大一番に勝てば横綱の称号 — 終局時+3目。', kind: 'stone', icon: 'tsunatorigo' },
+            { file: 'tuggo.html', name: 'TUGGO', jp: '綱引碁', desc: '中央の綱標を引き合う。敵陣への侵入数で標が動き、端まで引けば勝利。', kind: 'stone', icon: 'tuggo' },
+            { file: 'tunnelgo.html', name: 'TUNNELGO', jp: '隧道碁', desc: '4つの隧道入口 (◇) に打つと出口へ石が瞬間移動する。出口が塞がると使えない。', kind: 'stone', icon: 'tunnelgo' },
+            { file: 'twinboardgo.html', name: 'TWINBOARDGO', jp: '双盤碁', desc: '表盤と裏盤の2枚の盤。「盤反転」で入れ替わり、地は両盤の合計。', kind: 'stone', icon: 'twinboardgo' },
+            { file: 'twinringgo.html', name: 'TWINRINGGO', jp: '双環碁', desc: '2つの環が1点で繋がる8の字盤。接点の橋渡しが両環の命綱。', kind: 'stone', icon: 'twinringgo' },
+            { file: 'uchiagego.html', name: 'UCHIAGEGO', jp: '花火碁', desc: '各側8手目は打ち上げ花火。石が上空で開き、4斜めの空点に自石が咲く。', kind: 'stone', icon: 'uchiagego' },
+            { file: 'ukaigo.html', name: 'UKAIGO', jp: '鵜飼碁', desc: '獲った側の着手石は鵜になる。捕獲のたび+1 (最大5) の鮎を咥える。', kind: 'stone', icon: 'ukaigo' },
+            { file: 'umeboshigo.html', name: 'UMEBOSHIGO', jp: '梅干碁', desc: '梅の木の下の石は8手ごとに塩漬けされて梅干に。終局時1個+2目。', kind: 'stone', icon: 'umeboshigo' },
+            { file: 'unbango.html', name: 'UNBANGO', jp: '雲版碁', desc: '8手ごとに雲版が鳴って禅の刻が進む。鳴るたびに両者へ+1目の功徳。', kind: 'stone', icon: 'unbango' },
+            { file: 'underminego.html', name: 'UNDERMINEGO', jp: '掘削碁', desc: '「掘削」→自石を選ぶと坑夫が消え、隣接する敵石を全て崩して獲る (各側4回)。', kind: 'stone', icon: 'underminego' },
+            { file: 'unengo.html', name: 'Un-Go', jp: '暈碁', desc: '18手周期で暈が出て3手後に嵐。嵐は呼吸1以下の連を全て洗い流す。', kind: 'stone', icon: 'unengo' },
+            { file: 'unevengo.html', name: 'UNEVENGO', jp: '非対称碁', desc: '非対称ルール: 黒は毎手+1石の数で、白は1石連が不屈の強さで戦う。コミなし。', kind: 'stone', icon: 'unevengo' },
+            { file: 'upliftgo.html', name: 'UPLIFTGO', jp: '隆起碁', desc: '12手ごとに盤の一部が隆起して新しい高地になる。高地の石は呼吸+1。', kind: 'stone', icon: 'upliftgo' },
+            { file: 'upsidedowngo.html', name: 'UPSIDEDOWNGO', jp: '逆さ碁', desc: '着手は盤の反対側に現れる。常に180度回転して読み直す逆さまの碁。', kind: 'stone', icon: 'upsidedowngo' },
+            { file: 'uruugo.html', name: 'URUUGO', jp: '閏年碁', desc: '4手ごとに閏が入り、打った側がそのままもう一手打てる。閏は白黒交互に巡る。', kind: 'stone', icon: 'uruugo' },
+            { file: 'usuigo.html', name: 'Usui-Go', jp: '雨水碁', desc: '9手ごとに雨が帯を下ろし、その3行が泥になる。泥の上の石は以後ずっと取れない。', kind: 'stone', icon: 'usuigo' },
+            { file: 'valleygo.html', name: 'VALLEYGO', jp: '谷間碁', desc: '両側を崖に挟まれた峡谷の盤。谷底 (中央行) の石は1つ余分に呼吸する。', kind: 'stone', icon: 'valleygo' },
+            { file: 'vampirogo.html', name: 'VAMPIROGO', jp: '寄生碁', desc: '敵石に隣接して打った石は寄生する。寄生石は自分の手番の終わりに隣の敵石を1つ吸い取る。', kind: 'stone', icon: 'vampirogo' },
+            { file: 'viscerago.html', name: 'VISCERAGO', jp: '五臓碁', desc: '盤は五臓の体。五臓全てに石を置くと気血が巡り全連+1呼吸。', kind: 'stone', icon: 'viscerago' },
+            { file: 'volcango2.html', name: 'VOLCANGO', jp: '噴火碁', desc: '天元の火山が20手ごとに噴火。溶岩流が一直線上の石を全て焼失する。', kind: 'weather', icon: 'volcango2' },
+            { file: 'voltagego.html', name: 'VOLTAGEGO', jp: '電圧碁', desc: '置いた石と最初に接触した敵石が中和して両方消える (1手1対のみ)。', kind: 'stone', icon: 'voltagego' },
+            { file: 'vortex2go.html', name: 'VORTEX2GO', jp: '旋風碁', desc: '石を置くと周囲8マスが時計回りに1マスずつ環流する。連は渦で千切れる。', kind: 'stone', icon: 'vortex2go' },
+            { file: 'wafergo.html', name: 'WAFERGO', jp: '薄板碁', desc: '盤は表と裏の2面。5手ごとに裏返って別盤として進行する (裏返ると左右反転)。', kind: 'stone', icon: 'wafergo' },
+            { file: 'wakago.html', name: 'WAKAGO', jp: '和歌碁', desc: '句は石、結びは間。2点空けて同色が向かい合えば歌が結ばれ+1目。', kind: 'stone', icon: 'wakago' },
+            { file: 'washigo.html', name: 'WASHIGO', jp: '和紙碁', desc: '和紙の石は水路に入ると濡れ、8手ごとの雨で破れて消える。', kind: 'stone', icon: 'washigo' },
+            { file: 'watago.html', name: 'WATAGO', jp: '綿石碁', desc: '石は綿。取られた連は潰れて半分しかアゲハマにならない (切り上げ)。', kind: 'stone', icon: 'watago' },
+            { file: 'waterwheelgo.html', name: 'WATERWHEELGO', jp: '水車碁', desc: '盤下を流れる水車。8手ごとに最下行の石が1マス東へ流され、端から零れると相手のアゲハマ。', kind: 'stone', icon: 'waterwheelgo' },
+            { file: 'wave2go.html', name: 'WAVE2GO', jp: '波動碁', desc: '着手の衝撃が波として伝播。距離2リングにある全ての石が外側へ1マス押し出される。', kind: 'stone', icon: 'wave2go' },
+            { file: 'weatheringgo.html', name: 'WEATHERINGGO', jp: '風化碁', desc: '石は30手で風化して砂になり、砂は12手で空に還る。永遠の地はない。', kind: 'stone', icon: 'weatheringgo' },
+            { file: 'whetstonego.html', name: 'WHETSTONEGO', jp: '研師碁', desc: '石は刃物。砥石に隣接して打つと研がれ、研がれた石を取られると相手に+1の切れ味点。', kind: 'stone', icon: 'whetstonego' },
+            { file: 'windinstgo.html', name: 'WINDINSTGO', jp: '管楽碁', desc: '行が音域。上2段 (高音) には孤立石は置けない。最下2段 (低音) の連は響きが太く+1目。', kind: 'stone', icon: 'windinstgo' },
+            { file: 'wishgo.html', name: 'WISHGO', jp: '流星碁', desc: '願いの点に相手が打つと流星が落ちて願いが叶い、その石は宣言者のものになる。', kind: 'stone', icon: 'wishgo' },
+            { file: 'wisteriago.html', name: 'WISTERIAGO', jp: '藤碁', desc: '星の点に置いた石は藤の棚。自分の手番ごとに真下へ花房が1つ垂れる (各棚3房まで)。', kind: 'stone', icon: 'wisteriago' },
+            { file: 'workshopgo.html', name: 'WORKSHOPGO', jp: '工房碁', desc: '素材の隣に置いて回収。素材2個で道具を鍛えると、次の着手に助っ人石が自動で付く。', kind: 'stone', icon: 'workshopgo' },
+            { file: 'wriggle.html', name: 'WRIGGLE', jp: '蠕動碁', desc: '「蠕動」で自石を1マス匍匐移動 (1手を消費)。移動でも通常の取りは発生する。', kind: 'stone', icon: 'wriggle' },
+            { file: 'yabusamego.html', name: 'YABUSAMEGO', jp: '流鏑碁', desc: '着手した石の行と列を馬が走り、一直線上の的を射抜く。的ごとに+1目 (各1回)。', kind: 'stone', icon: 'yabusamego' },
+            { file: 'yataigo.html', name: 'YATAIGO', jp: '屋台碁', desc: '同色3連以上の「屋台の列」に客が集まる。列の石1個につき+1目の賑わい。', kind: 'stone', icon: 'yataigo' },
+            { file: 'yeastgo.html', name: 'YEASTGO', jp: '酵母碁', desc: '甘い糖蜜の窪みでは酵母の石が8手ごとに出芽して増殖する。', kind: 'stone', icon: 'yeastgo' },
+            { file: 'yohengo.html', name: 'YOHENGO', jp: '窯変碁', desc: '着手時12%で石が窯変して相手の色に変わる (変化は双方に公平)。', kind: 'stone', icon: 'yohengo' },
+            { file: 'yomigo.html', name: 'YOMIGO', jp: '黄泉碁', desc: '15手ごとに黄泉の国(盤の裏)から両者の石が1つずつ這い出す。', kind: 'stone', icon: 'yomigo' },
+            { file: 'yorakugo.html', name: 'YORAKUGO', jp: '瓔珞碁', desc: '中央の堂(3x3)に連を繋げると瓔珞で飾られる。堂に接する連の石ごとに+1目。', kind: 'stone', icon: 'yorakugo' },
+            { file: 'yubago.html', name: 'YUBAGO', jp: '湯葉碁', desc: '横4連以上の石は湯葉の膜。終局時に膜の枚数 (長さ-3) が得点になる。', kind: 'stone', icon: 'yubago' },
+            { file: 'yukionnago.html', name: 'YUKIONNAGO', jp: '雪女碁', desc: '置いた石に触れた敵石は凍り、自分の次の手番で凍死する。隣の雪女を除けば解凍。', kind: 'stone', icon: 'yukionnago' },
+            { file: 'yuzengo.html', name: 'YUZENGO', jp: '友禅碁', desc: '同色3連以上の直線は絵羽模様。終局時に模様1本につき+2目。', kind: 'stone', icon: 'yuzengo' },
+            { file: 'zashikigo.html', name: 'ZASHIKIGO', jp: '座敷碁', desc: '上段の席ほど席次が高い座敷。上座+3目、中座+1目、下座はそのまま。', kind: 'stone', icon: 'zashikigo' },
+            { file: 'zazengo.html', name: 'ZAZENGO', jp: '座禅碁', desc: '中央5x5の座禅区域。敵に隣接されず静かに坐った石は心が安定して+3目。', kind: 'stone', icon: 'zazengo' },
+            { file: 'zigguratgo.html', name: 'ZIGGURATGO', jp: '神殿碁', desc: '自分の石の上に積み上げて神殿を建てる。Lv4の頂点に到達した側が即勝ち。', kind: 'stone', icon: 'zigguratgo' },
+            { file: 'zogango.html', name: 'ZOGANGO', jp: '象嵌碁', desc: '敵石に1つでも隣接する石は象嵌に嵌め込まれた文様 — 終局時+0.25目。', kind: 'stone', icon: 'zogango' },
+            { file: 'zuihitsugo.html', name: 'ZUIHITSUGO', jp: '随筆碁', desc: '徒然の文は孤石。終局時に同色と隣接しない石1つ+1目。', kind: 'stone', icon: 'zuihitsugo' },
+            // ==== WAVE3 GAMES END ====
+                    ];
+
+        const grid = document.getElementById('gameGrid');
+        const tiles = [];
+        // アイコン遅延描画: 表示域 ±300px のタイルだけ描画し、画面外は解放して再表示時に再描画
+        const iconIO = new IntersectionObserver(entries => {
+            for (const en of entries) {
+                const t = en.target;
+                if (en.isIntersecting) {
+                    if (!t._iconDrawn) { drawIcon(t._iconCv.getContext('2d'), t._icon, 56); t._iconDrawn = true; }
+                } else if (t._iconDrawn) {
+                    t._iconCv.getContext('2d').clearRect(0, 0, 56, 56);
+                    t._iconDrawn = false;
+                }
+            }
+        }, { rootMargin: '300px 0px' });
+        const gameCountEl = document.getElementById('gameCount');
+        const noResultsEl = document.getElementById('gameNoResults');
+        const searchInput = document.getElementById('gameSearch');
+        const searchClear = document.getElementById('gameSearchClear');
+        const favFilterBtn = document.getElementById('favFilterBtn');
+        const favCountEl = document.getElementById('favCount');
+        gameCountEl.textContent = `全${GAMES.length}種`;
+
+        // お気に入り (localStorage永続化。ゲームのfile名を保持)
+        const FAV_KEY = 'mamego-favs';
+        let favs = new Set();
+        try { favs = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch (e) { /* private mode等 */ }
+        let favOnly = false;
+        // games.js (マニフェスト) / ranking.js (夜間集計) 由来の付加情報
+        const GAME_META = {};
+        (window.MAMEGO_GAMES || []).forEach(g => { GAME_META[g.file] = g; });
+        const RANK = (window.MAMEGO_RANKING && window.MAMEGO_RANKING.games) || {};
+        const RANK_DATE = (window.MAMEGO_RANKING && window.MAMEGO_RANKING.generated) || '';
+        const NEW_MS = 30 * 24 * 3600 * 1000;
+        const nowMs = Date.now();
+        function saveFavs() {
+            try { localStorage.setItem(FAV_KEY, JSON.stringify([...favs])); } catch (e) {}
+        }
+        function updateFavCount() { favCountEl.textContent = favs.size ? `(${favs.size})` : ''; }
+        updateFavCount();
+        favFilterBtn.addEventListener('click', () => {
+            favOnly = !favOnly;
+            favFilterBtn.classList.toggle('fav-on', favOnly);
+            applyGameFilter(searchInput.value);
+        });
+        // 曖昧検索: NFKC正規化(全角→半角・大小統一) + カタカナ→ひらがな + 空白区切り複数語AND + 各語は部分一致 or 部分列(文字飛ばし順序一致)でヒット
+        function normSearch(s) {
+            return (s || '').normalize('NFKC').toLowerCase()
+                .replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+        }
+        function subseqHit(term, text) {
+            let i = 0;
+            for (const ch of text) { if (ch === term[i]) { i++; if (i >= term.length) return true; } }
+            return false;
+        }
+        function applyGameFilter(q) {
+            const terms = normSearch(q).split(/\s+/).filter(Boolean);
+            let shown = 0;
+            tiles.forEach(t => {
+                const hit = (!favOnly || favs.has(t._game.file)) &&
+                    (!terms.length || terms.every(term => t._hay.includes(term) || subseqHit(term, t._hay)));
+                t.style.display = hit ? '' : 'none';
+                if (hit) shown++;
+            });
+            const hasQuery = terms.length > 0;
+            noResultsEl.textContent = (favOnly && !favs.size)
+                ? 'お気に入りはまだありません — 各タイルの ★ で登録できます'
+                : '該当する囲碁がありません';
+            noResultsEl.classList.toggle('hidden', shown > 0);
+            searchClear.classList.toggle('hidden', !hasQuery);
+            gameCountEl.textContent = favOnly ? `★${shown}件 / 全${GAMES.length}種`
+                : (hasQuery ? `${shown}件 / 全${GAMES.length}種` : `全${GAMES.length}種`);
+        }
+        searchInput.addEventListener('input', e => applyGameFilter(e.target.value));
+        searchClear.addEventListener('click', () => { searchInput.value = ''; applyGameFilter(''); searchInput.focus(); });
+        GAMES.forEach((v, idx) => {
+            const a = document.createElement('a');
+            a.href = v.file;
+            a.className = 'tile group bg-white/70 hover:bg-white rounded-xl border border-[#cbb07a] transition-all p-3 flex items-center gap-3 hover:shadow-sm';
+            const cv = document.createElement('canvas');
+            cv.width = 56; cv.height = 56;
+            cv.className = 'shrink-0 rounded-lg bg-[#e4bb70]';
+            const body = document.createElement('div');
+            body.className = 'flex-1 min-w-0';
+            body.innerHTML = `
+                <div class="flex items-baseline gap-1.5">
+                    <span class="font-extrabold tracking-wide text-sm">${v.name}</span>
+                    <span class="text-[10px] font-bold opacity-60">${v.jp}</span>
+                </div>
+                <p class="text-[11px] opacity-70 mt-0.5 leading-snug">${v.desc}</p>`;
+            // マニフェスト由来バッジ: NEW (30日以内に追加) / 調整中 (health-flags.json)
+            const meta = GAME_META[v.file] || {};
+            const nameRow = body.querySelector('.flex');
+            if (meta.added && nowMs - new Date(meta.added).getTime() < NEW_MS) {
+                const b = document.createElement('span');
+                b.className = 'tile-badge badge-new';
+                b.textContent = 'NEW';
+                b.title = `追加: ${meta.added}`;
+                nameRow.appendChild(b);
+            }
+            if (meta.health) {
+                const b = document.createElement('span');
+                b.className = 'tile-badge badge-fix';
+                b.textContent = '調整中';
+                b.title = String(meta.health);
+                nameRow.appendChild(b);
+            }
+            const arrow = document.createElement('span');
+            arrow.className = 'text-lg opacity-25 group-hover:opacity-70 transition-all';
+            arrow.textContent = '▶';
+            const star = document.createElement('button');
+            star.type = 'button';
+            star.className = 'fav-star' + (favs.has(v.file) ? ' faved' : '');
+            star.textContent = '★';
+            star.title = 'お気に入り登録';
+            star.addEventListener('click', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (favs.has(v.file)) { favs.delete(v.file); }
+                else {
+                    favs.add(v.file);
+                    if (window.MAMEGO && MAMEGO.event) MAMEGO.event('fav/' + v.file.replace(/\.html$/, ''));
+                }
+                saveFavs();
+                star.classList.toggle('faved', favs.has(v.file));
+                updateFavCount();
+                if (favOnly) applyGameFilter(searchInput.value);
+            });
+            const rankB = document.createElement('span');
+            rankB.className = 'rank-badge hidden';
+            a.appendChild(star); a.appendChild(rankB); a.appendChild(cv); a.appendChild(body); a.appendChild(arrow);
+            grid.appendChild(a);
+            a._icon = v.icon || v.kind;
+            a._iconCv = cv;
+            a._game = v;
+            a._idx = idx;
+            a._rankB = rankB;
+            iconIO.observe(a);
+            a._hay = normSearch(`${v.name} ${v.jp} ${v.desc}`);
+            tiles.push(a);
+        });
+
+        // ---- 並び替え (人気順 = 全ユーザーの★+対局を夜間集計 / 新着順 = 追加日) ----
+        const sortPopBtn = document.getElementById('sortPopBtn');
+        const sortNewBtn = document.getElementById('sortNewBtn');
+        const rankNote = document.getElementById('rankNote');
+        const hasRank = Object.keys(RANK).length > 0;
+        document.getElementById('popInfo').textContent = hasRank ? '' : ' (集計前)';
+        let sortMode = '';
+        const slugOf = f => f.replace(/\.html$/, '');
+        const rankScore = f => {
+            const r = RANK[slugOf(f)];
+            return r ? (r.favs || 0) * 5 + (r.plays || 0) : 0;
+        };
+        function applySort() {
+            const arr = tiles.slice();
+            if (sortMode === 'pop') {
+                arr.sort((a, b) => rankScore(b._game.file) - rankScore(a._game.file) || a._idx - b._idx);
+            } else if (sortMode === 'new') {
+                const added = t => (GAME_META[t._game.file] || {}).added || '';
+                arr.sort((a, b) => String(added(b)).localeCompare(String(added(a))) || a._idx - b._idx);
+            } else {
+                arr.sort((a, b) => a._idx - b._idx);
+            }
+            arr.forEach((t, i) => {
+                grid.appendChild(t);
+                const showRank = sortMode === 'pop' && hasRank;
+                t._rankB.classList.toggle('hidden', !showRank);
+                if (showRank) {
+                    const r = RANK[slugOf(t._game.file)];
+                    t._rankB.innerHTML = `#${i + 1}${r && r.favs ? `<br>★${r.favs}` : ''}`;
+                }
+            });
+            sortPopBtn.classList.toggle('sort-on', sortMode === 'pop');
+            sortNewBtn.classList.toggle('sort-on', sortMode === 'new');
+            rankNote.textContent = sortMode === 'pop'
+                ? (RANK_DATE ? `集計日: ${RANK_DATE}` : '★集計は毎日1回・反映まで最大1日')
+                : sortMode === 'new' ? '追加日が新しい順'
+                : '人気順は全ユーザーの★を毎日集計';
+        }
+        sortPopBtn.addEventListener('click', () => { sortMode = sortMode === 'pop' ? '' : 'pop'; applySort(); });
+        sortNewBtn.addEventListener('click', () => { sortMode = sortMode === 'new' ? '' : 'new'; applySort(); });
+        applySort();
+
+        // ---- ドミノ碁豆 (MAMEGO アイコン) ----
+        drawIcon(document.getElementById('iconMamego').getContext('2d'), 'mame', 96);
+
+
+        // ---- おまかせルーレット ----
+        const spinBtn = document.getElementById('spinBtn');
+        const resultModal = document.getElementById('resultModal');
+        let spinning = false, audioCtx = null;
+
+        function tick(freq, dur = 0.045, vol = 0.05) {
+            try {
+                audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = 'triangle'; o.frequency.value = freq;
+                g.gain.setValueAtTime(vol, audioCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+                o.connect(g).connect(audioCtx.destination);
+                o.start(); o.stop(audioCtx.currentTime + dur);
+            } catch (e) { /* 音は出せなくても良い */ }
+        }
+        function jingle() {
+            [660, 880, 1320].forEach((f, i) => setTimeout(() => tick(f, 0.18, 0.09), i * 110));
+        }
+
+        function spawnTwinkle() {
+            // 画面内に見えているタイルだけに出す (外のタイルに出しても誰も見ていない)
+            const vis = tiles.filter(t => {
+                if (t.style.display === 'none' || t.classList.contains('lit') || t.classList.contains('winner')) return false;
+                const r = t.getBoundingClientRect();
+                return r.bottom > 0 && r.top < innerHeight;
+            });
+            const t = vis[Math.floor(Math.random() * vis.length)];
+            if (!t) return;
+            const s = document.createElement('span');
+            s.className = 'twinkle-star';
+            s.textContent = Math.random() < 0.5 ? '✦' : '✧';
+            s.style.left = (8 + Math.random() * 84) + '%';
+            s.style.top = (6 + Math.random() * 76) + '%';
+            s.style.fontSize = (8 + Math.random() * 11) + 'px';
+            t.appendChild(s);
+            t.classList.add('sparkle');
+            setTimeout(() => { s.remove(); t.classList.remove('sparkle'); }, 420);
+        }
+
+        function confettiBurst(el) {
+            const r = el.getBoundingClientRect();
+            const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+            const colors = ['#f59e0b', '#fbbf24', '#fde68a', '#fff7ed', '#3e2211'];
+            for (let i = 0; i < 34; i++) {
+                const p = document.createElement('div');
+                p.className = 'confetti';
+                const a = Math.random() * Math.PI * 2, d = 60 + Math.random() * 160;
+                p.style.left = cx + 'px'; p.style.top = cy + 'px';
+                p.style.background = colors[i % colors.length];
+                p.style.setProperty('--dx', Math.cos(a) * d + 'px');
+                p.style.setProperty('--dy', (Math.sin(a) * d - 60) + 'px');
+                p.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+                p.style.setProperty('--d', (700 + Math.random() * 700) + 'ms');
+                if (Math.random() < 0.4) p.style.borderRadius = '50%';
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 1500);
+            }
+        }
+
+        function showResult(v) {
+            const rcv = document.getElementById('resultIcon');
+            const rcx = rcv.getContext('2d');
+            rcx.clearRect(0, 0, rcv.width, rcv.height);
+            try { drawIcon(rcx, v.icon || v.kind, 112); } catch (e) { /* アイコン失敗でも結果は出す */ }
+            document.getElementById('resultName').textContent = v.name;
+            document.getElementById('resultJp').textContent = v.jp;
+            document.getElementById('resultDesc').textContent = v.desc;
+            document.getElementById('resultLink').href = v.file;
+            resultModal.classList.remove('hidden');
+            resultModal.classList.add('flex');
+        }
+        function hideResult() {
+            resultModal.classList.add('hidden');
+            resultModal.classList.remove('flex');
+        }
+
+        const roulOverlay = document.getElementById('roulOverlay');
+        const roulCard = document.getElementById('roulCard');
+        const roulIcon = document.getElementById('roulIcon');
+        const roulName = document.getElementById('roulName');
+        const roulJp = document.getElementById('roulJp');
+        const roulPrev = document.getElementById('roulPrev');
+        const roulNext = document.getElementById('roulNext');
+        const roulIconCtx = roulIcon.getContext('2d');
+
+        function setRoul(g) {
+            roulIconCtx.clearRect(0, 0, roulIcon.width, roulIcon.height);
+            drawIcon(roulIconCtx, g.icon || g.kind, 64);
+            roulName.textContent = g.name;
+            roulJp.textContent = g.jp;
+        }
+
+        function spin() {
+            if (spinning) return;
+            // 検索で絞り込まれているタイル (=表示中) の中からだけ選ぶ
+            const pool = tiles.filter(t => t.style.display !== 'none');
+            if (!pool.length) {
+                gameCountEl.classList.add('search-shake');
+                setTimeout(() => gameCountEl.classList.remove('search-shake'), 450);
+                return;
+            }
+            spinning = true;
+            spinBtn.disabled = true;
+            spinBtn.classList.add('spinning');
+            grid.classList.add('spinning');
+            tiles.forEach(t => t.classList.remove('winner', 'lit', 'sparkle'));
+            roulOverlay.classList.remove('hidden');
+            roulOverlay.classList.add('flex');
+            roulCard.classList.remove('roul-final');
+
+            const winIdx = Math.floor(Math.random() * pool.length);
+            // 候補列は個数非依存: 26〜34ステップで減速し、最後に勝者で止まる
+            const steps = 26 + Math.floor(Math.random() * 8);
+            const seq = [];
+            for (let i = 0; i < steps - 1; i++) seq.push(Math.floor(Math.random() * pool.length));
+            seq.push(winIdx);
+
+            let i = 0, sparkleAt = 0;
+            function step() {
+                try { // 1件の描画失敗で演出全体が固まらないようにする
+                    const g = pool[seq[i]]._game;
+                    setRoul(g);
+                    roulPrev.textContent = pool[seq[(i - 1 + seq.length) % seq.length]]._game.name;
+                    roulNext.textContent = pool[seq[(i + 1) % seq.length]]._game.name;
+                    roulCard.classList.remove('roul-tick');
+                    void roulCard.offsetWidth;
+                    roulCard.classList.add('roul-tick');
+                    tick(700 + i * 8, 0.04, 0.05);
+                    const now = performance.now();
+                    if (now - sparkleAt > 90) { sparkleAt = now; spawnTwinkle(); }
+                } catch (e) { /* skip */ }
+                i++;
+                if (i < seq.length) {
+                    const f = i / seq.length;
+                    setTimeout(step, 45 + Math.pow(f, 2.6) * 430); // 45ms → ~475ms に減速
+                } else finish();
+            }
+            step();
+
+            function finish() {
+                const winnerT = pool[winIdx], g = winnerT._game;
+                roulCard.classList.remove('roul-tick');
+                roulCard.classList.add('roul-final');
+                jingle();
+                setTimeout(() => {
+                    roulOverlay.classList.add('hidden');
+                    roulOverlay.classList.remove('flex');
+                    grid.classList.remove('spinning');
+                    winnerT.classList.add('winner');
+                    winnerT.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    confettiBurst(winnerT);
+                    spinning = false;
+                    spinBtn.disabled = false;
+                    spinBtn.classList.remove('spinning');
+                    setTimeout(() => showResult(g), 650);
+                }, 550);
+            }
+        }
+
+        spinBtn.addEventListener('click', spin);
+        document.getElementById('retryBtn').addEventListener('click', () => { hideResult(); spin(); });
+        document.getElementById('closeBtn').addEventListener('click', hideResult);
+        document.getElementById('resultBackdrop').addEventListener('click', hideResult);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') hideResult(); });
+
+        // ---- 一番上に戻る ----
+        const backToTop = document.getElementById('backToTop');
+        const updateTopBtn = () => backToTop.classList.toggle('show', window.scrollY > 500);
+        window.addEventListener('scroll', updateTopBtn, { passive: true });
+        updateTopBtn();
+        backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    </script>
+
+</body>
+</html>

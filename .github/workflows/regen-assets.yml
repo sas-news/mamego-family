@@ -6,13 +6,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'algo.html'
+      - 'docs/algo.html'
       - 'gen_*.js'
       - 'variants2/**'
       - 'variants3/**'
-      - 'icon-draw.js'
+      - 'docs/icon-draw.js'
       - 'tools/**'
-      - 'site-*.js'
+      - 'docs/site-*.js'
   workflow_dispatch:
 
 permissions:
@@ -49,7 +49,7 @@ jobs:
           if git status --porcelain | grep -q .; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A '*.html' 'games.json' 'games.js' 'VARIANTS.md' 'sitemap.xml' 'robots.txt' 'og/' 'icon-draw.js'
+            git add -A docs/
             git commit -m "regen: 生成物の再構築 ($(git rev-parse --short HEAD))"
             git push
           else

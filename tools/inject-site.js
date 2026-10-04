@@ -10,7 +10,7 @@ const { execSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
 const BASE = 'https://sas-news.github.io/mamego-family/';
-const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'games.json'), 'utf8'));
+const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs', 'games.json'), 'utf8'));
 const games = manifest.games;
 const byFile = new Map(games.map(g => [g.file, g]));
 
@@ -103,7 +103,7 @@ const targets = ['index.html', ...games.map(g => g.file)];
 let done = { meta: 0, nav: 0, foot: 0, scripts: 0 };
 const warns = [];
 for (const file of targets) {
-    const p = path.join(ROOT, file);
+    const p = path.join(ROOT, 'docs', file);
     if (!fs.existsSync(p)) { warns.push(`${file}: not found`); continue; }
     let html = fs.readFileSync(p, 'utf8').replace(/\r\n/g, '\n');
     const g = byFile.get(file) || { slug: 'index', name: 'MAMEGO', jp: '変則碁シリーズ', desc: '' };

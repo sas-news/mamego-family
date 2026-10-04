@@ -7,8 +7,8 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
-const OUT = path.join(ROOT, 'og');
-const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'games.json'), 'utf8'));
+const OUT = path.join(ROOT, 'docs', 'og');
+const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs', 'games.json'), 'utf8'));
 
 let createCanvas;
 try { ({ createCanvas, registerFont } = require('canvas')); }

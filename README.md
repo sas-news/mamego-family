@@ -9,7 +9,7 @@
 
 ## ゲーム一覧
 
-全リストは自動生成の [VARIANTS.md](VARIANTS.md) を参照。以下は代表例。
+全リストは自動生成の [VARIANTS.md](docs/VARIANTS.md) を参照。以下は代表例。
 
 ### ピース系 (連結碁石)
 
@@ -161,6 +161,7 @@
 
 ## 開発
 
+- 公開サイトの実体は [`docs/`](docs/) 配下 (GitHub Pages が `docs/` を公開ディレクトリとしてデプロイ)。ルートにはソース (生成系・テスト・`tools/`) のみ
 - `npm run gen` — 生成チェーン一式: `gen_variants.js` (wave1) → `gen_wave2.js` → `gen_wave3.js` → `gen_wave3_index.js` (index/icon-draw 更新) → `tools/build-manifest.js` (games.json/games.js/VARIANTS.md/sitemap/robots) → `tools/inject-site.js` (全HTMLへ共通部品注入)
 - `npm run og` — OGPカード `og/*.png` を生成 (要 `npm install`・CJKフォント・ImageMagick)
 - `npm run ranking` — GoatCounter 集計 → ranking.js (要 `GOATCOUNTER_CODE`/`GOATCOUNTER_TOKEN`)

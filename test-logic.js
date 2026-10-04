@@ -5,7 +5,7 @@ const fs = require('fs');
 const vm = require('vm');
 const path = require('path');
 
-const html = fs.readFileSync(path.join(__dirname, 'tetogo.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, 'docs', 'tetogo.html'), 'utf8');
 // <script src=...> ではないインラインスクリプトを抽出
 const m = html.match(/<script>([\s\S]*?)<\/script>/);
 if (!m) { console.error('inline <script> not found'); process.exit(1); }

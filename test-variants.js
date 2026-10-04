@@ -34,7 +34,7 @@ function makeEl() {
 }
 
 function loadSandbox(file) {
-    const html = fs.readFileSync(path.join(__dirname, file), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, 'docs', file), 'utf8');
     const m = html.match(/<script>([\s\S]*?)<\/script>/);
     if (!m) throw new Error(file + ': inline <script> not found');
     const store = {};
