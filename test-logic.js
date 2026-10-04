@@ -10,11 +10,12 @@ const html = fs.readFileSync(path.join(__dirname, 'tetogo.html'), 'utf8');
 const m = html.match(/<script>([\s\S]*?)<\/script>/);
 if (!m) { console.error('inline <script> not found'); process.exit(1); }
 
-// CanvasRenderingContext2D スタブ: あらゆるメソッド呼び出しを無視し、プロパティ代入を保持
+// CanvasRenderingContext2D スタブ: メソッド呼び出しは別スタブを返す
+// (createRadialGradient().addColorStop 等に対応)。プロパティ代入は保持。
 function makeCtx() {
     return new Proxy({}, {
         get: (t, p) => {
-            if (!(p in t)) t[p] = function () {};
+            if (!(p in t)) t[p] = function () { return makeCtx(); };
             return t[p];
         },
         set: (t, p, v) => { t[p] = v; return true; },

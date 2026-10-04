@@ -1,0 +1,34 @@
+name: pr-check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  gen-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # 生成チェーン (spec → HTML) が全アンカー一致で走るか。
+      # ここで生成した HTML はコミットしない (マージ後に regen-assets が再生成する)
+      - name: generate variants
+        run: |
+          node gen_variants.js
+          node gen_wave2.js
+          node gen_wave3.js
+          node gen_wave3_index.js
+      # 名前・アイコンの重複 / 上書き事故の検査
+      - name: uniqueness check
+        run: node tools/check-unique.js
+      # spec の test: を全バリアント分実行 + 基盤テスト
+      - name: tests
+        run: |
+          node test-wave2.js
+          node test-wave3.js
+          npm test

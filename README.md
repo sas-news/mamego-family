@@ -5,6 +5,8 @@
 
 **Play:** https://sas-news.github.io/mamego-family/
 
+**新しい変則碁を作るには:** [CONTRIBUTING.md](CONTRIBUTING.md) — spec+アイコンの2ファイルを置くだけでゲームが自動生成されます
+
 ## ゲーム一覧
 
 全リストは自動生成の [VARIANTS.md](VARIANTS.md) を参照。以下は代表例。
@@ -165,6 +167,8 @@
 - `node test-logic.js` / `node test-algo.js` — TETOGO/ALGO のルールエンジンテスト (vm + DOM スタブ)
 - `node test-variants.js` — 全バリアントの起動 + 固有ルールのスモークテスト
 - `tools/sim-game.js` — ランダム対局シミュレーション (健全性チェック)
+- `tools/check-unique.js` — ゲーム名/ファイル名の重複・上書き衝突を検査 (PRチェック用)
+- 新規ゲームの作り方は [CONTRIBUTING.md](CONTRIBUTING.md)
 - `tools/health-flags.json` — 「調整中」バッジの手動フラグ (`{"file.html": "理由"}`)
 
 生成物の再ビルドは `regen-assets.yml` が push 時に自動化。必要な Actions 変数:

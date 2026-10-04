@@ -297,6 +297,12 @@
                 <div id="onlineRoomStatus" class="text-center font-bold text-neutral-600 pt-1"></div>
             </div>
 
+            <!-- バリアント固有設定 (VPARAMSがあるゲームのみ表示) -->
+            <div id="variantParamsBox" class="hidden p-3 bg-amber-50 rounded-xl border border-amber-200 flex flex-col gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-neutral-500">このゲームの設定</span>
+                <div id="variantParams" class="flex flex-col gap-3"></div>
+            </div>
+
             <!-- 4. サウンド設定 -->
             <div class="flex items-center justify-between pt-1">
                 <span class="text-sm font-bold text-neutral-700">効果音 (SE)</span>
@@ -341,6 +347,78 @@
     </div>
 
     <script>
+        // === バリアント固有パラメータ ===
+        // spec が VPARAMS を差し替えた場合、設定モーダルに調整UIが自動生成される。
+        // ゲームコードは P('key') で現在値を参照する (変更は次の判定から即時反映)。
+        const VPARAMS = [];
+        const VPAR_MAP = {};
+        const VPAR_SAVED = (() => {
+            try { return JSON.parse(localStorage.getItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : '')) || '{}'); }
+            catch (e) { return {}; }
+        })();
+        VPARAMS.forEach(p => {
+            if (p.val === undefined) p.val = VPAR_SAVED[p.key] !== undefined ? VPAR_SAVED[p.key] : p.def;
+            VPAR_MAP[p.key] = p;
+        });
+        const P = k => (VPAR_MAP[k] ? VPAR_MAP[k].val : undefined);
+        function saveVpar() {
+            try {
+                const o = {};
+                VPARAMS.forEach(p => { if (p.val !== p.def) o[p.key] = p.val; });
+                localStorage.setItem('vpar:' + (typeof location !== 'undefined' ? location.pathname.split('/').pop() : ''), JSON.stringify(o));
+            } catch (e) {}
+        }
+        // 設定モーダルの「このゲームの設定」に VPARAMS 分のUIを生成
+        function initVariantParams() {
+            const box = document.getElementById('variantParamsBox');
+            const list = document.getElementById('variantParams');
+            if (!box || !list || !VPARAMS.length) return;
+            box.classList.remove('hidden');
+            const fmt = (p, v) => (p.step && p.step < 1 ? Number(v).toFixed(1) : String(v)) + (p.unit || '');
+            VPARAMS.forEach(p => {
+                const wrap = document.createElement('div');
+                wrap.className = 'flex flex-col gap-1';
+                const head = document.createElement('div');
+                head.className = 'flex justify-between text-xs font-bold text-neutral-600';
+                const lab = document.createElement('span');
+                lab.textContent = p.label + (p.hint ? ` (${p.hint})` : '');
+                const valEl = document.createElement('span');
+                valEl.className = 'text-amber-700';
+                valEl.textContent = fmt(p, p.val);
+                head.appendChild(lab); head.appendChild(valEl);
+                wrap.appendChild(head);
+                const applyVal = v => {
+                    p.val = v;
+                    valEl.textContent = fmt(p, p.val);
+                    saveVpar();
+                    if (typeof onVariantParam === 'function') onVariantParam(p);
+                };
+                if (p.options) {
+                    const sel = document.createElement('select');
+                    sel.className = 'w-full border border-neutral-300 rounded-lg py-1.5 text-sm font-bold bg-white';
+                    p.options.forEach(o => {
+                        const op = document.createElement('option');
+                        op.value = o.v; op.textContent = o.l;
+                        sel.appendChild(op);
+                    });
+                    sel.value = p.val;
+                    sel.addEventListener('change', () => {
+                        const num = parseFloat(sel.value);
+                        applyVal(isNaN(num) ? sel.value : num);
+                    });
+                    wrap.appendChild(sel);
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'range'; inp.min = p.min; inp.max = p.max; inp.step = p.step || 1; inp.value = p.val;
+                    inp.className = 'w-full accent-amber-600';
+                    inp.addEventListener('input', () => applyVal(parseFloat(inp.value)));
+                    wrap.appendChild(inp);
+                }
+                list.appendChild(wrap);
+            });
+        }
+        initVariantParams();
+
         // ==========================================
         // 1. カラーテーマ定義
         // ==========================================
@@ -381,7 +459,7 @@
                 bg: 'bg-[#f4e4bc]',
                 text: 'text-[#3e2211]',
                 subText: 'text-[#785338]',
-                boardBg: '#e8c88b',
+                boardBg: '#e4bb70',
                 lineColor: '#3e2211',
                 starColor: '#3e2211',
                 p1Fill: '#1c1917', p1Stroke: '#000000',
@@ -616,7 +694,7 @@
         // モード & 設定
         let gameMode = 'local'; // 'local' | 'ai' | 'online'
         let aiPlayer = 2; // AIの手番 (2: 白=後手, 1: 黒=先手)
-        let currentTheme = THEMES.default;
+        let currentTheme = THEMES.go;
         let previewPos = null; // { u, v, cells, valid, type, rot }
         let lastMove = null; // 直前に配置したピース { player, cells }
         let tetDrops = []; // ハードドロップ演出: 最近置かれたピースの落下ゴースト
@@ -816,11 +894,32 @@
             render();
         }
 
+        // 碁盤らしい余白: 外周の余白 = 1目分の格子幅
         function getBoardMetrics() {
             const width = canvas.getBoundingClientRect().width;
-            const padding = width * 0.08;
-            const cellSize = (width - padding * 2) / (BOARD_SIZE - 1);
+            const cellSize = width / (BOARD_SIZE + 1);
+            const padding = cellSize;
             return { width, padding, cellSize };
+        }
+
+        // ---- 色ユーティリティ ('#rrggbb' / 'rgba(...)' 両対応) ----
+        function parseColor(c) {
+            if (typeof c === 'string' && c[0] === '#') {
+                const n = parseInt(c.slice(1), 16);
+                return [n >> 16 & 255, n >> 8 & 255, n & 255, 1];
+            }
+            const m = String(c).match(/[\d.]+/g);
+            return [+m[0], +m[1], +m[2], m.length > 3 ? +m[3] : 1];
+        }
+        function shiftColor(c, amt) { // amt>0: 白寄り, amt<0: 黒寄り
+            const [r, g, b, a] = parseColor(c);
+            const t = amt > 0 ? 255 : 0, k = Math.abs(amt);
+            const f = v => Math.round(v + (t - v) * k);
+            return `rgba(${f(r)},${f(g)},${f(b)},${a})`;
+        }
+        function alphaColor(c, a) {
+            const [r, g, b] = parseColor(c);
+            return `rgba(${r},${g},${b},${a})`;
         }
 
         // ピースのセル集合を「角丸の融合テトロミノ」として描く。
@@ -868,16 +967,219 @@
             ctx.restore();
         }
 
+        // ==========================================
+        // 5.5 FX エンジン (移動アニメ・パーティクル・画面揺れ・専用障害物描画)
+        // ==========================================
+        // 全バリアント共通の演出基盤。各バリアントのコードから以下を呼ぶ:
+        //   fxSlide(fromIdx, toIdx)     石が1点から別点へ滑るアニメ (回転/風/重力等)
+        //   fxBurst(idx, color, n=14)   その交点で爆発パーティクル (爆発/捕獲/雷等)
+        //   fxGlow(idx, color)          交点が一瞬光るリング (出目/イベント/復活等)
+        //   fxText(idx, str, color)     交点上に浮かぶ文字 (+2目など)
+        //   fxSplash(idx, color, n=8)   外側へ散る小粒 (水没/腐食/毒など)
+        //   fxShake(power)              盤面を揺らす (爆発/地震/巨大イベント)
+        //   fxAmbient(fn)               常時オーバーレイ描画を登録 (雨・闇・泡など)
+        //   obstaclePainter = fn        壁(3)・特殊マス(4)の専用描画 (戻りtrueで描画済)
+        // 石や碁盤そのものの見た目を変える場合は、各バリアントが描画関数を
+        // 直接置き換えてよい (このファイルはテンプレートであり契約ではない)。
+        let fxList = [];           // 一過性エフェクト
+        let fxAmbients = [];       // 常時オーバーレイ (fn(ctx, now, w, padding, cellSize))
+        let fxShakeUntil = 0, fxShakeMag = 0;
+        let obstaclePainter = null;
+        // 静的層キャッシュ: エフェクトフレームでは全面再描画せずオフスクリーンを貼る
+        let fxStaticCv = null, fxStaticCtx = null, fxStaticW = 0;
+        const fxNow = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
+
+        function fxAdd(p) { p.t0 = fxNow(); fxList.push(p); if (fxList.length > 400) fxList.splice(0, fxList.length - 400); }
+        function fxSlide(fromIdx, toIdx, dur = 340) {
+            const a = fxGrid(fromIdx), b = fxGrid(toIdx);
+            if (a[0] === b[0] && a[1] === b[1]) return;
+            fxAdd({ kind: 'slide', x1: a[0], y1: a[1], x2: b[0], y2: b[1], dur });
+        }
+        function fxBurst(idx, color = '#f97316', n = 14, speed = 1.6) {
+            const [x, y] = fxGrid(idx);
+            for (let k = 0; k < n; k++) {
+                const ang = Math.random() * Math.PI * 2, sp = (0.5 + Math.random()) * speed;
+                fxAdd({ kind: 'dot', x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 0.4,
+                    dur: 500 + Math.random() * 350, color, size: 0.10 + Math.random() * 0.12 });
+            }
+        }
+        function fxSplash(idx, color = '#60a5fa', n = 8) {
+            const [x, y] = fxGrid(idx);
+            for (let k = 0; k < n; k++) {
+                const ang = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, sp = (0.4 + Math.random()) * 1.2;
+                fxAdd({ kind: 'dot', x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+                    dur: 450 + Math.random() * 300, color, size: 0.07 + Math.random() * 0.08, grav: 1.6 });
+            }
+        }
+        function fxGlow(idx, color = '#facc15', dur = 600) {
+            const [x, y] = fxGrid(idx);
+            fxAdd({ kind: 'ring', x, y, dur, color });
+        }
+        function fxText(idx, str, color = '#fde047', dur = 1100) {
+            const [x, y] = fxGrid(idx);
+            fxAdd({ kind: 'text', x, y, str, dur, color });
+        }
+        function fxShake(mag = 5, dur = 260) { fxShakeMag = Math.max(fxShakeMag, mag); fxShakeUntil = fxNow() + dur; }
+        function fxAmbient(fn) { fxAmbients.push(fn); }
+        function fxActive() { return fxList.length > 0 || fxAmbients.length > 0 || fxNow() < fxShakeUntil; }
+
+        // 障害物 (3:壁 4:幽霊など) のデフォルト描画 — obstaclePainter があればそちら優先
+        function drawObstacleCell(val, cx, cy, cellSize, idx) {
+            if (typeof obstaclePainter === 'function' && obstaclePainter(val, cx, cy, cellSize, idx)) return;
+            const w = cellSize * 0.86, h = cellSize * 0.86, x = cx - w / 2, y = cy - h / 2;
+            ctx.save();
+            if (val === 3) {
+                // 壁: 角丸の玄武岩ブロック + 上面ハイライト
+                const g = ctx.createLinearGradient(x, y, x, y + h);
+                g.addColorStop(0, '#57534e'); g.addColorStop(0.5, '#44403c'); g.addColorStop(1, '#292524');
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, h, w * 0.18);
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                ctx.lineWidth = Math.max(1, cellSize * 0.05);
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(255,255,255,0.12)';
+                ctx.beginPath();
+                ctx.roundRect(x + w * 0.12, y + w * 0.10, w * 0.76, h * 0.18, w * 0.09);
+                ctx.fill();
+            } else {
+                // 特殊マス: 薄いゴースト円
+                ctx.strokeStyle = 'rgba(150,160,190,0.7)';
+                ctx.lineWidth = Math.max(1.2, cellSize * 0.05);
+                ctx.setLineDash([cellSize * 0.12, cellSize * 0.10]);
+                ctx.beginPath();
+                ctx.arc(cx, cy, cellSize * 0.34, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // 盤面差分の自動演出: 取られた石・色反転・壁の出現/消滅を全バリアントで可視化
+        let fxPrevBoard = null;
+        function fxBoardDiff() {
+            if (!fxPrevBoard || fxPrevBoard.length !== board.length) { fxPrevBoard = board.slice(); return; }
+            let changed = 0;
+            for (let i = 0; i < board.length; i++) {
+                const a = fxPrevBoard[i], b = board[i];
+                if (a === b) continue;
+                changed++;
+                if (a === 1 || a === 2) {
+                    if (b === 0) { // 石が消えた → 取り/消滅の煙
+                        const fill = a === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                        fxBurst(i, shiftColor(fill, 0.3), 5, 0.9);
+                    } else if (b === 1 || b === 2) { // 色が反転
+                        fxGlow(i, b === 1 ? 'rgba(40,40,40,0.9)' : 'rgba(255,255,255,0.95)', 450);
+                    }
+                } else if (a === 3 && b === 0) { // 壁が消えた
+                    fxBurst(i, 'rgba(120,113,108,0.8)', 4, 0.7);
+                } else if (a === 0 && b === 3) { // 壁が現れた
+                    fxBurst(i, 'rgba(90,84,80,0.9)', 6, 0.9);
+                }
+            }
+            fxPrevBoard = board.slice();
+        }
+
+        // 一過性エフェクト + 常時オーバーレイ + 画面揺れの描画 (render末尾で呼ぶ)
+        function drawFx(now, padding, cellSize) {
+            ctx.save();
+            fxAmbients.forEach(fn => {
+                try { fn(ctx, now, padding, cellSize); } catch (e) { /* 演出失敗は無視 */ }
+            });
+            const alive = [];
+            for (const p of fxList) {
+                const t = (now - p.t0) / p.dur;
+                if (t >= 1) continue;
+                alive.push(p);
+                const x = padding + (p.x ?? 0) * cellSize;
+                const y = padding + (p.y ?? 0) * cellSize;
+                if (p.kind === 'slide') {
+                    const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; // easeInOut
+                    const gx = padding + (p.x1 + (p.x2 - p.x1) * e) * cellSize;
+                    const gy = padding + (p.y1 + (p.y2 - p.y1) * e) * cellSize;
+                    const val = board[p.y2 * BOARD_SIZE + p.x2];
+                    const fill = val === 1 ? currentTheme.p1Fill : val === 2 ? currentTheme.p2Fill : 'rgba(148,163,184,0.9)';
+                    const R = cellSize * 0.42;
+                    // 移動先の石本体は着地まで薄く、ゴーストが滑る
+                    ctx.globalAlpha = 0.9;
+                    const g = ctx.createRadialGradient(gx - R * 0.38, gy - R * 0.42, R * 0.08, gx, gy, R);
+                    g.addColorStop(0, shiftColor(fill, 0.5));
+                    g.addColorStop(1, shiftColor(fill, -0.2));
+                    ctx.fillStyle = g;
+                    ctx.beginPath();
+                    ctx.arc(gx, gy, R, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+                    ctx.lineWidth = Math.max(1, cellSize * 0.04);
+                    ctx.stroke();
+                } else if (p.kind === 'dot') {
+                    const px = x + p.vx * cellSize * t * 3;
+                    const py = y + p.vy * cellSize * t * 3 + (p.grav ? p.grav * cellSize * t * t : 0);
+                    ctx.globalAlpha = 1 - t;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(px, py, Math.max(0.8, p.size * cellSize * (1 - t * 0.5)), 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (p.kind === 'ring') {
+                    ctx.globalAlpha = (1 - t) * 0.9;
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = Math.max(1.2, cellSize * 0.06 * (1 - t));
+                    ctx.beginPath();
+                    ctx.arc(x, y, cellSize * (0.3 + t * 1.1), 0, Math.PI * 2);
+                    ctx.stroke();
+                } else if (p.kind === 'text') {
+                    ctx.globalAlpha = t < 0.7 ? 1 : (1 - t) / 0.3;
+                    ctx.fillStyle = p.color;
+                    ctx.font = 'bold ' + Math.round(cellSize * 0.5) + 'px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(p.str, x, y - cellSize * (0.4 + t * 1.1));
+                }
+            }
+            fxList = alive;
+            ctx.restore();
+        }
+
         function render() {
             const { width, padding, cellSize } = getBoardMetrics();
 
-            // 盤面背景クリア
-            ctx.fillStyle = currentTheme.boardBg;
+            // 画面揺れ (爆発・地震など)
+            const fxN0 = fxNow();
+            if (fxN0 < fxShakeUntil) {
+                const p = (fxShakeUntil - fxN0) / 260;
+                ctx.save();
+                ctx.translate((Math.random() - 0.5) * 2 * fxShakeMag * p, (Math.random() - 0.5) * 2 * fxShakeMag * p);
+            } else fxShakeMag = 0;
+
+            // 木目調の盤面: 斜めグラデーション + うっすら縞 + 隅のヴィネット
+            const bg = ctx.createLinearGradient(0, 0, width, width);
+            bg.addColorStop(0, shiftColor(currentTheme.boardBg, 0.10));
+            bg.addColorStop(0.5, currentTheme.boardBg);
+            bg.addColorStop(1, shiftColor(currentTheme.boardBg, -0.10));
+            ctx.fillStyle = bg;
             ctx.fillRect(0, 0, width, width);
+
+            ctx.save();
+            ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.045);
+            ctx.lineWidth = width * 0.02;
+            for (let i = 0; i < 6; i++) {
+                const gy = width * (0.08 + i * 0.17);
+                ctx.beginPath();
+                ctx.moveTo(0, gy);
+                ctx.bezierCurveTo(width * 0.3, gy + width * 0.025, width * 0.7, gy - width * 0.025, width, gy);
+                ctx.stroke();
+            }
+            const vg = ctx.createRadialGradient(width / 2, width / 2, width * 0.55, width / 2, width / 2, width * 0.75);
+            vg.addColorStop(0, 'rgba(0,0,0,0)');
+            vg.addColorStop(1, 'rgba(0,0,0,0.09)');
+            ctx.fillStyle = vg;
+            ctx.fillRect(0, 0, width, width);
+            ctx.restore();
 
             // 格子線
             ctx.strokeStyle = currentTheme.lineColor;
-            ctx.lineWidth = 1;
+            ctx.lineWidth = Math.max(1, cellSize * 0.028);
             for (let i = 0; i < BOARD_SIZE; i++) {
                 const pos = padding + i * cellSize;
                 ctx.beginPath();
@@ -891,19 +1193,24 @@
                 ctx.stroke();
             }
 
-            // 外枠強調
+            // 外枠強調 (二重線で碁盤らしく)
             ctx.strokeStyle = currentTheme.lineColor;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = Math.max(1.6, cellSize * 0.055);
             ctx.strokeRect(padding, padding, width - padding * 2, width - padding * 2);
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.35;
+            ctx.strokeRect(padding + 3, padding + 3, width - padding * 2 - 6, width - padding * 2 - 6);
+            ctx.globalAlpha = 1;
 
             // 星 (天元・星の点)
             const starPoints = getStarPoints(BOARD_SIZE);
             ctx.fillStyle = currentTheme.starColor;
+            const starR = Math.max(2.5, cellSize * 0.10);
             starPoints.forEach(pt => {
                 const cx = padding + pt.x * cellSize;
                 const cy = padding + pt.y * cellSize;
                 ctx.beginPath();
-                ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+                ctx.arc(cx, cy, starR, 0, Math.PI * 2);
                 ctx.fill();
             });
 
@@ -921,22 +1228,57 @@
                 drawPreview(padding, cellSize);
             }
 
-            // ハードドロップ演出: ピースの影が盤上から落下して定着する
-            {
-                const now = performance.now();
-                tetDrops = tetDrops.filter(d => now - d.t0 < d.dur);
-                if (tetDrops.length > 0) {
-                    tetDrops.forEach(d => {
-                        const t = Math.min(1, (now - d.t0) / d.dur);
-                        const e = 1 - Math.pow(1 - t, 3); // easeOutCubic: 高速落下→着地
-                        const minY = Math.min(...d.cells.map(c => c.y));
-                        const off = (1 - e) * (minY + 0.8) * cellSize;
-                        const fill = d.player === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
-                        const stroke = d.player === 1 ? currentTheme.p1Stroke : currentTheme.p2Stroke;
-                        drawPieceShape(d.cells.map(c => ({ x: c.x, y: c.y - off / cellSize })), padding, cellSize, fill, stroke, 0.15 + 0.8 * e);
-                    });
-                    requestAnimationFrame(render);
-                }
+            // 画面揺れの transform を戻し、エフェクトを最前面に描画
+            if (fxN0 < fxShakeUntil) ctx.restore();
+            // 静的層スナップショット (揺れ中は歪むので撮らない): エフェクトフレームの貼り付け元
+            if (fxN0 >= fxShakeUntil) {
+                if (!fxStaticCv) { fxStaticCv = document.createElement('canvas'); fxStaticCtx = fxStaticCv.getContext('2d'); }
+                // バッキングストア解像度で複写する (CSSpxではない。ずれると貼り戻し時に拡大表示される)
+                if (fxStaticCv.width !== canvas.width || fxStaticCv.height !== canvas.height) { fxStaticCv.width = canvas.width; fxStaticCv.height = canvas.height; }
+                fxStaticCtx.drawImage(canvas, 0, 0);
+                fxStaticW = width;
+            }
+            fxBoardDiff(); // 差分検知で取り/反転/壁変化を自動演出
+            drawTetDrops(padding, cellSize); // ハードドロップ演出 (静止画層には含めず毎フレーム描画)
+            drawFx(fxNow(), padding, cellSize);
+
+            // エフェクトが生きている間は描画を続ける (常時オーバーレイ含む)
+            if ((fxActive() || tetDrops.length > 0) && typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(() => { try { fxFrame(); } catch (e) { fxList = []; tetDrops = []; } });
+            }
+        }
+
+        // ハードドロップ演出: ピースの影が盤上から落下して定着する
+        function drawTetDrops(padding, cellSize) {
+            const now = fxNow();
+            tetDrops = tetDrops.filter(d => now - d.t0 < d.dur);
+            if (tetDrops.length === 0) return;
+            tetDrops.forEach(d => {
+                const t = Math.min(1, (now - d.t0) / d.dur);
+                const e = 1 - Math.pow(1 - t, 3); // easeOutCubic: 高速落下→着地
+                const minY = Math.min(...d.cells.map(c => c.y));
+                const off = (1 - e) * (minY + 0.8) * cellSize;
+                const fill = d.player === 1 ? currentTheme.p1Fill : currentTheme.p2Fill;
+                const stroke = d.player === 1 ? currentTheme.p1Stroke : currentTheme.p2Stroke;
+                drawPieceShape(d.cells.map(c => ({ x: c.x, y: c.y - off / cellSize })), padding, cellSize, fill, stroke, 0.15 + 0.8 * e);
+            });
+        }
+
+        // エフェクトフレーム: 静的層はキャッシュを貼るだけ (全石・壁・格子の再描画を省く)
+        function fxFrame() {
+            const { width, padding, cellSize } = getBoardMetrics();
+            const now = fxNow();
+            // 揺れ中・キャッシュ未作成・リサイズ直後は全面描画にフォールバック
+            if (now < fxShakeUntil || !fxStaticCv || fxStaticW !== width) {
+                render();
+                return;
+            }
+            // デバイスpxのスナップショットをCSSpx領域へ縮小貼り付け (ctxのdpr変換込みで等倍になる)
+            ctx.drawImage(fxStaticCv, 0, 0, width, width);
+            drawTetDrops(padding, cellSize);
+            drawFx(now, padding, cellSize);
+            if ((fxActive() || tetDrops.length > 0) && typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(() => { try { fxFrame(); } catch (e) { fxList = []; tetDrops = []; } });
             }
         }
 
