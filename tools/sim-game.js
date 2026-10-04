@@ -40,7 +40,9 @@ function makeEl() {
 }
 
 function loadSandbox(file) {
-    const html = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
+    const p = [path.join(__dirname, '..', 'docs', file), path.join(__dirname, '..', file)].find(fs.existsSync);
+    if (!p) throw new Error(file + ': not found');
+    const html = fs.readFileSync(p, 'utf8');
     const m = html.match(/<script>([\s\S]*?)<\/script>/);
     if (!m) throw new Error(file + ': inline <script> not found');
     const store = {};
@@ -171,7 +173,7 @@ function simOne(file, maxPlies, timeout) {
 }
 
 function allVariantFiles() {
-    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'docs', 'index.html'), 'utf8');
     const m = html.match(/const GAMES = \[([\s\S]*?)\];/);
     const files = [];
     const re = /file: '([^']+\.html)'/g;

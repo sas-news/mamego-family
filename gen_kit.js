@@ -6,7 +6,7 @@
 // 使い方: node gen_variants.js   (失敗した置換はログに出る)
 const fs = require('fs');
 const path = require('path');
-const ALGO = fs.readFileSync(path.join(__dirname, 'algo.html'), 'utf8').replace(/\r\n/g, '\n');
+const ALGO = fs.readFileSync(path.join(__dirname, 'docs', 'algo.html'), 'utf8').replace(/\r\n/g, '\n');
 
 let failures = 0;
 function apply(src, spec, name) {
@@ -26,7 +26,7 @@ function apply(src, spec, name) {
 }
 const ONE = 'one', ALL = 'all';
 function out(name, html) {
-    fs.writeFileSync(path.join(__dirname, name), html);
+    fs.writeFileSync(path.join(__dirname, 'docs', name), html);
     console.log(`wrote ${name} (${html.length} bytes)`);
 }
 

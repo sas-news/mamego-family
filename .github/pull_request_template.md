@@ -10,7 +10,7 @@
   - [ ] `node gen_wave3.js` が `ALL OK` (MISSING がない)
   - [ ] `node test-wave3.js` が通る (spec の test: が全て PASS)
   - [ ] ブラウザで実際に最後まで遊んだ (2パス終局・採点が動く)
-  - [ ] `node tools/sim-game.js --plies 200 <name>.html` が `ended=gameOver` になる
+  - [ ] `node tools/sim-game.js --plies 200 docs/<name>.html` が `ended=gameOver` になる
 - ルール概要: <!-- 1〜2行で -->
 
 ## その他の変更の場合

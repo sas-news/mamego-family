@@ -5,8 +5,8 @@ const path = require('path');
 
 const specsDir = path.join(__dirname, 'variants3');
 const iconsDir = path.join(specsDir, 'icons');
-const indexPath = path.join(__dirname, 'index.html');
-const iconsPath = path.join(__dirname, 'icon-draw.js');
+const indexPath = path.join(__dirname, 'docs', 'index.html');
+const iconsPath = path.join(__dirname, 'docs', 'icon-draw.js');
 
 const specs = fs.readdirSync(specsDir)
     .filter(f => f.endsWith('.spec.js')).sort()

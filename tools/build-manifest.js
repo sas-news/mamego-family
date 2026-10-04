@@ -10,7 +10,7 @@ const BASE = 'https://sas-news.github.io/mamego-family/';
 const FLAGS_PATH = path.join(__dirname, 'health-flags.json');
 
 // ---- GAMES配列を index.html から抽出 ----
-const indexHtml = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+const indexHtml = fs.readFileSync(path.join(ROOT, 'docs', 'index.html'), 'utf8');
 const m = indexHtml.match(/const GAMES = \[([\s\S]*?)\];/);
 if (!m) { console.error('index.html 内に GAMES 配列が見つかりません'); process.exit(1); }
 const games = eval(`[${m[1]}]`);
@@ -33,7 +33,7 @@ try {
     for (const line of log.split('\n')) {
         const cm = line.match(/^COMMIT (.+)$/);
         if (cm) { date = cm[1].slice(0, 10); continue; }
-        const f = line.trim();
+        const f = line.trim().replace(/^docs\//, '');
         if (f.endsWith('.html') && !added[f]) added[f] = date;
     }
 } catch (e) {
@@ -63,14 +63,14 @@ const list = games.map(g => {
 }).sort((a, b) => a.file.localeCompare(b.file));
 
 // ---- games.json (データ正) ----
-fs.writeFileSync(path.join(ROOT, 'games.json'), JSON.stringify({
+fs.writeFileSync(path.join(ROOT, 'docs', 'games.json'), JSON.stringify({
     generated: today,
     count: list.length,
     games: list,
 }, null, 1) + '\n');
 
 // ---- games.js (ブラウザ用・file://でも読める script 形式) ----
-fs.writeFileSync(path.join(ROOT, 'games.js'),
+fs.writeFileSync(path.join(ROOT, 'docs', 'games.js'),
     `// 自動生成: tools/build-manifest.js — 直接編集しないこと\nwindow.MAMEGO_GAMES = ${JSON.stringify(list)};\n`);
 
 // ---- VARIANTS.md (カテゴリ別カタログ) ----
@@ -89,20 +89,20 @@ for (const [label, arr] of groups) {
     }
     md += '\n';
 }
-fs.writeFileSync(path.join(ROOT, 'VARIANTS.md'), md);
+fs.writeFileSync(path.join(ROOT, 'docs', 'VARIANTS.md'), md);
 
 // ---- sitemap.xml ----
 const urls = [''].concat(list.map(g => g.file)).map(f =>
     `  <url><loc>${BASE}${f || 'index.html'}</loc></url>`);
-fs.writeFileSync(path.join(ROOT, 'sitemap.xml'),
+fs.writeFileSync(path.join(ROOT, 'docs', 'sitemap.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`);
 
 // ---- robots.txt ----
-fs.writeFileSync(path.join(ROOT, 'robots.txt'),
+fs.writeFileSync(path.join(ROOT, 'docs', 'robots.txt'),
     `User-agent: *\nAllow: /\n\nSitemap: ${BASE}sitemap.xml\n`);
 
 // ---- ranking.js スタブ (無ければ作る。実データは nightly-ranking workflow が上書き) ----
-const rankPath = path.join(ROOT, 'ranking.js');
+const rankPath = path.join(ROOT, 'docs', 'ranking.js');
 if (!fs.existsSync(rankPath)) {
     fs.writeFileSync(rankPath,
         `// 自動生成スタブ: nightly-ranking workflow が実データで上書きする\nwindow.MAMEGO_RANKING = { generated: null, games: {} };\n`);

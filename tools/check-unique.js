@@ -45,19 +45,19 @@ for (const key of ['en', 'jp']) {
 //    HEAD 基準のため gen_wave3 の実行順に依らない。git が無い環境では
 //    ワークツリーの内容で判定 (その場合 gen 実行前が前提)。
 const keyRe = /STORAGE_KEY = '([a-z0-9_]+)-save-v1'/;
-const committedHtml = new Set();     // HEAD に存在するルート直下の *.html
+const committedHtml = new Set();     // HEAD に存在する docs/ 直下の *.html (docs/ 接頭は剥がして保持)
 const committedOwner = new Map();    // html file -> HEAD に埋め込まれた prefix
 let gitOk = true;
 try {
     const { execSync } = require('child_process');
     // ls-tree の pathspec は glob 非対応なので全取得して JS 側で絞る
     execSync('git ls-tree -r --name-only HEAD', { cwd: ROOT, encoding: 'utf8' })
-        .split('\n').filter(f => f.endsWith('.html') && !f.includes('/'))
-        .forEach(f => committedHtml.add(f));
+        .split('\n').filter(f => f.startsWith('docs/') && f.endsWith('.html') && !f.slice(5).includes('/'))
+        .forEach(f => committedHtml.add(f.slice(5)));
     const gg = execSync('git grep -n STORAGE_KEY HEAD', { cwd: ROOT, encoding: 'utf8' });
     for (const line of gg.split('\n')) {
         const m = line.match(/^HEAD:([^:]+\.html):\d+:.*STORAGE_KEY = '([a-z0-9_]+)-save-v1'/);
-        if (m) committedOwner.set(m[1], m[2]);
+        if (m) committedOwner.set(m[1].replace(/^docs\//, ''), m[2]);
     }
 } catch { gitOk = false; }
 
@@ -67,15 +67,15 @@ const ownCheck = (f, spec) => {
         const p = committedOwner.get(f);
         return p === undefined ? false : p === spec.prefix;
     }
-    if (!fs.existsSync(path.join(ROOT, f))) return null;
-    const m = fs.readFileSync(path.join(ROOT, f), 'utf8').match(keyRe);
+    if (!fs.existsSync(path.join(ROOT, 'docs', f))) return null;
+    const m = fs.readFileSync(path.join(ROOT, 'docs', f), 'utf8').match(keyRe);
     return m ? m[1] === spec.prefix : false;
 };
 
 for (const { at, spec } of specs) {
-    // ルート直下の英小文字名のみ (パスエスケープ・上書き事故の防止)
+    // docs/ 直下の英小文字名のみ (パスエスケープ・上書き事故の防止)
     if (spec.file && !/^[a-z0-9]+\.html$/.test(spec.file))
-        complain(`${at}: file '${spec.file}' はルート直下の「英小文字+.html」にしてください`);
+        complain(`${at}: file '${spec.file}' は docs/ 直下の「英小文字+.html」にしてください`);
     if (spec.prefix && !/^[a-z0-9]+$/.test(spec.prefix))
         complain(`${at}: prefix '${spec.prefix}' は英小文字のみにしてください`);
     const own = spec.file ? ownCheck(spec.file, spec) : null;
@@ -104,7 +104,7 @@ for (const { at, spec } of specs) {
 }
 
 // 4) index.html のカタログ (GAMES 配列 + WAVE3 セクション) 内の重複
-const indexPath = path.join(ROOT, 'index.html');
+const indexPath = path.join(ROOT, 'docs', 'index.html');
 if (fs.existsSync(indexPath)) {
     const html = fs.readFileSync(indexPath, 'utf8');
     const entries = [...html.matchAll(

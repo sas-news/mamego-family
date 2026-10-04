@@ -20,7 +20,7 @@ if (!CODE || !TOKEN) {
     process.exit(0);
 }
 
-const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'games.json'), 'utf8'));
+const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs', 'games.json'), 'utf8'));
 const slugs = manifest.games.map(g => g.slug);
 // 集計対象パス: event/fav/<slug> と event/play/<slug>
 const targets = [];
@@ -81,7 +81,7 @@ async function main() {
     const data = { generated: new Date().toISOString().slice(0, 10), since: SINCE.slice(0, 10), games };
 
     fs.writeFileSync(path.join(ROOT, 'ranking.json'), JSON.stringify(data, null, 1) + '\n');
-    fs.writeFileSync(path.join(ROOT, 'ranking.js'),
+    fs.writeFileSync(path.join(ROOT, 'docs', 'ranking.js'),
         `// 自動生成: nightly-ranking workflow (${data.generated}) — 直接編集しないこと\n` +
         `window.MAMEGO_RANKING = ${JSON.stringify(data)};\n`);
     console.log(`build-ranking: ${fetched} requests, ${Object.keys(games).length} games with data, ` +
