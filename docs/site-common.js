@@ -134,7 +134,10 @@
     var favBtn = document.getElementById('mgFav');
     if (favBtn) {
         var syncFav = function () {
-            favBtn.textContent = isFav() ? 'お気に入りを解除' : 'お気に入りに追加';
+            var on = isFav();
+            favBtn.textContent = on ? 'お気に入り済み' : 'お気に入り';
+            favBtn.classList.toggle('mg-faved', on);
+            favBtn.setAttribute('aria-pressed', String(on));
         };
         syncFav();
         favBtn.addEventListener('click', function () {

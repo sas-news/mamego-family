@@ -15,7 +15,7 @@
     <meta property="og:image" content="https://sas-news.github.io/mamego-family/og/kitchengo.png">
     <meta property="og:locale" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="mamego-build" content="777db58">
+    <meta name="mamego-build" content="10ff19d">
     <!-- /MAMEGO:META -->
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -54,18 +54,19 @@
             .mg-menu-btn{display:flex;align-items:center;gap:.3rem;padding:.4rem .7rem;border-radius:.5rem;border:1px solid;color:inherit;opacity:.8;transition:all .15s;cursor:pointer;background:transparent;font:inherit;font-weight:700;font-size:inherit;line-height:1}
             .mg-menu-btn:hover{opacity:1}
             .mg-menu-btn svg{width:.7em;height:.7em}
+            .mg-menu-btn.mg-faved{color:#b45309;border-color:#b45309;opacity:1}
             .mg-menu-item{display:block;width:100%;text-align:left;padding:.55rem .8rem;border-radius:.5rem;border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit;cursor:pointer;white-space:nowrap;text-decoration:none}
             .mg-menu-item:hover{background:rgba(0,0,0,.07)}
             .mg-menu-item.hidden{display:none}
         </style>
         <nav class="w-full flex items-center justify-between text-xs sm:text-sm font-bold" aria-label="サイトナビ">
             <a href="index.html" class="px-2.5 py-1.5 rounded-lg border border-current/25 hover:bg-black/10 active:scale-95 transition-all" title="ゲーム一覧に戻る">← 一覧</a>
-            <div class="relative">
+            <div class="relative flex items-center gap-1.5">
+                <button id="mgFav" class="mg-menu-btn">お気に入り</button>
+                <button id="mgShare" class="mg-menu-btn">リンクをコピー</button>
                 <button id="mgMenuBtn" class="mg-menu-btn" aria-haspopup="menu" aria-expanded="false">メニュー<svg viewBox="0 0 10 6" fill="currentColor" aria-hidden="true"><path d="M1 0l4 4 4-4z"/></svg></button>
                 <div id="mgMenu" class="hidden absolute right-0 top-full mt-1 z-50 bg-white text-neutral-900 rounded-xl border border-neutral-300 shadow-lg p-1 min-w-[12rem]" role="menu">
-                    <button id="mgFav" class="mg-menu-item" role="menuitem">お気に入りに追加</button>
                     <a id="mgRand" href="#" class="mg-menu-item" role="menuitem">ランダムなゲームへ</a>
-                    <button id="mgShare" class="mg-menu-item" role="menuitem">リンクをコピー</button>
                     <div class="my-1 border-t border-neutral-200" role="separator"></div>
                     <button data-report="github" class="mg-menu-item" role="menuitem">バグをGitHubで報告</button>
                     <button data-report="form" class="mg-menu-item hidden" role="menuitem">バグをフォームで報告</button>
