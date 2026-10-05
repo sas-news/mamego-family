@@ -1,17 +1,15 @@
 // ============================================================
 // 新規ゲーム spec 雛形 — ルールを変えて「新しい碁」を作る
 //
-//   使い方:
-//     1. このファイルを variants3/<あなたのゲーム>.spec.js にコピー
-//        (ファイル名は file: から .html を除いた名前に揃えると分かりやすい)
-//     2. MYGO / マイ碁 / mygo を自分の名前にすべて置き換える
-//     3. 「ルール差分」セクションに自分のルールを書く
-//     4. docs/new-game.icon.js もコピーして variants3/icons/ に置く
+//   使い方 (手動): このファイルを variants/<あなたのゲーム>.spec.js にコピーして
+//                 MYGO / マイ碁 / mygo を自分の名前にすべて置き換える。
+//   使い方 (推奨): npm run new-game -- <名前> <英字名> <日本語名> が
+//                 この雛形とアイコン雛形を名前置換済みで生成する。
 //
 //   spec = 「ベース (tools/base.html) のどの文字列を何に置き換えるか」の列。
 //   アンカーは gen_kit.js の K.* か自分で書いた完全一致文字列。
 //   アンカーが見つからないと gen が MISSING で失敗する。
-//   詳しいアンカー一覧は docs/wave3-guide.md と gen_kit.js を参照。
+//   詳しいアンカー一覧は guides/spec-guide.md と gen_kit.js を参照。
 // ============================================================
 const K = require('../gen_kit.js');
 
@@ -22,7 +20,7 @@ module.exports = {
     prefix: 'mygo',      // file から .html を除いた名前。セーブキー/ルームIDの接頭辞
     desc: '初手は四隅にしか置けない碁。',  // index.html のカードに出る1行説明
     kind: 'stone',       // アイコン種別。新規は 'stone' (通常碁石) がほぼ全て
-    icon: 'mygo',        // variants3/icons/mygo.icon.js の icon 値と一致させる
+    icon: 'mygo',        // variants/icons/mygo.icon.js の icon 値と一致させる
 
     spec: [
         // --- 必須・先頭: タイトル/H1/セーブキー/ルームID を自分の名前に一括置換 ---
@@ -59,7 +57,7 @@ module.exports = {
         ...K.STONE_SPEC,
     ],
 
-    // ルールテスト。test-wave3.js が生成された HTML を VM で起動して実行する。
+    // ルールテスト。test-specs.js が生成された HTML を VM で起動して実行する。
     // assert('説明', 条件) を最低3つ。
     // 使えるもの: board[y*BOARD_SIZE+x] / pieces / history / turn / captures /
     //             executeMove({cells:[{x,y}...]}, player) / isValidPlacement(cells, player)

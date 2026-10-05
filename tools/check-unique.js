@@ -1,7 +1,7 @@
 // check-unique.js — PR チェック用の一意性検査。
 //   失敗 (fail): file/prefix/icon の重複、spec 管理外 HTML との衝突、icon 未作成
 //   警告 (warn): en/jp 名の類似 (見た目の被り。既存にも類似名があるため fail にしない)
-// gen 実行前でも動くが、CI では gen_wave3_index.js の後に実行する想定。
+// gen 実行前でも動くが、CI では gen_index.js の後に実行する想定。
 const fs = require('fs');
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
@@ -16,7 +16,7 @@ const collect = (dir) => {
     return fs.readdirSync(d).filter(f => f.endsWith('.spec.js'))
         .map(f => ({ at: `${dir}/${f}`, spec: require(path.join(d, f)) }));
 };
-const specs = [...collect('variants2'), ...collect('variants3')];
+const specs = [...collect('variants')];
 
 // 1) spec 同士の重複。file/prefix/icon は保存キーや上書きの実害があるので fail、
 //    en/jp は表示名の類似なので warn のみ。
@@ -42,7 +42,7 @@ for (const key of ['en', 'jp']) {
 // 2) spec の file が spec 管理外の既存 HTML を上書きしないか。
 //    生成 HTML は全て STORAGE_KEY = '<prefix>-save-v1' を含むので、
 //    「コミット済みのそのファイルが自分の prefix を持つ生成物か」で所有を判定する。
-//    HEAD 基準のため gen_wave3 の実行順に依らない。git が無い環境では
+//    HEAD 基準のため gen_specs の実行順に依らない。git が無い環境では
 //    ワークツリーの内容で判定 (その場合 gen 実行前が前提)。
 const keyRe = /STORAGE_KEY = '([a-z0-9_]+)-save-v1'/;
 const committedHtml = new Set();     // HEAD に存在する docs/ 直下の *.html (docs/ 接頭は剥がして保持)
@@ -85,22 +85,23 @@ for (const { at, spec } of specs) {
     }
 }
 
-// 3) wave3 spec の icon 参照が実在するか
-const iconsDir = path.join(ROOT, 'variants3', 'icons');
+// 3) spec の icon 参照が実在するか (catalog: false = 手書きカード掲載のレガシーは検査対象外)
+const iconsDir = path.join(ROOT, 'variants', 'icons');
 const icons = new Set();
 if (fs.existsSync(iconsDir)) {
     for (const f of fs.readdirSync(iconsDir).filter(f => f.endsWith('.icon.js'))) {
         const m = require(path.join(iconsDir, f));
         const name = m.icon || f.replace(/\.icon\.js$/, '');
-        if (icons.has(name)) complain(`icon '${name}' が重複 (variants3/icons/)`);
+        if (icons.has(name)) complain(`icon '${name}' が重複 (variants/icons/)`);
         icons.add(name);
     }
 }
 for (const { at, spec } of specs) {
-    if (!at.startsWith('variants3/')) continue;
-    if (!spec.icon) complain(`${at}: icon がありません (一覧は汎用アイコンになります)`);
+    if (!at.startsWith('variants/')) continue;
+    if (spec.catalog === false) continue;
+    if (!spec.icon) complain(`${at}: icon がありません (一覧カードが生成されません)`);
     else if (!icons.has(spec.icon))
-        complain(`${at}: icon '${spec.icon}' → variants3/icons/${spec.icon}.icon.js がありません`);
+        complain(`${at}: icon '${spec.icon}' → variants/icons/${spec.icon}.icon.js がありません`);
 }
 
 // 4) index.html のカタログ (GAMES 配列 + WAVE3 セクション) 内の重複

@@ -8,8 +8,7 @@ on:
     paths:
       - 'tools/base.html'
       - 'gen_*.js'
-      - 'variants2/**'
-      - 'variants3/**'
+      - 'variants/**'
       - 'docs/icon-draw.js'
       - 'tools/**'
       - 'docs/site-*.js'

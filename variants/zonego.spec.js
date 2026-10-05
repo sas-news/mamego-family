@@ -1,0 +1,119 @@
+// ZONEGO — 区域碁: 3×3の9区域のうち5区域以上を制圧した側が即勝ち
+const K = require('../gen_kit.js');
+module.exports = {
+    file: 'zonego.html',
+    en: 'ZONEGO',
+    jp: '区域碁',
+    prefix: 'zonego',
+    desc: '盤は9区域。自分の石が相手より2個以上多い区域を「制圧」。5区域制圧で即勝ち。',
+    catalog: false, // index.html に手書きカードがあるため自動カタログ生成しない
+    kind: 'zone',
+    spec: [
+        ...K.rb('ZONEGO', '区域碁', 'zonego'),
+        K.params([
+            { key: 'ctrl_margin', label: '制圧に必要な差', min: 1, max: 6, def: 2, unit: '石' },
+            { key: 'win_zones', label: '勝利に必要な区域数', min: 3, max: 9, def: 5, unit: '区域' },
+        ]),
+        [K.ONE, `        function endGameByScore() {`, K.WIN_BY_RULE_FN + `
+        // 区域制圧数: 自石が相手より2個以上多い区域の数
+        function controlledZones(player) {
+            const opponent = player === 1 ? 2 : 1;
+            const zw = Math.ceil(BOARD_SIZE / 3), zh = Math.ceil(BOARD_SIZE / 3);
+            const own = Array(9).fill(0), opp = Array(9).fill(0);
+            for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                const v = board[y * BOARD_SIZE + x];
+                const z = Math.min(2, Math.floor(y / zh)) * 3 + Math.min(2, Math.floor(x / zw));
+                if (v === player) own[z]++;
+                else if (v === opponent) opp[z]++;
+            }
+            let n = 0;
+            for (let z = 0; z < 9; z++) if (own[z] >= opp[z] + (P('ctrl_margin') || 2)) n++;
+            return n;
+        }
+
+        function endGameByScore() {`],
+        [K.ONE, K.TURN_FLIP, `            consecutivePasses = 0;
+            holdUsed = false; // 着手でホールド権利が戻る
+
+            // 区域ルール: N区域以上を制圧したら即勝ち
+            if (controlledZones(player) >= (P('win_zones') || 5)) {
+                if (lastMove && lastMove.cells[0]) {
+                    fxGlow(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, '#facc15', 800);
+                    fxText(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x, '制圧!', '#facc15', 1200);
+                }
+                fxShake(4, 300);
+                winByRule(player, '区域制圧勝ち', '9区域のうち' + (P('win_zones') || 5) + '区域以上を制圧しました'); return;
+            }
+
+            turn = opponent;`],
+        // 区域境界を太線で描く
+        K.CUE_STARS(`            {
+                const zw = Math.ceil(BOARD_SIZE / 3);
+                ctx.save();
+                ctx.strokeStyle = alphaColor(currentTheme.lineColor, 0.7);
+                ctx.lineWidth = Math.max(1.6, cellSize * 0.06);
+                for (let k = 1; k <= 2; k++) {
+                    const p2 = padding + k * zw * cellSize;
+                    ctx.beginPath(); ctx.moveTo(p2, padding); ctx.lineTo(p2, width - padding); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(padding, p2); ctx.lineTo(width - padding, p2); ctx.stroke();
+                }
+                ctx.restore();
+            }`),
+        // 区域制圧: 制圧区域をプレイヤー色で染め、小旗を立てる
+        K.CUE_GRID(`            {
+                const zw = Math.ceil(BOARD_SIZE / 3), zh = Math.ceil(BOARD_SIZE / 3);
+                const own = Array(9).fill(0), opp = Array(9).fill(0);
+                for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
+                    const v = board[y * BOARD_SIZE + x];
+                    const z = Math.min(2, Math.floor(y / zh)) * 3 + Math.min(2, Math.floor(x / zw));
+                    if (v === 1) own[z]++;
+                    else if (v === 2) opp[z]++;
+                }
+                for (let z = 0; z < 9; z++) {
+                    const cm = P('ctrl_margin') || 2;
+                    const zx = z % 3, zy = Math.floor(z / 3);
+                    const x0 = padding + zx * zw * cellSize - cellSize * 0.5;
+                    const y0 = padding + zy * zh * cellSize - cellSize * 0.5;
+                    const w2 = Math.min(zw * cellSize, width - padding * 2 + cellSize - zx * zw * cellSize);
+                    const h2 = Math.min(zh * cellSize, width - padding * 2 + cellSize - zy * zh * cellSize);
+                    if (own[z] >= opp[z] + cm) {
+                        ctx.fillStyle = 'rgba(30,30,30,0.16)';
+                    } else if (opp[z] >= own[z] + cm) {
+                        ctx.fillStyle = 'rgba(255,255,255,0.28)';
+                    } else {
+                        continue;
+                    }
+                    ctx.fillRect(x0, y0, w2, h2);
+                    const dark = own[z] >= opp[z] + cm;
+                    ctx.fillStyle = dark ? 'rgba(15,15,15,0.55)' : 'rgba(255,255,255,0.7)';
+                    const fx2 = x0 + w2 * 0.15, fy2 = y0 + h2 * 0.14;
+                    ctx.fillRect(fx2 - cellSize * 0.015, fy2, cellSize * 0.03, cellSize * 0.32);
+                    ctx.beginPath();
+                    ctx.moveTo(fx2, fy2);
+                    ctx.lineTo(fx2 + cellSize * 0.26, fy2 + cellSize * 0.08);
+                    ctx.lineTo(fx2, fy2 + cellSize * 0.17);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }`),
+        ...K.EVENT_CHIP_SPEC(`'制圧 黒:' + controlledZones(1) + ' 白:' + controlledZones(2)`),
+        [K.ONE, K.RV_BASE, K.rv([
+            '盤は太線で区切られた9区域。自分の石が相手より2個以上多い区域を「制圧」したことになる。',
+            '5区域以上を制圧した時点で即勝ち。制圧数はヘッダのチップで確認できる。',
+        ])],
+        ...K.STONE_SPEC,
+    ],
+    test: `
+        board.fill(0);
+        assert('初期は0区域', controlledZones(1) === 0);
+        // 5つの区域に黒2個ずつ (区域幅をまたいで配置)
+        const zw = Math.ceil(BOARD_SIZE / 3);
+        const centers = [[1,1],[zw+1,1],[2*zw+1,1],[1,zw+1],[zw+1,zw+1]];
+        centers.forEach(([x,y]) => { board[y * BOARD_SIZE + x] = 1; board[y * BOARD_SIZE + x + 1] = 1; });
+        assert('5区域制圧', controlledZones(1) === 5);
+        board.fill(0);
+        assert('空盤は0', controlledZones(1) === 0);
+        executeMove({ cells: [{ x: 0, y: 0 }] }, 1);
+        assert('石1個では制圧なし', controlledZones(1) === 0);
+    `,
+};

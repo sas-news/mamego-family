@@ -3,12 +3,14 @@
   "private": true,
   "description": "変則碁シリーズ — 静的HTML変則囲碁コレクション",
   "scripts": {
-    "gen": "node gen_variants.js && node gen_wave2.js && node gen_wave3.js && node gen_wave3_index.js && node tools/build-manifest.js && node tools/inject-site.js",
+    "gen": "node gen_specs.js && node gen_index.js && node tools/build-manifest.js && node tools/inject-site.js",
     "manifest": "node tools/build-manifest.js",
+    "new-game": "node tools/scaffold-game.js",
+    "check": "npm run gen && node tools/check-unique.js && npm test",
     "inject": "node tools/inject-site.js",
     "og": "node tools/og-image.js",
     "ranking": "node tools/build-ranking.js",
-    "test": "node test-variants.js && node test-algo.js && node test-logic.js"
+    "test": "node test-variants.js && node test-algo.js && node test-logic.js && node test-specs.js"
   },
   "devDependencies": {
     "canvas": "^3.1.0"

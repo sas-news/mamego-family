@@ -19,16 +19,13 @@ jobs:
       # ここで生成した HTML はコミットしない (マージ後に regen-assets が再生成する)
       - name: generate variants
         run: |
-          node gen_variants.js
-          node gen_wave2.js
-          node gen_wave3.js
-          node gen_wave3_index.js
+          node gen_specs.js
+          node gen_index.js
       # 名前・アイコンの重複 / 上書き事故の検査
       - name: uniqueness check
         run: node tools/check-unique.js
       # spec の test: を全バリアント分実行 + 基盤テスト
       - name: tests
         run: |
-          node test-wave2.js
-          node test-wave3.js
+          node test-specs.js
           npm test

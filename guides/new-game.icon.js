@@ -1,9 +1,10 @@
 // ============================================================
 // 新規ゲーム アイコン雛形
-//   使い方: variants3/icons/<icon名>.icon.js にコピーし、
+//   使い方: variants/icons/<icon名>.icon.js にコピーし、
 //           icon 値を spec の icon: と一致させる。
+//           (npm run new-game なら spec と一緒に自動生成される)
 //   body は 6x6 グリッド上に描く描画コード (ctx / cell / 座標部品が使える)。
-//   参考: variants3/icons/*.icon.js に実例が多数ある。
+//   参考: variants/icons/*.icon.js に実例が多数ある。
 // ============================================================
 module.exports = {
     icon: 'mygo',   // spec の icon: と一致させる
