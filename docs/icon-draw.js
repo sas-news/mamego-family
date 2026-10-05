@@ -1891,7 +1891,7 @@
                     dot(1.3,4.6,'#fef3c7','#b45309',cell*0.45);
                     dot(4.9,4.6,P1,P1S,cell*0.32); seg(4.4,4.6,4.75,4.6,'rgba(62,34,17,0.5)',1.4);
                     break;
-                                                                                                                                                                                                                                                                                                                                                                                                // == WAVE3 ICONS BEGIN ==
+                                                                                                                                                                                                                                                                                                                                                                                                                // == WAVE3 ICONS BEGIN ==
                 case 'abyssgo': {
         tri(3, 4.4, cell * 1.3, '#475569', '#1e293b', 0);
         blk(2.6, 2.2, '#57534e', '#292524');
