@@ -15,7 +15,7 @@
     <meta property="og:image" content="https://sas-news.github.io/mamego-family/og/chargego.png">
     <meta property="og:locale" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="mamego-build" content="2e8af52">
+    <meta name="mamego-build" content="ec2d9bcd">
     <!-- /MAMEGO:META -->
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -837,6 +837,10 @@
         // DOM Elements
         const canvas = document.getElementById('boardCanvas');
         const ctx = canvas.getContext('2d');
+        // Safari <16.4 には ctx.roundRect が無いので角丸を矩形にフォールバック (壁描画で例外にならないように)
+        if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h) { this.rect(x, y, w, h); };
+        }
         const appBody = document.getElementById('appBody');
         const statusCard = document.getElementById('statusCard');
         const turnIndicator = document.getElementById('turnIndicator');
@@ -1290,8 +1294,15 @@
                 return;
             }
             // デバイスpxのスナップショットをCSSpx領域へ縮小貼り付け (ctxのdpr変換込みで等倍になる)
-            ctx.drawImage(fxStaticCv, 0, 0, width, width);
-            drawFx(now, padding, cellSize);
+            try {
+                ctx.drawImage(fxStaticCv, 0, 0, width, width);
+                drawFx(now, padding, cellSize);
+            } catch (e) {
+                // 静的層が壊れていた場合は全面描画にフォールバック (ループを殺さない)
+                fxStaticCv = null; fxStaticCtx = null;
+                render();
+                return;
+            }
             fxSchedule();
         }
 
