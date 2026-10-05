@@ -120,7 +120,7 @@ module.exports = {
             }`),
         // 窒息領域の閾値は設定で調整可能
         [K.ONE, `                if (region.length < PIECE_SIZE) {`, `                if (region.length < (P('suff_min') || PIECE_SIZE)) {`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手は1x3の橋ピース (回転=⟳ボタン・Rキー・右クリック・ホイール)。両端が空点なら、中点が自分の石でも上に架けられる。','自分の石を橋桁にして連を伸ばす。中点が敵石なら架けられない。'])],
+        [K.ONE, K.RV_BASE, K.rv(['着手は1x3の橋ピース (回転=⟳ボタン・Rキー・右クリック・ホイール)。両端が空点なら、中点が自分の石でも上に架けられる。','自分の石を橋桁にして連を伸ばす。中点が敵石なら架けられない。'])],
         // 打ち切り手数 (0=制限なし): 設定で有効化すると超過時に強制採点
         [K.ONE, `        function executeMove(move, player) {`,
 `        let moveCapFired = false;

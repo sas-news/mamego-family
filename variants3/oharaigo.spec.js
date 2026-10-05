@@ -66,10 +66,10 @@ module.exports = {
 
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'大祓まで' + ((P('oharai_interval') || 18) - (history.length % (P('oharai_interval') || 18))) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            大祓碁: 18手ごとの大祓 — 呼吸点1以下の連は全て穢れとして祓われる<br>
+        [K.ONE, K.INFO_BASE, `            大祓碁: 18手ごとの大祓 — 呼吸点1以下の連は全て穢れとして祓われる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '18手ごとの着手後に大祓が執り行われる: 呼吸点1以下の連は全て祓われて消滅 (相手のアゲハマに)。',
             '大祓に弱い連を残すな — 呼吸2以上に整えておけば清いまま残る。',
             '大祓のタイミングを読んで敵の弱連をあぶり出せ。',

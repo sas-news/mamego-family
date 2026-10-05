@@ -91,10 +91,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`(function(){ const b = pieces.filter(pc => isBuried(pc)).length; const iv = P('bury_interval') || 4; return b > 0 ? '埋蔵 ' + b + '石' : '次の埋蔵 ' + (iv - st.pcnt[turn] % iv) + '手後'; })()`),
-        [K.ONE, K.INFO_ALGO, `            埋蔵碁: 各側4手ごとの石は土に埋められ、4手の間は土饅頭にしか見えない<br>
+        [K.ONE, K.INFO_BASE, `            埋蔵碁: 各側4手ごとの石は土に埋められ、4手の間は土饅頭にしか見えない<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '各プレイヤーの4・8・12…手目の着手は「埋蔵石」— 色の分からない土饅頭として現れる。',
             '埋蔵は4手で掘り起こされ本来の色に戻る。伏せられた石も呼吸・取り・地には普通に働く。',
         ])],

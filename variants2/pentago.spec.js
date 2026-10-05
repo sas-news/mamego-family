@@ -46,7 +46,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '縦・横・斜めのいずれかに自分の石を5個連続で並べた側が即勝ち (五目並べ)。',
             '囲碁の取り・呼吸ルールも有効: 途中の石を取られれば連は切れる。',
         ])],

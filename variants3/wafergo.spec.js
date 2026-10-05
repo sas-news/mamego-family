@@ -71,10 +71,10 @@ module.exports = {
             territory.white += t2.white;`],
         // 表/裏チップ
         ...K.EVENT_CHIP_SPEC(`(st.side ? '裏面' : '表面') + ' 反転まで ' + (Math.max(1, P('flip_interval') || 5) - (history.length % Math.max(1, P('flip_interval') || 5))) + ' 手'`),
-        [K.ONE, K.INFO_ALGO, `            薄板碁: 盤は表と裏の2面。5手ごとに裏返って別盤として進行する (左右反転)<br>
+        [K.ONE, K.INFO_BASE, `            薄板碁: 盤は表と裏の2面。5手ごとに裏返って別盤として進行する (左右反転)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手するたびに裏面も育つ。5手ごとに薄板が裏返り、別の盤 (左右反転) が現れる。',
             '両面の地とアゲハマの合計で勝敗を決める。表で不利でも裏で捲れる。',
             '満局打ち切り: 交点数の0.9倍の手数で即採点終局。連続パスでも即採点。',

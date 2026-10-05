@@ -112,7 +112,7 @@ module.exports = {
                 });
             });`),
         ...K.EVENT_CHIP_SPEC(`st.queue.length > 0 ? '予約 ' + st.queue.length + '件' : ''`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は「予約」となり盤には即座に現れない。2手後に実体化する (菱形の影が予約)。',
             '実体化の時点で埋まっている座標は消える。捕獲は実体化のタイミングで起こる。',
         ])],

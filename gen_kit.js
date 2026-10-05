@@ -1,12 +1,12 @@
 // gen_kit.js — 変則碁ジェネレータ共通基盤
 // gen_variants.js / gen_wave2.js から require して使う。
 // 変則碁バリアント一括生成スクリプト
-// algo.html (碁盤+通常碁石の見た目のエンジン) をテンプレートに、
+// tools/base.html (碁盤+通常碁石の中立ベース) をテンプレートに、
 // 各ゲーム = 「通常囲碁 + 特殊ルール」として文字列置換で差分を適用する。
 // 使い方: node gen_variants.js   (失敗した置換はログに出る)
 const fs = require('fs');
 const path = require('path');
-const ALGO = fs.readFileSync(path.join(__dirname, 'docs', 'algo.html'), 'utf8').replace(/\r\n/g, '\n');
+const BASE = fs.readFileSync(path.join(__dirname, 'tools', 'base.html'), 'utf8').replace(/\r\n/g, '\n');
 
 let failures = 0;
 function apply(src, spec, name) {
@@ -31,7 +31,8 @@ function out(name, html) {
 }
 
 // ============================================================
-// アンカー文字列 (algo.html 内の正確なテキスト)
+// アンカー文字列 — このブロックの *_ALGO 定数は ALGO (アルカン碁) 固有のテキスト。
+// ベース (tools/base.html) には含まれない。spec の「検索側」は下の *_BASE を使うこと。
 // ============================================================
 const MOLECULES_ALGO = `        const MOLECULES = {
             BUTANE:         { name: 'ブタン',            iupac: 'n-ブタン',             formula: 'C₄H₁₀', atoms: [[0,0],[1,0],[1,1],[2,1]] },
@@ -443,12 +444,12 @@ const SIZE_BTNS_91319 = `                    <button data-size="9" class="btn-si
 //   タイトル/H1/ルームID/保存キー/セクションコメント を一括差替
 // ============================================================
 const rb = (en, jp, prefix) => [
-    [ONE, '<title>ALGO - アルカン碁</title>', `<title>${en} - ${jp}</title>`],
-    [ONE, '>ALGO <span class="text-sm font-bold opacity-60">アルカン碁</span>',
+    [ONE, '<title>BASE - ベース碁</title>', `<title>${en} - ${jp}</title>`],
+    [ONE, '>BASE <span class="text-sm font-bold opacity-60">ベース碁</span>',
           `>${en} <span class="text-sm font-bold opacity-60">${jp}</span>`],
-    [ONE, `ROOM_ID_PREFIX = 'algo-'`, `ROOM_ID_PREFIX = '${prefix}-'`],
-    [ONE, `STORAGE_KEY = 'algo-save-v1'`, `STORAGE_KEY = '${prefix}-save-v1'`],
-    [ONE, '// 8. 囲碁 & ALGO ルール判定アルゴリズム', `// 8. 囲碁 & ${en} ルール判定アルゴリズム`],
+    [ONE, `ROOM_ID_PREFIX = 'base-'`, `ROOM_ID_PREFIX = '${prefix}-'`],
+    [ONE, `STORAGE_KEY = 'base-save-v1'`, `STORAGE_KEY = '${prefix}-save-v1'`],
+    [ONE, '// 8. 囲碁 & BASE ルール判定アルゴリズム', `// 8. 囲碁 & ${en} ルール判定アルゴリズム`],
 ];
 
 // ============================================================
@@ -462,14 +463,8 @@ const STONE_DEFS = `        // 通常の碁石: 1手につき空いている交�
             STONE: { name: '碁石', iupac: '', formula: '', atoms: [[0,0]] }
         };`;
 const STONE_SPEC = [
-    [ONE, MOLECULES_ALGO, STONE_DEFS],
-    [ONE, OCNT_ALGO, '// 碁石は1マス: 回転の区別なし (1パターン)'],
-    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'STONE';`],
-    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'STONE'`],
-    // 盤サイズ 13/19/25 → 9/13/19 (標準的な囲碁サイズ)
-    [ONE, SIZE_BTNS, SIZE_BTNS_91319],
-    [ONE, `![13, 19, 25].includes(s.boardSize)`, `![9, 13, 19].includes(s.boardSize)`],
-    [ONE, STARS_ALGO, STARS_GENERIC],
+    // ※ 分子定義・ルール文・サイズ等はベースが既に碁石版なので正規化不要。
+    //   ピース系バリアントは STONE_SPEC の「前」に自分のピース定義を差し替える。
     // トレイ非表示 (石は1種のみ)
     [ONE, TRAY_DIV, `        <div id="pieceTray" class="hidden w-full items-center gap-3 p-3 rounded-xl border transition-colors">`],
     // 供給モード設定を除去 (自由/ネクストの区別が無意味)
@@ -480,11 +475,43 @@ const STONE_SPEC = [
           `        if (btnOpenCatalog) btnOpenCatalog.addEventListener('click', () => {`],
     [ONE, `        btnCloseCatalog.addEventListener('click', () => {`,
           `        if (btnCloseCatalog) btnCloseCatalog.addEventListener('click', () => {`],
-    // ルール文 → 通常碁版
-    [ONE, RCM_ALGO, RULES_STONE_COMMON],
-    [ONE, RC_ALGO, RULES_STONE_CONTROLS],
-    // 残った「碁カン」表記を全て碁石へ
+    // 残った「碁カン」表記を全て碁石へ (ベースの休眠ピース機構内の表記も含む)
     [ALL, '碁カン', '碁石'],
+];
+
+// ============================================================
+// アンカー文字列 (tools/base.html 内の正確なテキスト)
+//   spec の「検索側」は全てこちらを参照する。_ALGO 版は上のブロック。
+// ============================================================
+const MOLECULES_BASE = STONE_DEFS;
+const OCNT_BASE = '// 碁石は1マス: 回転の区別なし (1パターン)';
+const INFO_BASE = `            標準的な囲碁 (ベーステンプレート)<br>
+            PC: クリックで配置 / スマホ: 1タップ目プレビュー、2タップ目確定`;
+const STARS_BASE = STARS_GENERIC;
+const RCM_BASE = RULES_STONE_COMMON;
+const RC_BASE = RULES_STONE_CONTROLS;
+const RV_BASE = rv([
+    'このゲームは全バリアント共通のベース (標準囲碁)。1手1石、特殊ルールなし。',
+    '盤サイズは9/13/19路から選択できる (コミ6.5目)。',
+]);
+const TRAY_UI_BASE = TRAY_UI_ALGO;
+
+// アルカン碁由来の盤サイズ・ルール文を維持するピース系バリアント向けの差分
+//   (ベースは9/13/19路・標準碁ルール文。ALGO系は13/19/25路+分子ルール文を使う)
+const ALGO_SIZE_SPEC = [
+    [ONE, SIZE_BTNS_91319, SIZE_BTNS],
+    [ONE, `![9, 13, 19].includes(s.boardSize)`, `![13, 19, 25].includes(s.boardSize)`],
+    [ONE, STARS_BASE, STARS_ALGO],
+];
+const ALGO_RULES_SPEC = [
+    [ONE, RCM_BASE, RCM_ALGO],
+    [ONE, RC_BASE, RC_ALGO],
+];
+const ALGO_PIECES_SPEC = [
+    [ONE, MOLECULES_BASE, MOLECULES_ALGO],
+    [ONE, OCNT_BASE, OCNT_ALGO],
+    [ONE, `let currentPieceType = 'STONE';`, `let currentPieceType = 'ISOBUTANE';`],
+    [ONE, `? s.currentPieceType : 'STONE'`, `? s.currentPieceType : 'BUTANE'`],
 ];
 
 // ============================================================
@@ -1127,7 +1154,7 @@ function params(arr) {
 // exports
 // ============================================================
 module.exports = {
-    ALGO,
+    BASE,
     apply,
     ONE,
     VPARAMS,
@@ -1146,6 +1173,17 @@ module.exports = {
     RCM_ALGO,
     RV_ALGO,
     RC_ALGO,
+    ALGO_SIZE_SPEC,
+    ALGO_RULES_SPEC,
+    ALGO_PIECES_SPEC,
+    MOLECULES_BASE,
+    OCNT_BASE,
+    INFO_BASE,
+    STARS_BASE,
+    RCM_BASE,
+    RC_BASE,
+    RV_BASE,
+    TRAY_UI_BASE,
     PIECES_PUSH,
     CAPTURE_BLOCK,
     TURN_FLIP,
@@ -1166,7 +1204,6 @@ module.exports = {
     NEXTBOX_HTML,
     GRID_RENDER,
     AI_EVAL,
-    TRAY_UI_ALGO,
     HOLD_ROTATE_FNS,
     CLICK_BODY,
     MOUSE_MOVE,

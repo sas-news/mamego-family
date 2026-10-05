@@ -93,7 +93,7 @@ module.exports = {
         [K.ONE, `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の城壁:</span> <strong>\${fortWhite}</strong></div>`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '敵連を取った跡地は自分の城壁 (置けない壁) になる。',
             '城壁は1つ1目の得点。取れば取るほど盤が自分の城だらけになる。',
         ])],

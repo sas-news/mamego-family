@@ -70,10 +70,10 @@ module.exports = {
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'磬まで ' + (Math.max(1, P('kei_interval') || 5) - (st.pcnt[turn] % Math.max(1, P('kei_interval') || 5))) + '手'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            磬子碁: 自分の5手ごとに磬が鳴り、法会の節目として+3目<br>
+        [K.ONE, K.INFO_BASE, `            磬子碁: 自分の5手ごとに磬が鳴り、法会の節目として+3目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の着手を数えて5手ごとに磬(けいす=法会の鉦)が鳴り、節目の功徳として+3目のアゲハマ。',
             '両者が同じ周期で鳴らす対称ルール — 節目の手を取り・逃げに使い分けろ。',
         ])],

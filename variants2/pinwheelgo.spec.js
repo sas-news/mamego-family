@@ -60,7 +60,7 @@ module.exports = {
                 ctx.restore();
             }`],
         ...K.WALL_GUARD_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '四隅を回転対称に削った風車形の盤。',
             '欠けた隅で呼吸点が偏り、辺ごとに異なる戦い方を強いられる。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',

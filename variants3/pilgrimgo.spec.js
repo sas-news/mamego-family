@@ -55,10 +55,10 @@ module.exports = {
                 });
             }`),
         ...K.EVENT_CHIP_SPEC(`(function(){ const s = getStarPoints(BOARD_SIZE).filter(pt => board[pt.y * BOARD_SIZE + pt.x] === turn).length; return '聖地 ' + s + '/' + (P('need') || 3); })()`),
-        [K.ONE, K.INFO_ALGO, `            巡礼碁: 5つの聖地 (星の点) のうち3つを同時に制すると奉納達成で即勝ち<br>
+        [K.ONE, K.INFO_BASE, `            巡礼碁: 5つの聖地 (星の点) のうち3つを同時に制すると奉納達成で即勝ち<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤上の5つの聖地 (朱い鳥居の星の点) のうち3箇所を同時に自分の石で占めると奉納達成で即勝ち。',
             '聖地の石は普通に取られる — 巡礼路を守りながら地取り勝負も続く。',
             '打ち切り: 140手を超えると自動終局・採点される。',

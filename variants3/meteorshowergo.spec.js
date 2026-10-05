@@ -91,10 +91,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'隕石まで ' + (Math.max(1, P('interval') || 10) - history.length % Math.max(1, P('interval') || 10)) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            隕群碁: 10手ごとに流星群が着弾し、十字の石を蒸発させる<br>
+        [K.ONE, K.INFO_BASE, `            隕群碁: 10手ごとに流星群が着弾し、十字の石を蒸発させる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '10手ごとに流星群が盤面に着弾。着弾点とその4近傍の石は蒸発する (アゲハマにならない)。',
             '着弾位置は手数で決まるため両者に公平。次の着弾はヘッダのチップで確認できる。',
         ])],

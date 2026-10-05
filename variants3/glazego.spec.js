@@ -94,10 +94,10 @@ module.exports = {
                 ctx.restore();
             });`),
         ...K.EVENT_CHIP_SPEC(`st.raw.length ? '生乾き ' + st.raw.length + '個 (窯まで ' + ((P('kiln_interval') || 12) - history.length % (P('kiln_interval') || 12)) + '手)' : '窯まで ' + ((P('kiln_interval') || 12) - history.length % (P('kiln_interval') || 12)) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            釉薬碁: 生乾きの石は取られると2個分。12手ごとの窯で確定<br>
+        [K.ONE, K.INFO_BASE, `            釉薬碁: 生乾きの石は取られると2個分。12手ごとの窯で確定<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着いたばかりの石は釉薬が生乾き (濡れ印が付く)。',
             '生乾きの石が取られると2個分のアゲハマになる — 生乾きの間は守りたい。',
             '12手ごとに窯が焚かれ、全ての生乾きの石の色が確定する (両者同じ窯)。',

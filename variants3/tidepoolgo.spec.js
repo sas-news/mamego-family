@@ -66,7 +66,7 @@ module.exports = {
         ...K.EVENT_CHIP_SPEC(`Math.floor(history.length / (P('tide_period') || 10)) % 2 === 1 ? '満潮' : '干潮'`),
         // 連続パスは潮に流されて即終局 — 死石は自動判定で採点 (対話的死石確認は省略)
         [K.ONE, `                startDeadStoneSelectionPhase();`, `                endGameByScore();`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '潮汐は10手周期: 満潮の10手帯は盤の外周1段が水没し、そこに着手もできない。',
             '潮が満ちる瞬間、外周の石は全て流出する (アゲハマにはならない)。周期は両者共通。',
         ])],

@@ -100,10 +100,10 @@ module.exports = {
             territory.black += jadeBonus(1);
             territory.white += jadeBonus(2);`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            翡翠碁: 石は生き残るほど深い緑に磨かれる。8手超+1目・16手超+2目<br>
+        [K.ONE, K.INFO_BASE, `            翡翠碁: 石は生き残るほど深い緑に磨かれる。8手超+1目・16手超+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '置いた石は翡翠 — 盤上で生き延びるほど深い緑に磨かれる。',
             '終局時、8手を超えて残った石は+1目、16手を超えた石は+2目の磨きボーナス。',
             '石を守り抜く持久戦が光る。両者同じ条件。',

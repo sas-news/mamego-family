@@ -57,7 +57,7 @@ module.exports = {
         [K.ONE, `                turn = turn === 1 ? 2 : 1;`, `                st.ply++;
                 turn = ((P('turn_pat') || 'pend') === 'half' ? [1, 1, 2, 2] : [1, 2, 2, 1])[st.ply % 4];`],
         ...K.EVENT_CHIP_SPEC(`'振子 ' + (st.ply % 4 + 1) + '/4'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '手番は交互ではなく振り子式: 黒,白,白,黒,黒,白,白,黒… の繰り返し。',
             '各プレイヤーに2連続番が交互に巡る。連番を活かして取り切りや陣地固めを狙う。',
         ])],

@@ -54,7 +54,7 @@ module.exports = {
             }
 
             turn = opponent;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は自分の直前の着手から3マス以上離れた点のみ (初手は自由)。',
             '自分の石は次々と長く跳んでいく。近場の攻防は他の石頼みになる。',
         ])],

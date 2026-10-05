@@ -68,7 +68,7 @@ module.exports = {
         [K.ONE, `                startDeadStoneSelectionPhase();`,
 `                endGameByScore(); // 連続パスで即採点終局`],
         ...K.WALL_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '各プレイヤーが最初に敵石を取った場所は「墓穴」になる (暗い窪み)。',
             '墓穴には二度と石は置けず、地にもならない。最初の捕獲場所に注意 — 両者1回ずつ。',
         ])],

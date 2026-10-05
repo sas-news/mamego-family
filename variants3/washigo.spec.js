@@ -90,10 +90,10 @@ module.exports = {
                 }
             }`),
         ...K.EVENT_CHIP_SPEC(`'雨まで ' + ((P('rain_interval') || 8) - history.length % (P('rain_interval') || 8)) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            和紙碁: 水路の石は濡れ、8手ごとの雨で破れて消える<br>
+        [K.ONE, K.INFO_BASE, `            和紙碁: 水路の石は濡れ、8手ごとの雨で破れて消える<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '中央に用水路が走る。水路の上の石は濡れる (青い滲みが目印)。',
             '8手ごとに雨が降り、濡れた石は全て破れて消える — アゲハマにはならない。',
             '水路は一時の足場。雨が来る前に取るか捨てるか。',

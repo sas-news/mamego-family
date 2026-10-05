@@ -39,7 +39,7 @@ module.exports = {
 
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'引継まで ' + (Math.max(1, P('flip_interval') || 10) - (history.length % Math.max(1, P('flip_interval') || 10))) + '手'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '引継: 10手ごとに盤面の全ての石の色が反転する (黒⇔白の総入替)。',
             '築いた地は相手に引き継がれる。反転のタイミングを読んで石を配置しよう。',
         ])],

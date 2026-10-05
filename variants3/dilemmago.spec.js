@@ -104,10 +104,10 @@ module.exports = {
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
         ...K.EVENT_CHIP_SPEC(`'精算まで ' + ((P('payoff_cycle') || 12) - (history.length % (P('payoff_cycle') || 12))) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            囚人碁: 12手ごとに協力/裏切りを精算。「姿勢」ボタンで宣言を切替<br>
+        [K.ONE, K.INFO_BASE, `            囚人碁: 12手ごとに協力/裏切りを精算。「姿勢」ボタンで宣言を切替<br>
             PC: クリックで配置 / 「姿勢」ボタンで協力⇄裏切り<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '12手ごとに両者の「姿勢」が精算される (デフォルトは協力)。',
             '協力×協力 = 両者 +3目。裏切り×裏切り = 両者 +1目。片方だけ裏切り = 裏切り側 +5目・相手 +0。',
             '精算後は両者「協力」に戻る。「姿勢」ボタンで次の精算への宣言を切り替える。',

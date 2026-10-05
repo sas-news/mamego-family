@@ -55,7 +55,7 @@ module.exports = {
                     ctx.fillText(String(BOARD_SIZE - 1 - y), width - padding + cellSize * 0.4, padding + y * cellSize);
                 }
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は上に行くほど高い雪山 (白い斜面で標高を表示)。',
             '終局時、各自の石に標高 (上端が最高点) の合計が得点になる。高峰を目指せ。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',

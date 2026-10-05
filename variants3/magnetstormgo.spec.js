@@ -43,7 +43,7 @@ module.exports = {
 
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'磁暴まで ' + (Math.max(1, P('storm_interval') || 10) - (history.length % Math.max(1, P('storm_interval') || 10))) + '手'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '磁暴は10手ごとに訪れ、盤上の各石が50%の確率で極性 (色) をランダム反転する。',
             '形勢は磁暴で一変する。反転は完全にランダムで両者同条件 — 残った連の形を活かそう。',
         ])],

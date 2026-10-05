@@ -129,10 +129,10 @@ module.exports = {
         }
         function _endGameByScoreCore() {`],
         ...K.EVENT_CHIP_SPEC(`'収穫 黒' + st.score[1] + ' / 白' + st.score[2]`),
-        [K.ONE, K.INFO_ALGO, `            養蚕碁: 桑畑の蚕は10手で繭を収穫して+1点<br>
+        [K.ONE, K.INFO_BASE, `            養蚕碁: 桑畑の蚕は10手で繭を収穫して+1点<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の対角に2枚の桑畑がある。',
             '桑畑の蚕は10手で繭を収穫 — 持ち主に+1点。収穫後の跡地にはまた蚕を放てる。',
             '桑畑を耕すか、敵の蚕を取り崩すか。両者同じ条件。',

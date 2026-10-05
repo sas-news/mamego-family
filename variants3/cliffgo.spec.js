@@ -85,10 +85,10 @@ module.exports = {
                 ctx.fillRect(padding - cellSize / 2, ey, BOARD_SIZE * cellSize, cellSize * 0.4);
                 ctx.restore();
             }`),
-        [K.ONE, K.INFO_ALGO, `            岩壁碁: 盤を横断する崖。縁に置いた石は崖下へ落下する<br>
+        [K.ONE, K.INFO_BASE, `            岩壁碁: 盤を横断する崖。縁に置いた石は崖下へ落下する<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤を横断する崖がある。崖の縁の石は崖下方向へ、空きがあるかぎり落下する。',
             '落下で下の石に積み上がって結合する。落下で窒息した連は崖死 (相手のアゲハマ)。',
         ])],

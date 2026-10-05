@@ -55,7 +55,7 @@ module.exports = {
                 soundManager.playPlace();
             }`],
         ...K.EVENT_CHIP_SPEC(`'倍率 黒x' + mult[1] + ' 白x' + mult[2]`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             'アゲハマは 取った石数 × 自分の倍率 で計算される。',
             '取るたびに自分の倍率が+1 (最大x9)、取れない手を打つと倍率はx1にリセット。',
         ])],

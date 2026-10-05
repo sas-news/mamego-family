@@ -76,7 +76,7 @@ module.exports = {
                 ctx.fillRect(width - padding - t / 2, padding, t, bw);
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '黒は上辺↔下辺、白は左辺↔右辺を自分の石の連で結んだら即勝ち (Hex)。',
             '囲碁の取り・呼吸ルールも有効: 相手の連を切るには取るしかない。',
         ])],

@@ -96,10 +96,10 @@ module.exports = {
         });`],
         ...K.EVENT_CHIP_SPEC(`st.pcnt[turn] % (P('night_interval') || 4) === (P('night_interval') || 4) - 1 ? '今晩は夜! 梟が狩る' : '夜まで ' + ((P('night_interval') || 4) - (st.pcnt[turn] || 0) % (P('night_interval') || 4)) + '手'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            梟碁: 自分の4手ごとの着手は「夜」。その手に置いた梟は隣の敵石を1つ狩る<br>
+        [K.ONE, K.INFO_BASE, `            梟碁: 自分の4手ごとの着手は「夜」。その手に置いた梟は隣の敵石を1つ狩る<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の着手数が4の倍数の手は「夜」— 置いた梟が隣接する敵石1つを狩る (孤立した獲物を優先)。',
             '昼 (他の手) では梟は眠る。夜の手番は両者に同じ周期で訪れる対称ルール。',
         ])],

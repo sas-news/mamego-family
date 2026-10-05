@@ -94,10 +94,10 @@ module.exports = {
         // 影石の描画補助 (取られた影の掃除は reproject と cleanUpPieces が担う)
         ...K.EVENT_CHIP_SPEC(`'光源 ' + ['北', '東', '南', '西'][st.light] + ' 残 ' + ((P('light_every') || 16) - history.length % (P('light_every') || 16)) + '手'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            投影碁: 全ての石が光と反対側のマスに影石を落とす。光源は16手毎に回る<br>
+        [K.ONE, K.INFO_BASE, `            投影碁: 全ての石が光と反対側のマスに影石を落とす。光源は16手毎に回る<br>
             PC: クリックで配置<br>
             スマホ: タップで配置`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '全ての石は光と反対側の隣マスに同色の影石を投影する (実石と同じ働き)。',
             '光源は16手ごとに北→東→南→西と回り、影の向きが変わる。',
             '影は呼吸や連結にも数える。光が回るタイミングで形が大きく変わる。',

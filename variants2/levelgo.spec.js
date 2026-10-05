@@ -79,7 +79,7 @@ module.exports = {
                 ctx.fillText(String(lv), cx, cy);
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv(['石にはレベルがある (初期Lv1)。敵連を取ると、取った石に接していた自石がLvUPする。','終局時、盤上の石の (Lv-1) の合計がその陣営の目に加算される。'])],
+        [K.ONE, K.RV_BASE, K.rv(['石にはレベルがある (初期Lv1)。敵連を取ると、取った石に接していた自石がLvUPする。','終局時、盤上の石の (Lv-1) の合計がその陣営の目に加算される。'])],
         ...K.STONE_SPEC,
     ],
     test: `

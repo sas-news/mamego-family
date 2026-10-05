@@ -66,7 +66,7 @@ module.exports = {
 
             turn = opponent;`],
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は自分の石から将棋の桂馬の動き (縦横1:2) で跳んだ点のみ。',
             '最初の1手はどこにでも置ける。石は桂馬のように跳んで盤を渡る。',
         ])],

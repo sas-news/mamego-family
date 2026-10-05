@@ -71,7 +71,7 @@ module.exports = {
             ctx2.restore();
         });`],
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は x,y 両座標が素数 (2,3,5,7,11,13,17) の交点のみ。',
             '盤面は疎らな星座となる。隣接する素数点同士でしか連が作れない。',
         ])],

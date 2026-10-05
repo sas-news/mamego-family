@@ -118,10 +118,10 @@ module.exports = {
         }
         function _endGameByScoreCore() {`],
         ...K.EVENT_CHIP_SPEC(`'ダイヤ ' + st.dia.filter(i => board[i] === 1 || board[i] === 2).length + '個'`),
-        [K.ONE, K.INFO_ALGO, `            炭素碁: 高圧区域の石はダイヤに変質。終局時1個1点<br>
+        [K.ONE, K.INFO_BASE, `            炭素碁: 高圧区域の石はダイヤに変質。終局時1個1点<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤中央は高圧区域。そこに置いた石はダイヤに変質する (青い結晶の輝き)。',
             '終局時、盤上に残ったダイヤ石は1個につき1点の加点 — 両者同じ条件。',
             '区域を争うか、敵のダイヤを取り崩すか。',

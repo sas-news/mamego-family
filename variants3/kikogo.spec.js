@@ -116,10 +116,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'名所 黒' + (st.score ? st.score[1] : 0) + ' 白' + (st.score ? st.score[2] : 0)`),
-        [K.ONE, K.INFO_ALGO, `            紀行碁: 5箇所の名所に最初に石を据えた者が+2目 (取られても記録は残る)<br>
+        [K.ONE, K.INFO_BASE, `            紀行碁: 5箇所の名所に最初に石を据えた者が+2目 (取られても記録は残る)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤上の5箇所が名所。最初にそこへ石を据えた者がその地を記して+2目 — 後から取られても記録は消えない。',
             '序盤の名所巡りが勝負を分ける。',
         ])],

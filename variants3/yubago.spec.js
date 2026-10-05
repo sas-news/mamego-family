@@ -84,10 +84,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'湯葉 ' + (() => { let n = 0; for (let y = 0; y < BOARD_SIZE; y++) { let r = 0; for (let x = 0; x < BOARD_SIZE; x++) { const v = board[y * BOARD_SIZE + x]; if (v === turn) { r++; if (r === (P('film_min') || 4)) n++; } else r = 0; } } return n + '膜'; })()`),
-        [K.ONE, K.INFO_ALGO, `            湯葉碁: 横に4個以上連なった石は湯葉の膜 (終局時 長さ-3 目)<br>
+        [K.ONE, K.INFO_BASE, `            湯葉碁: 横に4個以上連なった石は湯葉の膜 (終局時 長さ-3 目)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '横に4個以上連なった自分の石は「湯葉の膜」。終局時に膜1枚につき (長さ-3) 目が入る。',
             '長く伸ばすほど旨いが、敵に切られると膜は破れる。双方同じ条件の編み物勝負。',
         ])],

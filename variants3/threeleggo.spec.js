@@ -37,10 +37,10 @@ module.exports = {
                 && !cells.some(p => getNeighbors(p.y * BOARD_SIZE + p.x).some(n => board[n] === player))) return false;`],
         ...K.EVENT_CHIP_SPEC(`board.includes(turn) ? '既存の石に隣接して打て' : '初手は自由'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            二人三碁: 自分の石がある限り、着手は必ず既存の自分の石に隣接する (二人三脚のように連動)<br>
+        [K.ONE, K.INFO_BASE, `            二人三碁: 自分の石がある限り、着手は必ず既存の自分の石に隣接する (二人三脚のように連動)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤上に自分の石が1つでもあれば、新しい着手は既存の石に隣接した点に限られる。',
             '全ての石が繋がって伸びていく二人三脚の碁。全滅すれば再び自由に打てる。',
         ])],

@@ -53,10 +53,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>蒔絵の文様:</span> <strong>黒 \${makiBonus(1)} / 白 \${makiBonus(2)}</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            蒔絵碁: 同色の石が隣接する辺1本ごとに金粉+0.25目<br>
+        [K.ONE, K.INFO_BASE, `            蒔絵碁: 同色の石が隣接する辺1本ごとに金粉+0.25目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '蒔絵の文様: 同じ色の石が上下左右に隣接する辺1本ごとに終局時+0.25目。',
             '細かく繋げて文様を豊かに描こう。',
         ])],

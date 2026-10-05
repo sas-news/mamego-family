@@ -76,7 +76,7 @@ module.exports = {
                 (BOARD_SIZE - 2 * front + 2 * e) * cs, (BOARD_SIZE - 2 * front + 2 * e) * cs);
             ctx2.restore();
         });`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '初手は最外周 (環0) にのみ着手できる。',
             '石が存在する最も深い環の1つ内側まで着手可能になる。同心円状に内へ侵攻する。',
             '最深部の石が取られると侵攻深度も後退する。',

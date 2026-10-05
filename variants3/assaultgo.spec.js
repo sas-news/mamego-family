@@ -63,10 +63,10 @@ module.exports = {
 `                endGameByScore(); // 連続パスで即採点終局 (死に石確認は簡略化)`],
         [K.ONE, '        function endGameByScore() {', K.WIN_BY_RULE_FN + `
         function endGameByScore() {`],
-        [K.ONE, K.INFO_ALGO, `            突撃碁2: 敵連に接した連は突撃状態。毎手、両軍の先鋒が削れる<br>
+        [K.ONE, K.INFO_BASE, `            突撃碁2: 敵連に接した連は突撃状態。毎手、両軍の先鋒が削れる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '敵の連に隣接している連は「突撃状態」— 毎手番の終わりに両軍の先鋒 (接している石) が1個ずつ削れて相手のアゲハマになる。',
             '接触線は常に出血する。大きな連も少しずつ削られるので、離れて地を固める戦略も有効。',
             '打ち切り: 140手を超えると自動終局・採点される。',

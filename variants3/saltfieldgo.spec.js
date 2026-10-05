@@ -129,10 +129,10 @@ module.exports = {
         }
         function _endGameByScoreCore() {`],
         ...K.EVENT_CHIP_SPEC(`'結晶 黒' + st.score[1] + ' / 白' + st.score[2]`),
-        [K.ONE, K.INFO_ALGO, `            塩田碁: 上下の塩田で10手ごとに結晶が育ち+1点<br>
+        [K.ONE, K.INFO_BASE, `            塩田碁: 上下の塩田で10手ごとに結晶が育ち+1点<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の上下に塩田 (白い結晶田) がある。',
             '10手ごとの天日で、田の中の石が塩の結晶になって持ち主に+1点 (1石1回)。',
             '結晶田を巡る取り合い — 両者同じ条件。',

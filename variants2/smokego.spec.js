@@ -87,10 +87,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`st.smoke && history.length - st.smoke.at < (P('smoke_turns') || 3) ? '煙幕 残り' + ((P('smoke_turns') || 3) - (history.length - st.smoke.at)) + '手' : '煙幕まで ' + (history.length % (P('smoke_interval') || 6) === 0 ? (P('smoke_interval') || 6) : (P('smoke_interval') || 6) - history.length % (P('smoke_interval') || 6)) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            煙幕碁: 6手ごとの着地点を中心に3x3の煙幕。区内の石は3手の間見えない<br>
+        [K.ONE, K.INFO_BASE, `            煙幕碁: 6手ごとの着地点を中心に3x3の煙幕。区内の石は3手の間見えない<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '6の倍数手で打たれた石の周囲3x3に煙幕が張られ、中の石は3手の間不可視になる。',
             '煙幕内の石も呼吸・取り・地には普通に働く — 霧の中の暗闘を読み合え。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',

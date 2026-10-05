@@ -66,7 +66,7 @@ module.exports = {
             ctx2.restore();
         });`],
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は四隅の3x3洲域か、自分の石に直交隣接する点のみ。',
             '隅から始めて自石に連なりながら川のように中央へ広がっていく。',
         ])],

@@ -50,7 +50,7 @@ module.exports = {
             if (history.length >= Math.max(10, P('cap_ply') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手ごとに全ての石が列の底へ転がり落ちる。空中に浮く石はない。',
             '転がり落ちた石で新たな取りは発生しない。140手を超えた時点で地数判定する。',
         ])],

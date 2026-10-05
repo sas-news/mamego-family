@@ -95,10 +95,10 @@ module.exports = {
         });`],
         ...K.EVENT_CHIP_SPEC(`'灯籠 黒' + (lanternBonus(1) / (P('lantern_pts') || 6)) + '/白' + (lanternBonus(2) / (P('lantern_pts') || 6))`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            灯籠碁: 星点は庭灯籠。灯籠に火(石)を入れると夜の庭が照らされ1基+6目<br>
+        [K.ONE, K.INFO_BASE, `            灯籠碁: 星点は庭灯籠。灯籠に火(石)を入れると夜の庭が照らされ1基+6目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '天元以外の星点は「石灯籠」。そこに石を置くと灯籠に火が入り、終局時に1基ごと+6目。',
             '灯りは取られれば消える — 灯籠を守る形を作るか、終盤に一気に点火するか。',
         ])],

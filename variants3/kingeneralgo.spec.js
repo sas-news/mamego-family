@@ -102,10 +102,10 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
-        [K.ONE, K.INFO_ALGO, `            金碁: 同色4方向で囲んだ石は金将。+2目で無敵<br>
+        [K.ONE, K.INFO_BASE, `            金碁: 同色4方向で囲んだ石は金将。+2目で無敵<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '上下左右4方向すべてを同色の石で囲んだ石は「金将」になる: +2目。',
             '金将は絶対に取ることができない無敵の石 — 広域守備の核。',
         ])],

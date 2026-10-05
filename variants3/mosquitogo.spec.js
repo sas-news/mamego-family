@@ -102,10 +102,10 @@ module.exports = {
                     <div class="flex justify-between"><span>白の吸血:</span> <strong>\${st.bonus[2]}目</strong></div>`],
         ...K.EVENT_CHIP_SPEC(`'吸血 +' + st.bonus[turn] + '目'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            吸血碁: 蚊(石)は隣の敵石から血(+1目)を吸う<br>
+        [K.ONE, K.INFO_BASE, `            吸血碁: 蚊(石)は隣の敵石から血(+1目)を吸う<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '置いた蚊は隣接する敵石から血を吸う — 敵石1つにつき一度だけ +1目。',
             '吸われた石には赤い咬み跡が残る。敵の大きな連のそばに何度も蚊を止めて稼げ。',
             '打ち切り: 150手を超えると自動終局・採点される。',

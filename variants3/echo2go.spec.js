@@ -86,7 +86,7 @@ module.exports = {
                 ctx.restore();
             });`),
         ...K.EVENT_CHIP_SPEC(`st.echo[turn] != null && board[st.echo[turn]] === 0 ? '残響あり' : ''`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '残響: 自分が直前に置いた座標は残響となり、次の自分の番ではそこに着手できない。',
             '残響は空点にだけ表示される。同じ場所を連続で使えないので、布石を散らそう。',
         ])],

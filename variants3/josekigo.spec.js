@@ -90,10 +90,10 @@ module.exports = {
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
         ...K.EVENT_CHIP_SPEC(`history.length <= (P('joseki_turns') || 24) ? '定石 +' + ((st.bonus && st.bonus[turn]) || 0) + '目' : ''`),
-        [K.ONE, K.INFO_ALGO, `            定石碁: 序盤24手で隅の定石域に置くと +1目<br>
+        [K.ONE, K.INFO_BASE, `            定石碁: 序盤24手で隅の定石域に置くと +1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '序盤 (全局24手まで) に四隅4線以内の「定石域」へ置くと +1目。',
             '定石をなぞるように隅から打つと互角以上に進む。中央への早期進出は無得点。',
         ])],

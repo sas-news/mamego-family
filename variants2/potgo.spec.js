@@ -55,7 +55,7 @@ module.exports = {
                 soundManager.playPlace();
             }`],
         ...K.EVENT_CHIP_SPEC(`'壺:' + pot`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '取った石は自分のアゲハマではなく共有の「壺」に溜まる。',
             '1手で3個以上を取った (大取) 側が壺の中身を全て奪う。壺を狙って大きく刈れ。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',

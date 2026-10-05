@@ -60,7 +60,7 @@ module.exports = {
 `                    <div class="flex justify-between"><span>白のアゲハマ預金:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の利子:</span> <strong>\${bankInterest[2]}</strong></div>`],
         ...K.EVENT_CHIP_SPEC(`'利子 黒:' + bankInterest[1] + ' 白:' + bankInterest[2]`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             'アゲハマは銀行預金。自分が着手するたび残高の1/5 (切捨) が利子で増える。',
             '早めに預金を作って寝かせるほど複利が効く。終局は 地+預金+利子 の合計。',
         ])],

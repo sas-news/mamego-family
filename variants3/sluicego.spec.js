@@ -88,10 +88,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'放水まで ' + ((P('flush_interval') || 8) - history.length % (P('flush_interval') || 8)) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            水門碁: 中央の水路を8手ごとの放水が洗う。水路の石は下流へ流される<br>
+        [K.ONE, K.INFO_BASE, `            水門碁: 中央の水路を8手ごとの放水が洗う。水路の石は下流へ流される<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の中央1行は東へ流れる水路 (着手も呼吸も通常通り)。',
             '8手ごとに水門が開き放水 — 水路の石は全て1マス下流へ流される。',
             '河口 (右端) から押し出された石は海に流れて失われる。両者同じ周期で効く。',

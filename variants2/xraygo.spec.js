@@ -100,10 +100,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`st.pcnt[turn] < (P('xray_at') || 2) ? '透視まで あと' + ((P('xray_at') || 2) - st.pcnt[turn]) + '手' : '記録済敵石 ' + (st.seen[turn] || []).length + '個'`),
-        [K.ONE, K.INFO_ALGO, `            透視碁: 敵石は不可視。各側2手目のX線でその時点の敵石だけ永久に見える<br>
+        [K.ONE, K.INFO_BASE, `            透視碁: 敵石は不可視。各側2手目のX線でその時点の敵石だけ永久に見える<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '相手の石は不可視。各プレイヤーの2手目の着手でX線が走り、',
             'その時点の敵石全てがあなたにだけ「記録」されて以後ずっと見える。',
             'X線後に置かれた敵石は再び闇の中 — 一度きりの透視をどこで使うか。',

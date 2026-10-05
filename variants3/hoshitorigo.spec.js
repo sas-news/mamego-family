@@ -83,10 +83,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>星取表:</span> <strong>黒 \${st.stars[1]}星 / 白 \${st.stars[2]}星</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            星取碁: 敵石を取るたび星+1。自分の手番が連続して取れば連勝ボーナス+1。星1個=終局時1目<br>
+        [K.ONE, K.INFO_BASE, `            星取碁: 敵石を取るたび星+1。自分の手番が連続して取れば連勝ボーナス+1。星1個=終局時1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '星取表: 敵石を取るたびその個数だけ星を得る (アゲハマ点に加えて星1個=+1目)。',
             '自分の手番ごとに取り続ければ連勝ボーナス+1星。',
         ])],

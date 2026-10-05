@@ -87,7 +87,7 @@ module.exports = {
                 ctx.setLineDash([]);
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手ごとに全ての石が中央を囲む軌道を時計回りに1歩周回する (中心は不動)。',
             '敵石の先に進んだ石は消滅する。味方の先には進めない (跳ね返る)。',
             '140手を超えた時点で即座に地数判定する。',

@@ -93,10 +93,10 @@ module.exports = {
 
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`(st.chain[turn] || 0) > 0 ? '詰み ×' + st.chain[turn] : ''`),
-        [K.ONE, K.INFO_ALGO, `            詰碁: アタリを3連続でかけると詰み勝ち<br>
+        [K.ONE, K.INFO_BASE, `            詰碁: アタリを3連続でかけると詰み勝ち<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の着手で相手の連をアタリにする手を3連続でかけると「詰み」で即勝ち。',
             '追い回しが途切れたら連鎖は切れる — 詰めろをかけ続ける碁。',
         ])],

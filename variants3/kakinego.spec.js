@@ -70,10 +70,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`'垣根 黒' + (fenceBonus(1) / Math.max(1, P('fence_pts') || 2)) + '/白' + (fenceBonus(2) / Math.max(1, P('fence_pts') || 2))`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            垣根碁: 中央十字は垣根ライン。その上に立てた石は垣根として終局時に1つ+2目<br>
+        [K.ONE, K.INFO_BASE, `            垣根碁: 中央十字は垣根ライン。その上に立てた石は垣根として終局時に1つ+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '中央の行と列 (盤を四分割する十字) は「垣根ライン」。その上の自分の石は垣根となり1つ+2目。',
             '垣根で区切られた別天地を作るか、垣根をまたいで敵庭へ攻め込むか。',
         ])],

@@ -74,7 +74,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`Math.floor(history.length / Math.max(1, P('season') || 12)) % 2 === 1 ? '雨季' : '乾季'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '季節は12手周期: 雨季の12手帯は盤の下2段 (低地) が水没し、着手もできない。',
             '雨季が始まる瞬間、低地の石は全て流される (アゲハマにはならない)。周期は両者共通。',
         ])],

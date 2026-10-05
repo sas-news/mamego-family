@@ -93,10 +93,10 @@ module.exports = {
             }`),
         [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_WATER],
         ...K.EVENT_CHIP_SPEC(`'水車まで ' + ((P('flow_interval') || 8) - (history.length % (P('flow_interval') || 8))) + ' 手'`),
-        [K.ONE, K.INFO_ALGO, `            水車碁: 8手ごとに最下行の石が1マス東へ流れる。端から零れるとアゲハマ<br>
+        [K.ONE, K.INFO_BASE, `            水車碁: 8手ごとに最下行の石が1マス東へ流れる。端から零れるとアゲハマ<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤下の水流で水車が回る — 8手ごとに最下行の石が1マス東へ流される。',
             '東端から零れた石は相手のアゲハマ。流れで呼吸を失った連も崩れる。',
             '最下行は輸送路 — 西から置いて東へ運ぶか、敢えて乗せないか。',

@@ -50,7 +50,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '1つの行に置ける石は黒白合わせて4個まで。満杯の行にはもう置けない。',
             '行が寡占されて閉じると石は縦へ逃げる。取られれば行が再び開く。',
         ])],

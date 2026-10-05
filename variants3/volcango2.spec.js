@@ -90,7 +90,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'噴火まで ' + (Math.max(1, P('eruption_interval') || 20) - (history.length % Math.max(1, P('eruption_interval') || 20))) + '手'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '天元は火山の火口 (永久の壁)。20手ごとに噴火し、火口から縦か横の一直線に溶岩が流れる。',
             '溶岩の経路上の石は全て焼失 (アゲハマにはならない)。噴火周期は両者共通。',
         ])],

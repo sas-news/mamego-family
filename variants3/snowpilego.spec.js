@@ -87,10 +87,10 @@ module.exports = {
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`history.length % (P('snow_cycle') || 30) < Math.floor((P('snow_cycle') || 30) / 2) ? '雪期' : '雪予報' + ((P('snow_cycle') || 30) - (history.length % (P('snow_cycle') || 30)))`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            積雪碁: 30手毎に大雪で全石が埋まり (打てなくなる)、15手後に解けて復活<br>
+        [K.ONE, K.INFO_BASE, `            積雪碁: 30手毎に大雪で全石が埋まり (打てなくなる)、15手後に解けて復活<br>
             PC: クリックで配置<br>
             スマホ: タップで配置`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '30手ごとに大雪: 全ての石が雪に埋まり、埋まった所には打てなくなる (先頭の1石だけ残る)。',
             '雪が積もってから15手後に解け、埋まっていた石が元の色で復活する。',
             '埋まる前に取り切るか、春の復活を見越して布石するかの季節ゲーム。',

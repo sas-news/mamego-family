@@ -56,7 +56,7 @@ module.exports = {
                 ctx.setLineDash([]);
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手すると、その縦軸ミラー位置にある敵石が1段下がる (滑車)。',
             '最下段からさらに下がった石は盤から落ち、着手側のアゲハマになる。',
             '140手を超えた時点で即座に地数判定する。',

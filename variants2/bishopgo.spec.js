@@ -54,7 +54,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は自分の石と同じ斜線上にある交点のみ。',
             '最初の1手はどこにでも置ける。角行のように斜めに盤を制する。',
         ])],

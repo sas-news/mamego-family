@@ -60,10 +60,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>山車の賑わい:</span> <strong>黒 \${dashiBonus(1)} / 白 \${dashiBonus(2)}</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            山車碁: 5個以上つながった連は「山車」— 終局時、山車1台につき+4目の賑わい<br>
+        [K.ONE, K.INFO_BASE, `            山車碁: 5個以上つながった連は「山車」— 終局時、山車1台につき+4目の賑わい<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '5個以上つながった連は「山車」として練り歩き、沿道が賑わう。',
             '終局時、自分の山車1台につき+4目。小さな連には入らない。',
         ])],

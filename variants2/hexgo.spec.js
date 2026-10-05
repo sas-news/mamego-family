@@ -29,7 +29,7 @@ module.exports = {
             }
             return neighbors;
         }`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '近傍が上下左右+斜め2方向の計6方向になる六角形盤。',
             '連の繋がり方が通常碁と大きく変わる。オフセット行で六角のように描かれる。',
         ])],

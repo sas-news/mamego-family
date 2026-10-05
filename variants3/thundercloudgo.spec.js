@@ -116,10 +116,10 @@ module.exports = {
         });`],
         ...K.EVENT_CHIP_SPEC(`'落雷まで ' + ((P('strike_interval') || 16) - history.length % (P('strike_interval') || 16)) + '手'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            雷雲碁: 雷雲が盤を漂い、16手毎に雲の下 3x3 の石が吹き飛ぶ<br>
+        [K.ONE, K.INFO_BASE, `            雷雲碁: 雷雲が盤を漂い、16手毎に雲の下 3x3 の石が吹き飛ぶ<br>
             PC: クリックで配置<br>
             スマホ: タップで配置`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '雷雲は盤上を巡回する。16手ごとに雲の下の3x3範囲に落雷し、そこの石は全部吹き飛ぶ。',
             '吹き飛ぶ石は取りにもならない。落雷前3手は危険域が点滅する。',
             '盤上の石が全部吹き飛ぶ時は1個だけ残る。',

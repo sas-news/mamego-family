@@ -97,7 +97,7 @@ module.exports = {
         [K.ONE, K.TOGGLE_GUARD,
 `            const color = board[startIdx];
             if (color === 0 || color >= 3) return;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '取られた敵石は白骨 (象牙色の骨石) となってその場に残る。',
             '白骨の上には置けず呼吸点にもならないが、数手で風化して消える。',
         ])],

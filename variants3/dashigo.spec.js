@@ -85,10 +85,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'出汁区域 ' + [...DASHI_SET].filter(i => board[i] === 1 || board[i] === 2).length + '石'`),
-        [K.ONE, K.INFO_ALGO, `            出汁碁: 琥珀色の出汁区域で終局を迎えた石は旨み+1目ずつ<br>
+        [K.ONE, K.INFO_BASE, `            出汁碁: 琥珀色の出汁区域で終局を迎えた石は旨み+1目ずつ<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤上の2つの「出汁区域」(琥珀色の池)。終局時に区域の中で生きている石は1石につき+1目の旨みがつく。',
             '区域は両者共通の条件。取られないよう守り抜くか、相手の旨み石を刈り取るか。',
         ])],

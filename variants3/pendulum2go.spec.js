@@ -48,7 +48,7 @@ module.exports = {
             turn = opponent;`],
         // 振子の向きをステータスチップに表示
         ...K.EVENT_CHIP_SPEC(`'振子 ' + ((history.length % 2 === 0) ? '→' : '←')`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手のたびに全ての石が水平に1マス揺れる。偶数手は右へ、奇数手は左へ。',
             '盤端や他の石に遮られた石は揺れない。140手を超えた時点で地数判定する。',
         ])],

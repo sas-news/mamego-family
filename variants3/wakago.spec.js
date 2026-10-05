@@ -105,10 +105,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'結び ' + (() => { const b = typeof wakaBonus === 'function' ? wakaBonus() : { 1: 0, 2: 0 }; return '黒' + b[1] + ' 白' + b[2]; })()`),
-        [K.ONE, K.INFO_ALGO, `            和歌碁: 2点空けて同色が向かい合えば歌が結ばれ、終局時に1結び+1目<br>
+        [K.ONE, K.INFO_BASE, `            和歌碁: 2点空けて同色が向かい合えば歌が結ばれ、終局時に1結び+1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '上の句と下の句: 同じ色の石が縦か横にちょうど2点空けて向かい合うと歌が結ばれ、終局時+1目。',
             '間に石を置かれると歌は破れる。結びを積むか、地に勢いを留めるか。',
         ])],

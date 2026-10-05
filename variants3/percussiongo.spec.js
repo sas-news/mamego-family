@@ -73,10 +73,10 @@ module.exports = {
         });`],
         ...K.EVENT_CHIP_SPEC(`((history.filter(h => h.turn === turn).length + 1) % (P('don_every') || 8) === 0 || history.filter(h => h.turn === turn).length === (P('don_every') || 8) - 1) ? '次は大太鼓!' : '次の大太鼓まであと ' + ((P('don_every') || 8) - (history.filter(h => h.turn === turn).length % (P('don_every') || 8))) + ' 打'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            打楽碁: 着手は鼓の一打。自分の8手ごとの着手は大太鼓 — 盤が震え、隣の孤立敵石が跳ねて消える<br>
+        [K.ONE, K.INFO_BASE, `            打楽碁: 着手は鼓の一打。自分の8手ごとの着手は大太鼓 — 盤が震え、隣の孤立敵石が跳ねて消える<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は鼓の一打。自分の8手ごとの着手は大太鼓となり盤が震盪する。',
             '震盪で隣接する「孤立した敵石」(連が1石) が跳ねて消え、アゲハマになる。連は石を連ねて震えに耐えろ。両者同じ条件。',
         ])],

@@ -108,10 +108,10 @@ module.exports = {
         ...GAME_OVER,
         ...SCORE_END,
         ...K.EVENT_CHIP_SPEC(`'日影 ' + SHADOW_NAMES[Math.floor(history.length / Math.max(1, P('shadow_interval') || 8)) % 4]`),
-        [K.ONE, K.INFO_ALGO, `                        圭表碁: 8手ごとに日影の方角が東→南→西→北と回る。着手点の影の方角に敵石がいれば+2点。<br>
+        [K.ONE, K.INFO_BASE, `                        圭表碁: 8手ごとに日影の方角が東→南→西→北と回る。着手点の影の方角に敵石がいれば+2点。<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '8手ごとに日影の方角が回る (東→南→西→北)。',
             '着手した石の影の方角の隣に敵石があれば影が届いたとして+2。',
             '取り・コウ・パス終局は通常通り。満局近くで強制採点。',

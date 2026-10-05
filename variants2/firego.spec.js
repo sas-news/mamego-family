@@ -70,7 +70,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'燃焼域 ' + Math.min(Math.floor(history.length * (P('fire_speed') || 1)), 2 * BOARD_SIZE - 2) + ' 歩'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '左上隅の火点から1手ごとに火が斜め1マスずつ燃え広がる (x+yが手数以下の領域)。',
             '燃焼域の石は焼けて相手のアゲハマになる。全盤が燃え尽きた時点で終局となる。',
         ])],

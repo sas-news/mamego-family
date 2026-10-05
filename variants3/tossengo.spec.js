@@ -110,10 +110,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'審判まで ' + ((P('judge_interval') || 8) - (history.length % (P('judge_interval') || 8))) + ' 手 / 的 黒' + (st.fan ? st.fan[1] : 0) + ' 白' + (st.fan ? st.fan[2] : 0)`),
-        [K.ONE, K.INFO_ALGO, `            投扇碁: 8手ごとの審判で的に最も近い石の持ち主が+1目<br>
+        [K.ONE, K.INFO_BASE, `            投扇碁: 8手ごとの審判で的に最も近い石の持ち主が+1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤中央に2つの「的」がある (朱い円)。8手ごとの審判で、的に最も近い石の持ち主が+1目を得る。',
             '審判のたびに扇を投げ合う。的の近くを制しながら地も稼ぐ二兎追い。',
         ])],

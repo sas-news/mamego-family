@@ -108,10 +108,10 @@ const GRAFFITI = [
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'落書き残り ' + (GRAFFITI.filter(i => !st.cleaned[i]).length)`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            落書碁: 盤に散らばる落書き点の隣 (または直上) に自石を置くと消えて+1目<br>
+        [K.ONE, K.INFO_BASE, `            落書碁: 盤に散らばる落書き点の隣 (または直上) に自石を置くと消えて+1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤には10箇所の落書き。落書き点の隣 (または真上) に自分の石を置くと消えて+1目。',
             '落書きは両者共通 — 先に消した側が点を得る清掃合戦。',
             '消すために打つ手が形を崩すことも。綺麗な盤と綺麗な碁は別物。',

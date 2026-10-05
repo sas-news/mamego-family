@@ -8,7 +8,7 @@
 //     3. 「ルール差分」セクションに自分のルールを書く
 //     4. docs/new-game.icon.js もコピーして variants3/icons/ に置く
 //
-//   spec = 「ベース (algo.html) のどの文字列を何に置き換えるか」の列。
+//   spec = 「ベース (tools/base.html) のどの文字列を何に置き換えるか」の列。
 //   アンカーは gen_kit.js の K.* か自分で書いた完全一致文字列。
 //   アンカーが見つからないと gen が MISSING で失敗する。
 //   詳しいアンカー一覧は docs/wave3-guide.md と gen_kit.js を参照。
@@ -45,11 +45,11 @@ module.exports = {
         //   ルールコード内では P('n') で読む (未設定時は def が入る)。
 
         // --- ルール説明 (必須): ゲーム内「?」モーダルと index の情報枠に出る ---
-        [K.ONE, K.INFO_ALGO,
+        [K.ONE, K.INFO_BASE,
             '初手は四隅にしか置けない変則碁。<br>' +
             'PC: クリックで配置<br>' +
             'スマホ: 1タップ目プレビュー、2タップ目確定'],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '初手は盤の四隅にしか置けない',
             '二手目以降は通常の囲碁と同じ',
             '取り・コウ・コミも通常通り',

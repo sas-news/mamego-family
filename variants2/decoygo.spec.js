@@ -102,10 +102,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`(function(){ const d = pieces.filter(pc => pc.decoy).length; const n = P('decoy_interval') || 5; return d > 0 ? '囮石 ' + d + '個' : '次の囮 ' + (n - st.pcnt[turn] % n) + '手後'; })()`),
-        [K.ONE, K.INFO_ALGO, `            囮碁: 各側5手ごとの石は偽物で、置いてから3手後に跡形もなく消える<br>
+        [K.ONE, K.INFO_BASE, `            囮碁: 各側5手ごとの石は偽物で、置いてから3手後に跡形もなく消える<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '各プレイヤーの5・10・15…手目の着手は「囮石」。見た目は普通の石。',
             '囮石は置いてから3手後に消え、塞がっていた空点が戻る。囲み・取りの計算が歪む。',
         ])],

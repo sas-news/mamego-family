@@ -49,10 +49,10 @@ module.exports = {
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'雲版まで ' + (Math.max(1, P('bell_interval') || 8) - (history.length % Math.max(1, P('bell_interval') || 8))) + '手'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            雲版碁: 合計8手ごとに雲版が鳴って禅堂の時が進み、両者へ+1目の功徳<br>
+        [K.ONE, K.INFO_BASE, `            雲版碁: 合計8手ごとに雲版が鳴って禅堂の時が進み、両者へ+1目の功徳<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手数の合計が8の倍数になるたび雲版(禅堂の時告げ板)が鳴り、時が進む。',
             '鳴るたび両者に+1目 — 誰の手で鳴っても功徳は均等の対称ルール。',
         ])],

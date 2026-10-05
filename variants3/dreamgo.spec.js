@@ -134,10 +134,10 @@ module.exports = {
 `        btnPass.addEventListener('click', handlePass);
         btnDream.addEventListener('click', () => showDreamBoard());`],
         ...K.EVENT_CHIP_SPEC(`'夢盤入替 あと' + ((P('swap_interval') || 10) - history.length % (P('swap_interval') || 10)) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            夢幻碁: 10手ごとに現実盤と夢盤が入れ替わる。取った石は現実に持ち帰る<br>
+        [K.ONE, K.INFO_BASE, `            夢幻碁: 10手ごとに現実盤と夢盤が入れ替わる。取った石は現実に持ち帰る<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '10手ごとに「現実盤」と「夢盤」が丸ごと入れ替わる。',
             '夢盤で取ったアゲハマはそのまま現実のスコアに残る。',
             '「夢盤」ボタンで退避中のもう一方の盤をいつでも確認できる。',

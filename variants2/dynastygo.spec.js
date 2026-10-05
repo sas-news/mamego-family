@@ -88,7 +88,7 @@ module.exports = {
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の王朝点:</span> <strong>\${dynasty[2]}</strong></div>`],
         ...K.EVENT_CHIP_SPEC(`'存続 黒:' + streak[1] + ' 白:' + streak[2]`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の石を1つも取られない手番が5連続するごとに+5点の王朝ボーナス。',
             '石を取られたら連続記録は途切れる。終局は 地+アゲハマ+王朝点 の合計。',
         ])],

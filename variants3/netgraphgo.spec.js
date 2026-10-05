@@ -93,10 +93,10 @@ module.exports = {
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
         ...K.EVENT_CHIP_SPEC(`'ハブ +' + ((st.bonus && st.bonus[turn]) || 0) + '目'`),
-        [K.ONE, K.INFO_ALGO, `            グラフ碁: 同色3方向以上に繋がるハブ石を作ると +1目<br>
+        [K.ONE, K.INFO_BASE, `            グラフ碁: 同色3方向以上に繋がるハブ石を作ると +1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '交点は頂点、連は辺。同色の石と3方向以上に接した石は次数の高い「ハブ」。',
             'ハブを作ると +1目 (石ごとに1回)。分岐の多いネットワークを築くほど稼げる。',
         ])],

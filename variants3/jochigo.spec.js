@@ -87,10 +87,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'網上げまで ' + (Math.max(1, P('net_interval') || 10) - (history.length % Math.max(1, P('net_interval') || 10))) + ' 手'`),
-        [K.ONE, K.INFO_ALGO, `            定置碁: 網区域の石は10手ごとの網上げで全て獲られる (相手のアゲハマに)<br>
+        [K.ONE, K.INFO_BASE, `            定置碁: 網区域の石は10手ごとの網上げで全て獲られる (相手のアゲハマに)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '対角の2つの「定置網」区域。10手ごとの網上げで区域の石は色に関係なく全て獲られ、持ち主の敵のアゲハマになる。',
             '網に入るな — でも相手を追い込むには絶好の罠。網上げのタイミングを読め。',
         ])],

@@ -98,10 +98,10 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
-        [K.ONE, K.INFO_ALGO, `            手筋碁: アタリにする手 +2目、自軍連を繋ぐ手 +1目<br>
+        [K.ONE, K.INFO_BASE, `            手筋碁: アタリにする手 +2目、自軍連を繋ぐ手 +1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '筋の良い置き方が報われる碁。',
             '着手で相手の連をアタリ (呼吸点1) にすると +2目。自軍の2つ以上の連を繋ぐと +1目。',
         ])],

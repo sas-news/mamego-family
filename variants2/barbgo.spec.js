@@ -43,7 +43,7 @@ module.exports = {
             }`],
         // 窒息領域の閾値は設定で調整可能
         [K.ONE, `                if (region.length < PIECE_SIZE) {`, `                if (region.length < (P('suff_min') || PIECE_SIZE)) {`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手は1x5の槍ピースのみ (回転=⟳ボタン・Rキー・右クリック・ホイール)。','ピースが入らない5マス未満の連結空領域は窒息領域。'])],
+        [K.ONE, K.RV_BASE, K.rv(['着手は1x5の槍ピースのみ (回転=⟳ボタン・Rキー・右クリック・ホイール)。','ピースが入らない5マス未満の連結空領域は窒息領域。'])],
         // 槍の質感: 5連セルに柄と穂先を重ねる (黒→右/下、白→左/上で対向)
         ...K.STONE_MARKS_SPEC(`            {
                 ctx.save();

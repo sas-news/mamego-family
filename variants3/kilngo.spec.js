@@ -74,10 +74,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'窯室' + (lastMove ? chamberOf(lastMove.cells[0].y * BOARD_SIZE + lastMove.cells[0].x) + 1 : '-') + '/' + Math.max(2, P('chambers') || 5)`),
-        [K.ONE, K.INFO_ALGO, `            登窯碁: 盤は下から上への5連房の登り窯。連の全石が最上段にあれば焼き上がり+1呼吸<br>
+        [K.ONE, K.INFO_BASE, `            登窯碁: 盤は下から上への5連房の登り窯。連の全石が最上段にあれば焼き上がり+1呼吸<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は上から5つの窯室に分かれた登り窯 — 最上段(房1)が最も火が強い。',
             '連を構成する全ての石が最上段の窯室にある時、その連は完全に焼き上がり呼吸点+1。',
             '房を跨ぐ連は焼きムラで恩恵なし。頂点で焼き締めるか下で量を取るか。',

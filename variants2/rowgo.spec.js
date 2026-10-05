@@ -49,7 +49,7 @@ module.exports = {
             ctx2.restore();
         });`],
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は現在の対象行のみ。対象行は1手ごとに上から下へ1行ずつ行進する。',
             '最下行の次は最上行に戻る。対象行が埋まっていればパスで進めるしかない。',
         ])],

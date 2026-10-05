@@ -138,10 +138,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'塩漬けまで ' + (Math.max(1, P('salt_interval') || 8) - (history.length % Math.max(1, P('salt_interval') || 8))) + ' 手'`),
-        [K.ONE, K.INFO_ALGO, `            梅干碁: 梅の木の下の石は8手ごとに塩漬けされ終局時+2目<br>
+        [K.ONE, K.INFO_BASE, `            梅干碁: 梅の木の下の石は8手ごとに塩漬けされ終局時+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤上に5本の「梅の木」がある (花マーク)。木の下の石は8手ごとに塩漬けされ、終局まで残れば1個+2目。',
             '梅は両者が取り合う名所。塩漬けを守るか相手の梅を摘むか。',
         ])],

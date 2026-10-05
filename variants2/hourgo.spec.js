@@ -66,7 +66,7 @@ module.exports = {
                 ctx.fill();
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '上下の三角形が中央1点でだけ繋がる砂時計形。',
             '中央の咽喉を押さえれば上下の連絡を断てる。',
         ])],

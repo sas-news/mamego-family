@@ -51,7 +51,7 @@ module.exports = {
             if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '敵石を取るとカプセルが弾け、自分色の中身がその距離2リングの最初の空きマスに飛び出す。',
             '中身の石は普通の石として扱う (取られる・取れる)。140手を超えた時点で地数判定する。',
         ])],

@@ -99,10 +99,10 @@ module.exports = {
                 ctx.fillRect(kx - cellSize * 0.4, ky - cellSize * 0.2, cellSize * 0.8, cellSize * 0.6);
                 ctx.restore();
             }`),
-        [K.ONE, K.INFO_ALGO, `            内堀碁: 城を取り巻く環状の堀。堀の石は流れて水門から出ていく<br>
+        [K.ONE, K.INFO_BASE, `            内堀碁: 城を取り巻く環状の堀。堀の石は流れて水門から出ていく<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤中央を環状の内堀が時計回りに流れる (着手可・呼吸も通常)。',
             '堀の中の石は毎手1マス下流へ流され、水門に達すると城外へ流出して失われる。',
             '堀は一時的な足場。城を囲う地取りと流れの読み合いが勝負。',

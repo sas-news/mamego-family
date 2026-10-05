@@ -70,10 +70,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'徒然 ' + (() => { const b = typeof zuihitsuBonus === 'function' ? zuihitsuBonus() : { 1: 0, 2: 0 }; return '黒' + b[1] + ' 白' + b[2]; })()`),
-        [K.ONE, K.INFO_ALGO, `            随筆碁: 同色と隣接しない石 (孤石) は終局時+1目<br>
+        [K.ONE, K.INFO_BASE, `            随筆碁: 同色と隣接しない石 (孤石) は終局時+1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '徒然なるままに散らばった石が随筆の章 — 同色と隣接しない石は終局時+1目。',
             '連を組めば強いが章にならない。散らすか纏めるか、筆の捌きどころ。',
         ])],

@@ -74,10 +74,10 @@ module.exports = {
             territory.black += st.haul[1];
             territory.white += st.haul[2];`],
         ...K.EVENT_CHIP_SPEC(`'大漁 黒' + (st.haul ? st.haul[1] : 0) + ' 白' + (st.haul ? st.haul[2] : 0)`),
-        [K.ONE, K.INFO_ALGO, `            地引碁: 1手で4個以上を獲れば大漁 — 獲物は終局時2倍計上<br>
+        [K.ONE, K.INFO_BASE, `            地引碁: 1手で4個以上を獲れば大漁 — 獲物は終局時2倍計上<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '1手で4個以上の敵石をまとめて取ると「大漁」。獲った石はアゲハマに加え終局時にもう1回数えられる。',
             '大きな連を育てて一網打尽にするか、小さく切り裂いて大漁を逃すか。双方同じ条件。',
         ])],

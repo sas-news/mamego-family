@@ -66,10 +66,10 @@ module.exports = {
         ...K.WALL_GUARD_SPEC,
         ...K.EVENT_CHIP_SPEC(`'景石 黒' + (pondBonus(1) / Math.max(1, P('pond_pts') ?? 2)) + '/白' + (pondBonus(2) / Math.max(1, P('pond_pts') ?? 2))`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            池泉碁: 中央の十字形の池は着手不可の水場。池に面した景石ごとに+2目<br>
+        [K.ONE, K.INFO_BASE, `            池泉碁: 中央の十字形の池は着手不可の水場。池に面した景石ごとに+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '中央の十字形は「池」— 水場なので着手できず、呼吸点にもならない (壁と同じ)。',
             '池に隣接する自分の石は「景石」として終局時に1つ+2目。池を眺める位置取りが勝負。',
         ])],

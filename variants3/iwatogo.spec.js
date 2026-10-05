@@ -76,10 +76,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>天岩戸の御光:</span> <strong>黒 \${iwatoBonus(1)} / 白 \${iwatoBonus(2)}</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            天岩戸碁: 盤中央の太陽を自石で隠すと盤は闇に包まれる — 終局時に占める側+4目<br>
+        [K.ONE, K.INFO_BASE, `            天岩戸碁: 盤中央の太陽を自石で隠すと盤は闇に包まれる — 終局時に占める側+4目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '天岩戸: 盤中央 (天元) に光る太陽。終局時にその点を自石で占める側は+4目の御光を得る。',
             '太陽が隠れると盤は薄暗くなる。中央の取り合いが勝敗を分ける。',
         ])],

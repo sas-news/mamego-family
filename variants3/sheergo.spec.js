@@ -44,10 +44,10 @@ module.exports = {
             whiteCapturesEl.textContent = '~' + Math.round(captures[2] / Math.max(1, P('cap_round') || 4)) * Math.max(1, P('cap_round') || 4);`],
         ...K.EVENT_CHIP_SPEC(`'手番側だけ実色'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            透け碁: 手番でない側の石は半透明に透け、アゲハマも「約」表示で正確な数が読めない<br>
+        [K.ONE, K.INFO_BASE, `            透け碁: 手番でない側の石は半透明に透け、アゲハマも「約」表示で正確な数が読めない<br>
             PC: クリックで配置<br>
             スマホ: タップで配置`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の手番には相手の石が半透明に透ける。数や形を正確に読むのは難しい。',
             'アゲハマ表示も「~約数」の曖昧表示 (内部計算は正確)。',
             '見た目の曖昧さを補うため、呼吸や取りのルール自体は通常通り。',

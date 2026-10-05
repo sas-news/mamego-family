@@ -29,7 +29,7 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手は5連の蛇 (階段状W字) ピースのみ (回転=⟳ボタン・Rキー・右クリック・ホイール)。','ピースが入らない5マス未満の連結空領域は窒息領域。'])],
+        [K.ONE, K.RV_BASE, K.rv(['着手は5連の蛇 (階段状W字) ピースのみ (回転=⟳ボタン・Rキー・右クリック・ホイール)。','ピースが入らない5マス未満の連結空領域は窒息領域。'])],
         // 蛇の姿: ピースを鎖状になぞった胴体 + 頭の目と舌
         [K.ONE, `        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
             if (!cellsAbs || cellsAbs.length === 0) return;

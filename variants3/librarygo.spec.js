@@ -78,10 +78,10 @@ module.exports = {
 ${CAP}
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`(() => { const mn = P('shelf_mine') || 4, fe = (P('shelf_foe') ?? 1); let b = 0, w = 0; for (let by = 0; by < BOARD_SIZE; by += 3) for (let bx = 0; bx < BOARD_SIZE; bx += 3) { let m1 = 0, m2 = 0; for (let dy = 0; dy < 3; dy++) for (let dx = 0; dx < 3; dx++) { const v = board[(by + dy) * BOARD_SIZE + bx + dx] || 0; if (v === 1) m1++; else if (v === 2) m2++; } if (m1 >= mn && m2 <= fe) b++; if (m2 >= mn && m1 <= fe) w++; } return '書棚 黒' + b + ' / 白' + w; })()`),
-        [K.ONE, K.INFO_ALGO, `            蔵書碁: 盤は3x3の書棚。棚を自分の石4個以上・敵1以下で「分類」すると+4<br>
+        [K.ONE, K.INFO_BASE, `            蔵書碁: 盤は3x3の書棚。棚を自分の石4個以上・敵1以下で「分類」すると+4<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は3x3のブロックに区切られた書棚群 (太線が棚板)。',
             '書棚の中に自分の石が4個以上・相手の石が1個以下なら「分類済み」— 終局時に棚1つにつき+4目。',
             '敵石を2個以上紛れ込ませると棚は「未分類」のまま。分類の妨害も立派な戦略。',

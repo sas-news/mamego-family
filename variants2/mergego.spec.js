@@ -25,7 +25,7 @@ module.exports = {
             } else {
                 soundManager.playPlace();
             }`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '取った敵連は消えずに自分の色に染まり、自分の連に吸収併合される。',
             '取るほど自分の勢力がそのまま増える。大きな敵連を併合すると一気に制圧できる。',
         ])],

@@ -79,10 +79,10 @@ module.exports = {
 
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`(() => { const c = turn === 1 ? (history.length + 1) >> 1 : history.length >> 1; const ev = P('bullet_every') || 5; const r = ev - c % ev; return r === ev ? '弾丸装填済' : '弾丸まで ' + r + '手'; })()`),
-        [K.ONE, K.INFO_ALGO, `            弾丸碁: 各側5手目の石は弾丸。最も近い敵石へ弾を放ち直線上を最大3個貫通<br>
+        [K.ONE, K.INFO_BASE, `            弾丸碁: 各側5手目の石は弾丸。最も近い敵石へ弾を放ち直線上を最大3個貫通<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '各プレイヤーの5手ごとの着手は「弾丸石」— 置くと弾を放つ。',
             '4方角で最も近い敵石が見える方向へ撃ち、直線上の敵石を最大3個まで貫通する。',
             '自石は盾となって弾道を止める。発射周期は両者同じ5手。',

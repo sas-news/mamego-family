@@ -104,7 +104,7 @@ module.exports = {
         [K.ONE, `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の鉱石:</span> <strong>\${oreScore[2]}</strong></div>`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '敵連を取った跡地に鉱石 (金のダイヤ) が出現する。',
             '鉱石のある空点に石を置くと拾って1目得点。終局は 地+アゲハマ+鉱石 の合計。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',

@@ -71,10 +71,10 @@ module.exports = {
         [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_MOSS)],
         // 木立を死に石選択から除外
         ...K.WALL_GUARD_SPEC,
-        [K.ONE, K.INFO_ALGO, `            木立碁: 木立区域は着手不可。窒息した連は木立を1本伐って生き延びる<br>
+        [K.ONE, K.INFO_BASE, `            木立碁: 木立区域は着手不可。窒息した連は木立を1本伐って生き延びる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の木立 (緑の林) は着手も呼吸点にもならない。',
             'ただし窒息した連が木立に接していれば、木を1本伐って息をつき生き延びる (伐採は1度きり)。',
         ])],

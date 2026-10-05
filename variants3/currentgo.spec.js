@@ -97,10 +97,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`'海流まで ' + (Math.max(1, P('current_period') || 8) - history.length % Math.max(1, P('current_period') || 8)) + '手'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            海流碁: 5行おきの海流が8手ごとに石を1マス流す。盤外に流されると取られる<br>
+        [K.ONE, K.INFO_BASE, `            海流碁: 5行おきの海流が8手ごとに石を1マス流す。盤外に流されると取られる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             'y≡2 の行は東へ、y≡4 の行は西へ — 5行おきに海流が走っている。',
             '8手ごとの潮汐で流れの段の石が1マスずれる。盤外に押し出されると相手のアゲハマに。',
             '流れに乗せて石を運ぶか、連を崩されるか。両者共通の潮流。',

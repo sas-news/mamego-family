@@ -122,10 +122,10 @@ module.exports = {
                     <div class="flex justify-between"><span>白の調合:</span> <strong>\${st.bonus[2]}目</strong></div>`],
         ...K.EVENT_CHIP_SPEC(`'調合 +' + st.bonus[turn] + '目'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            薬籠碁: 同色3つ以上の直線並びが薬に調合される<br>
+        [K.ONE, K.INFO_BASE, `            薬籠碁: 同色3つ以上の直線並びが薬に調合される<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '石は生薬。自分の着手で同色の未調合の石が縦・横・斜めに3つ以上連なると調合され、+5目の薬になる。',
             '調合済みの生薬は金の環。石は残るが同じ生薬では二度調合できない。',
             '打ち切り: 150手を超えると自動終局・採点される。',

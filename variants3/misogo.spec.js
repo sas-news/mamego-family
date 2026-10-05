@@ -80,10 +80,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'味噌樽 ' + [...TARU_SET].filter(i => board[i] === 1 || board[i] === 2).length + '石'`),
-        [K.ONE, K.INFO_ALGO, `            味噌碁: 味噌樽区域に入った連は発酵して固くなり取られない<br>
+        [K.ONE, K.INFO_BASE, `            味噌碁: 味噌樽区域に入った連は発酵して固くなり取られない<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '対角の2つの「味噌樽」区域。樽の中に石を含む連は発酵して固くなり、呼吸点が0でも取られない。',
             '樽は両者共通の聖域。敵石が樽に入れば同様に取れなくなる — 小さな区域を巡る攻防。',
         ])],

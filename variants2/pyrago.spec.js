@@ -88,7 +88,7 @@ module.exports = {
                 ctx.restore();
             }`],
         ...K.WALL_GUARD_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '外郭・中段・頂の3層に溝で分かれたピラミッド盤。',
             '層の間は行き来できない。各層で独立した地取り合戦になる。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',

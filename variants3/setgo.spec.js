@@ -41,10 +41,10 @@ module.exports = {
                         blackTerritory += Math.floor(region.length * share);
                         whiteTerritory += region.length - Math.floor(region.length * share);
                     }`],
-        [K.ONE, K.INFO_ALGO, `            集合碁: 両勢力に接する空領域は「積集合」として黒白で折半される<br>
+        [K.ONE, K.INFO_BASE, `            集合碁: 両勢力に接する空領域は「積集合」として黒白で折半される<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '領地は集合で決まる: 片方の色だけに接する空領域は通常通りその色の地。',
             '黒と白の両方に接する空領域 (積集合) は2分割して双方の地に加算。接触地帯も無駄にならない。',
             'どちらの色にも接しない補集合領域は従来通り0目。',

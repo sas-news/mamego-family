@@ -81,10 +81,10 @@ module.exports = {
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'花火まで ' + (Math.max(1, P('hanabi_interval') || 8) - ((st.cnt[turn] || 0) % Math.max(1, P('hanabi_interval') || 8))) + '手'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            花火碁: 各側8手目の着手は花火玉。打ち上がって4斜めの空点に自石が咲く<br>
+        [K.ONE, K.INFO_BASE, `            花火碁: 各側8手目の着手は花火玉。打ち上がって4斜めの空点に自石が咲く<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '各プレイヤーの8手目ごとの着手は「花火玉」。石は上空に打ち上がって消え、',
             '着地点の4斜めの空点に自石が開いて咲く (呼吸点のない場所には開かない)。',
         ])],

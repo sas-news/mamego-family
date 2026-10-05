@@ -86,10 +86,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`'茶箱 黒' + chabakoCount(1) + '/白' + chabakoCount(2) + ' (' + (P('chabako_need') || 5) + 'で野点)'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            茶箱碁: 中央3x3の茶箱に道具(石)を5つ詰めれば野点出発で即勝ち<br>
+        [K.ONE, K.INFO_BASE, `            茶箱碁: 中央3x3の茶箱に道具(石)を5つ詰めれば野点出発で即勝ち<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '中央3x3は「茶箱」。自分の石(道具)を5つ詰め込んだ側が、荷造り完了で野点へ出発し即勝ち。',
             '野点に届かなくても、終局時に箱の中の石は1つ+1目。',
         ])],

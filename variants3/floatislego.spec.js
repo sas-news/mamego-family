@@ -151,10 +151,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`st.tide === 1 ? '満潮' : '満潮まで ' + ((P('tide_interval') || 9) - (history.length % (P('tide_interval') || 9))) + ' 手'`),
-        [K.ONE, K.INFO_ALGO, `            浮島碁: 4つの浮き島。中央の海峡は9手ごとの潮の満ち干で開閉<br>
+        [K.ONE, K.INFO_BASE, `            浮島碁: 4つの浮き島。中央の海峡は9手ごとの潮の満ち干で開閉<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は4つの浮き島と、それを結ぶ中央の十字の海峡。島の外は海 (壁)。',
             '9手ごとに潮が満ち引きする: 満潮で海峡は海に沈み、残った石は相手のアゲハマに。',
             '干潮で海峡は砂州として復活する。島間の移動は潮見を読んで。',

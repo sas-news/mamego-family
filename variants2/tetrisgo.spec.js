@@ -58,10 +58,10 @@ module.exports = {
                     ctx.fillRect(padding - cellSize * 0.5, padding + (ry - 0.5) * cellSize, cellSize * BOARD_SIZE, cellSize);
                 }
             }`),
-        [K.ONE, K.INFO_ALGO, `            消滅列碁: 行が全部埋まると消滅し、埋めた側の得点になる<br>
+        [K.ONE, K.INFO_BASE, `            消滅列碁: 行が全部埋まると消滅し、埋めた側の得点になる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '空点のない行は着手直後に消滅し、消えたマス数が着手者のアゲハマ得点になる。',
             '自分の石も道連れで消えるので、敵石を多く含む行を完成させるのが美味しい。',
             '残り1空点の行は盤上で警告表示される。',

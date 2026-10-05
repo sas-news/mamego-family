@@ -43,10 +43,10 @@ module.exports = {
         [K.ONE, '                drawPieceShape(alive, padding, cellSize, fill, stroke, isDead ? 0.35 : 1);',
 `                const dimA = (alive.length && isDim(alive[0].x, alive[0].y)) ? 0.55 : 1;
                 drawPieceShape(alive, padding, cellSize, fill, stroke, isDead ? 0.35 : dimA);`],
-        [K.ONE, K.INFO_ALGO, `            薄暮碁: 明るいのは中央領域だけ。外周の石は薄暮に霞んで読みにくい<br>
+        [K.ONE, K.INFO_BASE, `            薄暮碁: 明るいのは中央領域だけ。外周の石は薄暮に霞んで読みにくい<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の中央1/2領域だけが明るい。外周の薄暮エリアの石は薄く霞んで見える。',
             '隅での細かい戦いは薄暮の中 — 地取りは中央が読みやすく、隅は肌感覚が物を言う。',
         ])],

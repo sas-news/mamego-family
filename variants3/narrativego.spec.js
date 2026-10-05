@@ -79,10 +79,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の物語:</span> <strong>+\${chapterBonus(2)}</strong></div>`],
         ...K.EVENT_CHIP_SPEC(`'第' + (st.chapters.length + 1) + '章 黒:' + st.chapters.filter(c => c.owner === 1).length + ' 白:' + st.chapters.filter(c => c.owner === 2).length`),
-        [K.ONE, K.INFO_ALGO, `            物語碁: 12手ごとに章が刻まれる。章を多く綴った側に結末ボーナス<br>
+        [K.ONE, K.INFO_BASE, `            物語碁: 12手ごとに章が刻まれる。章を多く綴った側に結末ボーナス<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '12手ごとに盤面に「章」が刻まれる。期間中により多くの石を取った側の章になる。',
             '終局時、自分の章の数×2目が地に加わる。均衡した期間は「静寂」で誰の章にもならない。',
             '打ち切り: 交点数の0.75倍の手数を超えると自動的に終局・採点される。',

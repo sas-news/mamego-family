@@ -134,10 +134,10 @@ module.exports = {
         }
         function _endGameByScoreCore() {`],
         ...K.EVENT_CHIP_SPEC(`'酒 ' + st.sake.filter(i => board[i] === 1 || board[i] === 2).length + '個'`),
-        [K.ONE, K.INFO_ALGO, `            醸造碁: 仕込み樽に12手浸かった麹は酒になる (終局時1個1点)<br>
+        [K.ONE, K.INFO_BASE, `            醸造碁: 仕込み樽に12手浸かった麹は酒になる (終局時1個1点)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の対角に2つの仕込み樽 (醸造槽) がある。',
             '槽の中に12手浸かった麹の石は酒に変わる (琥珀の滴印)。終局時に1個1点の加点。',
             '槽を守って醸すか、敵の麹を引きずり出すか。両者同じ条件。',

@@ -70,10 +70,10 @@ module.exports = {
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
         ...K.EVENT_CHIP_SPEC(`history.length <= (P('fuseki_moves') || 18) ? '布石 +' + ((st.bonus && st.bonus[turn]) || 0) + '目' : ''`),
-        [K.ONE, K.INFO_ALGO, `            布石碁: 序盤18手は1手ごとに +1目。終盤は取り石が点数を伸ばす<br>
+        [K.ONE, K.INFO_BASE, `            布石碁: 序盤18手は1手ごとに +1目。終盤は取り石が点数を伸ばす<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '布石 (序盤18手) は広く打つだけで1手 +1目 — 序盤の構築が点数になる。',
             '以後は通常の地とアゲハマ勝負。序盤の稼ぎを終盤で守り切る碁。',
         ])],

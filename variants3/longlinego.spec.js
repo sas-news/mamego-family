@@ -111,10 +111,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'延縄まで ' + (Math.max(1, P('hook_interval') || 6) - (history.length % Math.max(1, P('hook_interval') || 6))) + ' 手'`),
-        [K.ONE, K.INFO_ALGO, `            延縄碁: 5個以上の連は延縄。6手ごとに隣の敵の孤立石を釣る<br>
+        [K.ONE, K.INFO_BASE, `            延縄碁: 5個以上の連は延縄。6手ごとに隣の敵の孤立石を釣る<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '5個以上繋がった連は「延縄」。6手ごとに縄に隣接する敵の孤立石 (大きさ1の連) を釣り上げてアゲハマにする。',
             '大きな連は強いが縄の間合いに敵が来れば釣られる。孤立石を近づけるな。',
         ])],

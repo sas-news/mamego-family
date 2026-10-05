@@ -52,10 +52,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>象嵌の文様:</span> <strong>黒 \${zoganBonus(1)} / 白 \${zoganBonus(2)}</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            象嵌碁: 敵石に1つでも隣接する石は象嵌の文様 — 終局時+0.25目<br>
+        [K.ONE, K.INFO_BASE, `            象嵌碁: 敵石に1つでも隣接する石は象嵌の文様 — 終局時+0.25目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '象嵌: 終局時、敵石に1つ以上隣接する自石は異素材を嵌め込んだ文様として+0.25目。',
             '敵との接点が多いほど文様は豊かになる — 接触戦が報われる。',
         ])],

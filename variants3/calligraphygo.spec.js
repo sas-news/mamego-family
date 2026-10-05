@@ -87,7 +87,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'筆流 ' + st.cur[turn] + ' (最長 ' + st.best[turn] + ')'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '石は墨の筆跡。直前に置いた自分の石に隣接して打つと「一筆」が伸びる (接続しないと新しい筆に)。',
             '終局時、最長の一筆の長さがそのまま得点。流れるような布石を目指せ — 両者同じ。',
         ])],

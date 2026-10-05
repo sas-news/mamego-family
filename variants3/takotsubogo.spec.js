@@ -81,10 +81,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'壺上げまで ' + ((P('pot_interval') || 9) - (history.length % (P('pot_interval') || 9))) + ' 手'`),
-        [K.ONE, K.INFO_ALGO, `            蛸壺碁: 壺の点の石は9手ごとの壺上げで獲られる (相手のアゲハマに)<br>
+        [K.ONE, K.INFO_BASE, `            蛸壺碁: 壺の点の石は9手ごとの壺上げで獲られる (相手のアゲハマに)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤上に4つの「蛸壺」がある (壺マーク)。9手ごとの壺上げで壺の中の石は色に関係なく獲られ、持ち主の敵のアゲハマになる。',
             '壺に入るな。相手を誘い込むなら絶好の罠。壺上げの番を読め。',
         ])],

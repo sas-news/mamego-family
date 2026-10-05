@@ -62,7 +62,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'霧 ' + (Math.floor(history.length / Math.max(1, P('fog_step') || 2)) % BOARD_SIZE) + '列〜'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '幅4列の霧の帯が盤を右へ這い回る (2手で1列)。霧の列には着手できず、霧の中の石は見えない。',
             '霧の中の石も捕獲対象として生きている — 位置を記憶して攻めを組み立てよう。霧は両者共通。',
         ])],

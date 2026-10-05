@@ -129,10 +129,10 @@ module.exports = {
         }
         function _endGameByScoreCore() {`],
         ...K.EVENT_CHIP_SPEC(`'入穴 黒' + st.score[1] + ' / 白' + st.score[2]`),
-        [K.ONE, K.INFO_ALGO, `            ビー玉碁: 星の点は穴。ビー玉を穴に入れると+2点、穴の中の石は呼吸+1<br>
+        [K.ONE, K.INFO_BASE, `            ビー玉碁: 星の点は穴。ビー玉を穴に入れると+2点、穴の中の石は呼吸+1<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の星の点 (9箇所) は暗い穴。ビー玉を穴に入れると入穴点+2。',
             '穴の中の石は抜けにくい — 呼吸点+1。穴は双方共通の得点源。',
             '入穴点は終局時にアゲハマ相当で加算される。',

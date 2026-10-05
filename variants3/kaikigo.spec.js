@@ -93,10 +93,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'法要: ' + (st.ply % Math.max(1, P('kaiki_interval') || 7) === 0 ? '今!' : (Math.max(1, P('kaiki_interval') || 7) - st.ply % Math.max(1, P('kaiki_interval') || 7)) + '手後')`),
-        [K.ONE, K.INFO_ALGO, `            回忌碁: 7手ごとに回忌法要。互いの取り石(故人)の差が徳点になる<br>
+        [K.ONE, K.INFO_BASE, `            回忌碁: 7手ごとに回忌法要。互いの取り石(故人)の差が徳点になる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手7手ごとに回忌法要が営まれる。両者の取り石数の半分同士を比べ、多い側にその差だけ徳点が入る。',
             '徳点は採点に加算される蓄積点 — 石が取り返されても徳は消えない。',
             '取り合いが激しいほど徳の差が開く。法要は双方同じ条件。',

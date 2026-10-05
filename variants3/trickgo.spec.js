@@ -91,10 +91,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`st.trap >= 0 && history.length < st.trapUntil ? '悪戯中 (' + (st.trap % BOARD_SIZE) + ',' + Math.floor(st.trap / BOARD_SIZE) + ')' : '-'`),
-        [K.ONE, K.INFO_ALGO, `            悪戯碁: 8手ごとに悪戯インク。仕掛けた相手は次の1手だけその点に打てない<br>
+        [K.ONE, K.INFO_BASE, `            悪戯碁: 8手ごとに悪戯インク。仕掛けた相手は次の1手だけその点に打てない<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '8手ごとに、打った点の隣の空点へ「悪戯インク」を仕掛ける。',
             '仕掛けられた側は次の1手だけその点に打てない。両者に同じ周期で巡る。',
             '打ち切り: 交点数の0.75倍の手数を超えると自動的に終局・採点される。',

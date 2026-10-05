@@ -49,7 +49,7 @@ module.exports = {
                 ctx.fill();
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '天元は王座 (金色の王冠マーク)。終局時に天元の石を持つ側が+3点のボーナス。',
             '通常の地取り勝負に王座争奪戦が載る。取っても取り返される激戦区。',
         ])],

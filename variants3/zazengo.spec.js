@@ -82,10 +82,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`'坐禅 黒' + (zazenBonus(1) / Math.max(1, P('zen_pts') ?? 3)) + '/白' + (zazenBonus(2) / Math.max(1, P('zen_pts') ?? 3))`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            座禅碁: 中央5x5の座禅区域で敵に接されない石は心が安定して終局時+3目<br>
+        [K.ONE, K.INFO_BASE, `            座禅碁: 中央5x5の座禅区域で敵に接されない石は心が安定して終局時+3目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '中央5x5は「座禅区域」。終局時、区域内で敵石に隣接していない自分の石は坐り切った証として+3目。',
             '敵に触れられた石は心が乱れる — 接点を増やすか、離れて坐り切るか。',
         ])],

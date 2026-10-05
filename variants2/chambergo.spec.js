@@ -43,7 +43,7 @@ module.exports = {
         // 城館の壁は石積み
         [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_BRICK('#565c66', '#333842'))],
         ...K.WALL_GUARD_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '十字の隔壁で4つの大部屋に分割。各部屋は2つの扉で隣室と繋がる。',
             '扉を押さえれば敵の侵入を防げる。部屋ごとの局地戦。',
         ])],

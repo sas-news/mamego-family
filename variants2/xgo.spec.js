@@ -34,7 +34,7 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手は叉字 (十字/X字) の5連ピースのみ。','中心の石が4方向に分岐した連。5マス未満の空領域は窒息領域。'])],
+        [K.ONE, K.RV_BASE, K.rv(['着手は叉字 (十字/X字) の5連ピースのみ。','中心の石が4方向に分岐した連。5マス未満の空領域は窒息領域。'])],
         // === FX: 積み木タイル駒 ===
         [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
 

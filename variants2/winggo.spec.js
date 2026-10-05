@@ -34,7 +34,7 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手は中央+両翼のV字5連ピースのみ (回転=⟳ボタン・Rキー・右クリック・ホイール)。','ピースが入らない5マス未満の連結空領域は窒息領域。'])],
+        [K.ONE, K.RV_BASE, K.rv(['着手は中央+両翼のV字5連ピースのみ (回転=⟳ボタン・Rキー・右クリック・ホイール)。','ピースが入らない5マス未満の連結空領域は窒息領域。'])],
         // === FX: 積み木タイル駒 ===
         [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
 

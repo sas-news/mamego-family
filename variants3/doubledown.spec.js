@@ -85,7 +85,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'倍返し ' + ((st.firstCap[1] ? '黒済' : '黒未') + '/' + (st.firstCap[2] ? '白済' : '白未'))`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '倍返し: 各プレイヤーがこの局で最初に石を取った時、そのアゲハマが2倍になる。',
             '発動は自動・両者同条件。最初の捕獲を誰がどの規模で取るかが勝負の分かれ目。',
         ])],

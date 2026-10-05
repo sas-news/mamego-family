@@ -109,10 +109,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白のゴール:</span> <strong>+\${st.pts[2]}</strong></div>`],
         ...K.EVENT_CHIP_SPEC(`'ゴール 黒' + st.pts[1] + ' 白' + st.pts[2]`),
-        [K.ONE, K.INFO_ALGO, `            石蹴碁: 置くと隣の味方石を蹴り飛ばす。盤端まで運ぶごとに+1点<br>
+        [K.ONE, K.INFO_BASE, `            石蹴碁: 置くと隣の味方石を蹴り飛ばす。盤端まで運ぶごとに+1点<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '石を置くと、直交する味方石が着手石と反対方向へ1マス蹴り飛ばされる。',
             '蹴られた石が盤の縁に着くとゴール+1点。連続して蹴って運ぶ戦法がある。',
             '蹴りで窒息した石は取られる。蹴りの効果は両者対称。',

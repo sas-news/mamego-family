@@ -76,10 +76,10 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
-        [K.ONE, K.INFO_ALGO, `            ケイマ碁: 自軍石から桂馬飛びに置くと +1目<br>
+        [K.ONE, K.INFO_BASE, `            ケイマ碁: 自軍石から桂馬飛びに置くと +1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自軍の石から将棋の桂馬の飛び先 (1×2) に置く「ケイマ」は +1目。',
             'ケイマは速いが石同士は直接繋がっていない — 切られやすさはそのまま。',
         ])],

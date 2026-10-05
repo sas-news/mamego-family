@@ -75,10 +75,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'竜巻 ' + ((P('tornado_interval') || 15) - history.length % (P('tornado_interval') || 15)) + '手後 ' + tornadoRow() + '段'`),
-        [K.ONE, K.INFO_ALGO, `            竜巻碁: 15手ごとに竜巻が点線の段を横断し、その段の石を全て吹き飛ばす<br>
+        [K.ONE, K.INFO_BASE, `            竜巻碁: 15手ごとに竜巻が点線の段を横断し、その段の石を全て吹き飛ばす<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '15手ごとに竜巻が一段を横断し、通路上の石を色に関係なく全て吹き飛ばす (アゲハマにはならない)。',
             '次の通路は点線とチップで予告される。吹き飛ばされないように段を避けて打とう。',
             '打ち切り: 交点数の0.75倍の手数を超えると自動的に終局・採点される。',

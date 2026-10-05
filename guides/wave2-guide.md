@@ -25,7 +25,7 @@ module.exports = {
 ```
 
 - `K.ONE` = 最初の1箇所だけ置換、`K.ALL` = 全箇所置換。
-- `spec` の代わりに `build(algoSrc, K)` 関数を export してもよい (自由生成)。
+- `spec` の代わりに `build(baseSrc, K)` 関数を export してもよい (自由生成)。
 - 文字列内のバッククォート・`${}` 注入に注意。置換 newString 側は自由記述。
 
 ## 主要アンカー (algo.html 内の正確な文字列。K.<名前> で参照)

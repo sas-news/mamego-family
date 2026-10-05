@@ -47,7 +47,7 @@ module.exports = {
             if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の石で「十字5連+その斜め角1石」の王冠形 (菱6連) を完成させると即勝ち。',
             '完成を阻むには途中の十字を崩すしかない。140手を超えた時点で地数判定する。',
         ])],

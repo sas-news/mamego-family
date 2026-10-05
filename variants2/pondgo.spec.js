@@ -23,7 +23,7 @@ module.exports = {
         ...K.WALL_GUARD_SPEC,
         // 池のさざ波
         [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_WATER],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤中央に大きな池が広がる。池には置けず呼吸にもならない。',
             '池を囲む環状の庭が唯一の戦場。回遊するように地を取れ。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',

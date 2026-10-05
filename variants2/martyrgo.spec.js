@@ -48,7 +48,7 @@ module.exports = {
             } else {
                 soundManager.playPlace();
             }`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '取られた連は殉教する: 取跡に接していた敵石は全て道連れに散る。',
             '囲んで取るたび囲んだ石も散る — 孤立した石ほど犠牲が小さい。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',

@@ -80,7 +80,7 @@ module.exports = {
                 ctx.fillText('寺', padding + c0 * cellSize, padding + c0 * cellSize);
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '中央3x3の「寺院区域」に隣接する自分の連が、その周縁接点を4つ以上持つと即勝ち。',
             '区域自体には普通に打てるが、囲む側を急ぐ方が早い。140手を超えた時点で地数判定する。',
         ])],

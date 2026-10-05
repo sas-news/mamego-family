@@ -62,7 +62,7 @@ module.exports = {
             turn = opponent;`],
         // 現在の最大連結数をステータスチップに表示
         ...K.EVENT_CHIP_SPEC(`'版図 黒' + largestGroup(1) + ' / 白' + largestGroup(2)`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '終局時、盤上で最も大きい連結区域 (最大の連) を持つ側が勝ち。',
             '同サイズなら通常の地数判定にフォールバックする。',
             '140手を超えた時点で即座に地数判定する (版図優先)。',

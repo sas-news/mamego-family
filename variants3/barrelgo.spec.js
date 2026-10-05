@@ -92,10 +92,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`'熟成 ' + board.reduce((n, v, i) => n + (st.born[i] && history.length - st.born[i].at >= (P('age_plies') || 24) && board[i] === st.born[i].p ? 1 : 0), 0)`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            樽酒碁: 石は酒樽。24手残った石は熟成し、終局時に1個+1目の価値になる<br>
+        [K.ONE, K.INFO_BASE, `            樽酒碁: 石は酒樽。24手残った石は熟成し、終局時に1個+1目の価値になる<br>
             PC: クリックで配置<br>
             スマホ: タップで配置`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '置いた石はその手数で「仕込み」が記録される。',
             '仕込みから24手残った石は熟成 (金の縁取り)。終局時、熟成石1個につき+1目。',
             '石を長く残すほど得になる守りのゲーム。',

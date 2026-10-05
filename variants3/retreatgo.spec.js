@@ -43,10 +43,10 @@ module.exports = {
 `                endGameByScore(); // 連続パスで即採点終局 (死に石確認は簡略化)`],
         [K.ONE, '        function endGameByScore() {', K.WIN_BY_RULE_FN + `
         function endGameByScore() {`],
-        [K.ONE, K.INFO_ALGO, `            退避碁: 孤立石がアタリになると自動で最後の呼吸点へ逃げる<br>
+        [K.ONE, K.INFO_BASE, `            退避碁: 孤立石がアタリになると自動で最後の呼吸点へ逃げる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '孤立した石 (同色と隣接していない石) がアタリになると、最後の呼吸点へ自動的に退避する。',
             '退避は両軍同じルール。連に組み込まれた石は退避しない — 単騎の石だけが逃げる。',
             '打ち切り: 140手を超えると自動終局・採点される。',

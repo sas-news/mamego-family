@@ -107,10 +107,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`'黄泉まで' + ((P('rite_interval') || 15) - (history.length % (P('rite_interval') || 15))) + '手'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            黄泉碁: 15手ごとに両者の石が1つずつ這い出す<br>
+        [K.ONE, K.INFO_BASE, `            黄泉碁: 15手ごとに両者の石が1つずつ這い出す<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '15手ごとの「黄泉の境界」で、黒は下から白は上から、それぞれ1石が盤の裏から這い出す。',
             '這い出た石はどちらの着手でもない増援。窒息して出た石は黄泉へ還る。',
             '打ち切り: 150手を超えると自動終局・採点される。',

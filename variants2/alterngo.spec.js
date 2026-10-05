@@ -47,7 +47,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '黒は偶数行、白は奇数行にしか着手できない。互いに相手の行へは進めない。',
             '石は行ごとに層を成し、取り合いは行を跨ぐ連の切り結びになる。',
         ])],

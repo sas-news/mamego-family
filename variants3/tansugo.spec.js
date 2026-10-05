@@ -79,10 +79,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`'箪笥 黒' + (tansuBonus(1) / (P('bonus') || 7)) + '/白' + (tansuBonus(2) / (P('bonus') || 7)) + '杯'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            箪笥碁: 四隅の3x3は箪笥。自分の石を4つ以上収めた引出しごとに+7目<br>
+        [K.ONE, K.INFO_BASE, `            箪笥碁: 四隅の3x3は箪笥。自分の石を4つ以上収めた引出しごとに+7目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の四隅3x3は「箪笥の引出し」。終局時、自分の石を4つ以上収めた引出しごとに+7目。',
             '両者が同じ引出しを争う — 入れ違いの収納合戦。',
         ])],

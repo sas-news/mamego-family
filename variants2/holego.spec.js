@@ -28,7 +28,7 @@ module.exports = {
             for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) {
                 if ((x * 31 + y * 17 + BOARD_SIZE) % Math.max(3, P('hole_mod') || 13) === 0) board[y * BOARD_SIZE + x] = 3;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の所々に穴が空いている。穴には置けず、呼吸点にも地にもならない。',
             '穴は盤サイズごとに固定。欠けた呼吸点を計算に入れて戦う。',
         ])],

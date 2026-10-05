@@ -37,7 +37,7 @@ module.exports = {
             } else {
                 soundManager.playPlace();
             }`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手した石に接する敵石は寄生で自分の色に変わる。',
             '敵連に打ち込むと端から侵食していく。奪った石はアゲハマにも計上される。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',

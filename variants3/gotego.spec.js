@@ -79,10 +79,10 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
-        [K.ONE, K.INFO_ALGO, `            後手碁: アタリの連を救う応手で +2目 (白は+3目)<br>
+        [K.ONE, K.INFO_BASE, `            後手碁: アタリの連を救う応手で +2目 (白は+3目)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '受けに回った側が報われる碁。アタリ (呼吸点1) にされた自軍連へ繋いで救出すると +2目。',
             '常に後手の白は +3目 — 粘り強く受ければ逆転できる。',
         ])],

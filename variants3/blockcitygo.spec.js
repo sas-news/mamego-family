@@ -55,10 +55,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>黒の領有街区:</span> <strong>\${blockDetail[1]}</strong></div>
                     <div class="flex justify-between"><span>白の領有街区:</span> <strong>\${blockDetail[2]}</strong></div>
                     <div class="flex justify-between font-bold border-t pt-1"><span>黒合計:</span> <span>\${blackTotal}</span></div>`],
-        [K.ONE, K.INFO_ALGO, `            街区碁: 道路で区切られた街区状の盤。街区ごとに領主が決まる<br>
+        [K.ONE, K.INFO_BASE, `            街区碁: 道路で区切られた街区状の盤。街区ごとに領主が決まる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は道路で区切られた街区 (3x3程度の区域) の集まり。道路は着手不可・呼吸なし。',
             '終局時、各街区で石が多い側がその街区全域を領地として得る (通常の地にも加算)。',
         ])],

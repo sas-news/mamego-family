@@ -74,7 +74,7 @@ module.exports = {
             if (history.length >= Math.max(10, P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の石で「直角二等辺三角形」の3頂点 (軸平行・脚長2以上) を作ると、その内部の敵石を全て取る。',
             '内部に自分の石があってもそのまま残る (三角形内は安全地帯)。',
             '140手を超えた時点で即座に地数判定する。',

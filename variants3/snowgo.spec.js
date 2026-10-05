@@ -78,7 +78,7 @@ module.exports = {
         ...K.EVENT_CHIP_SPEC(`'雪線 ' + (Math.floor(history.length / (P('snow_interval') || 8)) % (P('snow_cycle') || 5)) + '段'`),
         // 連続パスは雪に埋もれて即終局 — 死石は自動判定で採点 (対話的死石確認は省略)
         [K.ONE, `                startDeadStoneSelectionPhase();`, `                endGameByScore();`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '雪線は8手ごとに1段ずつ上辺から下りる (最大4段、その後雪解けで0に戻る周期)。',
             '雪線より上は凍結: 着手できず、そこにある連も凍り付いて取られない。周期は両者共通。',
         ])],

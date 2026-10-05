@@ -61,10 +61,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>屋台の賑わい:</span> <strong>黒 \${stallBonus(1)} / 白 \${stallBonus(2)}</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            屋台碁: 同色で横/縦に3個以上連なった列は「屋台」— 終局時、列の石1個につき+1目<br>
+        [K.ONE, K.INFO_BASE, `            屋台碁: 同色で横/縦に3個以上連なった列は「屋台」— 終局時、列の石1個につき+1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の石が横か縦に3個以上まっすぐ連なった「屋台の列」は客を呼ぶ。',
             '終局時、屋台の列に並ぶ石1個につき+1目の賑わい点が入る (斜め・分断された列は数えない)。',
         ])],

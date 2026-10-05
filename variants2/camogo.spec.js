@@ -48,10 +48,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`(function(){ const c = pieces.filter(pc => isCamo(pc)).length; return c > 0 ? '迷彩 ' + c + '石' : ''; })()`),
-        [K.ONE, K.INFO_ALGO, `            迷彩碁: 置いた石は5手の間だけ敵色に見える (盤面ロジックは正しい色のまま)<br>
+        [K.ONE, K.INFO_BASE, `            迷彩碁: 置いた石は5手の間だけ敵色に見える (盤面ロジックは正しい色のまま)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '置いてから5手の間、その石は敵色に見える (緑の破線が迷彩の目印)。',
             '取り・呼吸・地は実際の色で判定される — 見た目と裏腹な連ができて混乱する。',
         ])],
