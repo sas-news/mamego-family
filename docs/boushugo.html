@@ -15,7 +15,7 @@
     <meta property="og:image" content="https://sas-news.github.io/mamego-family/og/boushugo.png">
     <meta property="og:locale" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="mamego-build" content="160e946">
+    <meta name="mamego-build" content="ec2d9bcd">
     <!-- /MAMEGO:META -->
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -836,6 +836,10 @@
         // DOM Elements
         const canvas = document.getElementById('boardCanvas');
         const ctx = canvas.getContext('2d');
+        // Safari <16.4 には ctx.roundRect が無いので角丸を矩形にフォールバック (壁描画で例外にならないように)
+        if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h) { this.rect(x, y, w, h); };
+        }
         const appBody = document.getElementById('appBody');
         const statusCard = document.getElementById('statusCard');
         const turnIndicator = document.getElementById('turnIndicator');
@@ -1062,6 +1066,18 @@
         function fxAmbient(fn) { fxAmbients.push(fn); }
         function fxActive() { return fxList.length > 0 || fxAmbients.length > 0 || fxNow() < fxShakeUntil; }
 
+        // rAFループは常に1本: 予約済みなら追加しない (mousemoveでrenderが連発されても増殖しない)
+        let fxRafPending = false;
+        function fxSchedule() {
+            if (fxRafPending || !fxActive() || typeof requestAnimationFrame !== 'function') return;
+            fxRafPending = true;
+            requestAnimationFrame(() => {
+                fxRafPending = false;
+                // 例外時はエンジンごと停止: fxListだけ消すと常時演出が残り毎フレーム投げ続ける無限ループになる
+                try { fxFrame(); } catch (e) { fxList = []; fxAmbients = []; fxShakeUntil = 0; }
+            });
+        }
+
         // 障害物 (3:壁 4:幽霊など) のデフォルト描画 — obstaclePainter があればそちら優先
         function drawObstacleCell(val, cx, cy, cellSize, idx) {
             if (typeof obstaclePainter === 'function' && obstaclePainter(val, cx, cy, cellSize, idx)) return;
@@ -1280,9 +1296,7 @@
             drawFx(fxNow(), padding, cellSize);
 
             // エフェクトが生きている間は描画を続ける (常時オーバーレイ含む)
-            if (fxActive() && typeof requestAnimationFrame === 'function') {
-                requestAnimationFrame(() => { try { fxFrame(); } catch (e) { fxList = []; } });
-            }
+            fxSchedule();
         }
 
         // エフェクトフレーム: 静的層はキャッシュを貼るだけ (全石・壁・格子の再描画を省く)
@@ -1295,11 +1309,16 @@
                 return;
             }
             // デバイスpxのスナップショットをCSSpx領域へ縮小貼り付け (ctxのdpr変換込みで等倍になる)
-            ctx.drawImage(fxStaticCv, 0, 0, width, width);
-            drawFx(now, padding, cellSize);
-            if (fxActive() && typeof requestAnimationFrame === 'function') {
-                requestAnimationFrame(() => { try { fxFrame(); } catch (e) { fxList = []; } });
+            try {
+                ctx.drawImage(fxStaticCv, 0, 0, width, width);
+                drawFx(now, padding, cellSize);
+            } catch (e) {
+                // 静的層が壊れていた場合は全面描画にフォールバック (ループを殺さない)
+                fxStaticCv = null; fxStaticCtx = null;
+                render();
+                return;
             }
+            fxSchedule();
         }
 
         function getStarPoints(size) {
