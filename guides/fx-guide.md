@@ -29,7 +29,7 @@ tools/base.html に全バリアント共通の「FXエンジン」が組み込�
 
 同じアンカー `            const covered = new Set(); // ピース描画でカバー済みのマス` を置き換えて、**wall セル (board[i]===3) を好きな質感で塗る専用ブロック**を書く。`fxNow()` を読めば脈動・揺らぎ・泡立ちのアニメ塗りになる。
 
-例: LAVAGO (gen_variants.js) — 玄武岩グラデ + 脈動する灼熱亀裂 + 次に沈むリングの予告。パターン:
+例: LAVAGO (variants/lavago.spec.js) — 玄武岩グラデ + 脈動する灼熱亀裂 + 次に沈むリングの予告。パターン:
 
 ```js
 [ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`,
@@ -64,7 +64,7 @@ tools/base.html に全バリアント共通の「FXエンジン」が組み込�
 
 盤面を書き換える処理 (回転・爆破・水没・凍結など) の中で、変化したセルに対して `fxSlide` / `fxBurst` / `fxGlow` / `fxShake` を呼ぶ。
 
-例: ROTATEGO (variants2/rotatego.spec.js) — spin() で「どこからどこへ動いた」を記録してスライド:
+例: ROTATEGO (variants/rotatego.spec.js) — spin() で「どこからどこへ動いた」を記録してスライド:
 
 ```js
 cs.forEach(([x, y], k) => {
@@ -74,7 +74,7 @@ cs.forEach(([x, y], k) => {
 });
 ```
 
-例: BOMBGO (variants2/bombgo.spec.js) — 爆破の中心でリング+揺れ+文字+各セルで火花:
+例: BOMBGO (variants/bombgo.spec.js) — 爆破の中心でリング+揺れ+文字+各セルで火花:
 
 ```js
 fxGlow(ci, '#fbbf24', 700);
@@ -85,7 +85,7 @@ for (...) { fxBurst(i0, '#f97316', 10, 1.8); fxBurst(i0, '#fbbf24', 5, 1.2); }
 
 ## 常時オーバーレイ (fxAmbient)
 
-`let obstaclePainter = null;` の行をアンカーに初期化コードを足す (wave2 の gen_kit には `K.FX_BOOT` アンカー = `'        let obstaclePainter = null;'` がある — なければ同じ文字列を使う):
+`let obstaclePainter = null;` の行をアンカーに初期化コードを足す (gen_kit.js に `K.FX_BOOT` アンカー = `'        let obstaclePainter = null;'` がある — なければ同じ文字列を使う):
 
 ```js
 [ONE, `        let obstaclePainter = null;`,
@@ -111,6 +111,6 @@ for (...) { fxBurst(i0, '#f97316', 10, 1.8); fxBurst(i0, '#fbbf24', 5, 1.2); }
 
 ## 確認
 
-- `node gen_wave2.js` / `node gen_variants.js` で再生成 → `node test-wave2.js` / `node test-variants.js` 全パス。
+- `node gen_specs.js` で再生成 → `node test-specs.js` / `node test-variants.js` 全パス。
 - `node tools/sim-game.js --plies 120 <file>` で起動・進行エラーがないか。
 - **ブラウザで実際に開いて目視** (file://)。描画が壊れてないか、演出が発火するか、見やすいか。変なら何度でも直す。

@@ -1,9 +1,8 @@
 // gen_kit.js — 変則碁ジェネレータ共通基盤
-// gen_variants.js / gen_wave2.js から require して使う。
-// 変則碁バリアント一括生成スクリプト
+// variants/*.spec.js から require して使う (gen_specs.js が収集して適用する)。
 // tools/base.html (碁盤+通常碁石の中立ベース) をテンプレートに、
 // 各ゲーム = 「通常囲碁 + 特殊ルール」として文字列置換で差分を適用する。
-// 使い方: node gen_variants.js   (失敗した置換はログに出る)
+// 使い方: node gen_specs.js   (失敗した置換は MISSING としてログに出る)
 const fs = require('fs');
 const path = require('path');
 const BASE = fs.readFileSync(path.join(__dirname, 'tools', 'base.html'), 'utf8').replace(/\r\n/g, '\n');

@@ -162,14 +162,16 @@
 ## 開発
 
 - 公開サイトの実体は [`docs/`](docs/) 配下 (GitHub Pages が `docs/` を公開ディレクトリとしてデプロイ)。ルートにはソース (生成系・テスト・`tools/`) のみ
-- `npm run gen` — 生成チェーン一式: `gen_variants.js` (wave1) → `gen_wave2.js` → `gen_wave3.js` → `gen_wave3_index.js` (index/icon-draw 更新) → `tools/build-manifest.js` (games.json/games.js/VARIANTS.md/sitemap/robots) → `tools/inject-site.js` (全HTMLへ共通部品注入)
+- `npm run gen` — 生成チェーン一式: `gen_specs.js` (variants/ 全spec → `tools/base.html` に差分適用して docs/ へ生成) → `gen_index.js` (index/icon-draw 更新) → `tools/build-manifest.js` (games.json/games.js/VARIANTS.md/sitemap/robots) → `tools/inject-site.js` (全HTMLへ共通部品注入)
+- `npm run check` — gen + 衝突検査 + 全テスト (新規ゲーム検証はこれ1本)
+- `npm run new-game -- <名前> <英字名> <日本語名>` — spec+icon 雛形を variants/ に生成
 - `npm run og` — OGPカード `og/*.png` を生成 (要 `npm install`・CJKフォント・ImageMagick)
 - `npm run ranking` — GoatCounter 集計 → ranking.js (要 `GOATCOUNTER_CODE`/`GOATCOUNTER_TOKEN`)
 - `node test-logic.js` / `node test-algo.js` — TETOGO/ALGO のルールエンジンテスト (vm + DOM スタブ)
-- `node test-variants.js` — 全バリアントの起動 + 固有ルールのスモークテスト
+- `npm test` — `test-variants.js` (全バリアント起動+スモーク) + `test-algo.js`/`test-logic.js` + `test-specs.js` (spec の test: 実行)
 - `tools/sim-game.js` — ランダム対局シミュレーション (健全性チェック)
 - `tools/check-unique.js` — ゲーム名/ファイル名の重複・上書き衝突を検査 (PRチェック用)
-- 新規ゲームの作り方は [CONTRIBUTING.md](CONTRIBUTING.md)
+- 新規ゲームの作り方は [CONTRIBUTING.md](CONTRIBUTING.md)。AIエージェント向けの単一エントリは [AGENTS.md](AGENTS.md)、spec の詳細仕様は [guides/spec-guide.md](guides/spec-guide.md)
 - `tools/health-flags.json` — 「調整中」バッジの手動フラグ (`{"file.html": "理由"}`)
 
 生成物の再ビルドは `regen-assets.yml` が push 時に自動化。必要な Actions 変数:
