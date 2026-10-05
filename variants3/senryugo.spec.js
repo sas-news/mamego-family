@@ -84,10 +84,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'おかしみ ' + (() => { const b = typeof senryuBonus === 'function' ? senryuBonus() : { 1: 0, 2: 0 }; return '黒' + b[1] + ' 白' + b[2]; })()`),
-        [K.ONE, K.INFO_ALGO, `            川柳碁: 山なりの同色3連 (真中が1点張り出す形) は終局時+1目<br>
+        [K.ONE, K.INFO_BASE, `            川柳碁: 山なりの同色3連 (真中が1点張り出す形) は終局時+1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '同じ色が「∧」や「∨」の山なり3連を成せばおかしみ点、終局時+1目。',
             '川柳は軽みが命 — 駄目に走る余所見が実は得点源。双方同じ条件。',
         ])],

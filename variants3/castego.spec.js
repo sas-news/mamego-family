@@ -100,7 +100,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'次の上級石まで ' + ((P('noble_every') || 4) - ((st.pcnt[turn] || 0) % (P('noble_every') || 4))) + '手'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '石は階級。自分の4手ごとの着手は「上級」階級の石 (金の冠印) になる。',
             '上級石は取られるとアゲハマ2個分の価値。数が少ないほど貴重 — 両者同じ周期で現れる。',
         ])],

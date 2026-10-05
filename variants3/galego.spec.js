@@ -98,10 +98,10 @@ module.exports = {
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'木枯らし ' + ${DIRS}.name[st.dir] + ' まで ' + ((P('gale_interval') || 12) - history.length % (P('gale_interval') || 12)) + '手'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            木枯碁: 12手毎に木枯らしが吹き、全石が風下へ1マス流される (風向きは東→南→西→北)<br>
+        [K.ONE, K.INFO_BASE, `            木枯碁: 12手毎に木枯らしが吹き、全石が風下へ1マス流される (風向きは東→南→西→北)<br>
             PC: クリックで配置<br>
             スマホ: タップで配置`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '12手ごとに木枯らし: 全ての石が風下へ1マス流される (行き先が空いている石のみ)。',
             '風向きは吹くたびに東→南→西→北とまわる。',
             '流された先で呼吸や取りの関係が変わる。端に追い込まれた石は動けない。',

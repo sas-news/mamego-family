@@ -46,7 +46,7 @@ module.exports = {
             ctx2.restore();
         });`],
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は盤の端から2マス以内の帯状領域のみ。中央は暗い死域。',
             '全ての石が縁で縮み合う。呼吸の確保がいつも以上に苦しい。',
         ])],

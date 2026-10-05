@@ -75,7 +75,7 @@ module.exports = {
             }`],
         ...K.WALL_GUARD_SPEC,
         ...K.EVENT_CHIP_SPEC(`'隕石まで ' + (Math.max(1, P('interval') || 7) - history.length % Math.max(1, P('interval') || 7)) + ' 手'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '7手ごとに隕石が落下し、十字形のクレーター(壁)が穿たれる。直撃した石は消滅する。',
             'クレーターは壁となり、呼吸点も地も失う。落下位置は手数で決まり読める。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',

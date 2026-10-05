@@ -56,10 +56,10 @@ module.exports = {
                     ctx.lineTo(cx - cellSize * 0.08, cy - cellSize * 0.42);
                     ctx.stroke();`)],
         ...K.WALL_GUARD_SPEC,
-        [K.ONE, K.INFO_ALGO, `            琥珀碁: 取られた石は琥珀に封じ込められ障害物として残る<br>
+        [K.ONE, K.INFO_BASE, `            琥珀碁: 取られた石は琥珀に封じ込められ障害物として残る<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '取られた石は消えず、その場で琥珀 (金色の障害物) に封じ込められる。',
             'アゲハマは通常通り数えるが、取っても空地にはならない — 琥珀は永久に動かせない。',
             '取り合いのたびに盤が化石で埋まっていく。両者同じ条件。',

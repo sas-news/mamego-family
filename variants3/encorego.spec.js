@@ -112,10 +112,10 @@ const melodyIdx = (k) => MELODY[k][1] * BOARD_SIZE + MELODY[k][0];
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'次の音符 ' + ((st.pos[turn] || 0) + 1) + '/' + Math.min(8, Math.max(1, P('win_notes') || 8))`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            完奏碁: 盤の音符点を1番から順に自石で埋める。8音を完奏した側が即勝ち (1音ごと+1目)<br>
+        [K.ONE, K.INFO_BASE, `            完奏碁: 盤の音符点を1番から順に自石で埋める。8音を完奏した側が即勝ち (1音ごと+1目)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤に8個の音符点 (1〜8) が描かれている。自分の「次の音符」に自石がある限り演奏が進み、1音ごと+1目。',
             '8音全てを先に埋めた側が「完奏」で即勝ち。',
             '音符点は両者共通 — 相手の次の音を塞ぐ (取る・占める) 立ち回りが効く。',

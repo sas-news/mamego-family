@@ -66,7 +66,7 @@ module.exports = {
             turn = opponent;
             }`],
         ...K.EVENT_CHIP_SPEC(`spongeBonus[turn] > 0 ? '追打ち!' : ''`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '敵連を取るとスポンジのように息を吸い、そのままもう1手打てる。',
             '追打ちでさらに取れば連打が続く。取る局面が一気に優勢になる。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',

@@ -69,7 +69,7 @@ module.exports = {
                 ctx.fillText('→↓←↑'[history.length % 4], padding - cellSize * 0.8, padding - cellSize * 0.4);
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手ごとに盤上の全石が風向きに1マス流される。風は東→南→西→北と1手ごとに向きを変える。',
             '盤端や他の石に詰まった石は流されない。風読みが勝負を分ける。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',

@@ -48,7 +48,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手できるのは市松模様の黒マスだけ。',
             '黒マス同士は直交しないので全ての石が孤立。1石ずつの取り合いになる。',
         ])],

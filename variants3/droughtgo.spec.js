@@ -75,7 +75,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'次の干ばつ ' + ((P('drought_interval') || 5) - (history.length % (P('drought_interval') || 5))) + '手'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '天元は水源 (オアシス)。5手ごとの「干ばつ」で、水源から遠い石 (破線の外側) が渇いて消える。',
             '遠くに逃げる布石は干上がる。水源の周りで争う密度の高い戦いになる。',
         ])],

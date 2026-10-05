@@ -106,10 +106,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'次の大将まで ' + ((P('general_interval') || 5) - (history.filter(h => h.turn === turn).length % (P('general_interval') || 5))) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            歩兵碁: 5手ごとの着手は大将石。大将は最初の捕獲を甲冑で1度耐える<br>
+        [K.ONE, K.INFO_BASE, `            歩兵碁: 5手ごとの着手は大将石。大将は最初の捕獲を甲冑で1度耐える<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '各軍5手ごとの着手は金印の「大将石」になる (歩兵の隊列に将が混ざる)。',
             '大将は取られた時に甲冑で1度だけ持ちこたえて盤に残る (甲冑は砕けて通常石に)。',
             '打ち切り: 140手を超えると自動終局・採点される。',

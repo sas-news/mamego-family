@@ -118,10 +118,10 @@ ${NASH_SCAN}
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
-        [K.ONE, K.INFO_ALGO, `            ナッシュ碁: 両者にとって最善の「均衡点」が ◎ で公開される。置くと +2目<br>
+        [K.ONE, K.INFO_BASE, `            ナッシュ碁: 両者にとって最善の「均衡点」が ◎ で公開される。置くと +2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤上で両プレイヤーの評価合計が最大の点が「均衡点」として ◎ 表示される (毎手再計算)。',
             '均衡点に置いた側は +2目ボーナス。相手も同じ点を見ている — 読み合いが均衡に収束する碁。',
         ])],

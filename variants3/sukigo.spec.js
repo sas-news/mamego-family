@@ -108,10 +108,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'風流点 ' + (() => { const b = typeof sukiBonus === 'function' ? sukiBonus() : { 1: 0, 2: 0 }; return '黒' + b[1] + ' 白' + b[2]; })()`),
-        [K.ONE, K.INFO_ALGO, `            数奇碁: 二隅の庭に置いた孤石 (同色と隣接しない石) は終局時+2目<br>
+        [K.ONE, K.INFO_BASE, `            数奇碁: 二隅の庭に置いた孤石 (同色と隣接しない石) は終局時+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '左上と右下の4x4が「数寄屋の庭」。庭にいる石が同色と隣接していなければ風流点+2目。',
             '庭に孤石を置くか、敵の孤石に同色を添えて風流点を消すか。双方同じ庭を持つ。',
         ])],

@@ -66,7 +66,7 @@ module.exports = {
                 ctx.fillText('↘', padding - cellSize * 0.6, padding - cellSize * 0.6);
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は右下がりの滑り台: 着手ごとに全石が右下へ1マス滑り落ちる。',
             '右端や下端に達した石は壁に止まる。連鎖的に滑るので石はどんどん谷に集まる。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',

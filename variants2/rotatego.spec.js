@@ -74,7 +74,7 @@ module.exports = {
                 ctx.fillText('↺', padding + c * cellSize, padding + c * cellSize);
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '外周リングは時計回り、内周リングは反時計回りに、着手ごと全石が1マス環流する。',
             '中央部は動かない。環流で石が運ばれ、囲いも崩れもする。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',

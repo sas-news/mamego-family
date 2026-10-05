@@ -134,10 +134,10 @@ module.exports = {
 ${CAP}
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`(() => { const _kd = Math.max(1, P('key_dist') || 2); const K2 = [[_kd, _kd], [BOARD_SIZE - 1 - _kd, _kd], [_kd, BOARD_SIZE - 1 - _kd], [BOARD_SIZE - 1 - _kd, BOARD_SIZE - 1 - _kd]]; let b = 0, w = 0; K2.forEach(([x, y]) => { const v = board[y * BOARD_SIZE + x]; if (v === 1) b++; else if (v === 2) w++; }); return '結界石 黒' + b + ' / 白' + w; })()`),
-        [K.ONE, K.INFO_ALGO, `            結界碁: 四隅の結界石を3つ以上占めると結界発動。内部の空点と敵石が終局時に得点になる<br>
+        [K.ONE, K.INFO_BASE, `            結界碁: 四隅の結界石を3つ以上占めると結界発動。内部の空点と敵石が終局時に得点になる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '四隅から2目離れた4点が「結界石」(魔方陣の印)。',
             '自分の石で結界石を3つ以上占めると結界が張られる: 内部の空点と敵石がすべて終局時の自分の得点になる。',
             '結界内の敵石は「封印」される — 中に残すと危険。結界石の争奪戦。',

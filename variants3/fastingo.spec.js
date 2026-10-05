@@ -63,10 +63,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`isFastingTurn() ? '斎戒中: 縁のみ' : '斎戒まで' + ((P('fast_interval') || 6) - ((history.length + 1) % (P('fast_interval') || 6))) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            斎戒碁: 6手ごとの斎戒手番は身を清めて縁 (外周2路) のみに打てる<br>
+        [K.ONE, K.INFO_BASE, `            斎戒碁: 6手ごとの斎戒手番は身を清めて縁 (外周2路) のみに打てる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '6手ごとの手番は斎戒 — 中央域は祓われ、盤の縁 (外周2路以内) にしか打てない。',
             '斎戒中に打てる点がなければパスしかない。交互に訪れる制約は双方同じ。',
             '斎戒を読み切って布石しろ — 縁を制する者が願いを届ける。',

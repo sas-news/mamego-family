@@ -93,10 +93,10 @@ module.exports = {
                     <div class="my-1 border-b border-current/10"></div>`],
         ...K.EVENT_CHIP_SPEC(`'弾丸まで ' + ((P('bullet_interval') || 6) - ((st.cnt[turn] || 0) % (P('bullet_interval') || 6))) + '手'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            射的碁: 各側6手目の着手は弾丸。着地点の8近傍から敵石を1つ撃ち落とす (景品+1目)<br>
+        [K.ONE, K.INFO_BASE, `            射的碁: 各側6手目の着手は弾丸。着地点の8近傍から敵石を1つ撃ち落とす (景品+1目)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '各プレイヤーの6手目ごとの着手は「弾丸」。着地点の8近傍にある敵石を1つ撃ち落とす。',
             '撃ち落とした敵石はアゲハマに加え「景品」として終局時に+1目。的が無ければ空振り。',
         ])],

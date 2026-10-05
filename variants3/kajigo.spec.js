@@ -60,10 +60,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>加持の守護:</span> <strong>黒 \${kajiBonus(1)} / 白 \${kajiBonus(2)}</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            加持碁: 4個以上の連は加持の祈りが届く — 終局時1連につき+2目の守護<br>
+        [K.ONE, K.INFO_BASE, `            加持碁: 4個以上の連は加持の祈りが届く — 終局時1連につき+2目の守護<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '加持: 終局時、4個以上で繋がった連は加持の祈りが届き1連につき+2目の守護。',
             '大きな連を保てば守られる。',
         ])],

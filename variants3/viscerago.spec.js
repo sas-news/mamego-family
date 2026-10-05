@@ -79,10 +79,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`(() => { const b = allOrgansAlive(board, turn); return b ? '気血巡る (+1呼吸)' : '五臓 ' + new Set(board.map((v,i)=>v===turn?organOf(i):-1).filter(v=>v>=0)).size + '/5'; })()`),
-        [K.ONE, K.INFO_ALGO, `            五臓碁: 盤は五臓の体。五臓 (4象限+中臓) 全てに石を置くと気血が巡り全連+1呼吸<br>
+        [K.ONE, K.INFO_BASE, `            五臓碁: 盤は五臓の体。五臓 (4象限+中臓) 全てに石を置くと気血が巡り全連+1呼吸<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は五臓の体: 肝・心・脾・肺の4象限と中央の菱形「腎」の5区域。',
             '五臓全てに自分の石があると気血が巡り、自分の全ての連が呼吸点+1。',
             '片方の臓を欠くと体は普通の碁に戻る — 五臓のバランスを保って打て。',

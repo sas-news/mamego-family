@@ -85,10 +85,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の公差:</span> <strong>\${st.bonus[2]}</strong></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            公差碁: 自分の直前2手と同じ方向・間隔で打つと+2目の公差ボーナス<br>
+        [K.ONE, K.INFO_BASE, `            公差碁: 自分の直前2手と同じ方向・間隔で打つと+2目の公差ボーナス<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の直前の2手と「同じ方向に同じ間隔」で打つと等差数列が完成し+2目。',
             '例: (2,2)→(4,2)→(6,2) なら横2マスの等差。止まらず同じ公差で伸ばし続けると連続ボーナス。',
             '打ち切り: 150手を超えると自動終局・採点される。',

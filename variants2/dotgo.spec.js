@@ -96,7 +96,7 @@ module.exports = {
                 ctx.fill();
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv(['1手=盤上の任意の2点に1石ずつ置く。1点目をクリックすると金色の点で仮置き、2点目で確定。','仮置きは同じ点の再クリックか ⟳ボタン・Rキー・右クリック・ホイールで取消。2石は別々の連。'])],
+        [K.ONE, K.RV_BASE, K.rv(['1手=盤上の任意の2点に1石ずつ置く。1点目をクリックすると金色の点で仮置き、2点目で確定。','仮置きは同じ点の再クリックか ⟳ボタン・Rキー・右クリック・ホイールで取消。2石は別々の連。'])],
         // 双点: 仮置き点に脈動リング (着手待ちを示す)
         [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
         fxAmbient((ctx2, now, pad, cs) => {

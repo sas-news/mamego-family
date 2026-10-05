@@ -69,10 +69,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`'薬効 黒' + senyakuBonus(1) + '/白' + senyakuBonus(2)`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            煎薬碁: 同色に隣接しない単石は「生薬」。単石ごとに終局時+3目<br>
+        [K.ONE, K.INFO_BASE, `            煎薬碁: 同色に隣接しない単石は「生薬」。単石ごとに終局時+3目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '同じ色の石と隣接していない「単石」は生薬。終局時に煎じられて1つ+3目。',
             '連を組めば強いが薬効は出ない — ばらまくか固めるか、薬と石のさじ加減。',
         ])],

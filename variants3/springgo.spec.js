@@ -78,7 +78,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`['春=芽吹', '夏', '秋=枯れ', '冬=凍結'][Math.floor(history.length / (P('season_len') || 5)) % 4] + ' ' + ((P('season_len') || 5) - history.length % (P('season_len') || 5)) + '手'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '季節は5手周期で巡る — 春: 置いた石の隣に芽石が生える。夏: 通常。秋: 捕獲してもアゲハマ無し。',
             '冬: 連は凍り付き取られない (呼吸点0のまま耐える)。季節の巡りは両プレイヤー共通。',
         ])],

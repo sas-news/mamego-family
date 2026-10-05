@@ -41,7 +41,7 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手は桂馬飛びの位置にある2石ペア (向き=⟳ボタン・Rキー・右クリック・ホイール)。','2石は離れているので別々の連。桂馬の跳び先で制圧する。'])],
+        [K.ONE, K.RV_BASE, K.rv(['着手は桂馬飛びの位置にある2石ペア (向き=⟳ボタン・Rキー・右クリック・ホイール)。','2石は離れているので別々の連。桂馬の跳び先で制圧する。'])],
         // 桂馬ペア: 生きている2石同士を淡い連携線で結ぶ
         ...K.STONE_MARKS_SPEC(`            // 桂馬ペアの連携線
             {

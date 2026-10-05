@@ -116,10 +116,10 @@ module.exports = {
         }
         function _endGameByScoreCore() {`],
         ...K.EVENT_CHIP_SPEC(`'入港 黒' + st.score[1] + ' / 白' + st.score[2]`),
-        [K.ONE, K.INFO_ALGO, `            湾岸碁: 左上は海。海岸線の船着き場に石を入港させると+1点<br>
+        [K.ONE, K.INFO_BASE, `            湾岸碁: 左上は海。海岸線の船着き場に石を入港させると+1点<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の左上は海 (着手不可・呼吸なし)。斜めの海岸線が船着き場。',
             '船着き場の点に石を置くと「入港」して+1点 (終局時にアゲハマ相当で加算)。',
             '海際の取り合いと入港ポイントの両立が勝負。両者同じ岸を使う。',

@@ -41,10 +41,10 @@ module.exports = {
         ...K.LEGAL_DOTS_SPEC,
         [K.ONE, '        function endGameByScore() {', K.WIN_BY_RULE_FN + `
         function endGameByScore() {`],
-        [K.ONE, K.INFO_ALGO, `            密集碁: 自石に隣接する点にしか置けない (隊形は常に1つの塊)<br>
+        [K.ONE, K.INFO_BASE, `            密集碁: 自石に隣接する点にしか置けない (隊形は常に1つの塊)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自石が1つでも盤にあれば、着手は自分の石に直交隣接する点に限られる。',
             '全軍が1つの密集隊形として育つ。隊形が全滅すれば再び任意の点に布陣できる。',
             '打ち切り: 140手を超えると自動終局・採点される。',

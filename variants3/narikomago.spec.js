@@ -89,10 +89,10 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
-        [K.ONE, K.INFO_ALGO, `            成駒碁: 敵陣最深部に打つと石が成って +2目<br>
+        [K.ONE, K.INFO_BASE, `            成駒碁: 敵陣最深部に打つと石が成って +2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '敵陣最深部 (黒は下3列・白は上3列) に打ち込んだ石は「成駒」となり +2目。',
             '成駒は金の輝きを放つ — 深く打ち込むほど得するが、敵地で生き残るのは難しい。',
         ])],

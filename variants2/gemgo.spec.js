@@ -77,7 +77,7 @@ module.exports = {
         [K.ONE, K.TOGGLE_GUARD,
 `            const color = board[startIdx];
             if (color === 0 || color === 3) return;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '取られた敵石はその場で宝石 (青い結晶) に結晶化し、永久の壁として残る。',
             '宝石の上には置けず呼吸点にもならない。取るたび盤が少しずつ埋まっていく。',
         ])],

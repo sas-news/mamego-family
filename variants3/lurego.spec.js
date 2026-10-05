@@ -85,7 +85,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'次のルアーまで ' + (Math.max(1, P('lure_interval') || 10) - (pieces.filter(pc => pc.player === turn).length % Math.max(1, P('lure_interval') || 10))) + '手'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '10手ごとの自分の着手は「擬餌」になる (釣り針マーク)。',
             '擬餌を置くと周囲2〜3マスの敵石が1マスずつ誘い寄せられる。両者同じ周期で現れる。',
         ])],

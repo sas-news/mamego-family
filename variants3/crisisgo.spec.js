@@ -101,7 +101,7 @@ module.exports = {
             render();
         }`],
         ...K.EVENT_CHIP_SPEC(`st.arm[turn] ? '捨身発動中' : (st.used[turn] ? '捨身済' : (captures[turn] + (P('deficit_min') || 1) <= captures[turn === 1 ? 2 : 1] ? '捨身可' : ''))`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             'アゲハマで劣勢の側は「捨身」ボタンで1回だけ特別な手番を得られる。',
             '宣言した手番の着手後にもう1手続けて打てる (2連続着手)。各プレイヤー1局1回。',
         ])],

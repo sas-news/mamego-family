@@ -54,10 +54,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>金魚ボーナス:</span> <strong>黒 +\${captures[1] * (Math.max(1, P('scoop_pts') || 2) - 1)} / 白 +\${captures[2] * (Math.max(1, P('scoop_pts') || 2) - 1)}</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            金魚すくい碁: 取った敵石はポイで掬った金魚 — アゲハマ1個につき2目の得点<br>
+        [K.ONE, K.INFO_BASE, `            金魚すくい碁: 取った敵石はポイで掬った金魚 — アゲハマ1個につき2目の得点<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '敵の連を取ると、ポイ (すくい枠) で金魚を掬い上げる。掬った金魚は高く売れる。',
             '終局時、アゲハマ1個につき通常の1目+金魚ボーナス1目の計2目になる。',
         ])],

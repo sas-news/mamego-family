@@ -63,10 +63,10 @@ module.exports = {
         [K.ONE, `            const covered = new Set(); // ピース描画でカバー済みのマス`, K.CIRCLE_DRAW],
         ...K.WALL_GUARD_SPEC,
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            土俵碁: 円形の土俵で闘う — 置いた石に隣接し俵際の敵石は突き出されてアゲハマになる<br>
+        [K.ONE, K.INFO_BASE, `            土俵碁: 円形の土俵で闘う — 置いた石に隣接し俵際の敵石は突き出されてアゲハマになる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '土俵は円形: 俵の外には着手できない。',
             '置いた石に隣接し、俵(盤の縁)にも隣接する敵石は土俵の外に突き出されてアゲハマになる。縁際の闘いが熱い。',
         ])],

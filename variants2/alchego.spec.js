@@ -43,7 +43,7 @@ module.exports = {
             } else {
                 soundManager.playPlace();
             }`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '敵連を取ると、最も呼吸点の少ない自連の石1個が錬成されて取跡へ転移する。',
             '危ない石を自動で助けてくれるが、繋がりが断たれる隙も生まれる。',
         ])],

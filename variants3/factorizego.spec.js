@@ -103,10 +103,10 @@ module.exports = {
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
         ...K.EVENT_CHIP_SPEC(`'素点 +' + ((st.bonus && st.bonus[turn]) || 0) + '目'`),
-        [K.ONE, K.INFO_ALGO, `            素因数碁: 素数番地 (◆) に置くたび +1目ボーナス<br>
+        [K.ONE, K.INFO_BASE, `            素因数碁: 素数番地 (◆) に置くたび +1目ボーナス<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤面の交点番地 (0起点) が素数の点は「素点」。どちらが置いても +1目。',
             '素点は薄い◆で表示。約4割の点が素点なので狙いすぎなくても当たる。',
         ])],

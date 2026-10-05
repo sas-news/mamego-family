@@ -45,7 +45,7 @@ module.exports = {
             } else {
                 soundManager.playPlace();
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['重い石: 敵連を取るには、その石数の2倍の自分の石で接し囲む必要がある。','例: 3連を取るには接する敵石が6個必要。コンパクトな塊はほぼ取れない。'])],
+        [K.ONE, K.RV_BASE, K.rv(['重い石: 敵連を取るには、その石数の2倍の自分の石で接し囲む必要がある。','例: 3連を取るには接する敵石が6個必要。コンパクトな塊はほぼ取れない。'])],
         // 重い石 = 鋲打ちの金属インゴット (ピースは連結する鋼板)
         [K.ONE, `        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
             if (!cellsAbs || cellsAbs.length === 0) return;

@@ -52,10 +52,10 @@ module.exports = {
                 chev(padding + TAN_COL1 * cellSize, padding, 0, -1);
                 chev(padding + TAN_COL0 * cellSize, padding + (BOARD_SIZE - 1) * cellSize, 0, 1);
                 chev(padding + TAN_COL1 * cellSize, padding + (BOARD_SIZE - 1) * cellSize, 0, 1);`),
-        [K.ONE, K.INFO_ALGO, `            短冊碁: 幅2の短冊盤。上下の端は折り返して繋がる<br>
+        [K.ONE, K.INFO_BASE, `            短冊碁: 幅2の短冊盤。上下の端は折り返して繋がる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は幅2列の短冊。それ以外は紙の裏 (着手不可・呼吸なし)。',
             '上端と下端は折り返して繋がる — 盤は輪っか。端を越えて連も取りも成立する。',
         ])],

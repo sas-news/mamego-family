@@ -79,7 +79,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は左上から中心へ渦を巻く1本の通路。各点の近傍は前後2方向だけ。',
             '連は通路に沿ってしか伸びず、両脇を塞がれると即座に取られる。',
         ])],

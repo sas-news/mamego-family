@@ -88,10 +88,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`st.item >= 0 ? 'アイテム出現中!' : 'アイテムまで ' + (history.length % Math.max(1, P('item_interval') || 5) === 0 ? Math.max(1, P('item_interval') || 5) : Math.max(1, P('item_interval') || 5) - history.length % Math.max(1, P('item_interval') || 5)) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            道具碁: 5手ごとに盤上へ★アイテム出現。1マス以内に置いた側が拾って+1目<br>
+        [K.ONE, K.INFO_BASE, `            道具碁: 5手ごとに盤上へ★アイテム出現。1マス以内に置いた側が拾って+1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '5の倍数手の後、盤上の空点に★アイテムが出現する (出現位置は決まった規則)。',
             'アイテムの1マス以内に着手した側がそれを拾い、アゲハマが+1される。',
             '拾い合いの位置取りが入り乱れる — 小利を巡る読み合い。',

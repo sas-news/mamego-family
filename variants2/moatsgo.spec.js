@@ -25,7 +25,7 @@ module.exports = {
         ...K.WALL_GUARD_SPEC,
         // 堀の水面のきらめき
         [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_WATER],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '中央の郭を取り囲む環状の堀。橋はなく内外は完全に分断。',
             '城内と外野は別々の戦場。どちらを制するかの配分勝負。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',

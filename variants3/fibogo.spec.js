@@ -81,10 +81,10 @@ module.exports = {
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
         ...K.EVENT_CHIP_SPEC(`'フィボ +' + ((st.bonus && st.bonus[turn]) || 0) + '目'`),
-        [K.ONE, K.INFO_ALGO, `            フィボ碁: 着手でできた連のサイズがフィボナッチ数なら +2目<br>
+        [K.ONE, K.INFO_BASE, `            フィボ碁: 着手でできた連のサイズがフィボナッチ数なら +2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手の結果、自分の連のサイズがフィボナッチ数 (2,3,5,8,13,…) になると +2目。',
             '連をフィボ数に育てるか、相手の連をフィボ数にさせないか — サイズ管理の碁。',
         ])],

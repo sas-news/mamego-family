@@ -93,10 +93,10 @@ module.exports = {
         });`],
         ...K.EVENT_CHIP_SPEC(`(() => { const c = Math.max(2, P('cycle') || 24), l = Math.min(Math.max(1, P('rainbow_len') || 8), c), h = history.length % c; return h >= c - l ? '虹出現!' : '虹まで ' + (c - l - h) + '手'; })()`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            虹霓碁: 24手周期の後半8手で虹が架かり、斜め隣接も連結・呼吸になる<br>
+        [K.ONE, K.INFO_BASE, `            虹霓碁: 24手周期の後半8手で虹が架かり、斜め隣接も連結・呼吸になる<br>
             PC: クリックで配置<br>
             スマホ: タップで配置`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '24手ごとに雨が上がり、後半8手は虹が架かる。',
             '虹の間は斜め4方向の隣接も連結に数える: 呼吸も取りも斜めが有効になる。',
             '虹の間だけ斜め繋がりで石が助かり、逆に斜めからも取れる。',

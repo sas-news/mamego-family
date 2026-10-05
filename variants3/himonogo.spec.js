@@ -144,10 +144,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'干し上がりまで ' + (Math.max(1, P('dry_interval') || 8) - (history.length % Math.max(1, P('dry_interval') || 8))) + ' 手'`),
-        [K.ONE, K.INFO_ALGO, `            干物碁: 上下端の干場の石は8手ごとに乾物になり終局時+2目<br>
+        [K.ONE, K.INFO_BASE, `            干物碁: 上下端の干場の石は8手ごとに乾物になり終局時+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の上下端の列は「干場」。干場の石は8手ごとに乾物となり、終局まで生き残れば1枚+2目。',
             '端は普通薄い場所だが、ここでは保存食の棚。干すか取り込むか、潮風の読み合い。',
         ])],

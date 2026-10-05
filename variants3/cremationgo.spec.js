@@ -116,10 +116,10 @@ module.exports = {
                     <div class="flex justify-between"><span>白の供養:</span> <strong>\${st.bonus[2]}目</strong></div>`],
         ...K.EVENT_CHIP_SPEC(`'供養 +' + st.bonus[turn] + '目'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            荼毘碁: 取られた石は灰を残し、供養で+1目を得る<br>
+        [K.ONE, K.INFO_BASE, `            荼毘碁: 取られた石は灰を残し、供養で+1目を得る<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '取られた石は荼毘に付され、その場に灰の小山を残す — 灰には6手の間置けない。',
             '取るたびに供養+1目。死石の供養がそのまま得点になる。',
             '打ち切り: 150手を超えると自動終局・採点される。',

@@ -55,7 +55,7 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手は自由形の4連ピース (テトロミノ19向き)。⟳ボタン・Rキー・右クリック・ホイールで形を巡回する。','ピースが入らない4マス未満の連結空領域は窒息領域。'])],
+        [K.ONE, K.RV_BASE, K.rv(['着手は自由形の4連ピース (テトロミノ19向き)。⟳ボタン・Rキー・右クリック・ホイールで形を巡回する。','ピースが入らない4マス未満の連結空領域は窒息領域。'])],
         // テトロミノ質感: 隙間のない融合タイルで描く (外郭稜線+上面ハイライト)
         [K.ONE, `        function drawPieceShape(cellsAbs, padding, cellSize, fill, stroke, alpha = 1) {
             if (!cellsAbs || cellsAbs.length === 0) return;`,

@@ -43,10 +43,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`isRadarOn() ? 'レーダー照射中' : 'レーダーまで ' + (Math.max(1, P('radar_interval') || 3) - history.length % Math.max(1, P('radar_interval') || 3)) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            探知碁: 手番でない側の石は霧の中に隠れる。3手ごとにレーダーが敵石を照らす<br>
+        [K.ONE, K.INFO_BASE, `            探知碁: 手番でない側の石は霧の中に隠れる。3手ごとにレーダーが敵石を照らす<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '相手の石は薄い影でしか見えない (自分の石は常にはっきり見える)。',
             '3手ごとの着手直後にレーダーが走り、その局面だけ敵石が全て可視化される。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',

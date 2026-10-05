@@ -105,10 +105,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`(st.cnt[turn] || 0) % Math.max(1, P('interval') || 5) === Math.max(1, P('interval') || 5) - 1 ? '次は擬態石' : '擬態まで' + (Math.max(1, P('interval') || 5) - ((st.cnt[turn] || 0) % Math.max(1, P('interval') || 5))) + '手'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            擬態碁: 5手ごとの石は擬態し、一度だけ取りを免れる<br>
+        [K.ONE, K.INFO_BASE, `            擬態碁: 5手ごとの石は擬態し、一度だけ取りを免れる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '5手ごとの着手は擬態石 (紫の点線輪) — 敵に紛れ込み、一度だけ取られるのを免れて擬態が解ける。',
             '擬態石を敵地の要害に忍ばせ、二度必要な攻めで時間を稼げ。',
             '打ち切り: 150手を超えると自動終局・採点される。',

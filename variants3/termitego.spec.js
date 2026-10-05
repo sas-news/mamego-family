@@ -89,7 +89,7 @@ module.exports = {
 
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'蟻 ' + st.len + '/' + (P('tunnel_len') || 40)`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の縁からシロアリの通路 (茶色の壁) が毎手1マスずつ掘り進まれる。通路上の石は食われて消える。',
             '通路は呼吸を遮る壁になる。全長40マスに達するか行き止まりで、新たな通路が別の縁から伸び始める。',
         ])],

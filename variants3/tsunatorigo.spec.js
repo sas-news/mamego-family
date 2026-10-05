@@ -80,10 +80,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>横綱の称号:</span> <strong>黒 \${st.yoko[1] ? '横綱(+3)' : '—'} / 白 \${st.yoko[2] ? '横綱(+3)' : '—'}</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            綱取碁: 1手で5個以上の敵石を取る大一番に勝てば横綱の称号 — 終局時+3目<br>
+        [K.ONE, K.INFO_BASE, `            綱取碁: 1手で5個以上の敵石を取る大一番に勝てば横綱の称号 — 終局時+3目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '綱取り: 1手で5個以上の敵石を取る大一番に勝つと横綱に昇進し、終局時+3目。',
             '大きな連を養って一気に取るか、バラけて逃がすかの駆け引き。',
         ])],

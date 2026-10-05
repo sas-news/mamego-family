@@ -98,10 +98,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`(function(){ const m = pieces.filter(pc => isMirage(pc) && pc.cells.some(p => board[p.y * BOARD_SIZE + p.x] === pc.player)).length; return m > 0 ? '蜃気楼 ' + m + '石' : ''; })()`),
-        [K.ONE, K.INFO_ALGO, `            蜃気楼碁: 置いた石は3手の間だけ蜃気楼。敵石を隣に置かれると消えてしまう<br>
+        [K.ONE, K.INFO_BASE, `            蜃気楼碁: 置いた石は3手の間だけ蜃気楼。敵石を隣に置かれると消えてしまう<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '置いたばかりの石は3手の間「蜃気楼」(点線の輪郭)。3手経てば実体化する。',
             '蜃気楼の敵石の直交隣に着手すると、その石は幻だったと判明して消える。',
             '呼吸や取りは蜃気楼の間も普通に働く — 消される前に囲み切れるかが勝負。',

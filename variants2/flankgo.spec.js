@@ -56,7 +56,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は敵石の上下左右に面した点のみ (敵石が無い間は自由)。',
             '敵の側面にだけ食い込める。斜め接触は許されない肉薄戦。',
         ])],

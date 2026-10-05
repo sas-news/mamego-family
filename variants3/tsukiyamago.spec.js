@@ -83,10 +83,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`'築山 黒' + hillCount(1) + '/白' + hillCount(2) + ' (要' + Math.ceil(getStarPoints(BOARD_SIZE).length * (P('win_ratio') || 0.5)) + ')'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            築山碁: 星点は築山候補地。過半数を占拠すると庭の主景が完成し即勝ち<br>
+        [K.ONE, K.INFO_BASE, `            築山碁: 星点は築山候補地。過半数を占拠すると庭の主景が完成し即勝ち<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '星点は「築山候補地」。着手終了時にその過半数を自石で占めていれば築山完成で即勝ち。',
             '即勝ちに届かなくても、終局時に占拠した築山ごとに+4目のボーナス。',
         ])],

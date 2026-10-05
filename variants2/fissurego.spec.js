@@ -44,7 +44,7 @@ module.exports = {
             } else {
                 soundManager.playPlace();
             }`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '敵連を取ると亀裂が走る: 取跡に接する敵石と、その直線上の次の石まで裂けて消える。',
             '連の内側への侵入ほど亀裂が深く走る。薄い連は一撃で両断される。',
         ])],

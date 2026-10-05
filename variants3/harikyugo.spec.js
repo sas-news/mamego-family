@@ -87,10 +87,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`'経穴 ' + tsuboIdxs().filter(i => board[i] === turn).length + '/6'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            鍼灸碁: 6つの経穴(つぼ)を含む連は気が通り、囲んでも取れない<br>
+        [K.ONE, K.INFO_BASE, `            鍼灸碁: 6つの経穴(つぼ)を含む連は気が通り、囲んでも取れない<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤上の6点は「経穴(つぼ)」。経穴を1つでも含む連は気が通り、完全に囲まれても取られない。',
             '連を経穴に繋げば不死身。相手の連が経穴に届く前に断ち切れ。',
         ])],

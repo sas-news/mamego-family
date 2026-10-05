@@ -76,10 +76,10 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
-        [K.ONE, K.INFO_ALGO, `            ハネ碁: 敵石2枚の間に突き出すと +2目<br>
+        [K.ONE, K.INFO_BASE, `            ハネ碁: 敵石2枚の間に突き出すと +2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             'ハネ (敵石に挟まれた急所への突き出し) は局所的に強い手筋。',
             '着手点の左右または上下が両方とも敵石ならハネ成立で +2目。',
         ])],

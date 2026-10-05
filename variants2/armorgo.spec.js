@@ -80,7 +80,7 @@ module.exports = {
                 ctx.stroke();
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv(['全ての石は配置時に装甲 (銀のリング) を持つ。','包囲された連は1度目は装甲が剥がれるだけで盤に残る。剥がれた後にもう一度包囲すると取れる。'])],
+        [K.ONE, K.RV_BASE, K.rv(['全ての石は配置時に装甲 (銀のリング) を持つ。','包囲された連は1度目は装甲が剥がれるだけで盤に残る。剥がれた後にもう一度包囲すると取れる。'])],
         // 打ち切り手数 (0=制限なし): 設定で有効化すると超過時に強制採点
         [K.ONE, `        function executeMove(move, player) {`,
 `        let moveCapFired = false;

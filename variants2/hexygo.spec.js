@@ -62,10 +62,10 @@ module.exports = {
                 ctx.strokeRect(padding, padding, (BOARD_SIZE - 1) * cellSize, (BOARD_SIZE - 1) * cellSize);
                 ctx.restore();
             }`),
-        [K.ONE, K.INFO_ALGO, `            六角辺碁: 6方向近傍の擬似六角盤。辺の地は2倍計算<br>
+        [K.ONE, K.INFO_BASE, `            六角辺碁: 6方向近傍の擬似六角盤。辺の地は2倍計算<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '近傍が上下左右+斜め2方向の計6方向になる六角形盤。連の形が大きく変わる。',
             'さらに地集計では盤端 (辺) の空点が1点2目で計算される。辺の取り合いが勝敗を分ける。',
         ])],

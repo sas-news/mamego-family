@@ -55,10 +55,10 @@ module.exports = {
                 ctx.fillRect(cx - cellSize * 0.11, cy - cellSize * 0.09, cellSize * 0.22, cellSize * 0.07);
                 ctx.restore();
             }`),
-        [K.ONE, K.INFO_ALGO, `            擲碁: ピンを石の隣に置いて倒す。1本1点のボウリング碁<br>
+        [K.ONE, K.INFO_BASE, `            擲碁: ピンを石の隣に置いて倒す。1本1点のボウリング碁<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤中央に10本のピンが三角形に立つ。ピンのマスには石を置けない障害物。',
             '打った石の隣にあるピンは倒れ、倒した側のアゲハマ得点になる。',
             'ピンを壁として活かすか、得点に変えるか — 通常の地取り勝負も残る。',

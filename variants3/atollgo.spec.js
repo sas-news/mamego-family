@@ -33,10 +33,10 @@ module.exports = {
         // 海を死に石選択から除外
         ...K.WALL_GUARD_SPEC,
         [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_WATER],
-        [K.ONE, K.INFO_ALGO, `            環礁碁: 環礁型の盤。潟と外洋は着手不可・呼吸なし<br>
+        [K.ONE, K.INFO_BASE, `            環礁碁: 環礁型の盤。潟と外洋は着手不可・呼吸なし<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は環礁の形 — 中央の大きな潟と外洋は海。着手も呼吸点にもならない。',
             'サンゴ礁の帯だけが戦場。細いリング上での取り合いが勝負を分ける。',
         ])],

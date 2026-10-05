@@ -67,7 +67,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は中央5x5の内核のみ。周縁は暗い虚空。',
             '小さな核で激しい取り合いが即座に始まる。地はほぼ全域が争点。',
         ])],

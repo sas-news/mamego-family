@@ -71,10 +71,10 @@ module.exports = {
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'枯れるまで ' + (Math.max(1, P('wither_interval') || 8) - (history.length % Math.max(1, P('wither_interval') || 8))) + '手'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            苔庭碁: 石=苔が庭を覆う。最外周の乾燥区域では8手ごとに苔が枯れて相手のアゲハマになる<br>
+        [K.ONE, K.INFO_BASE, `            苔庭碁: 石=苔が庭を覆う。最外周の乾燥区域では8手ごとに苔が枯れて相手のアゲハマになる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の最外周は「乾燥区域」。8手を数えるごとに、そこに置かれた石 (苔) は枯れて相手のアゲハマになる。',
             '苔を生やすなら内側の湿った庭へ。外周は短期決戦か捨て石で。',
         ])],

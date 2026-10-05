@@ -64,7 +64,7 @@ module.exports = {
 
             turn = st.extra ? player : opponent;`],
         ...K.EVENT_CHIP_SPEC(`(() => { const b = Math.max(2, P('beat') || 4); return '拍 ' + ((history.length % b) + 1) + '/' + b + (history.length % b === b - 1 ? ' (次=強拍)' : ''); })()`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '4拍子周期: 4手ごとの強拍の着手者は、続けてもう1石置ける (合計2石)。',
             '強拍の巡りは盤の手数で決まり両者共通。強拍に合わせて攻めを組み立てよう。',
         ])],

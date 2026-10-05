@@ -91,7 +91,7 @@ module.exports = {
                 ctx.fillText('印', cx, cy);
                 ctx.restore();
             });`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の石で3x3マスを完全に埋めると「刻印」: その区域は無敵になり+9点。',
             '同じ区域への重複刻印はできない。140手を超えた時点で地数判定する。',
         ])],

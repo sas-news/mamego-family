@@ -72,7 +72,7 @@ module.exports = {
             }
             ctx2.restore();
         });`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '斜めに交差する壁がハニカム状の巣房を作る。',
             '巣房を隔てる薄い隔壁をめぐって小さな殺し合いが連続する。',
         ])],

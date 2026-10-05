@@ -72,7 +72,7 @@ module.exports = {
 
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`retStock[turn] > 0 ? '帰還石+' + retStock[turn] : ''`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '取られた石は相手のアゲハマに加わると同時に自分の手元にも戻る。',
             '次に着手したとき、戻り石があれば打った石の隣の空点に1個自動で補充配置される。',
             '打ち切り: 交点数の1.4倍の手数を超えると自動的に終局・採点される。',

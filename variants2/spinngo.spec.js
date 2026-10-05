@@ -62,7 +62,7 @@ module.exports = {
                 ctx.fillText('↻', padding + w + cellSize * 0.35, padding + w * 0.5);
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手ごとに盤面全体が90°時計回りに自転する。4手で一周して元に戻る。',
             '打った石も次の瞬間には別の座標へ。回転を見越して形を作る新感覚の碁。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',

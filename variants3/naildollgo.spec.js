@@ -73,7 +73,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'次の釘まで ' + (Math.max(1, P('interval') || 9) - (pieces.filter(pc => pc.player === turn).length % Math.max(1, P('interval') || 9))) + '手'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '9手ごとの自分の着手は「五寸釘」(赤い釘印) になる。',
             '釘を打つと、中心を挟んだ対称位置 (対蹠点) にいる敵石が呪い殺される。両者同じ周期で現れる。',
         ])],

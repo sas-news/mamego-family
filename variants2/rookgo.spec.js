@@ -32,7 +32,7 @@ module.exports = {
                 }
                 if (hasOwn && !sharesAxis) return false;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は自分の石と同じ行か列にある交点のみ。',
             '最初の1手はどこにでも置ける。飛車のように筋を結んで盤を制する。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',

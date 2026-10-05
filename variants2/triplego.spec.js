@@ -57,7 +57,7 @@ module.exports = {
                 turnPlaced = [];`],
         // 手番表示に残り石数を出す
         [K.ONE, K.TURN_LINE, `            turnIndicator.textContent = (turn === 1 ? '黒 (1P)' : '白 (2P)') + ' ×残り' + stonesLeftInTurn + '石';`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '1手番につき3石ずつ置く。3石置き切るまで相手に手番は巡らない。',
             '取り・コウ判定は各石ごとに通常通り。パスすると残りを放棄して交代。',
         ])],

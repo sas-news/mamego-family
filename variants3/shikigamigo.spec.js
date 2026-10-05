@@ -81,7 +81,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'次の式神まで ' + ((P('shiki_interval') || 8) - (pieces.filter(pc => pc.player === turn).length % (P('shiki_interval') || 8))) + '手'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '8手ごとの自分の着手は「式神」になる (紫の札印)。',
             '終局時、生きている式神の斜め4方に接する敵石は使役されて1つ+1目。両者同じ周期で現れる。',
         ])],

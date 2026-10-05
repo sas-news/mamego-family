@@ -85,7 +85,7 @@ module.exports = {
                 ctx.fill(); ctx.stroke();
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手するたびその石に「次の一手を生き延びる」賭けが自動で乗る。',
             '相手の手番を越えて石が残っていれば的中で+1点。終局は 地+アゲハマ+賭け点 の合計。',
         ])],

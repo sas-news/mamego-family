@@ -42,7 +42,7 @@ module.exports = {
 
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'日食まで ' + ((P('eclipse_interval') || 12) - (history.length % (P('eclipse_interval') || 12))) + '手'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '日食は12手ごとに訪れる: 盤上の全石の色が反転し、双方のアゲハマも入れ替わる。',
             '攻めの絶頂で色が入れ替わる。日食のカウントは両プレイヤー共通。',
         ])],

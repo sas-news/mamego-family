@@ -104,10 +104,10 @@ ${CAP}
 `                    <div class="flex justify-between"><span>白のオーダー:</span> <strong>\${ordW}</strong></div>
                     <div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>`],
         ...K.EVENT_CHIP_SPEC(`'厨房 黒' + st.orderPts[1] + '点 / 白' + st.orderPts[2] + '点'`),
-        [K.ONE, K.INFO_ALGO, `            厨房碁: 自石を直線に3連で「オーダー完成」(+2)、5連で「大盛り」(+4)<br>
+        [K.ONE, K.INFO_BASE, `            厨房碁: 自石を直線に3連で「オーダー完成」(+2)、5連で「大盛り」(+4)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             'オーダーは「直列の盛り付け」。着手点を通る自石の直線ラン(横・縦・斜め)がちょうど3連になると完成で+2目。',
             'さらに伸ばして5連以上にすると「大盛り」で+4目 (3連の+2と別途)。',
             'オーダー得分は終局時の採点に加算される。敵のランは相手のオーダーになる。',

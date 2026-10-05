@@ -92,10 +92,10 @@ module.exports = {
             })`),
         ...K.EVENT_CHIP_SPEC(`'灯籠 ' + st.lit[turn].length + '/' + Math.ceil(getStarPoints(BOARD_SIZE).length * (P('win_ratio') || 1))`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            巡灯碁: 星の点に着手すると灯籠に灯が入る。全ての灯籠を一周させると即勝<br>
+        [K.ONE, K.INFO_BASE, `            巡灯碁: 星の点に着手すると灯籠に灯が入る。全ての灯籠を一周させると即勝<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '星の点 (灯籠) に着手すると、その灯籠に自分の灯が入る (金の輪と炎)。',
             '盤上の全ての灯籠を灯して一周させた側は即勝利。',
             '灯籠を巡るか地を取るか — 双方対称の巡り合戦。',

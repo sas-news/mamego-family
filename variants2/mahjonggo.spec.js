@@ -55,10 +55,10 @@ module.exports = {
         [K.ONE, `<div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>`,
 `<div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>
                     <div class="flex justify-between"><span>役ボーナス:</span> <strong>黒+\${yaku[1]} / 白+\${yaku[2]}</strong></div>`],
-        [K.ONE, K.INFO_ALGO, `            雀碁: 石の並びが役になる。対子/刻子/槓子/役満を終局加算<br>
+        [K.ONE, K.INFO_BASE, `            雀碁: 石の並びが役になる。対子/刻子/槓子/役満を終局加算<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '終局時、縦横の同色の連続した並びが役として加算される。',
             '2連=対子+1目 / 3連=刻子+3目 / 4連=槓子+6目 / 5連以上=役満+10目。',
             '並びを作る形と地取りを両立させる牌理の碁。',

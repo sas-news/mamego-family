@@ -61,7 +61,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '市松の半分は「孤点」で、斜め方向にだけ繋がる。',
             '残り半分は通常の直交格子。2種類の連の在り方が交錯する。',
         ])],

@@ -142,10 +142,10 @@ ${CAP}
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'結合 黒' + st.bondPts[1] + ' / 白' + st.bondPts[2]`),
-        [K.ONE, K.INFO_ALGO, `            周期碁: 交点は元素 (H O C N Na Cl S Fe)。結合対で+2、Na-O/Na-H 隣接は激反応で両者消失<br>
+        [K.ONE, K.INFO_BASE, `            周期碁: 交点は元素 (H O C N Na Cl S Fe)。結合対で+2、Na-O/Na-H 隣接は激反応で両者消失<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の交点には元素記号 (H O C N Na Cl S Fe) が市松に割り振られている。',
             '味方の石同士を結合対 (H-O, C-O, N-H, Na-Cl, S-O, Fe-O) で隣接させると+2目。',
             'Na と O/H の隣接は激反応: 敵味方関係なく両石が消失する (アゲハマ無し)。',

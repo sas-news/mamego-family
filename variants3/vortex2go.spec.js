@@ -39,7 +39,7 @@ module.exports = {
             if (history.length >= Math.max(1, P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '石を置くと、その着手点を囲む3x3の外周8マスが時計回りに1マスずつ回転する。',
             '石ごと運ばれるので連は渦に千切れやすい。両者の着手で同じように回転する。',
             '140手を超えた時点で即座に地数判定する。',

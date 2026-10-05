@@ -1,19 +1,19 @@
 // 変則碁バリアント一括生成スクリプト (wave1)
-// algo.html をテンプレートに文字列置換で差分適用。共通基盤は gen_kit.js。
+// tools/base.html をテンプレートに文字列置換で差分適用。共通基盤は gen_kit.js。
 // 使い方: node gen_variants.js   (失敗した置換はログに出る)
 const K = require('./gen_kit.js');
-const { ALGO, apply, ONE, out, MOLECULES_ALGO, OCNT_ALGO, NBRS_GRID, VALID_BOUNDS, INFO_ALGO, TRAY_DIV, SUPPLY_SEC, CATALOG_ROW, SIZE_BTNS, STARS_ALGO, RCM_ALGO, RV_ALGO, RC_ALGO, PIECES_PUSH, CAPTURE_BLOCK, TURN_FLIP, FALLBACK_SKIP, TOGGLE_GUARD, BOARD_DECL, RESET_BOARD, RESET_HELD, PASS_INC, SNAP_PUSH, SNAP_POP, LOAD_HOLD, SAVE_TAIL, ONLINE_SEND, ONLINE_RECV, TURN_LINE, UI_TAIL, NEXTBOX_HTML, GRID_RENDER, AI_EVAL, TRAY_UI_ALGO, HOLD_ROTATE_FNS, CLICK_BODY, MOUSE_MOVE, PLACE_AT, REFRESH_PREVIEW, RESET_SUPPLY, LOAD_QUEUE, SAVE_QUEUE, SNAP_QUEUE, UNDO_QUEUE, ONLINE_QUEUE_RECV, ONLINE_QUEUE_SEND, PALETTE_FOR, PALETTE_CLICK, SHUFFLE_FN, QUEUE_DECL, PMODE_DECL, AI_TYPES, SUPPLY_BLOCK, rv, rc, RULES_STONE_COMMON, RULES_STONE_CONTROLS, STARS_GENERIC, SIZE_BTNS_91319, rb, STONE_DEFS, STONE_SPEC, PER_PLAYER_SPEC, WIN_BY_RULE_FN, voidDraw, WALL_GUARD_SPEC, WALL_DRAW, WALL_SPEC, CIRCLE_FRAME_NONE, CIRCLE_DRAW, LEGAL_DOTS, LEGAL_DOTS_SPEC, EVENT_CHIP_SPEC, wrapMarks, WRAP_MARKS_SPEC, STONE_MARKS_SPEC, CUE_STARS, CUE_GRID, COVERED_ANCHOR, OBSTACLE_ANCHOR, FX_BOOT, texDraw, PAINT_WATER, PAINT_ROCK, PAINT_BRICK, PAINT_RIFT, PAINT_FRAME, PAINT_TOMB, PAINT_STEEL, PAINT_ZOMBIE, PAINT_CAVE, PAINT_MOSS, PAINT_METEOR, PAINT_PIT, PAINT_CLIFF, AMBIENT_WATER, AMBIENT_MIST, ALL } = K;
+const { BASE, apply, ONE, out, ALGO_SIZE_SPEC, ALGO_RULES_SPEC, ALGO_PIECES_SPEC, MOLECULES_BASE, OCNT_BASE, NBRS_GRID, VALID_BOUNDS, INFO_BASE, TRAY_DIV, SUPPLY_SEC, CATALOG_ROW, SIZE_BTNS, STARS_BASE, RCM_BASE, RV_BASE, RC_BASE, PIECES_PUSH, CAPTURE_BLOCK, TURN_FLIP, FALLBACK_SKIP, TOGGLE_GUARD, BOARD_DECL, RESET_BOARD, RESET_HELD, PASS_INC, SNAP_PUSH, SNAP_POP, LOAD_HOLD, SAVE_TAIL, ONLINE_SEND, ONLINE_RECV, TURN_LINE, UI_TAIL, NEXTBOX_HTML, GRID_RENDER, AI_EVAL, TRAY_UI_BASE, HOLD_ROTATE_FNS, CLICK_BODY, MOUSE_MOVE, PLACE_AT, REFRESH_PREVIEW, RESET_SUPPLY, LOAD_QUEUE, SAVE_QUEUE, SNAP_QUEUE, UNDO_QUEUE, ONLINE_QUEUE_RECV, ONLINE_QUEUE_SEND, PALETTE_FOR, PALETTE_CLICK, SHUFFLE_FN, QUEUE_DECL, PMODE_DECL, AI_TYPES, SUPPLY_BLOCK, rv, rc, RULES_STONE_COMMON, RULES_STONE_CONTROLS, STARS_GENERIC, SIZE_BTNS_91319, rb, STONE_DEFS, STONE_SPEC, PER_PLAYER_SPEC, WIN_BY_RULE_FN, voidDraw, WALL_GUARD_SPEC, WALL_DRAW, WALL_SPEC, CIRCLE_FRAME_NONE, CIRCLE_DRAW, LEGAL_DOTS, LEGAL_DOTS_SPEC, EVENT_CHIP_SPEC, wrapMarks, WRAP_MARKS_SPEC, STONE_MARKS_SPEC, CUE_STARS, CUE_GRID, COVERED_ANCHOR, OBSTACLE_ANCHOR, FX_BOOT, texDraw, PAINT_WATER, PAINT_ROCK, PAINT_BRICK, PAINT_RIFT, PAINT_FRAME, PAINT_TOMB, PAINT_STEEL, PAINT_ZOMBIE, PAINT_CAVE, PAINT_MOSS, PAINT_METEOR, PAINT_PIT, PAINT_CLIFF, AMBIENT_WATER, AMBIENT_MIST, ALL } = K;
 
 // ============================================================
 // 1. NORMGO (通常碁) — 標準的な囲碁そのもの (ベースライン)
 // ============================================================
-out('normgo.html', apply(ALGO, [
+out('normgo.html', apply(BASE, [
     ...rb('GO', '通常碁', 'normgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         'このゲームは標準的な囲碁。1手1石、特殊ルールなし。',
         '盤サイズは9/13/19路から選択できる (コミ6.5目)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 (拡張ルールなし)<br>
             PC: クリックで配置 / スマホ: 1タップ目プレビュー、2タップ目確定`],
     ...STONE_SPEC,
@@ -22,13 +22,13 @@ out('normgo.html', apply(ALGO, [
 // ============================================================
 // 2. TORUSGO (トーラス碁) — 辺がループする碁盤
 // ============================================================
-out('torusgo.html', apply(ALGO, [
+out('torusgo.html', apply(BASE, [
     ...rb('TORUSGO', 'トーラス碁', 'torusgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '盤面はトーラス: 上下・左右の端がつながっており、隅や辺が存在しない。',
         '端を越えても連・呼吸点・取り・地の判定はそのまま続く。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + トーラス盤<br>
             ※上下左右の端がつながっている (隅・辺なし)`],
     [ONE, NBRS_GRID,
@@ -90,13 +90,13 @@ out('torusgo.html', apply(ALGO, [
 // ============================================================
 // 3. DIAGO (斜め碁) — 斜めも連・呼吸点になる8近傍盤
 // ============================================================
-out('diago.html', apply(ALGO, [
+out('diago.html', apply(BASE, [
     ...rb('DIAGO', '斜め碁', 'diago'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '近傍は斜めを含む8方向: 斜めに隣接する石も連になり、呼吸点・取り・地の判定も8方向で行う。',
         '斜めの連だけでも連結扱いになるため、従来よりはるかに強く繋がる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 斜め連結<br>
             ※近傍は8方向: 斜めに隣接する石も連になる`],
     [ONE, NBRS_GRID,
@@ -162,16 +162,16 @@ out('diago.html', apply(ALGO, [
 // ============================================================
 // 4. WALLGO (迷路碁) — ランダムな壁マスがある碁盤
 // ============================================================
-out('wallgo.html', apply(ALGO, [
+out('wallgo.html', apply(BASE, [
     ...rb('WALLGO', '迷路碁', 'wallgo'),
     K.params([
         { key: 'wall_rate', label: '壁の密度', min: 0.03, max: 0.5, def: 0.12, step: 0.01 },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '対局開始時に盤上へランダムで壁マス (約12%) が配置される。',
         '壁は石を置けず、呼吸点にも地にもならない中立のブロック。取ることもできない。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 迷路壁<br>
             ※ランダムな壁マスがあり、置けない・呼吸点にも地にもならない`],
     [ONE, BOARD_DECL,
@@ -198,13 +198,13 @@ out('wallgo.html', apply(ALGO, [
 // ============================================================
 // 5. GRAVGO (重力碁) — 石は最下段か石の直上にしか置けない
 // ============================================================
-out('gravgo.html', apply(ALGO, [
+out('gravgo.html', apply(BASE, [
     ...rb('GRAVGO', '重力碁', 'gravgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '重力ルール: 石は盤の最下段か、真下に他の石がある交点にしか置けない。',
         '取りで支えを失った石は浮いたまま残る (落下はしない)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 重力ルール<br>
             ※石は最下段または他の石の直上にしか置けない`],
     [ONE, VALID_BOUNDS,
@@ -259,13 +259,13 @@ out('gravgo.html', apply(ALGO, [
 // ============================================================
 // 6. SPAWNGO (繁殖碁) — 自分の石に隣接する点にしか置けない
 // ============================================================
-out('spawngo.html', apply(ALGO, [
+out('spawngo.html', apply(BASE, [
     ...rb('SPAWNGO', '繁殖碁', 'spawngo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '繁殖ルール: 自分の石が盤にある間は、既存の自分の石に隣接する空点にしか置けない。',
         '全滅した場合のみ、盤上のどこにでも置ける。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 繁殖ルール<br>
             ※自分の石に隣接する空点にしか置けない (全滅時のみ自由)`],
     [ONE, VALID_BOUNDS,
@@ -305,17 +305,17 @@ out('spawngo.html', apply(ALGO, [
 // ============================================================
 // 7. MIRRGO (対称碁) — 着手が縦中央線で鏡映される
 // ============================================================
-out('mirrgo.html', apply(ALGO, [
+out('mirrgo.html', apply(BASE, [
     ...rb('MIRRGO', '対称碁', 'mirrgo'),
     K.params([
         { key: 'mirror_axis', label: '対称軸', options: [{ v: 'v', l: '縦軸' }, { v: 'h', l: '横軸' }, { v: 'both', l: '両軸' }], def: 'v' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '対称ルール: 着手すると盤の縦中央線に対して鏡映した位置にも同じ石が置かれる (最大で着手の2倍)。',
         '鏡映先が塞がっているセルは置かれない。鏡映側で自分の連が窒息する場合はその鏡映をスキップする。',
         '鏡映した石も通常の石として取り・呼吸点に関与する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 対称ルール<br>
             ※着手は縦中央線で鏡映され、空いていれば両側に置かれる`],
     [ONE, PIECES_PUSH,
@@ -368,16 +368,16 @@ out('mirrgo.html', apply(ALGO, [
 // ============================================================
 // 8. TWICEGO (二手碁) — 各手番で2石ずつ置く
 // ============================================================
-out('twicego.html', apply(ALGO, [
+out('twicego.html', apply(BASE, [
     ...rb('TWICEGO', '二手碁', 'twicego'),
     K.params([
         { key: 'stones_per_turn', label: '手番ごとの石数', min: 1, max: 4, def: 2, unit: '石' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '二手碁: 各手番で2石ずつ置く (同じ色が2連続で着手する)。',
         '途中でパスすれば残りの着手を放棄して手番が渡る。手番表示の「n手目/2」で残りを確認できる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 二手ルール<br>
             ※各手番で2石置く (途中パスで残りを放棄)`],
     [ONE, `        let consecutivePasses = 0;`,
@@ -451,13 +451,13 @@ out('twicego.html', apply(ALGO, [
 // ============================================================
 // 9. KINGGO (王碁) — 最初に置いた石が王。王を取られると即負け
 // ============================================================
-out('kinggo.html', apply(ALGO, [
+out('kinggo.html', apply(BASE, [
     ...rb('KINGGO', '王碁', 'kinggo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '各プレイヤーが最初に置いた石は「王」(♛マーク) になる。',
         '王を含む連が取られると即座に敗北。通常の地集計勝負 (パス2連続) も同時に有効。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 王石ルール<br>
             ※各プレイヤーの最初の石が王 (♛)。王を取られると即負け`],
     [ONE, `        let consecutivePasses = 0;`,
@@ -575,16 +575,16 @@ ${PIECES_PUSH}`],
 // ============================================================
 // 10. MAXGO (先取碁) — 10石先取で即勝利
 // ============================================================
-out('maxgo.html', apply(ALGO, [
+out('maxgo.html', apply(BASE, [
     ...rb('MAXGO', '先取碁', 'maxgo'),
     K.params([
         { key: 'win_captures', label: '先取のアゲハマ数', min: 2, max: 40, def: 10, unit: '石' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '先取ルール: 先に10石取った側がその場で勝利する。',
         '通常の終局 (パス2連続→地集計+コミ) も同時に有効。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 先取ルール<br>
             ※先に10石取った側が即勝利 (地集計も有効)`],
     [ONE, `        let komi = 6.5;`,
@@ -617,13 +617,13 @@ out('maxgo.html', apply(ALGO, [
 // ============================================================
 // 11. SANDGO (ハサミ碁) — 上下/左右に挟まれた敵石を追加捕獲
 // ============================================================
-out('sandgo.html', apply(ALGO, [
+out('sandgo.html', apply(BASE, [
     ...rb('SANDGO', 'ハサミ碁', 'sandgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         'ハサミ取り: 着手後、自分の石で上下か左右に一直線に挟まれた敵石は呼吸点に関係なく取られる。',
         '挟まれた側は自分の番では取られないので、隙間に逃げ込む手は安全。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + ハサミ取り<br>
             ※敵石を上下/左右に一直線に挟むと呼吸点に関係なく取れる`],
     [ONE, `            // ネクストモードでは次のピースを供給`,
@@ -658,17 +658,17 @@ out('sandgo.html', apply(ALGO, [
 // ============================================================
 // 12. DECAYGO (崩壊碁) — 碁石が寿命で崩壊する
 // ============================================================
-out('decaygo.html', apply(ALGO, [
+out('decaygo.html', apply(BASE, [
     ...rb('DECAYGO', '崩壊碁', 'decaygo'),
     K.params([
         { key: 'decay_limit', label: '石の寿命', min: 2, max: 32, def: 8, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '碁石に寿命がある: 配置から8手 (自分+相手の着手計) 経過した石は崩壊して消える。',
         '崩壊した石はアゲハマにならない。石は古くなるほど薄く表示される。',
         '崩壊で盤面が埋まり切らないため、盤面マス数と同じ手数で自動終了して地集計に入る。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 崩壊ルール<br>
             ※碁石は配置から8手で崩壊・消滅 (薄いほど寿命が近い)`],
     [ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`,
@@ -806,19 +806,19 @@ const LIFE_FN = `
         }
 `;
 
-out('lifego.html', apply(ALGO, [
+out('lifego.html', apply(BASE, [
     ...rb('LIFEGO', '生命碁', 'lifego'),
     K.params([
         { key: 'life_every', label: '世代交代の間隔', min: 1, max: 12, def: 4, unit: '手' },
         { key: 'life_cap', label: '打ち切り手数', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '4手ごとに盤面全体が Conway のライフゲームを1世代進む (B3/S23・斜め含む8近傍)。',
         '石は孤独(近傍<2)でも過密(>3)でも死滅する (前回の世代以降に置いた石はその世代は死なない)。空点はちょうど3個の同色近傍で誕生。',
         'ライフ死滅はアゲハマにならない。世代交代で呼吸点を失った連は通常通り取られる。',
         '累計200手で打ち切り終局して地計算 (無限対局を防ぐ安全装置)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + ライフゲーム<br>
             ※4手ごと盤面が1世代進化 (誕生B3・生存S23・8近傍)`],
     [ONE, TURN_FLIP,
@@ -896,13 +896,13 @@ const RUSH_TIMER_FN = `
         }
 `;
 
-out('rushgo.html', apply(ALGO, [
+out('rushgo.html', apply(BASE, [
     ...rb('RUSHGO', 'スピード碁', 'rushgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '1手ごとの制限時間付き (設定でなし/5/10/30秒)。時間切れは自動パスになる。',
         'タイムバーはステータスカードの下に常時表示される。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + スピードルール<br>
             ※1手の制限時間を超えると自動でパスされる`],
     // タイマー表示 (ステータスカード内)
@@ -987,14 +987,14 @@ out('rushgo.html', apply(ALGO, [
 // ============================================================
 // 15. 3DGO (立体碁) — 3層盤面、上下も連・呼吸点になる
 // ============================================================
-let d3 = apply(ALGO, [
+let d3 = apply(BASE, [
     ...rb('3DGO', '立体碁', '3dgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '盤面は3層。同じ層の上下左右に加えて、真上・真下の層の点も近傍になる (最大6近傍)。',
         '層タブで置く層を選ぶ。他層の石は薄い◆で表示される。',
         '取り・呼吸点・地の判定は3層をまたいで行われる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 3層盤面<br>
             ※盤面は3層: 上下の層も連・呼吸点になる。他層の石は薄い◆で表示`],
     [ONE, `        const PIECE_SIZE = Math.min(...PIECE_TYPES.map(t => PIECE_DEFS[t].length));`,
@@ -1218,16 +1218,16 @@ out('3dgo.html', d3);
 // 16. GRAPHGO (グラフ碁) — 盤面が分子グラフ
 //     呼吸点・連は盤の辺のみ。ピース内隣接には辺が必要
 // ============================================================
-let graph = apply(ALGO, [
+let graph = apply(BASE, [
     ...rb('GRAPHGO', 'グラフ碁', 'graphgo'),
     K.params([
         { key: 'edge_remove', label: '辺の除去率', min: 0.05, max: 0.6, def: 0.28, step: 0.01 },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '盤面はランダムな分子グラフ: 全格子辺から約28%を連結を保ちながら除去して生成。',
         '連・呼吸点・取り・地の判定はすべてグラフの辺 (結合線) だけを辿る。辺のない隣接はつながらない。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 分子グラフ盤<br>
             ※呼吸点・連は結合(辺)のみ。格子の隣接でも辺がなければつながらない`],
     [ONE, BOARD_DECL,
@@ -1418,21 +1418,23 @@ const PENTO_MOLS = `        // 12種のペントミノを分子として扱う (
             Z: { name: 'Zペントミノ', iupac: 'Z', formula: 'ペントミノ (5マス)', atoms: [[0,0],[1,0],[1,1],[1,2],[2,2]] }
         };`;
 
-out('pengo.html', apply(ALGO, [
+out('pengo.html', apply(BASE, [
     ...rb('PENGO', 'ペン碁', 'pengo'),
-    [ONE, RV_ALGO, rv([
+    ...ALGO_RULES_SPEC,
+    ...ALGO_SIZE_SPEC,
+    [ONE, RV_BASE, rv([
         'このゲームで使う碁ペンはペントミノ12種 (5マスの連結形)。',
         '窒息領域: 5マス未満の空領域は呼吸点にも地にもならない。',
         '回転のみ可能 (鏡像は別の向きとしては出ない)。',
         '供給モード: 「自由選択」は毎手好きな碁ペンを選べる。「ネクスト」は12種1巡のランダム供給 (ホールド可)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            ペントミノ「碁ペン」を配置し合う変則囲碁<br>
             ※窒息領域は5マス未満 (ペントミノが入らない空領域)`],
-    [ONE, MOLECULES_ALGO, PENTO_MOLS],
-    [ONE, OCNT_ALGO, '// 回転のみ (鏡像なし): F4/I2/L4/P4/N4/T4/U4/V4/W4/X1/Y4/Z4 = 計45パターン'],
-    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'F';`],
-    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'F'`],
+    [ONE, MOLECULES_BASE, PENTO_MOLS],
+    [ONE, OCNT_BASE, '// 回転のみ (鏡像なし): F4/I2/L4/P4/N4/T4/U4/V4/W4/X1/Y4/Z4 = 計45パターン'],
+    [ONE, `let currentPieceType = 'STONE';`, `let currentPieceType = 'F';`],
+    [ONE, `? s.currentPieceType : 'STONE'`, `? s.currentPieceType : 'F'`],
     [ONE, '登場アルカン', '登場ペントミノ'],
     [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
 `ペントミノは碁石5個が連結した形 (12種)。5マス未満の窒息領域にはどの碁ペンも入りません。`],
@@ -1466,16 +1468,18 @@ const CYCLO_MOLECULES = `        const MOLECULES = {
             ADAMANTANE:        { name: 'アダマンタン',       iupac: 'アダマンタン',        formula: 'C₁₀H₁₆', atoms: [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]] }
         };`;
 
-out('cyclogo.html', apply(ALGO, [
+out('cyclogo.html', apply(BASE, [
     ...rb('CYCLOGO', 'シクロ碁', 'cyclogo'),
-    [ONE, RV_ALGO, rv([
+    ...ALGO_RULES_SPEC,
+    ...ALGO_SIZE_SPEC,
+    [ONE, RV_BASE, rv([
         'このゲームで使う碁クロはシクロアルカン7種 (環状分子)。',
         'リング状の碁クロは内側に空点を残すことがある。窒息領域は4マス未満。',
     ])],
-    [ONE, MOLECULES_ALGO, CYCLO_MOLECULES],
-    [ONE, OCNT_ALGO, '// シクロブタン:1 / メチルシクロブタン:4 / シクロヘキサン:2 / エチルシクロブタン:4 / シクロオクタン:1 / ナフタレン:2 / アダマンタン:1 = 計15パターン'],
-    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'CYCLOBUTANE';`],
-    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'CYCLOBUTANE'`],
+    [ONE, MOLECULES_BASE, CYCLO_MOLECULES],
+    [ONE, OCNT_BASE, '// シクロブタン:1 / メチルシクロブタン:4 / シクロヘキサン:2 / エチルシクロブタン:4 / シクロオクタン:1 / ナフタレン:2 / アダマンタン:1 = 計15パターン'],
+    [ONE, `let currentPieceType = 'STONE';`, `let currentPieceType = 'CYCLOBUTANE';`],
+    [ONE, `? s.currentPieceType : 'STONE'`, `? s.currentPieceType : 'CYCLOBUTANE'`],
     [ONE, '登場アルカン', '登場シクロアルカン'],
     [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
 `シクロアルカンは炭素骨格が環を含む。リング状の碁クロは内側に穴を残すことがある。CYCLOGO では全7種が登場します。`],
@@ -1484,7 +1488,7 @@ out('cyclogo.html', apply(ALGO, [
         // すべて4原子以上なので「4マス未満の窒息領域」ルールがそのまま機能する。`,
 `        // シクロアルカンの炭素骨格を碁盤の格子に写した形。原子=碁石、結合=連結。
         // リング状分子は内側に空点を残すが、そこは窒息領域なら呼吸点にならない。`],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            シクロアルカン「碁クロ」を配置し合う変則囲碁<br>
             PC: クリックで配置 / 回転=⟳ボタン・Rキー・右クリック・ホイール / ホールド=Hキー<br>
             スマホ: 1タップ目プレビュー、2タップ目確定 (回転・ホールドはボタン)`],
@@ -1531,9 +1535,11 @@ const ALKENE_MOLECULES = `        const MOLECULES = {
             ISOPRENE:    { name: 'イソプレン',     iupac: '2-メチル-1,3-ブタジエン',   formula: 'C₅H₈',  atoms: [[1,0],[0,1],[1,1],[2,1],[1,2]], db: [[0,2],[2,3]] }
         };`;
 
-let alk = apply(ALGO, [
+let alk = apply(BASE, [
     ...rb('ALKENEGO', 'アルケン碁', 'alkenego'),
-    [ONE, RV_ALGO, rv([
+    ...ALGO_RULES_SPEC,
+    ...ALGO_SIZE_SPEC,
+    [ONE, RV_BASE, rv([
         'このゲームで使う碁ケンはアルケン・アルキン7種 (二重・三重結合を含む不飽和分子)。',
         '多重結合は剛直のため碁ケンは回転できない (全分子1向き固定)。二重線が多重結合。',
     ])],
@@ -1545,9 +1551,9 @@ let alk = apply(ALGO, [
         // すべて4原子以上なので「4マス未満の窒息領域」ルールがそのまま機能する。`,
 `        // 不飽和炭化水素の骨格を碁盤の格子に写した形。原子=碁石、結合=連結。
         // 二重/三重結合 (db) は剛直: 分子は回転できない。`],
-    [ONE, MOLECULES_ALGO, ALKENE_MOLECULES],
+    [ONE, MOLECULES_BASE, ALKENE_MOLECULES],
     [ONE, `        // 各分子の回転バリエーションを事前生成 (重複排除)
-        ${OCNT_ALGO}
+        ${OCNT_BASE}
         const ORIENTATIONS = {};
         PIECE_TYPES.forEach(type => {
             let cells = normalizeCells(PIECE_DEFS[type]);
@@ -1580,10 +1586,10 @@ let alk = apply(ALGO, [
                 [[m.atoms[a][0] - minX, m.atoms[a][1] - minY],
                  [m.atoms[b][0] - minX, m.atoms[b][1] - minY]]);
         });`],
-    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'BUTENE';`],
-    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'BUTENE'`],
+    [ONE, `let currentPieceType = 'STONE';`, `let currentPieceType = 'BUTENE';`],
+    [ONE, `? s.currentPieceType : 'STONE'`, `? s.currentPieceType : 'BUTENE'`],
     [ONE, '⟳ 回転', '⟳ 回転不可'],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            アルケン・アルキン「碁ケン」を配置し合う変則囲碁 (回転不可)<br>
             PC: クリックで配置 / ホールド=Hキー<br>
             スマホ: 1タップ目プレビュー、2タップ目確定<br>
@@ -1689,36 +1695,33 @@ out('alkenego.html', alk);
 // ============================================================
 // 20. POLYGO (ポリ碁) — 自由に曲がるポリマー鎖を毎手描く
 // ============================================================
-let poly = apply(ALGO, [
+let poly = apply(BASE, [
     ...rb('POLYGO', 'ポリ碁', 'polygo'),
+    [ONE, RCM_BASE, K.RCM_ALGO],
+    ...ALGO_SIZE_SPEC,
     K.params([
         { key: 'monomers', label: '鎖の長さ', min: 2, max: 8, def: 4, unit: 'マス' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '毎手、盤上に4連のポリマー鎖を自由に描いて置く (形は固定ではない)。',
         '鎖は隣接する空点にのみ伸ばせる。完成した鎖上をタップするか「配置する」で確定。',
         '窒息領域: 4マス未満の空領域は呼吸点にも地にもならない。',
     ])],
-    [ONE, RC_ALGO, rc([
+    [ONE, RC_BASE, rc([
         '鎖の構築: タップ/クリックで隣接する空点にモノマーを追加 (4連で完成)。',
         '確定: 完成した鎖の上をタップ、または「配置する」ボタン。',
         '1マス戻す: 右クリック・Rキー・「↩ 1マス戻す」ボタン。鎖の途中をタップするとそこまで切り戻せる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            ポリマー鎖を自由に描く変則囲碁<br>
             タップ/クリックでモノマーを追加し、4連のポリマー鎖を構築 (隣接する空点にのみ伸ばせます)<br>
             完成した鎖の上をタップ or 「配置する」で確定。末尾を戻す=右クリック・Rキー・「↩ 1マス戻す」`],
     // ピース定義 → モノマー鎖
     [ONE, `        // アルカンの炭素骨格を碁盤の格子に写した形。原子=碁石、結合=連結。
         // すべて4原子以上なので「4マス未満の窒息領域」ルールがそのまま機能する。
+        // 通常の碁石: 1手につき空いている交点へ1石を置く標準的な囲碁。
         const MOLECULES = {
-            BUTANE:         { name: 'ブタン',            iupac: 'n-ブタン',             formula: 'C₄H₁₀', atoms: [[0,0],[1,0],[1,1],[2,1]] },
-            ISOBUTANE:      { name: 'イソブタン',         iupac: '2-メチルプロパン',     formula: 'C₄H₁₀', atoms: [[1,0],[0,1],[1,1],[2,1]] },
-            PENTANE:        { name: 'ペンタン',           iupac: 'n-ペンタン',           formula: 'C₅H₁₂', atoms: [[0,0],[1,0],[2,0],[3,0],[4,0]] },
-            ISOPENTANE:     { name: 'イソペンタン',       iupac: '2-メチルブタン',       formula: 'C₅H₁₂', atoms: [[0,0],[1,0],[2,0],[3,0],[1,1]] },
-            NEOPENTANE:     { name: 'ネオペンタン',       iupac: '2,2-ジメチルプロパン', formula: 'C₅H₁₂', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2]] },
-            HEXANE:         { name: 'ヘキサン',           iupac: 'n-ヘキサン',           formula: 'C₆H₁₄', atoms: [[0,0],[1,0],[1,1],[2,1],[2,2],[3,2]] },
-            NEOHEXANE:      { name: 'ネオヘキサン',       iupac: '2,2-ジメチルブタン',   formula: 'C₆H₁₄', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2],[1,3]] }
+            STONE: { name: '碁石', iupac: '', formula: '', atoms: [[0,0]] }
         };`,
 `        // ポリマー鎖: ピースは固定形を持たず、毎手 MONOMERS 連の自由な鎖を描く。
         const MOLECULES = {}; // 固定ピースなし`],
@@ -1749,7 +1752,7 @@ let poly = apply(ALGO, [
             }
         }`],
     [ONE, `        // 各分子の回転バリエーションを事前生成 (重複排除)
-        ${OCNT_ALGO}
+        ${OCNT_BASE}
         const ORIENTATIONS = {};
         PIECE_TYPES.forEach(type => {
             let cells = normalizeCells(PIECE_DEFS[type]);
@@ -1782,8 +1785,8 @@ let poly = apply(ALGO, [
 `        let pieceMode = 'free'; // ポリマー鎖は自由描画のみ`],
     [ONE, `            pieceMode = ['free', 'next'].includes(s.pieceMode) ? s.pieceMode : 'next';`,
 `            pieceMode = 'free';`],
-    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'POLY';`],
-    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'POLY'`],
+    [ONE, `let currentPieceType = 'STONE';`, `let currentPieceType = 'POLY';`],
+    [ONE, `? s.currentPieceType : 'STONE'`, `? s.currentPieceType : 'POLY'`],
     // 設定: 供給モード → 説明文 / 図鑑 → 除去
     [ONE, SUPPLY_SEC,
 `            <!-- 3. ポリマー説明 -->
@@ -1797,7 +1800,7 @@ let poly = apply(ALGO, [
     [ONE, `        btnCloseCatalog.addEventListener('click', () => {`,
           `        if (btnCloseCatalog) btnCloseCatalog.addEventListener('click', () => {`],
     // トレイUI: 鎖の構築状況表示 + ボタン流用
-    [ONE, TRAY_UI_ALGO,
+    [ONE, TRAY_UI_BASE,
 `        // ポリマー鎖の構築状況をトレイに表示 (進捗ドット + 確定ボタン制御)
         function updatePieceTrayUI() {
             currentPieceLabel.textContent = 'モノマー鎖';
@@ -1992,14 +1995,17 @@ out('polygo.html', poly);
 // ============================================================
 // 21. ASYMGO (非対称碁) — 黒=直鎖アルカン / 白=分枝アルカン
 // ============================================================
-let asym = apply(ALGO, [
+let asym = apply(BASE, [
     ...rb('ASYMGO', '非対称碁', 'asymgo'),
-    [ONE, RV_ALGO, rv([
+    ...ALGO_RULES_SPEC,
+    ...ALGO_SIZE_SPEC,
+    ...ALGO_PIECES_SPEC,
+    [ONE, RV_BASE, rv([
         '非対称ルール: 使える碁カンがプレイヤーで違う。',
         '黒=直鎖アルカン (ブタン・ペンタン・ヘキサン) / 白=分枝アルカン (イソブタン・イソペンタン・ネオペンタン・ネオヘキサン)。',
         '供給は各プレイヤー自分のセットから1巡バッグ。自由選択モードでも自軍の種類のみ選べる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            アルカン分子「碁カン」を配置し合う変則囲碁 (非対称)<br>
             PC: クリックで配置 / 回転=⟳ボタン・Rキー・右クリック・ホイール / ホールド=Hキー<br>
             スマホ: 1タップ目プレビュー、2タップ目確定<br>
@@ -2028,16 +2034,19 @@ out('asymgo.html', asym);
 // ============================================================
 // 22. DRAFTGO (ドラフト碁) — 対局前にピースを交互ドラフト
 // ============================================================
-let draft = apply(ALGO, [
+let draft = apply(BASE, [
     ...rb('DRAFTGO', 'ドラフト碁', 'draftgo'),
+    ...ALGO_RULES_SPEC,
+    ...ALGO_SIZE_SPEC,
+    ...ALGO_PIECES_SPEC,
     K.params([
         { key: 'draft_picks', label: 'ドラフト獲得数', min: 1, max: 3, def: 3, unit: '種' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '対局前にドラフト: 7種の碁カンから黒→白の順に交互に3種ずつピック。',
         '対局中は各プレイヤーが獲得した3種のみが供給される (自軍バッグ1巡)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            アルカン分子「碁カン」を配置し合う変則囲碁 (ドラフト制)<br>
             PC: クリックで配置 / 回転=⟳ボタン・Rキー・右クリック・ホイール / ホールド=Hキー<br>
             スマホ: 1タップ目プレビュー、2タップ目確定<br>
@@ -2262,13 +2271,13 @@ out('draftgo.html', draft);
 // ============================================================
 
 // 23. REVERSEGO (反転碁) — ハサミで敵石が自分の色に寝返る
-out('reversego.html', apply(ALGO, [
+out('reversego.html', apply(BASE, [
     ...rb('REVERSEGO', '反転碁', 'reversego'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '反転ルール: 着手後、自分の石で上下か左右に一直線に挟まれた敵石は取られず、自分の色に寝返る。',
         '通常の取り (呼吸点0の連) も同時に有効。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 反転ルール<br>
             ※敵石を上下/左右に挟むと取らずに自分の色へ寝返る`],
     [ONE, `            // ネクストモードでは次のピースを供給`,
@@ -2302,16 +2311,16 @@ out('reversego.html', apply(ALGO, [
 ], 'reversego'));
 
 // 24. PUSHGO (押し碁) — 着手で隣接する敵石を1マス押す
-out('pushgo.html', apply(ALGO, [
+out('pushgo.html', apply(BASE, [
     ...rb('PUSHGO', '押し碁', 'pushgo'),
     K.params([
         { key: 'push_dist', label: '押す距離', min: 1, max: 4, def: 1, unit: 'マス' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '押しルール: 置いた石に隣接する敵石は、その方向へ1マス押される。',
         '押し先が盤外または占有されている場合は押せない。押された後の取り判定は通常通り行われる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 押しルール<br>
             ※置いた石に隣接する敵石は1マス押される (押し先が空の場合のみ)`],
     [ONE, PIECES_PUSH,
@@ -2339,16 +2348,16 @@ out('pushgo.html', apply(ALGO, [
 ], 'pushgo'));
 
 // 25. ATTRACTGO (吸引碁) — 直線2マス先の敵石を引き寄せる
-out('attractgo.html', apply(ALGO, [
+out('attractgo.html', apply(BASE, [
     ...rb('ATTRACTGO', '吸引碁', 'attractgo'),
     K.params([
         { key: 'attract_dist', label: '吸引する距離', min: 2, max: 6, def: 2, unit: 'マス' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '吸引ルール: 置いた石の直線2マス先にいる敵石は、間のマスが空いていれば1マス引き寄せられる。',
         '引き寄せられた後の取り判定は通常通り行われる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 吸引ルール<br>
             ※置いた石は直線2マス先の敵石を1マス引き寄せる`],
     [ONE, PIECES_PUSH,
@@ -2376,16 +2385,16 @@ out('attractgo.html', apply(ALGO, [
 ], 'attractgo'));
 
 // 26. TURNGO (回転碁) — 着手ごとに盤面が90°回転
-out('turngo.html', apply(ALGO, [
+out('turngo.html', apply(BASE, [
     ...rb('TURNGO', '回転碁', 'turngo'),
     K.params([
         { key: 'rotate_every', label: '回転の間隔', min: 1, max: 8, def: 1, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '回転ルール: 着手のたびに盤面全体が90°時計回りに回転する (石もすべて回転)。',
         '取り・呼吸点は回転後の盤面で判定される。コウ判定の盤面も回転に追従する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 回転ルール<br>
             ※着手のたびに盤面全体が90°時計回りに回転する`],
     [ONE, `            // ネクストモードでは次のピースを供給`,
@@ -2501,13 +2510,13 @@ const TILE_DRAW_SPEC = [ONE, `        function drawPieceShape(cellsAbs, padding,
             }`];
 
 // 27. NOGO (禁取碁) — 取る手は禁止、詰んだら負け
-out('nogo.html', apply(ALGO, [
+out('nogo.html', apply(BASE, [
     ...rb('NOGO', '禁取碁', 'nogo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '禁取ルール: 相手の石を取る手 (着手の結果相手の連の呼吸点が0になる手) は置けない。',
         '自殺手も禁止。盤が埋まり合法手がなくなった側が敗北する (パス2連続の地集計も有効)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 禁取ルール<br>
             ※相手石を取る手は置けない。合法手がなくなった側が負け`],
     // 禁取: 取れる手は禁止
@@ -2558,13 +2567,13 @@ ${STALEMATE_CHECK}`],
 ], 'nogo'));
 
 // 28. LIMITGO (詰み碁) — 合法手がなくなった側が即負け
-out('limitgo.html', apply(ALGO, [
+out('limitgo.html', apply(BASE, [
     ...rb('LIMITGO', '詰み碁', 'limitgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '詰みルール: 合法手が1つもなくなった手番側はその場で敗北する。',
         '通常の取り・自殺禁止・地集計もすべて有効。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 詰みルール<br>
             ※置ける場所がなくなった側が即負け`],
     [ONE, `        function isValidPlacement(cells, player) {`, ANY_VALID_FN + `
@@ -2580,16 +2589,16 @@ ${STALEMATE_CHECK}`],
 ], 'limitgo'));
 
 // 29. GROWGO (増殖碁) — 着手ごとに石が空点へ増殖する
-out('growgo.html', apply(ALGO, [
+out('growgo.html', apply(BASE, [
     ...rb('GROWGO', '増殖碁', 'growgo'),
     K.params([
         { key: 'grow_rate', label: '増殖確率', min: 0.05, max: 1, def: 0.3, step: 0.05 },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '増殖ルール: 着手ごとに、石に隣接する空点のうち約30%へ同じ色の石が増殖する。',
         '増殖はどの連の最後の呼吸点も埋めない (増殖だけでは石は取られないが、アタリまで追い込める)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 増殖ルール<br>
             ※着手ごとに石が隣の空点へランダムに増殖する`],
     [ONE, `        let history = []; // 1手戻る用: 各着手前のスナップショットのスタック`,
@@ -2634,17 +2643,17 @@ out('growgo.html', apply(ALGO, [
 ], 'growgo'));
 
 // 30. MOLEGO (もぐら碁) — 石がランダムに隣へ移動する
-out('molego.html', apply(ALGO, [
+out('molego.html', apply(BASE, [
     ...rb('MOLEGO', 'もぐら碁', 'molego'),
     K.params([
         { key: 'mol_rate', label: 'もぐら移動確率', min: 0.02, max: 0.8, def: 0.18, step: 0.02 },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         'もぐらルール: 着手ごとに盤上の各碁石が約18%の確率で隣の空点へ移動する。',
         '移動はランダム。移動で空いた点・新しい接続は通常ルールどおり機能する。',
         '盤面がなかなか落ち着かないため、盤面マス数と同じ手数で自動終了して地集計に入る。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + もぐらルール<br>
             ※着手ごとに各碁石がランダムに隣の空点へ移動することがある`],
     [ONE, `        let history = []; // 1手戻る用: 各着手前のスナップショットのスタック`,
@@ -2683,14 +2692,14 @@ out('molego.html', apply(ALGO, [
 ], 'molego'));
 
 // 31. BLASTGO (爆撃碁) — 隣接する敵石の連を無条件破壊
-out('blastgo.html', apply(ALGO, [
+out('blastgo.html', apply(BASE, [
     ...rb('BLASTGO', '爆撃碁', 'blastgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '爆撃ルール: 置いた石に隣接する敵石の「連」は呼吸点に関係なくすべて破壊・取られる。',
         '通常の取り判定も有効。爆撃で取った石もアゲハマに数えられる。',
         '爆撃で盤面が埋まり切らないため、盤面マス数と同じ手数で自動終了して地集計に入る。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 爆撃ルール<br>
             ※置いた石に隣接する敵石の連をすべて破壊する`],
     [ONE, PIECES_PUSH,
@@ -2733,13 +2742,13 @@ out('blastgo.html', apply(ALGO, [
 ], 'blastgo'));
 
 // 32. HANDIGO (置碁) — ハンデ置碁 (2〜9子の事前配置)
-out('handigo.html', apply(ALGO, [
+out('handigo.html', apply(BASE, [
     ...rb('HANDIGO', '置碁', 'handigo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '置碁: 対局開始時に黒石をハンデ数だけ事前配置する (設定で なし/2/4/6/9 子)。',
         '置碁ありの場合はコミは0.5目になる (実質ハンデなし互先=コミ6.5)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 置碁ハンデ<br>
             ※設定で黒石を事前配置 (2〜9子)。置碁時はコミ0.5目`],
     // 設定に置碁セクション
@@ -2819,32 +2828,26 @@ out('handigo.html', apply(ALGO, [
 // ==== 第3バッチ: 追加10派生 ====
 // ============================================================
 
-// 盤サイズを 9/13/19 路へ (STONE_SPEC抜きのピース系バリアント用)
-const SIZE_91319 = [
-    [ONE, SIZE_BTNS, SIZE_BTNS_91319],
-    [ONE, `![13, 19, 25].includes(s.boardSize)`, `![9, 13, 19].includes(s.boardSize)`],
-    [ONE, STARS_ALGO, STARS_GENERIC],
-];
-
 // 33. MAMEGO (豆碁) — 原作の碁豆 (ドミノ2連) を再実装
 const DOMINO_MOLS = `        // 碁豆: 2連のドミノ碁石 (原作 MAMEGO のピース)
         const MOLECULES = {
             DOMINO: { name: '碁豆', iupac: 'ドミノ', formula: '2連結', atoms: [[0,0],[1,0]] }
         };`;
-out('mamego.html', apply(ALGO, [
+out('mamego.html', apply(BASE, [
     ...rb('MAMEGO', '豆碁', 'mamego'),
-    [ONE, RV_ALGO, rv([
+    ...ALGO_RULES_SPEC,
+    [ONE, RV_BASE, rv([
         'このゲームで使う碁豆はドミノ (2連結) のみ。',
         '原作 MAMEGO (碁豆) の同系ルールを通常囲碁エンジン上に再実装したもの。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            ドミノ「碁豆」を配置し合う変則囲碁 (原作リスペクト)<br>
             PC: クリックで配置 / 回転=⟳ボタン・Rキー・右クリック・ホイール / ホールド=Hキー<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-    [ONE, MOLECULES_ALGO, DOMINO_MOLS],
-    [ONE, OCNT_ALGO, '// 碁豆: 縦/横 = 2パターン'],
-    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'DOMINO';`],
-    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'DOMINO'`],
+    [ONE, MOLECULES_BASE, DOMINO_MOLS],
+    [ONE, OCNT_BASE, '// 碁豆: 縦/横 = 2パターン'],
+    [ONE, `let currentPieceType = 'STONE';`, `let currentPieceType = 'DOMINO';`],
+    [ONE, `? s.currentPieceType : 'STONE'`, `? s.currentPieceType : 'DOMINO'`],
     [ONE, '登場アルカン', '登場碁豆'],
     [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
 `碁豆は2連のドミノ形のみ。孤立した1マスの空領域は窒息領域になります。`],
@@ -2855,7 +2858,6 @@ out('mamego.html', apply(ALGO, [
 `                ctx.beginPath();
                 ctx.ellipse(cx, cy, R, R * 0.72, ((p.x + p.y) % 2 === 0 ? 1 : -1) * Math.PI / 4, 0, Math.PI * 2);
                 ctx.fill();`],
-    ...SIZE_91319,
     [ALL, '碁カン', '碁豆'],
     [ALL, '全7種1巡', '補充なし'],
 ], 'mamego'));
@@ -2866,23 +2868,23 @@ const TRIO_MOLS = `        // トリオミノ: 3連結の形2種 (直鎖 / L字)
             TRI_I: { name: 'Iトリオミノ', iupac: '直鎖3', formula: '3連結', atoms: [[0,0],[1,0],[2,0]] },
             TRI_L: { name: 'Lトリオミノ', iupac: 'L字3', formula: '3連結', atoms: [[0,0],[0,1],[1,1]] }
         };`;
-out('triogo.html', apply(ALGO, [
+out('triogo.html', apply(BASE, [
     ...rb('TRIOGO', 'トリオ碁', 'triogo'),
-    [ONE, RV_ALGO, rv([
+    ...ALGO_RULES_SPEC,
+    [ONE, RV_BASE, rv([
         'このゲームで使う碁リオはトリオミノ2種 (直鎖I / 曲がりL、いずれも3連結)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            トリオミノ「碁リオ」を配置し合う変則囲碁<br>
             PC: クリックで配置 / 回転=⟳ボタン・Rキー・右クリック・ホイール / ホールド=Hキー<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-    [ONE, MOLECULES_ALGO, TRIO_MOLS],
-    [ONE, OCNT_ALGO, '// I:2 / L:4 = 計6パターン'],
-    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'TRI_I';`],
-    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'TRI_I'`],
+    [ONE, MOLECULES_BASE, TRIO_MOLS],
+    [ONE, OCNT_BASE, '// I:2 / L:4 = 計6パターン'],
+    [ONE, `let currentPieceType = 'STONE';`, `let currentPieceType = 'TRI_I';`],
+    [ONE, `? s.currentPieceType : 'STONE'`, `? s.currentPieceType : 'TRI_I'`],
     [ONE, '登場アルカン', '登場トリオミノ'],
     [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
 `トリオミノは碁石3個の連結形 (直鎖とL字の2種)。3マス未満の窒息領域には入りません。`],
-    ...SIZE_91319,
     [ALL, '碁カン', '碁リオ'],
     [ALL, '全7種1巡', '全2種1巡'],
     [ALL, '7種1巡', '2種1巡'],
@@ -2890,13 +2892,13 @@ out('triogo.html', apply(ALGO, [
 ], 'triogo'));
 
 // 35. KOGO (孤立碁) — 自分の石に隣接して置けない
-out('kogo.html', apply(ALGO, [
+out('kogo.html', apply(BASE, [
     ...rb('KOGO', '孤立碁', 'kogo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '孤立ルール: 自分の石に隣接する空点には置けない。自連は一切作れず、全石が単独のまま。',
         '取り・呼吸点・自殺禁止・コウは通常通り。単石は最大4呼吸点しか持てないため脆い。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 孤立ルール<br>
             ※自分の石に隣接する点には置けない (全石が孤立単石)`],
     [ONE, VALID_BOUNDS,
@@ -2931,16 +2933,16 @@ out('kogo.html', apply(ALGO, [
 ], 'kogo'));
 
 // 36. RINGO (環状碁) — 中央3×3が壁のドーナツ盤
-out('ringo.html', apply(ALGO, [
+out('ringo.html', apply(BASE, [
     ...rb('RINGO', '環状碁', 'ringo'),
     K.params([
         { key: 'hole_radius', label: '中央の壁の半径', min: 0, max: 4, def: 1 },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '盤の中央3×3が壁 (使用不能領域) のドーナツ状盤面。',
         '壁は石を置けず、呼吸点にも地にもならない。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 環状盤<br>
             ※中央3×3が壁。壁は置けず呼吸点にも地にもならない`],
     [ONE, RESET_BOARD,
@@ -2957,16 +2959,16 @@ out('ringo.html', apply(ALGO, [
 ], 'ringo'));
 
 // 37. CROSSGO (十字碁) — 四隅が壁の十字盤
-out('crossgo.html', apply(ALGO, [
+out('crossgo.html', apply(BASE, [
     ...rb('CROSSGO', '十字碁', 'crossgo'),
     K.params([
         { key: 'corner_div', label: '隅の広さ', min: 2, max: 6, def: 3, hint: '盤幅の1/N' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '四隅が壁で削られた十字形の盤面 (隅は盤面の約1/3)。',
         '壁は石を置けず、呼吸点にも地にもならない。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 十字盤<br>
             ※四隅が壁の十字形盤面。壁は置けず呼吸点にも地にもならない`],
     [ONE, RESET_BOARD,
@@ -2984,14 +2986,14 @@ out('crossgo.html', apply(ALGO, [
 ], 'crossgo'));
 
 // 38. LIVEGO (活石碁) — 地ではなく盤上の石数で勝負
-out('livego.html', apply(ALGO, [
+out('livego.html', apply(BASE, [
     ...rb('LIVEGO', '活石碁', 'livego'),
     ...EVENT_CHIP_SPEC(`'生 黒' + board.filter(v => v === 1).length + ' / 白' + board.filter(v => v === 2).length`),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '得点は「地」ではなく盤上に残った自分の石の数。アゲハマも加算 (生き石+アゲハマ+コミ)。',
         '石を多く生き残らせることがそのまま得点になる。地の囲い込みは意味を持たない。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 活石得点<br>
             ※得点=盤上の自分の石数+アゲハマ (地は数えない)`],
     [ONE, `            const blackTotal = territory.black + captures[1];
@@ -3025,13 +3027,13 @@ out('livego.html', apply(ALGO, [
 ], 'livego'));
 
 // 39. FUSEGO (融合碁) — 隣接する敵石が中立ブロックに変化
-out('fusego.html', apply(ALGO, [
+out('fusego.html', apply(BASE, [
     ...rb('FUSEGO', '融合碁', 'fusego'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '融合ルール: 置いた石に隣接する敵石は「中和」されて中立ブロック (壁) に変わる。',
         '中和された石はアゲハマにならず、そのマスは以後使えない。通常の取り判定も有効。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 融合ルール<br>
             ※置いた石に隣接する敵石は中立ブロックに変わる (アゲハマにならない)`],
     [ONE, PIECES_PUSH,
@@ -3059,16 +3061,16 @@ out('fusego.html', apply(ALGO, [
 ], 'fusego'));
 
 // 40. WORMGO (転送碁) — ワームホールペアが近傍をつなぐ
-out('wormgo.html', apply(ALGO, [
+out('wormgo.html', apply(BASE, [
     ...rb('WORMGO', '転送碁', 'wormgo'),
     K.params([
         { key: 'worm_pairs', label: 'ワームホールの組数', min: 1, max: 6, def: 2, unit: '組' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '転送ルール: 盤上にランダムなワームホールペア (◎マーク) が2組ある。',
         'ワームホール端点同士は近傍としてつながる (連・呼吸点・取りが遠隔で成立)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 転送ルール<br>
             ※盤上のワームホールペア (◎) 同士が近傍としてつながる`],
     [ONE, BOARD_DECL,
@@ -3218,13 +3220,13 @@ out('wormgo.html', apply(ALGO, [
 ], 'wormgo'));
 
 // 41. GRAVEGO (墓標碁) — 取られたマスが壁になる
-out('gravego.html', apply(ALGO, [
+out('gravego.html', apply(BASE, [
     ...rb('GRAVEGO', '墓標碁', 'gravego'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '墓標ルール: 取られた石のマスは空点に戻らず「墓標」(壁) になる。',
         '墓標は石を置けず、呼吸点にも地にもならない。盤面は徐々に狭くなる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 墓標ルール<br>
             ※取られたマスは空点に戻らず壁になる。盤面は次第に狭くなる`],
     [ONE, CAPTURE_BLOCK,
@@ -3245,13 +3247,13 @@ out('gravego.html', apply(ALGO, [
 ], 'gravego'));
 
 // 42. REAPGO (連取碁) — 取ったらもう1手打てる
-out('reapgo.html', apply(ALGO, [
+out('reapgo.html', apply(BASE, [
     ...rb('REAPGO', '連取碁', 'reapgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '連取ルール: 着手で敵石を1個以上取った場合、同じプレイヤーがもう1手打てる (連鎖可)。',
         '取らなかった場合のみ手番が交代する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 連取ルール<br>
             ※敵石を取るともう1手打てる (連鎖可)`],
     [ONE, TURN_FLIP,
@@ -3276,39 +3278,39 @@ const QUAD_MOLS = `        // 碁カク: 2x2ブロックの方形碁石
         const MOLECULES = {
             QUAD: { name: '碁カク', iupac: '正方形4', formula: '4連結', atoms: [[0,0],[1,0],[0,1],[1,1]] }
         };`;
-out('quadgo.html', apply(ALGO, [
+out('quadgo.html', apply(BASE, [
     ...rb('QUADGO', '四方碁', 'quadgo'),
-    [ONE, RV_ALGO, rv([
+    ...ALGO_RULES_SPEC,
+    [ONE, RV_BASE, rv([
         'このゲームで使う碁カクは2×2の正方形ブロックのみ。回転しても同じ形。',
         '大きな塊は呼吸点を多く持つが、置ける場所は限られる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            2×2ブロック「碁カク」を配置し合う変則囲碁<br>
             PC: クリックで配置 / スマホ: 1タップ目プレビュー、2タップ目確定`],
-    [ONE, MOLECULES_ALGO, QUAD_MOLS],
-    [ONE, OCNT_ALGO, '// 碁カク: 正方形は回転不変 = 1パターン'],
-    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'QUAD';`],
-    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'QUAD'`],
+    [ONE, MOLECULES_BASE, QUAD_MOLS],
+    [ONE, OCNT_BASE, '// 碁カク: 正方形は回転不変 = 1パターン'],
+    [ONE, `let currentPieceType = 'STONE';`, `let currentPieceType = 'QUAD';`],
+    [ONE, `? s.currentPieceType : 'STONE'`, `? s.currentPieceType : 'QUAD'`],
     [ONE, '登場アルカン', '登場碁カク'],
     [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
 `碁カクは2×2の正方形のみ。回転しても形は変わりません。`],
-    ...SIZE_91319,
     [ALL, '碁カン', '碁カク'],
     [ALL, '全7種1巡', '補充なし'],
     TILE_DRAW_SPEC,
 ], 'quadgo'));
 
 // 44. CIRCLEGO (円盤碁) — 円形盤面
-out('circlego.html', apply(ALGO, [
+out('circlego.html', apply(BASE, [
     ...rb('CIRCLEGO', '円盤碁', 'circlego'),
     K.params([
         { key: 'rim', label: '円の縮み', min: 0, max: 3, def: 0, step: 0.5, unit: 'マス' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '盤面は円形 — 中心から半径 (N-1)/2 より外のマスは壁 (使用不能)。',
         '「隅」が存在しない盤面で戦う囲碁。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 円形盤<br>
             ※円の外側は壁。壁は置けず呼吸点にも地にもならない`],
     [ONE, RESET_BOARD,
@@ -3370,17 +3372,17 @@ out('circlego.html', apply(ALGO, [
 ], 'circlego'));
 
 // 45. LAVAGO (溶岩碁) — 8手ごとに外周の空点が溶岩に沈む
-out('lavago.html', apply(ALGO, [
+out('lavago.html', apply(BASE, [
     ...rb('LAVAGO', '溶岩碁', 'lavago'),
     K.params([
         { key: 'lava_every', label: '溶岩化の間隔', min: 2, max: 20, def: 8, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '溶岩ルール: 合計8手ごとに盤の最外周リングが溶岩に沈む (空マスが壁になる)。',
         '石は残るが呼吸点を失い、呼吸点0になった連は溶岩に飲まれて相手のアゲハマになる。',
         '盤面は内側へ徐々に狭くなる。全周が沈み切ったらその時点で地集計に入る。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 溶岩ルール<br>
             ※8手ごとに外周の空マスが溶岩 (壁) に沈む。盤面はどんどん狭くなる`],
     [ONE, `        let komi = 6.5;`,
@@ -3550,13 +3552,13 @@ out('lavago.html', apply(ALGO, [
 ], 'lavago'));
 
 // 46. HALFGO (陣地碁) — 黒は左半分、白は右半分のみ
-out('halfgo.html', apply(ALGO, [
+out('halfgo.html', apply(BASE, [
     ...rb('HALFGO', '陣地碁', 'halfgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '陣地ルール: 黒は盤の左半分、白は右半分にしか置けない。中央列は両者共通。',
         '敵の陣地には侵入できない — 境界線上の攻防と自陣の囲い合いが勝負。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 陣地ルール<br>
             ※黒は左半分、白は右半分のみ配置可 (中央列は共通)`],
     [ONE, VALID_BOUNDS,
@@ -3607,13 +3609,13 @@ out('halfgo.html', apply(ALGO, [
 ], 'halfgo'));
 
 // 47. SPARSEGO (離散碁) — いかなる石の隣にも置けない
-out('sparsego.html', apply(ALGO, [
+out('sparsego.html', apply(BASE, [
     ...rb('SPARSEGO', '離散碁', 'sparsego'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '離散ルール: いかなる石 (敵味方問わず) に隣接する空点には置けない。',
         '全ての石は孤立し、取り合いは発生しない。地の囲い合いのみの静かな碁。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 離散ルール<br>
             ※どの石にも隣接する点には置けない (全石が孤立)`],
     [ONE, VALID_BOUNDS,
@@ -3648,16 +3650,16 @@ out('sparsego.html', apply(ALGO, [
 ], 'sparsego'));
 
 // 48. FIRSTGO (一撃碁) — 最初の取りで即勝利
-out('firstgo.html', apply(ALGO, [
+out('firstgo.html', apply(BASE, [
     ...rb('FIRSTGO', '一撃碁', 'firstgo'),
     K.params([
         { key: 'win_captures', label: '勝利に必要なアゲハマ数', min: 1, max: 10, def: 1, unit: '石' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '一撃ルール: 最初に敵石を1個でも取った側がその場で勝利する。',
         '通常の終局 (パス2連続→地集計+コミ) も有効だが、実際は最初の取り合いで決まることが多い。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 一撃ルール<br>
             ※最初に敵石を取った側が即勝利`],
     [ONE, `        let komi = 6.5;`,
@@ -3688,16 +3690,16 @@ out('firstgo.html', apply(ALGO, [
 ], 'firstgo'));
 
 // 49. TREASUREGO (宝碁) — 星のマスを囲むと+5点
-out('treasurego.html', apply(ALGO, [
+out('treasurego.html', apply(BASE, [
     ...rb('TREASUREGO', '宝碁', 'treasurego'),
     K.params([
         { key: 'treasure_bonus', label: '宝ボーナス', min: 1, max: 20, def: 5, unit: '点' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '宝ルール: 星のマス (◆印) は宝物。終局時、宝マスの全近傍が自分の石で囲まれていれば1箇所につき+5点。',
         '宝マスそのものは普通の空点として使える (置くとその宝は消える)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 宝ルール<br>
             ※星マス (◆) を全方向囲むと終局時+5点/箇所`],
     // 宝マス描画 (星の直後)
@@ -3771,17 +3773,17 @@ out('treasurego.html', apply(ALGO, [
 ], 'treasurego'));
 
 // 50. DARKGO (暗闇碁) — 自石の近く以外は敵石が見えない
-out('darkgo.html', apply(ALGO, [
+out('darkgo.html', apply(BASE, [
     ...rb('DARKGO', '暗闇碁', 'darkgo'),
     K.params([
         { key: 'fog_range', label: '視界距離', min: 1, max: 8, def: 3, unit: 'マス' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '暗闇ルール: 自分の石からマンハッタン距離3以内の範囲しか見えない。',
         '視野外の敵石は表示されない (配置判定や取り自体は通常通り働く)。',
         'ローカル対戦では手番側の視点、AI/オンラインでは自分の視点で描画。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 暗闇ルール<br>
             ※自分の石の近くしか見えない。敵石は霧の中`],
     [ONE, `        let komi = 6.5;`,
@@ -3863,17 +3865,17 @@ out('darkgo.html', apply(ALGO, [
 ], 'darkgo'));
 
 // 51. ORBITGO (周回碁) — 着手ごとに外周リングが1マス回転
-out('orbitgo.html', apply(ALGO, [
+out('orbitgo.html', apply(BASE, [
     ...rb('ORBITGO', '周回碁', 'orbitgo'),
     K.params([
         { key: 'orbit_step', label: '周回するマス数', min: 1, max: 8, def: 1, unit: 'マス' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '周回ルール: 着手ごとに盤の最外周リング上の石が1マスずつ時計回りに移動する。',
         '外周に置いた石はぐるぐる回り続ける。連が裂かれることもある。',
         '周回で盤面がなかなか落ち着かないため、盤面マス数と同じ手数で自動終了して地集計に入る。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 周回ルール<br>
             ※着手ごとに外周リング上の石が1マス時計回りに移動`],
     [ONE, `        function endGameByScore() {`,
@@ -3946,13 +3948,13 @@ out('orbitgo.html', apply(ALGO, [
 ], 'orbitgo'));
 
 // 52. SELFGO (自爆碁) — 自殺手が合法 (自連が消えて相手のアゲハマ)
-out('selfgo.html', apply(ALGO, [
+out('selfgo.html', apply(BASE, [
     ...rb('SELFGO', '自爆碁', 'selfgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '自爆ルール: 自殺手が合法。着手の結果、呼吸点0になった自分の連は消滅し相手のアゲハマになる。',
         '敵の連を取る判定は通常通り先に行われる。捨て石の極致 — わざと自爆して局面を作り変えられる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 自爆ルール<br>
             ※自殺手が合法。呼吸点0の自連は消えて相手のアゲハマになる`],
     [ONE, `            // 自殺手チェック: この手で自分の石(連)が窒息するなら禁止
@@ -3988,19 +3990,20 @@ const STAR_MOLS = `        // 碁ホシ: 十字(プラス)形5連結の碁石
         const MOLECULES = {
             PLUS: { name: '碁ホシ', iupac: '十字5', formula: '5連結', atoms: [[1,0],[0,1],[1,1],[2,1],[1,2]] }
         };`;
-out('stargo.html', apply(ALGO, [
+out('stargo.html', apply(BASE, [
     ...rb('STARGO', '星碁', 'stargo'),
-    [ONE, RV_ALGO, rv([
+    ...ALGO_RULES_SPEC,
+    [ONE, RV_BASE, rv([
         'このゲームで使う碁ホシは十字(プラス)形5連結のみ。回転しても同じ形。',
         '四方向に腕を伸ばす形は接触点多く、攻防が激しい。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            十字形「碁ホシ」を配置し合う変則囲碁<br>
             PC: クリックで配置 / スマホ: 1タップ目プレビュー、2タップ目確定`],
-    [ONE, MOLECULES_ALGO, STAR_MOLS],
-    [ONE, OCNT_ALGO, '// 碁ホシ: 十字は回転不変 = 1パターン'],
-    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'PLUS';`],
-    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'PLUS'`],
+    [ONE, MOLECULES_BASE, STAR_MOLS],
+    [ONE, OCNT_BASE, '// 碁ホシ: 十字は回転不変 = 1パターン'],
+    [ONE, `let currentPieceType = 'STONE';`, `let currentPieceType = 'PLUS';`],
+    [ONE, `? s.currentPieceType : 'STONE'`, `? s.currentPieceType : 'PLUS'`],
     [ONE, '登場アルカン', '登場碁ホシ'],
     [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
 `碁ホシは十字形5連結のみ。四方向すべてに腕が伸びます。`],
@@ -4017,7 +4020,6 @@ out('stargo.html', apply(ALGO, [
                 }
                 ctx.closePath();
                 ctx.fill();`],
-    ...SIZE_91319,
     [ALL, '碁カン', '碁ホシ'],
     [ALL, '全7種1巡', '補充なし'],
 ], 'stargo'));
@@ -4027,19 +4029,20 @@ const BIG_MOLS = `        // 碁オオ: 3x3ブロック9連結の巨大碁石
         const MOLECULES = {
             BIG: { name: '碁オオ', iupac: '正方形9', formula: '9連結', atoms: [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]] }
         };`;
-out('biggo.html', apply(ALGO, [
+out('biggo.html', apply(BASE, [
     ...rb('BIGGO', '巨大碁', 'biggo'),
-    [ONE, RV_ALGO, rv([
+    ...ALGO_RULES_SPEC,
+    [ONE, RV_BASE, rv([
         'このゲームで使う碁オオは3×3ブロック (9連結) のみ。',
         '窒息領域は9マス未満 — 小さな囲みは全て死に領域。盤面はすぐ埋まる超高速碁。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            3×3ブロック「碁オオ」を配置し合う変則囲碁<br>
             PC: クリックで配置 / スマホ: 1タップ目プレビュー、2タップ目確定`],
-    [ONE, MOLECULES_ALGO, BIG_MOLS],
-    [ONE, OCNT_ALGO, '// 碁オオ: 正方形は回転不変 = 1パターン'],
-    [ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'BIG';`],
-    [ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'BIG'`],
+    [ONE, MOLECULES_BASE, BIG_MOLS],
+    [ONE, OCNT_BASE, '// 碁オオ: 正方形は回転不変 = 1パターン'],
+    [ONE, `let currentPieceType = 'STONE';`, `let currentPieceType = 'BIG';`],
+    [ONE, `? s.currentPieceType : 'STONE'`, `? s.currentPieceType : 'BIG'`],
     [ONE, '登場アルカン', '登場碁オオ'],
     [ONE, `アルカンは直鎖・分枝を問わず環を含まない炭素骨格 (C<sub>n</sub>H<sub>2n+2</sub>)。ALGO では全7種が登場します。`,
 `碁オオは3×3の正方形のみ (9連結)。9マス未満の空領域は全て窒息領域です。`],
@@ -4050,19 +4053,18 @@ out('biggo.html', apply(ALGO, [
 `                ctx.beginPath();
                 ctx.rect(cx - R * 1.0, cy - R * 1.0, R * 2, R * 2);
                 ctx.fill();`],
-    ...SIZE_91319,
     [ALL, '碁カン', '碁オオ'],
     [ALL, '全7種1巡', '補充なし'],
 ], 'biggo'));
 
 // 55. CONNECTGO (連絡碁) — 辺を繋いだら勝ち (Hex的勝利条件)
-out('connectgo.html', apply(ALGO, [
+out('connectgo.html', apply(BASE, [
     ...rb('CONNECTGO', '連絡碁', 'connectgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '連絡ルール: 黒は上辺と下辺、白は左辺と右辺を自分の石で連結すれば即勝利 (Hex型)。',
         '連結には通常の「連」(近傍共有)を使う。取り・地集計も通常通り有効。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 連絡ルール<br>
             ※黒は上下辺、白は左右辺を石で連結すれば即勝利`],
     [ONE, `        function endGameByScore() {`,
@@ -4148,17 +4150,17 @@ out('connectgo.html', apply(ALGO, [
 ], 'connectgo'));
 
 // 56. CENTGO (中心碁) — 使用可能領域が中心から広がる
-out('centgo.html', apply(ALGO, [
+out('centgo.html', apply(BASE, [
     ...rb('CENTGO', '中心碁', 'centgo'),
     K.params([
         { key: 'init_radius', label: '初期半径', min: 1, max: 8, def: 2 },
         { key: 'grow_interval', label: '拡大間隔', min: 2, max: 24, def: 6, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '中心ルール: 着手できるのは中心からの半径 (2 + 総手数÷6) 以内の点のみ。',
         '盤が埋まるにつれ使える領域が外側へ広がる。6手ごとに半径+1。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 中心ルール<br>
             ※中心からの円内のみ配置可。6手ごとに半径が広がる`],
     [ONE, `        function endGameByScore() {`,
@@ -4211,18 +4213,18 @@ out('centgo.html', apply(ALGO, [
 ], 'centgo'));
 
 // 57. SWITCHGO (転換碁) — 12手ごとに全石の色が反転
-out('switchgo.html', apply(ALGO, [
+out('switchgo.html', apply(BASE, [
     ...rb('SWITCHGO', '転換碁', 'switchgo'),
     K.params([
         { key: 'interval', label: '転換間隔', min: 4, max: 40, def: 12, unit: '手' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '転換ルール: 合計12手ごとに盤上の全ての石の色が反転する (黒⇔白)。',
         '節目直前の配置で形成した形が相手のものになる — 反転を意識した布石が肝心。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 転換ルール<br>
             ※12手ごとに盤上の全石の色が黒⇔白に反転。200手で自動終局`],
     [ONE, `        function endGameByScore() {`,
@@ -4253,19 +4255,19 @@ out('switchgo.html', apply(ALGO, [
 ], 'switchgo'));
 
 // 58. THUNDERGO (雷碁) — 10手ごとに雷がランダムな連を破壊
-out('thundergo.html', apply(ALGO, [
+out('thundergo.html', apply(BASE, [
     ...rb('THUNDERGO', '雷碁', 'thundergo'),
     K.params([
         { key: 'interval', label: '落雷間隔', min: 3, max: 30, def: 10, unit: '手' },
         { key: 'max_size', label: '対象の最大連サイズ', min: 1, max: 20, def: 6, unit: '石' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '雷ルール: 合計10手ごとに6石以下のランダムな石連が雷に打たれて消滅する (アゲハマにはならない)。',
         '小さな連も一撃で消えることがある — 盤面の運要素が大きい祭り碁。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 雷ルール<br>
             ※10手ごとに小さな連が雷で消滅 (アゲハマにならない)。200手で自動終局`],
     [ONE, `        function endGameByScore() {`,
@@ -4335,7 +4337,7 @@ out('thundergo.html', apply(ALGO, [
 ], 'thundergo'));
 
 // 59. CYLINDGO (円筒碁) — 左右の端のみ繋がる
-out('cylindgo.html', apply(ALGO, [
+out('cylindgo.html', apply(BASE, [
     ...rb('CYLINDGO', '円筒碁', 'cylindgo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
@@ -4344,11 +4346,11 @@ out('cylindgo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '円筒ルール: 盤の左端と右端が繋がっている (上下は繋がらない)。',
         '端の概念が左右だけ消え、横に回り込んだ取りが成立する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 円筒ルール<br>
             ※左右の端がループして繋がる (上下端は通常通り)`],
     [ONE, NBRS_GRID,
@@ -4392,7 +4394,7 @@ out('cylindgo.html', apply(ALGO, [
 ], 'cylindgo'));
 
 // 60. MOEBIUSGO (メビウス碁) — 左右端が上下反転して繋がる
-out('moebiusgo.html', apply(ALGO, [
+out('moebiusgo.html', apply(BASE, [
     ...rb('MOEBIUSGO', 'メビウス碁', 'moebiusgo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
@@ -4401,11 +4403,11 @@ out('moebiusgo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         'メビウスルール: 左端から出ると右端に、上下が反転して出てくる (メビウス帯)。',
         'ねじれたトポロジーで連・取りの読みが大きく変わる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + メビウス帯<br>
             ※左端↔右端が上下反転して繋がる (上下端は通常通り)`],
     [ONE, NBRS_GRID,
@@ -4451,13 +4453,13 @@ out('moebiusgo.html', apply(ALGO, [
 ], 'moebiusgo'));
 
 // 61. QUARTERGO (象限碁) — 手番ごとに使用可能象限が回転
-out('quartergo.html', apply(ALGO, [
+out('quartergo.html', apply(BASE, [
     ...rb('QUARTERGO', '象限碁', 'quartergo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '象限ルール: 盤を4象限 (左上/右上/左下/右下) に分け、着手はその手番の象限内のみ。',
         '手番ごとに象限が時計回りに切り替わる (盤面の光っている区画が使用可能)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 象限ルール<br>
             ※着手はその手番の象限のみ。手番ごとに許可象限が回転`],
     [ONE, `        function endGameByScore() {`,
@@ -4507,13 +4509,13 @@ out('quartergo.html', apply(ALGO, [
 ], 'quartergo'));
 
 // 62. ESCAPEGO (脱出碁) — 辺に接する連は不死
-out('escapego.html', apply(ALGO, [
+out('escapego.html', apply(BASE, [
     ...rb('ESCAPEGO', '脱出碁', 'escapego'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '脱出ルール: 盤の辺 (最外周) に接している連は不死 — 呼吸点が0でも取られない。',
         '辺まで伸ばした連は安全。ただし辺に届く前の石は通常通り取られる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 脱出ルール<br>
             ※辺に接する連は不死。辺への接続が死活を左右する`],
     [ONE, `                    if (!hasLiberty) {
@@ -4593,13 +4595,13 @@ out('escapego.html', apply(ALGO, [
 // ============================================================
 
 // 63. SIPHONGO (吸収碁) — 取った敵石は消えず自分の色に変わる
-out('siphongo.html', apply(ALGO, [
+out('siphongo.html', apply(BASE, [
     ...rb('SIPHONGO', '吸収碁', 'siphongo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '吸収ルール: 呼吸点0になった敵連は消えず、まるごと自分の石に変わる (アゲハマにはならない)。',
         '取り合いがそのまま陣地転換になる — 大連を奪えば一気に盤面が塗り替わる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 吸収ルール<br>
             ※取った敵連は消えず自分の色に変わる (アゲハマにはならない)`],
     [ONE, CAPTURE_BLOCK,
@@ -4619,16 +4621,16 @@ out('siphongo.html', apply(ALGO, [
 ], 'siphongo'));
 
 // 64. MONOGO (単石碁) — 2石以上の連は不死、単石のみ取れる
-out('monogo.html', apply(ALGO, [
+out('monogo.html', apply(BASE, [
     ...rb('MONOGO', '単石碁', 'monogo'),
     K.params([
         { key: 'max_group', label: '取れる連の最大サイズ', min: 1, max: 4, def: 1, unit: '石' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '単石ルール: 呼吸点が0になっても、2石以上の連は取られない (不死)。',
         '取れるのは孤立した単石だけ — 早期に連を作ると安全だが隙もできる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 単石ルール<br>
             ※2石以上の連は不死。取れるのは孤立した単石のみ`],
     [ONE, `                    if (!hasLiberty) {
@@ -4682,7 +4684,7 @@ out('monogo.html', apply(ALGO, [
 ], 'monogo'));
 
 // 65. REGGO (上限碁) — 自連は最大3石まで
-out('reggo.html', apply(ALGO, [
+out('reggo.html', apply(BASE, [
     ...rb('REGGO', '上限碁', 'reggo'),
     K.params([
         { key: 'max_group', label: '連の最大サイズ', min: 2, max: 8, def: 3, unit: '石' },
@@ -4692,11 +4694,11 @@ out('reggo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '上限ルール: 着手の結果、自分の連が4石以上になる手は禁止 (連は最大3石)。',
         '大きな連を作れないため、小規模な攻防の連続になる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 上限ルール<br>
             ※自分の連は最大3石まで (4連以上になる着手は禁止)`],
     [ONE, `            // コウ判定: 相手の直前の着手前と同一の盤面になる手は禁止
@@ -4746,7 +4748,7 @@ out('reggo.html', apply(ALGO, [
 ], 'reggo'));
 
 // 66. ANTIGRAVGO (反重力碁) — 上向き重力
-out('antigravgo.html', apply(ALGO, [
+out('antigravgo.html', apply(BASE, [
     ...rb('ANTIGRAVGO', '反重力碁', 'antigravgo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
@@ -4755,11 +4757,11 @@ out('antigravgo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '反重力ルール: 石は上に落ちる — 最上段か、直上に石がある点にしか置けない。',
         '上から積み下ろす逆さまの重力碁。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 反重力ルール<br>
             ※最上段か石の直下のみ配置可 (上向きに積み上がる)`],
     [ONE, VALID_BOUNDS,
@@ -4812,7 +4814,7 @@ out('antigravgo.html', apply(ALGO, [
 ], 'antigravgo'));
 
 // 67. FOURGO (四方重力碁) — 着手ごとに重力方向が回転
-out('fourgo.html', apply(ALGO, [
+out('fourgo.html', apply(BASE, [
     ...rb('FOURGO', '四方重力碁', 'fourgo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
@@ -4821,12 +4823,12 @@ out('fourgo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '四方重力ルール: 手番ごとに重力方向が 下→左→上→右 と回転する。',
         '着手はその手番の重力方向で「端に接するか、直下に石がある」点のみ。',
         '手番表示の矢印が現在の重力方向。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 四方重力ルール<br>
             ※重力方向が手番ごとに回転 (下→左→上→右)。矢印方向の端か石の上のみ配置可`],
     [ONE, `        function endGameByScore() {`,
@@ -4910,7 +4912,7 @@ out('fourgo.html', apply(ALGO, [
 ], 'fourgo'));
 
 // 68. PUSHCHAINGO (連鎖押し碁) — 押した石が連鎖して押す
-out('pushchaingo.html', apply(ALGO, [
+out('pushchaingo.html', apply(BASE, [
     ...rb('PUSHCHAINGO', '連鎖押し碁', 'pushchaingo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
@@ -4919,11 +4921,11 @@ out('pushchaingo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '連鎖押しルール: 置いた石に隣接する敵石を1マス押す。行き先が敵石なら連鎖して押し続ける。',
         '行き先が盤外か自分の石なら押せない (何も起きない)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 連鎖押しルール<br>
             ※隣接する敵石を1マス押す。押された先が敵石なら連鎖`],
     [ONE, PIECES_PUSH,
@@ -4959,18 +4961,18 @@ out('pushchaingo.html', apply(ALGO, [
 ], 'pushchaingo'));
 
 // 69. TWILIGHTGO (黄昏碁) — 昼=自由配置、夜=自石隣接のみ
-out('twilightgo.html', apply(ALGO, [
+out('twilightgo.html', apply(BASE, [
     ...rb('TWILIGHTGO', '黄昏碁', 'twilightgo'),
     K.params([
         { key: 'phase_len', label: '昼/夜の長さ', min: 2, max: 12, def: 6, unit: '手' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '黄昏ルール: 12手周期で昼と夜が交互に来る。昼 (前半6手) は通常配置、',
         '夜 (後半6手) は自分の石に隣接する点にしか置けない (自石が無ければどこでも可)。',
         '手番表示の ☀/☾ が現在のフェーズ。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 黄昏ルール<br>
             ※昼(6手)=自由配置、夜(6手)=自石隣接のみ。☀/☾表示`],
     [ONE, `        function endGameByScore() {`,
@@ -5053,17 +5055,17 @@ out('twilightgo.html', apply(ALGO, [
 ], 'twilightgo'));
 
 // 70. HYDRAGO (ヒドラ碁) — 取られた石が隣の空点に復活
-out('hydrago.html', apply(ALGO, [
+out('hydrago.html', apply(BASE, [
     ...rb('HYDRAGO', 'ヒドラ碁', 'hydrago'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         'ヒドラルール: 取られた石は隣のランダムな空点に1つずつ復活する (復活先がなければ消える)。',
         'ただし復活は各石1回だけ — 再生した石をもう一度取れば完全に取り切れる。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + ヒドラルール<br>
             ※取られた石は隣のランダムな空点に1回だけ復活。200手で自動終局`],
     [ONE, `        let komi = 6.5;`,
@@ -5153,17 +5155,17 @@ out('hydrago.html', apply(ALGO, [
 ], 'hydrago'));
 
 // 71. GHOSTGO (幽霊碁) — 取られたマスに6手間だけ幽霊が残る
-out('ghostgo.html', apply(ALGO, [
+out('ghostgo.html', apply(BASE, [
     ...rb('GHOSTGO', '幽霊碁', 'ghostgo'),
     K.params([
         { key: 'ghost_life', label: '幽霊の残存', min: 2, max: 20, def: 6, unit: '手' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '幽霊ルール: 取られた石は消えず「幽霊」となって6手間そのマスを塞ぐ。',
         '幽霊は置けず呼吸点にもならないが、6手経つと消えて空点に戻る。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 幽霊ルール<br>
             ※取られたマスは幽霊となり6手間だけ塞がる`],
     [ONE, `        let komi = 6.5;`,
@@ -5292,7 +5294,7 @@ out('ghostgo.html', apply(ALGO, [
 ], 'ghostgo'));
 
 // 72. KLEINGO (クライン碁) — 両軸ループ+横は反転 (クライン瓶)
-out('kleingo.html', apply(ALGO, [
+out('kleingo.html', apply(BASE, [
     ...rb('KLEINGO', 'クライン碁', 'kleingo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
@@ -5301,11 +5303,11 @@ out('kleingo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         'クライン瓶ルール: 左右端は上下反転で繋がり、上下端も普通にループする。',
         'トーラスよりさらにねじれたトポロジー。全ての端が存在しない。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + クライン瓶<br>
             ※左右端は上下反転で接続、上下端もループ。端は存在しない`],
     [ONE, NBRS_GRID,
@@ -5361,16 +5363,16 @@ out('kleingo.html', apply(ALGO, [
 // ============================================================
 
 // 73. ZOMBEGO (ゾンビ碁) — 取られた石は徘徊する中立ゾンビになる
-out('zombego.html', apply(ALGO, [
+out('zombego.html', apply(BASE, [
     ...rb('ZOMBEGO', 'ゾンビ碁', 'zombego'),
     K.params([
         { key: 'wander_prob', label: '徘徊確率', min: 0.1, max: 1, def: 1, step: 0.1 },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         'ゾンビルール: 取られた石は中立の「ゾンビ」(壁ブロック) になり、毎手ランダムに隣の空点へ徘徊する。',
         'ゾンビは置けず呼吸点にも地にもならない。徘徊で開いたり塞いだりする盤面が生まれる。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + ゾンビルール<br>
             ※取られた石は中立ゾンビになり毎手ランダム徘徊する`],
     [ONE, `        let komi = 6.5;`,
@@ -5448,16 +5450,16 @@ out('zombego.html', apply(ALGO, [
 ], 'zombego'));
 
 // 74. RELAYGO (追撃碁) — 相手の直前の着手の近くにしか置けない
-out('relaygo.html', apply(ALGO, [
+out('relaygo.html', apply(BASE, [
     ...rb('RELAYGO', '追撃碁', 'relaygo'),
     K.params([
         { key: 'max_dist', label: '追撃範囲', min: 1, max: 10, def: 4, unit: 'マス' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '追撃ルール: 相手の直前の着手からマンハッタン距離4以内にしか置けない。',
         '戦線が相手の着手を追いかける形で進む。序盤1手目のみ自由配置。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 追撃ルール<br>
             ※相手の直前着手から距離4以内のみ配置可`],
     [ONE, VALID_BOUNDS,
@@ -5496,7 +5498,7 @@ out('relaygo.html', apply(ALGO, [
 ], 'relaygo'));
 
 // 75. SUMGO (実子碁) — 地+生き石の合算得点 (中国式風)
-out('sumgo.html', apply(ALGO, [
+out('sumgo.html', apply(BASE, [
     ...rb('SUMGO', '実子碁', 'sumgo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
@@ -5505,11 +5507,11 @@ out('sumgo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '実子ルール: 得点 = 地 + 盤上の生き石 + アゲハマ (+白はコミ)。中国式の子地皆数に近い。',
         '石を置くこと自体が得点なので地の詰め合いより勢力拡大が重要。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 実子得点<br>
             ※得点=地+盤上の石数+アゲハマ (中国式風)`],
     [ONE, `            const blackTotal = territory.black + captures[1];
@@ -5530,17 +5532,17 @@ out('sumgo.html', apply(ALGO, [
 ], 'sumgo'));
 
 // 76. FUELGO (燃料碁) — 遠くに置くほど燃料を消費
-out('fuelgo.html', apply(ALGO, [
+out('fuelgo.html', apply(BASE, [
     ...rb('FUELGO', '燃料碁', 'fuelgo'),
     K.params([
         { key: 'init_fuel', label: '初期燃料', min: 5, max: 99, def: 25 },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '燃料ルール: 各プレイヤーは燃料を25持つ。着手は最寄りの自石までのマンハッタン距離分の燃料を消費。',
         '燃料不足の手は打てない (自石隣接なら0消費)。燃料切れ後は自石隣接のみ。盤上に自石が無ければ消費0。',
         '手番表示の後ろの数値が残燃料。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 燃料ルール<br>
             ※着手は自石までの距離分の燃料を消費 (初期25)。切れると隣接のみ`],
     [ONE, `        let komi = 6.5;`,
@@ -5619,17 +5621,17 @@ ${PIECES_PUSH}`],
 ], 'fuelgo'));
 
 // 77. STRIPEGO (縞碁) — 奇数行は壁のストライプ盤
-out('stripego.html', apply(ALGO, [
+out('stripego.html', apply(BASE, [
     ...rb('STRIPEGO', '縞碁', 'stripego'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '縞盤ルール: 奇数行は全て壁 (使用不能)。石は偶数行のレーン上でのみ戦う。',
         '上下の呼吸点が無いため、各レーンは事実上1次元の取り合い。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 縞盤<br>
             ※奇数行は壁。偶数行のレーン上でのみ戦う。200手で自動終局`],
     [ONE, RESET_BOARD,
@@ -5648,18 +5650,18 @@ out('stripego.html', apply(ALGO, [
 ], 'stripego'));
 
 // 78. DRIFTGO (漂流碁) — 8手ごとに全石がランダム方向に1マス流される
-out('driftgo.html', apply(ALGO, [
+out('driftgo.html', apply(BASE, [
     ...rb('DRIFTGO', '漂流碁', 'driftgo'),
     K.params([
         { key: 'interval', label: '漂流間隔', min: 2, max: 30, def: 8, unit: '手' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '漂流ルール: 合計8手ごとに盤上の全石がランダムな方向 (上下左右) に1マス流される。',
         '行き先が塞がっている石は動かない。陣形が不定期に流される混沌碁。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 漂流ルール<br>
             ※8手ごとに全石がランダム方向へ1マス流される。200手で自動終局`],
     [ONE, `        function endGameByScore() {`,
@@ -5716,7 +5718,7 @@ out('driftgo.html', apply(ALGO, [
 ], 'driftgo'));
 
 // 79. LASTGO (終着碁) — 最後に石を置いた側が勝つ
-out('lastgo.html', apply(ALGO, [
+out('lastgo.html', apply(BASE, [
     ...rb('LASTGO', '終着碁', 'lastgo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
@@ -5725,11 +5727,11 @@ out('lastgo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '終着ルール: 双方パスで終局したとき、地の数ではなく「最後に石を置いた側」が勝つ (正常形の終局)。',
         '置ききれる場所を残す側が有利 — 序盤から終盤の手数まで読む碁。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 終着ルール<br>
             ※終局時「最後に石を置いた側」の勝ち (地は数えない)`],
     [ONE, `        function endGameByScore() {
@@ -5750,16 +5752,16 @@ WIN_BY_RULE_FN + `
 ], 'lastgo'));
 
 // 80. EYEGO (眼碁) — 最初に眼 (完全囲み空領域) を作った側が勝つ
-out('eyego.html', apply(ALGO, [
+out('eyego.html', apply(BASE, [
     ...rb('EYEGO', '眼碁', 'eyego'),
     K.params([
         { key: 'eye_size', label: '眼の最大サイズ', min: 1, max: 12, def: 6, unit: '点' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '眼ルール: 自分の石だけで完全に囲まれた小さな空領域 (眼・6点以内) を最初に作った側が即勝利。',
         '相手は侵入して囲みを壊せる。取り・地集計も通常通り有効。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 眼ルール<br>
             ※自分の石だけで囲まれた小領域 (6点以内) を最初に作った側が即勝利`],
     [ONE, `        function endGameByScore() {`,
@@ -5835,7 +5837,7 @@ out('eyego.html', apply(ALGO, [
 ], 'eyego'));
 
 // 81. BRAWLGO (乱闘碁) — 周囲3マス以上を敵で囲んだ石は個別に取れる
-out('brawlgo.html', apply(ALGO, [
+out('brawlgo.html', apply(BASE, [
     ...rb('BRAWLGO', '乱闘碁', 'brawlgo'),
     K.params([
         { key: 'brawl_min', label: '撃破に必要な敵方向数', min: 2, max: 4, def: 3 },
@@ -5845,11 +5847,11 @@ out('brawlgo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '乱闘ルール: 通常の取りに加え、周囲の3方向以上が敵石の石は個別に取られる (連の呼吸点不要)。',
         '密集地帯では個別撃破が起きる乱戦碁。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 乱闘ルール<br>
             ※周囲3方向以上が敵石の石は単独でも取られる`],
     [ONE, CAPTURE_BLOCK,
@@ -5892,18 +5894,18 @@ out('brawlgo.html', apply(ALGO, [
 ], 'brawlgo'));
 
 // 82. CHAINGO (連鎖爆発碁) — 取った空点に隣接する敵連も連鎖で取れる
-out('chaingo.html', apply(ALGO, [
+out('chaingo.html', apply(BASE, [
     ...rb('CHAINGO', '連鎖爆発碁', 'chaingo'),
     K.params([
         { key: 'chain_max', label: '連鎖の最大追加石数', min: 0, max: 32, def: 8, unit: '石' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '連鎖爆発ルール: 敵連を取ると、空いたマスの周囲8方向 (斜め含む) にある敵石も連鎖して取られる (連鎖分は最大8石)。',
         '斜めの接触が爆発を伝える高火力碁。取り合いがドミノ式に広がる。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 連鎖爆発ルール<br>
             ※取った空点の8方向にある敵石も連鎖して取られる (最大8石)。200手で自動終局`],
     [ONE, `        function endGameByScore() {`,
@@ -5962,18 +5964,18 @@ out('chaingo.html', apply(ALGO, [
 // ============================================================
 
 // 83. FINITEGO (有限碁) — 各プレイヤーの石は最大12個、超えると最古が消える
-out('finitego.html', apply(ALGO, [
+out('finitego.html', apply(BASE, [
     ...rb('FINITEGO', '有限碁', 'finitego'),
     K.params([
         { key: 'max_stones', label: '石の最大数', min: 4, max: 40, def: 12, unit: '個' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '有限ルール: 各プレイヤーが盤上に持てる石は最大12個。13個目を置くと最も古い石が消える。',
         '消えた石はアゲハマにならない。取り合いに加えて「どの石を残すか」の管理が要る。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 有限ルール<br>
             ※各プレイヤーの石は最大12個。超過すると最古の石が消える。200手で自動終局`],
     [ONE, PIECES_PUSH,
@@ -6019,13 +6021,13 @@ out('finitego.html', apply(ALGO, [
 ], 'finitego'));
 
 // 84. COPYGO (模倣碁) — 相手の直前着手の対称点にしか打てない
-out('copygo.html', apply(ALGO, [
+out('copygo.html', apply(BASE, [
     ...rb('COPYGO', '模倣碁', 'copygo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '模倣ルール: 相手の直前の着手と盤の中心に点対称な位置にしか打てない (鏡写し)。',
         'その位置が埋まっていれば自由に打てる。序盤は完全なコピー戦になる古典的な対称碁。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 模倣ルール<br>
             ※相手の直前着手の点対称位置にしか打てない (埋まっていれば自由)`],
     [ONE, VALID_BOUNDS,
@@ -6072,19 +6074,19 @@ out('copygo.html', apply(ALGO, [
 ], 'copygo'));
 
 // 85. SWAMPGO (沼碁) — 沼地の石は3手後に沈む
-out('swampgo.html', apply(ALGO, [
+out('swampgo.html', apply(BASE, [
     ...rb('SWAMPGO', '沼碁', 'swampgo'),
     K.params([
         { key: 'swamp_count', label: '沼の数', min: 1, max: 20, def: 6, unit: '個' },
         { key: 'sink_turns', label: '沈むまでの手数', min: 2, max: 20, def: 6, unit: '手' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '沼ルール: 盤上に6個の沼地 (緑色の枡) がある。沼に置いた石は6手後に沈んで消える。',
         '沼地は置けるが寿命付き。沈む直前に取り合いに使う高等戦術もある。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 沼ルール<br>
             ※緑の沼地に置いた石は6手後に沈む。200手で自動終局`],
     [ONE, `        let komi = 6.5;`,
@@ -6221,18 +6223,18 @@ out('swampgo.html', apply(ALGO, [
 ], 'swampgo'));
 
 // 86. TIDEGO (潮汐碁) — 10手ごとに外周が水没/干潟を繰り返す
-out('tidego.html', apply(ALGO, [
+out('tidego.html', apply(BASE, [
     ...rb('TIDEGO', '潮汐碁', 'tidego'),
     K.params([
         { key: 'interval', label: '潮汐間隔', min: 4, max: 30, def: 10, unit: '手' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '潮汐ルール: 10手ごとに満ち干が交代。満潮時は盤の外周1列が水没 (壁) になり、そこにある石は消える。',
         '干潮時は外周が戻る。外周の陣地は定期的に失われる。手番横の表示が潮位。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 潮汐ルール<br>
             ※10手ごとに外周が水没↔復活。手番横の🌊が満潮。200手で自動終局`],
     [ONE, `        let komi = 6.5;`,
@@ -6315,16 +6317,16 @@ out('tidego.html', apply(ALGO, [
 ], 'tidego'));
 
 // 87. PULSEGO (脈動碁) — 6手ごとに全ての連が呼吸点へ1石伸びる
-out('pulsego.html', apply(ALGO, [
+out('pulsego.html', apply(BASE, [
     ...rb('PULSEGO', '脈動碁', 'pulsego'),
     K.params([
         { key: 'interval', label: '脈動間隔', min: 2, max: 20, def: 6, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '脈動ルール: 合計6手ごとに盤上の全連がランダムな呼吸点へ1石伸びる (自動増殖)。',
         '囲いきる前に連が伸びるので、取り合いは時間との勝負。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 脈動ルール<br>
             ※6手ごとに全連がランダムな空点へ1石伸びる`],
     [ONE, `        function endGameByScore() {`,
@@ -6359,18 +6361,18 @@ out('pulsego.html', apply(ALGO, [
 ], 'pulsego'));
 
 // 88. RECYCLEGO (再生碁) — 取られた石は10手後に持ち主の色でランダム復活
-out('recyclego.html', apply(ALGO, [
+out('recyclego.html', apply(BASE, [
     ...rb('RECYCLEGO', '再生碁', 'recyclego'),
     K.params([
         { key: 'revive_delay', label: '復活までの手数', min: 3, max: 30, def: 10, unit: '手' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '再生ルール: 取られた石は10手後に元の持ち主の色でランダムな空点に復活する。',
         'ただし再生は各石1回だけ — 再生した石をもう一度取れば完全に取り切れる。アゲハマは通常通り計上。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 再生ルール<br>
             ※取られた石は10手後に元の持ち主の石として1回だけ復活。200手で自動終局`],
     [ONE, `        let komi = 6.5;`,
@@ -6464,7 +6466,7 @@ out('recyclego.html', apply(ALGO, [
 ], 'recyclego'));
 
 // 89. LIBGO (呼吸碁) — 得点は自連の呼吸点の合計
-out('libgo.html', apply(ALGO, [
+out('libgo.html', apply(BASE, [
     ...rb('LIBGO', '呼吸碁', 'libgo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
@@ -6473,11 +6475,11 @@ out('libgo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '呼吸得点: 得点 = 自分の全連の呼吸点の合計 + アゲハマ (+白はコミ)。地は数えない。',
         '囲うより呼吸の多い形を作るほうが得 — 伸び伸びした形が強い碁。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 呼吸得点<br>
             ※得点=自連の呼吸点合計+アゲハマ (地は数えない)`],
     [ONE, `            const blackTotal = territory.black + captures[1];
@@ -6524,18 +6526,18 @@ out('libgo.html', apply(ALGO, [
 ], 'libgo'));
 
 // 90. STONERAIN (石雨碁) — 9手ごとにランダムな空点に壁が降る
-out('stonerain.html', apply(ALGO, [
+out('stonerain.html', apply(BASE, [
     ...rb('STONERAIN', '石雨碁', 'stonerain'),
     K.params([
         { key: 'interval', label: '石雨間隔', min: 3, max: 30, def: 9, unit: '手' },
         { key: 'rain_count', label: '降る壁の数', min: 1, max: 5, def: 1, unit: '個' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '石雨ルール: 合計9手ごとにランダムな空点に中立の壁ブロックが1個降ってくる。',
         '壁は呼吸点にも地にもならず、盤面がだんだん欠けていく。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 石雨ルール<br>
             ※9手ごとにランダムな空点へ中立壁が降る`],
     [ONE, TURN_FLIP,
@@ -6563,18 +6565,18 @@ out('stonerain.html', apply(ALGO, [
 ], 'stonerain'));
 
 // 91. SPLITGO (分裂碁) — 7石以上の連は半分が敵色に変わる
-out('splitgo.html', apply(ALGO, [
+out('splitgo.html', apply(BASE, [
     ...rb('SPLITGO', '分裂碁', 'splitgo'),
     K.params([
         { key: 'split_min', label: '分裂する最小連サイズ', min: 4, max: 15, def: 7, unit: '石' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '分裂ルール: 着手後、自分の7石以上の連は分裂 — 半分の石が敵色に変わる。',
         '大きな連は作れない。半分を敵に取られるかどうかは連鎖捕捉の後に判定。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 分裂ルール<br>
             ※着手後、自分の7石以上の連は半分が敵色に変わる。200手で自動終局`],
     [ONE, CAPTURE_BLOCK,
@@ -6605,7 +6607,7 @@ out('splitgo.html', apply(ALGO, [
 ], 'splitgo'));
 
 // 92. MINIGO (少子碁) — 得点の少ない側が勝つ (ミゼール)
-out('minigo.html', apply(ALGO, [
+out('minigo.html', apply(BASE, [
     ...rb('MINIGO', '少子碁', 'minigo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
@@ -6614,11 +6616,11 @@ out('minigo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '少子ルール (ミゼール): 得点計算は通常と同じだが、少ない側が勝つ。',
         '地もアゲハマも少ないほうが勝ち — 相手に取らせる・囲わせる逆転の碁。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 少子ルール<br>
             ※合計得点が少ない側の勝ち (ミゼール)`],
     [ONE, `            let winnerTitle = '';
@@ -6659,18 +6661,18 @@ const NBRS8_FN = `        // 8方向近傍
 `;
 
 // 93. GRENADEGO (榴弾碁) — 取られた連は爆発し周囲8方向の石を道連れ
-out('grenadego.html', apply(ALGO, [
+out('grenadego.html', apply(BASE, [
     ...rb('GRENADEGO', '榴弾碁', 'grenadego'),
     K.params([
         { key: 'boom_max', label: '道連れの最大数', min: 0, max: 24, def: 8, unit: '石' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '榴弾ルール: 取られた連は爆発し、周囲8方向の石 (両色・最大8個) も道連れに消える。',
         '爆発に巻き込まれた自分の石もアゲハマに加算される。囲みすぎると自爆する攻撃的碁。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 榴弾ルール<br>
             ※取られた連は爆発し周囲8方向の石 (両色・最大8個) を道連れ。200手で自動終局`],
     [ONE, `        function endGameByScore() {`, NBRS8_FN + `
@@ -6709,18 +6711,18 @@ out('grenadego.html', apply(ALGO, [
 ], 'grenadego'));
 
 // 94. INFECTGO (感染碁) — 7手ごとに孤立石が隣接する敵石を感染させる
-out('infectgo.html', apply(ALGO, [
+out('infectgo.html', apply(BASE, [
     ...rb('INFECTGO', '感染碁', 'infectgo'),
     K.params([
         { key: 'interval', label: '感染間隔', min: 2, max: 25, def: 7, unit: '手' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '感染ルール: 合計7手ごとに、味方石と繋がっていない孤立石が隣接する敵石を全て自分の色に感染させる。',
         '孤立石は感染源として兵器になる。連を維持するか散らすかの駆け引き。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 感染ルール<br>
             ※7手ごとに孤立石が隣の敵石を自色に変える。200手で自動終局`],
     [ONE, TURN_FLIP,
@@ -6762,17 +6764,17 @@ out('infectgo.html', apply(ALGO, [
 ], 'infectgo'));
 
 // 95. BONDGO (結合碁) — 敵連を取ると接触していた自連も道連れ
-out('bondgo.html', apply(ALGO, [
+out('bondgo.html', apply(BASE, [
     ...rb('BONDGO', '結合碁', 'bondgo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '結合ルール: 敵連を取ると、その連に隣接していた自分の石も道連れに消える (相手のアゲハマになる)。',
         '取りは必ず相打ち。囲んだ側も犠牲を払う特攻的な碁。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 結合ルール<br>
             ※敵連を取ると接触していた自石も全て道連れ (相手のアゲハマ)。200手で自動終局`],
     [ONE, CAPTURE_BLOCK,
@@ -6805,7 +6807,7 @@ out('bondgo.html', apply(ALGO, [
 ], 'bondgo'));
 
 // 96. RIMGO (淵碁) — 外周の地は2倍計算
-out('rimgo.html', apply(ALGO, [
+out('rimgo.html', apply(BASE, [
     ...rb('RIMGO', '淵碁', 'rimgo'),
     K.params([
         { key: 'edge_bonus', label: '外周ボーナス', min: 0, max: 4, def: 1, unit: '点/地' },
@@ -6815,11 +6817,11 @@ out('rimgo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '淵ルール: 終局時、外周1列の自分の地は2倍計算される。',
         '辺の取り合いが通常以上に重要になる外周重視碁。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 淵ルール<br>
             ※外周1列の地は2倍計算`],
     [ONE, `            const blackTotal = territory.black + captures[1];
@@ -6885,16 +6887,16 @@ out('rimgo.html', apply(ALGO, [
 ], 'rimgo'));
 
 // 97. BUDGETGO (手数碁) — 60手で自動終局
-out('budgetgo.html', apply(ALGO, [
+out('budgetgo.html', apply(BASE, [
     ...rb('BUDGETGO', '手数碁', 'budgetgo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 20, max: 200, def: 60, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '手数ルール: 合計60手に達すると自動終局し、その時点で得点計算する。',
         'パスで手数を稼ぐことはできない (パスも1手に数える)。手番横が残り手数。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 手数ルール<br>
             ※合計60手で自動終局。手番横が残り手数`],
     [ONE, TURN_FLIP,
@@ -6916,18 +6918,18 @@ out('budgetgo.html', apply(ALGO, [
 ], 'budgetgo'));
 
 // 98. FRONTGO (前線碁) — 前線が上から下へ進み、後方の石は不死
-out('frontgo.html', apply(ALGO, [
+out('frontgo.html', apply(BASE, [
     ...rb('FRONTGO', '前線碁', 'frontgo'),
     K.params([
         { key: 'interval', label: '前線前進間隔', min: 1, max: 12, def: 4, unit: '手' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '前線ルール: 4手ごとに前線が1行下へ進む。前線より上の行の石は確定済みで取られなくなる。',
         '上から確定していくので、盤面上部の陣取りが早い者勝ちになる。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 前線ルール<br>
             ※4手ごとに前線が1行下へ。前線より上の石は取られない。200手で自動終局`],
     [ONE, `        function endGameByScore() {`,
@@ -6985,7 +6987,7 @@ out('frontgo.html', apply(ALGO, [
 ], 'frontgo'));
 
 // 99. CHARGEGO (溜め碁) — パスで次の石が5手間不死
-out('chargego.html', apply(ALGO, [
+out('chargego.html', apply(BASE, [
     ...rb('CHARGEGO', '溜め碁', 'chargego'),
     K.params([
         { key: 'armor_turns', label: '装甲の持続', min: 1, max: 15, def: 5, unit: '手' },
@@ -6995,11 +6997,11 @@ out('chargego.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '溜めルール: パスをすると溜めが貯まり、次に置く石が5手間取られなくなる (装甲)。',
         'パスの代償で絶対に死なない一手が打てる — 侵入・押さえ込みに有効。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 溜めルール<br>
             ※パスで溜めが貯まり次の石が5手間不死になる`],
     [ONE, `        let komi = 6.5;`,
@@ -7106,17 +7108,17 @@ out('chargego.html', apply(ALGO, [
 ], 'chargego'));
 
 // 100. SHUFFLEGO (混成碁) — 15手ごとに全石が50%で色反転
-out('shufflego.html', apply(ALGO, [
+out('shufflego.html', apply(BASE, [
     ...rb('SHUFFLEGO', '混成碁', 'shufflego'),
     K.params([
         { key: 'interval', label: '混成間隔', min: 5, max: 45, def: 15, unit: '手' },
         { key: 'flip_prob', label: '反転確率', min: 0.1, max: 1, def: 0.5, step: 0.1 },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '混成ルール: 合計15手ごとに盤上の全石が50%の確率で色が反転する。',
         '勢力図が定期的にシャッフルされる混沌碁。アゲハマと地集計は通常通り。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 混成ルール<br>
             ※15手ごとに全石が50%で色反転`],
     [ONE, TURN_FLIP,
@@ -7150,7 +7152,7 @@ out('shufflego.html', apply(ALGO, [
 ], 'shufflego'));
 
 // 101. TAXGO (関税碁) — 敵陣半分に置くと相手に+1目
-out('taxgo.html', apply(ALGO, [
+out('taxgo.html', apply(BASE, [
     ...rb('TAXGO', '関税碁', 'taxgo'),
     K.params([
         { key: 'tax', label: '関税', min: 0, max: 5, def: 1, unit: '目' },
@@ -7160,11 +7162,11 @@ out('taxgo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '関税ルール: 敵陣側の半分 (黒なら下半分、白なら上半分) に石を置くたび相手に+1目が入る。',
         '侵入は強力だが税がかかる — 攻め込みコストを考える碁。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 関税ルール<br>
             ※敵陣半分 (黒=下側/白=上側) への着手は相手に+1目`],
     [ONE, `        let komi = 6.5;`,
@@ -7257,17 +7259,17 @@ out('taxgo.html', apply(ALGO, [
 ], 'taxgo'));
 
 // 102. GREEDGO (強欲碁) — 取れる手があるときは取る手のみ合法
-out('greedgo.html', apply(ALGO, [
+out('greedgo.html', apply(BASE, [
     ...rb('GREEDGO', '強欲碁', 'greedgo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '強欲ルール: 敵連の呼吸点が1つだけ残っている (アタリ) 場合、その呼吸点を取る手しか打てない。',
         '取れるなら取れ。逃げる猶予がない即断の碁。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 強欲ルール<br>
             ※敵連がアタリ状態なら取る手しか打てない。200手で自動終局`],
     [ONE, `        function endGameByScore() {`,
@@ -7330,7 +7332,7 @@ out('greedgo.html', apply(ALGO, [
 // ============================================================
 
 // 103. CROSSWALLGO (十字壁碁) — 中央十字の壁で4区域に分断
-out('crosswallgo.html', apply(ALGO, [
+out('crosswallgo.html', apply(BASE, [
     ...rb('CROSSWALLGO', '十字壁碁', 'crosswallgo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
@@ -7339,11 +7341,11 @@ out('crosswallgo.html', apply(ALGO, [
 `${TURN_FLIP}
             // 手数上限で自動終局
             if (history.length >= (P('max_moves') || 200)) { endGameByScore(); return; }`],
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '十字壁ルール: 盤の中央を通る十字の壁で盤面が4つの区域に分断される。',
         '区域同士は石も呼吸も通れない完全分離。4つの小盤で同時に地を争う。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 十字壁<br>
             ※中央十字の壁が盤を4区域に分断`],
     [ONE, RESET_BOARD,
@@ -7361,17 +7363,17 @@ out('crosswallgo.html', apply(ALGO, [
 ], 'crosswallgo'));
 
 // 104. POLARGO (額縁碁) — 内側は全て壁、外周1列のみで戦う
-out('polargo.html', apply(ALGO, [
+out('polargo.html', apply(BASE, [
     ...rb('POLARGO', '額縁碁', 'polargo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '額縁ルール: 盤の内側は全て壁。戦えるのは外周1列の細い回廊のみ。',
         '石の呼吸点は最大3つ。回廊上での追い込みと封鎖だけの極限碁。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 額縁盤<br>
             ※内側は全て壁。外周1列の回廊のみで戦う。200手で自動終局`],
     [ONE, RESET_BOARD,
@@ -7391,13 +7393,13 @@ out('polargo.html', apply(ALGO, [
 ], 'polargo'));
 
 // 105. MICROGO (微細碁) — 5/7/9路の小盤
-out('microgo.html', apply(ALGO, [
+out('microgo.html', apply(BASE, [
     ...rb('MICROGO', '微細碁', 'microgo'),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '微細盤ルール: 5路・7路・9路の小さな碁盤のみ。通常ルールそのまま。',
         '小盤は取り合いが即座に始まる乱戦。9路がデフォルト。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 微細盤<br>
             ※5/7/9路の小盤のみ (デフォルト9路)`],
     ...STONE_SPEC, // 先に通常サイズ置換 (9/13/19) を適用してから微細盤に上書き
@@ -7437,18 +7439,18 @@ out('microgo.html', apply(ALGO, [
 ], 'microgo'));
 
 // 106. JUMPGO (跳躍碁) — 自石からちょうど距離2の点にしか打てない
-out('jumpgo.html', apply(ALGO, [
+out('jumpgo.html', apply(BASE, [
     ...rb('JUMPGO', '跳躍碁', 'jumpgo'),
     K.params([
         { key: 'jump_dist', label: '跳躍距離', min: 1, max: 4, def: 2, unit: 'マス' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '跳躍ルール: 自分の石からマンハッタン距離ちょうど2の点にしか置けない (初手のみ自由)。',
         'ただし距離2の空点が盤上に1つも無い場合は制約解除 — どこにでも置ける。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 跳躍ルール<br>
             ※自石から距離ちょうど2の点のみ (距離2の空点が無ければ自由)。200手で自動終局`],
     [ONE, VALID_BOUNDS,
@@ -7509,17 +7511,17 @@ out('jumpgo.html', apply(ALGO, [
 ], 'jumpgo'));
 
 // 107. NOKOGO (無コウ碁) — コウ禁止が無い
-out('nokogo.html', apply(ALGO, [
+out('nokogo.html', apply(BASE, [
     ...rb('NOKOGO', '無コウ碁', 'nokogo'),
     K.params([
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '無コウルール: コウ禁止が存在しない。直前の盤面と同じ形に戻る着手も合法。',
         'コウ争いが即座に繰り返せるため、単劫は互いに取り合い続ける膠着になる。',
         '安全装置: 合計200手に達すると自動終局し得点計算する (劫争いの無限継続を防ぐ)。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 無コウルール<br>
             ※コウ禁止なし — 同一盤面の再現も合法。200手で自動終局`],
     [ONE, `            // コウ判定: 相手の直前の着手前と同一の盤面になる手は禁止
@@ -7545,7 +7547,7 @@ out('nokogo.html', apply(ALGO, [
 ], 'nokogo'));
 
 // 108. CHAOTICGO (混沌碁) — 潮汐+漂流+石雨の全乗せ
-out('chaoticgo.html', apply(ALGO, [
+out('chaoticgo.html', apply(BASE, [
     ...rb('CHAOTICGO', '混沌碁', 'chaoticgo'),
     K.params([
         { key: 'drift_interval', label: '漂流間隔', min: 2, max: 30, def: 8, unit: '手' },
@@ -7553,13 +7555,13 @@ out('chaoticgo.html', apply(ALGO, [
         { key: 'rain_interval', label: '石雨間隔', min: 3, max: 30, def: 9, unit: '手' },
         { key: 'max_moves', label: '手数上限', min: 60, max: 600, def: 200, unit: '手' },
     ]),
-    [ONE, RV_ALGO, rv([
+    [ONE, RV_BASE, rv([
         '混沌ルール: 盤面が常に変化する全乗せモード。',
         '・8手ごとに全石がランダム方向へ漂流 / ・10手ごとに外周が水没↔復活 (潮汐) / ・9手ごとにランダムな空点へ壁が降る (石雨)',
         '陣形も盤面も維持できない。最終的に地+アゲハマ+コミで勝敗。',
         '安全装置: 合計200手に達すると自動終局し得点計算する。',
     ])],
-    [ONE, INFO_ALGO,
+    [ONE, INFO_BASE,
 `            通常の囲碁 + 混沌ルール<br>
             ※8手で全石漂流 / 10手で外周潮汐 / 9手で壁降下 — 全部同時。200手で自動終局`],
     [ONE, `        let komi = 6.5;`,

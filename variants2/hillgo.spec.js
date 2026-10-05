@@ -69,7 +69,7 @@ module.exports = {
                 ctx.fill();
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '天元の丘: 自分の石で中央1点を占めた側が即座に勝つ。',
             '丘を取れないままなら通常の地取り勝負になる。',
         ])],

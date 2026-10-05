@@ -108,10 +108,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の形見:</span> <strong>\${memW}目</strong></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            形見碁: 取られた石は形見を残し、終局時に亡き主の1目になる<br>
+        [K.ONE, K.INFO_BASE, `            形見碁: 取られた石は形見を残し、終局時に亡き主の1目になる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '取られた石はその場に「形見」(小さな供養塔) を残す。形見には誰も置けない。',
             '終局時、形見は亡き主の1目になる — 取られるほど相手に形見の地を贈ることになる。',
             '打ち切り: 150手を超えると自動終局・採点される。',

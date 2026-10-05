@@ -148,10 +148,10 @@ module.exports = {
         }
         function _endGameByScoreCore() {`],
         ...K.EVENT_CHIP_SPEC(`'蜜 黒' + st.score[1] + ' / 白' + st.score[2]`),
-        [K.ONE, K.INFO_ALGO, `            採蜜碁: 連が花畑と巣箱を結ぶと8手ごとに+1点<br>
+        [K.ONE, K.INFO_BASE, `            採蜜碁: 連が花畑と巣箱を結ぶと8手ごとに+1点<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '中央に花畑、上辺の両隅に巣箱がある。',
             '自分の連が花畑と巣箱の両方に届いていると、8手ごとに蜜を貯めて+1点。',
             '花畑の争奪と巣への路づくり。巣箱はどちらか一方に届けばよい。',

@@ -43,10 +43,10 @@ module.exports = {
             turn = opponent;`],
         // 水面っぽい常時演出
         [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_WATER],
-        [K.ONE, K.INFO_ALGO, `            流体碁: 石は流体。着手のたび全石が下へ1マス流れて集まる<br>
+        [K.ONE, K.INFO_BASE, `            流体碁: 石は流体。着手のたび全石が下へ1マス流れて集まる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手ごとに、盤上の全ての石が下へ1マス流れる (下が空いているとき)。',
             '石は低い側に集まり、連は流れの中で形を変える。取り・呼吸は通常通り。',
         ])],

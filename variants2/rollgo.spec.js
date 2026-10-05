@@ -70,7 +70,7 @@ module.exports = {
                     cellSize, cellSize * BOARD_SIZE);
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は中央が谷底のV字斜面: 着手ごとに石は低い方へ1マス転がる。',
             '谷底や前を塞がれた石は止まる。転がり続ける石を読んで形を作る。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',

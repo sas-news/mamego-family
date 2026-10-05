@@ -67,10 +67,10 @@ module.exports = {
                 turn = opponent;
             }`],
         ...K.EVENT_CHIP_SPEC(`'閏まで: ' + (Math.max(1, P('uruu_interval') || 4) - st.pcnt % Math.max(1, P('uruu_interval') || 4)) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            閏年碁: 4手ごとに閏が入り、打った側がそのままもう一手打てる<br>
+        [K.ONE, K.INFO_BASE, `            閏年碁: 4手ごとに閏が入り、打った側がそのままもう一手打てる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手を数えて4手ごとに「閏」が入る。閏の手を打った側は、そのままもう一手打てる。',
             '閏の手も手数に数えるため、閏の権利は白と黒に交互に巡る — どちらか一方だけ得をしない。',
             '閏で取り・コウの処理は通常通り。連続2手は大きな攻めの機会。',

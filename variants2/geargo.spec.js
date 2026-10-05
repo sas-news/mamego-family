@@ -59,7 +59,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC('\'歯車が回る\''),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '3手ごとに盤の最外周リングが1コマ逆回転、1つ内側のリングが1コマ順回転する。',
             '置いた石は盤と一緒に動く。連の分断・接続が毎手変わる流動的な碁。',
         ])],

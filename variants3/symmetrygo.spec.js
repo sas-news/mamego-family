@@ -94,10 +94,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の対称美:</span> <strong>\${st.bonus[2]}</strong></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            対称碁: 中央縦軸で镜像の位置に自分の石があれば+2目の対称美ボーナス<br>
+        [K.ONE, K.INFO_BASE, `            対称碁: 中央縦軸で镜像の位置に自分の石があれば+2目の対称美ボーナス<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の中央を縦に走る対称軸 (水色の破線)。置いた石の镜像位置に自分の石が既にあれば+2目。',
             '軸上の石は镜像が自分自身なのでボーナス対象外。左右対称に布石を広げると点が伸びる。',
             '打ち切り: 150手を超えると自動終局・採点される。',

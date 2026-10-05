@@ -81,7 +81,7 @@ module.exports = {
                     ctx.restore();
                 }
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '各プレイヤーの最初の2石は王 (金の王冠マーク)。',
             '王は2つとも生かさなければならない — どちらか1つでも取られた時点で即負け。',
         ])],

@@ -27,7 +27,7 @@ module.exports = {
             } else {
                 soundManager.playPlace();
             }`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '敵連を取ると、その敵連は自分の色になり、取った自分の連は敵の色になる。',
             '捕獲数は通常通り数える。取った瞬間に盤の勢力が大きく入れ替わる。',
         ])],

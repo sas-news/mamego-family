@@ -78,7 +78,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'G 黒:' + goals[1] + ' 白:' + goals[2]`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '中央3×3 (緑の点線枠) がゴール。そこに石を置くたび即座に1ゴール得点。',
             '投入石が後で取られてもゴール得点は残る。終局は 地+アゲハマ+ゴール の合計。',
         ])],

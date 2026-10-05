@@ -72,7 +72,7 @@ module.exports = {
             if (history.length >= (P('move_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手した連が敵連に接すると「対打」発生: 連の石数が多い側が勝ち、敗者の連は全て消える。',
             '互角 (同数) の対打は打ち込んだ石だけが弾かれて相手のアゲハマになる。',
             '対打は大きい敵連1組とだけ行う。140手を超えた時点で即座に地数判定する。',

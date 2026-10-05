@@ -100,10 +100,10 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi + st.rice[2];`],
         ...K.EVENT_CHIP_SPEC(`'蔵米 黒' + st.rice[1] + ' / 白' + st.rice[2]`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            蔵米碁: アゲハマは米になる。24手毎の冬に3俵を納め、足りなければ自石が飢える。残米は得点<br>
+        [K.ONE, K.INFO_BASE, `            蔵米碁: アゲハマは米になる。24手毎の冬に3俵を納め、足りなければ自石が飢える。残米は得点<br>
             PC: クリックで配置<br>
             スマホ: タップで配置`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '石を取るとその分だけ米が蔵に入る (アゲハマはそのまま得点にもなる)。',
             '24手ごとに冬が来る: 各プレイヤーは米3俵を納める。不足1俵ごとに自分の石が1個飢えて消える (最後の1個は残る)。',
             '終局時、蔵に残った米はそのまま自分の得点に加算される。',

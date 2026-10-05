@@ -46,10 +46,10 @@ module.exports = {
 `                    <div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>
                     <div class="mt-1 text-xs">逆転ルール: 合計が少ない側の勝ち</div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            逆転碁: 地とアゲハマの合計が「少ない」側の勝ち (逆転ルール)<br>
+        [K.ONE, K.INFO_BASE, `            逆転碁: 地とアゲハマの合計が「少ない」側の勝ち (逆転ルール)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '逆転ルール: 終局時、地+アゲハマ+コミの合計が「少ない」側が勝者になる。',
             '石を取りすぎても地を囲いすぎても負けに近づく。相手に取らせ・囲わせる読み合いの碁。',
             '着手・取り・コウ・パス終局は通常の囲碁と同じ。コミ6.5目も白の加点として働く。',

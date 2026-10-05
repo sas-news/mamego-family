@@ -118,10 +118,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'歌会まで ' + (Math.max(1, P('uta_interval') || 5) - (history.length % Math.max(1, P('uta_interval') || 5))) + ' 手 / 歌 黒' + (st.uta ? st.uta[1] : 0) + ' 白' + (st.uta ? st.uta[2] : 0)`),
-        [K.ONE, K.INFO_ALGO, `            曲水碁: 曲水の盃は5手ごとに流れる。岸の味方石に触れれば歌が成り+2目<br>
+        [K.ONE, K.INFO_BASE, `            曲水碁: 曲水の盃は5手ごとに流れる。岸の味方石に触れれば歌が成り+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '中央の川筋は「曲水」。5手ごとに盃 (川の石) が下流へ流れ、岸にいる同色の石と隣り合えば歌が成り、両方消えて+2目。',
             '歌えず流れ着いた盃は沈むだけ。岸に詠み手を据えて盃を流せ。',
         ])],

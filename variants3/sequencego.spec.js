@@ -83,10 +83,10 @@ module.exports = {
                     <div class="flex justify-between"><span>白の数列ボーナス:</span> <strong>\${st.bonus[2]}</strong></div>`],
         ...K.EVENT_CHIP_SPEC(`'ボーナス +' + st.bonus[turn] + '目'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            数列碁: 盤上の自分の石数が新しいフィボナッチ数になるたび+2目<br>
+        [K.ONE, K.INFO_BASE, `            数列碁: 盤上の自分の石数が新しいフィボナッチ数になるたび+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の着手後、盤上の自分の石数が 1,2,3,5,8,13,21,34,55,89… のフィボナッチ数になったら+2目。',
             '各数値は1人につき1回のみ有効。石を取られて数が減ると次の数が遠のく — 数を刻む立回りが重要。',
             '打ち切り: 150手を超えると自動終局・採点される。',

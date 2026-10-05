@@ -95,10 +95,10 @@ module.exports = {
             });`),
         ...K.EVENT_CHIP_SPEC(`'露 ' + Object.keys(st.wet).filter(k => st.wet[k] >= history.length).length + '点'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            露草碁: 24手毎の早朝に全石の周りへ露が降り、濡れた空点には10手の間打てない<br>
+        [K.ONE, K.INFO_BASE, `            露草碁: 24手毎の早朝に全石の周りへ露が降り、濡れた空点には10手の間打てない<br>
             PC: クリックで配置<br>
             スマホ: タップで配置`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '24手ごとの早朝に、全ての石の上下左右の空点が露で濡れる。',
             '濡れた空点には10手の間誰も打てない (雫マーク)。',
             '石の周りに展開したいなら朝露の前に済ませるか、乾くのを待つ。',

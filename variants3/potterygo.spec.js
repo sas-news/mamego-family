@@ -129,10 +129,10 @@ module.exports = {
                     <div class="flex justify-between"><span>白の完成品:</span> <strong>\${st.bonus[2]}目</strong></div>`],
         ...K.EVENT_CHIP_SPEC(`'完成品 +' + st.bonus[turn] + '目'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            陶芸碁: 星(窯)の上で15手焼成すると完成し+3目<br>
+        [K.ONE, K.INFO_BASE, `            陶芸碁: 星(窯)の上で15手焼成すると完成し+3目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '星の交点は窯。素地(石)を窯に入れて15手守り抜くと完成品になり、+3目の金彩が付く。',
             '焼成中の器は赤い熱マーク、完成品は金の環。敵に割られると窯入りからやり直し。',
             '打ち切り: 150手を超えると自動終局・採点される。',

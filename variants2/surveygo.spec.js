@@ -43,7 +43,7 @@ module.exports = {
         [K.ONE, `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>`,
 `                    <div class="flex justify-between"><span>白のアゲハマ:</span> <strong>\${captures[2]}</strong></div>
                     <div class="flex justify-between"><span>白の測量矩形:</span> <strong>\${surveyRect(2)}</strong></div>`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の石が長方形の外周を全て占めると、その面積が終局時にボーナス得点になる。',
             '矩形の内部は空でも敵石でもよい。大きく囲うほど高得点の測量勝負。',
             '打ち切り: 累計着手が交点数+2行ぶんに達したら強制終局して地計算 (無限対局を防ぐ安全装置)。',

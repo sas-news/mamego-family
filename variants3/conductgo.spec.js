@@ -145,10 +145,10 @@ module.exports = {
                 ctx.fillText('−', rx - cellSize / 2, padding - cellSize * 0.15);
                 ctx.restore();
             }`),
-        [K.ONE, K.INFO_ALGO, `            導電碁: 左右端の電極。両端に触れる連は短絡して弱化する<br>
+        [K.ONE, K.INFO_BASE, `            導電碁: 左右端の電極。両端に触れる連は短絡して弱化する<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の左右端は+と−の電極。自分の連が両方の電極に触れると短絡する。',
             '短絡した連は呼吸点-2で弱化。両者に同じく働く。',
         ])],

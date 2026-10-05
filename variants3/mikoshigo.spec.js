@@ -75,10 +75,10 @@ module.exports = {
 
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'神輿の揺れまで ' + (Math.max(1, P('interval') || 6) - history.length % Math.max(1, P('interval') || 6)) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            神輿碁: 6手ごとの揺れで各側の最大連 (3石以上) の先端石がこぼれ落ちる<br>
+        [K.ONE, K.INFO_BASE, `            神輿碁: 6手ごとの揺れで各側の最大連 (3石以上) の先端石がこぼれ落ちる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '6手ごとに神輿が揺れる — 各側の最大連 (3石以上) の先端石が1つこぼれ落ちる。',
             '連を大きくするほど揺れで先端を失いやすい。締まった連は揺れに強い。',
             '揺れは双方同時 — 大連の維持と分割のバランスが神輿の担ぎ手の腕。',

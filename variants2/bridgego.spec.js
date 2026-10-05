@@ -72,7 +72,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤中央の海峡で左右2つの大陸に分断。',
             '渡れるのは中央1点の橋だけ。橋頭堡を押さえれば大陸間の連絡を断てる。',
         ])],

@@ -120,10 +120,10 @@ module.exports = {
                 }
             }`),
         ...K.EVENT_CHIP_SPEC(`isScoutView(turn) ? '斥候の視界 残り' + (st.until[turn] - history.length) + '手' : '斥候まで ' + Math.max(0, (P('scout_move') || 4) - (st.pcnt[turn] || 0)) + '手'`),
-        [K.ONE, K.INFO_ALGO, `            斥候碁: 各側4手目の石は斥候。以後2手の間、敵の全石の呼吸数が暴かれる<br>
+        [K.ONE, K.INFO_BASE, `            斥候碁: 各側4手目の石は斥候。以後2手の間、敵の全石の呼吸数が暴かれる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '各プレイヤーの4手目の着手は「斥候」になる (緑のX印)。',
             '斥候が出ると以後2手の間、自分から見た敵の全石に呼吸点数が表示される。',
             '呼吸1・2の敵連を見逃すな — 斥候の短い視界で仕留め切れるかが勝負。',

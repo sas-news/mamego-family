@@ -67,7 +67,7 @@ module.exports = {
             if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は3x3の「区域」に分割。終局時、各区域で石が多い側が区域全域を領地として得る。',
             '通常の地とアゲハマも計上される。コミは白に+6.5。',
             '140手を超えた時点で即座に地数判定する。',

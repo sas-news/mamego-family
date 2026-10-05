@@ -123,10 +123,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'糠床 ' + [...NUKA_SET].filter(i => board[i] === 1 || board[i] === 2).length + '石'`),
-        [K.ONE, K.INFO_ALGO, `            漬物碁: 糠床に漬けた石は10手の間取られない<br>
+        [K.ONE, K.INFO_BASE, `            漬物碁: 糠床に漬けた石は10手の間取られない<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤中央は「糠床」。床に漬けたばかりの石は10手の間、呼吸点が0でも取られない。',
             '10手を過ぎれば普通の石。床は両者共通 — 漬け込みで凌ぐか、熟れ頃を狙うか。',
         ])],

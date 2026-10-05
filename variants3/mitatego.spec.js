@@ -77,10 +77,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'見立て ' + (() => { const b = typeof mitateBonus === 'function' ? mitateBonus() : { 1: 0, 2: 0 }; return '黒' + b[1] + ' 白' + b[2]; })()`),
-        [K.ONE, K.INFO_ALGO, `            見立碁: 縦横両方向に同色と繋がる石 (L字の角) は終局時+1目<br>
+        [K.ONE, K.INFO_BASE, `            見立碁: 縦横両方向に同色と繋がる石 (L字の角) は終局時+1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の石が縦と横の両方向に同色と繋がる「曲がり角」は、名物に見立てられて終局時+1目。',
             '真っ直ぐ並べるだけでは点にならない — 折れ曲がる形を作る遊び。双方同じ条件。',
         ])],

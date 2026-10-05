@@ -42,7 +42,7 @@ module.exports = {
 
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'勢力差:' + scoreDiff()`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '勢力 = 盤上の自石数 + アゲハマ数。毎手後に勢力差を計算し、10以上開けば即決着。',
             '大敗を早々に見切るレフリー制。追いつくなら早いうちに。',
         ])],

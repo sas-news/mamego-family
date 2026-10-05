@@ -15,13 +15,13 @@ module.exports = {
             { key: 'ply_cap', label: '打ち切り手数', min: 0.2, max: 1.0, def: 0.4, step: 0.05, hint: '交点数×倍率' },
         ]),
         // 骨ピース (2連結ドミノ) — 碁石を骨に差し替える
-        [K.ONE, K.MOLECULES_ALGO, `        // 骨格碁の骨: 2連結した碁石 (ドミノ)
+        [K.ONE, K.MOLECULES_BASE, `        // 骨格碁の骨: 2連結した碁石 (ドミノ)
         const MOLECULES = {
             BONE: { name: '骨', iupac: '', formula: '', atoms: [[0,0],[1,0]] }
         };`],
-        [K.ONE, K.OCNT_ALGO, '// 骨は2マス: 回転で縦横の区別あり (2パターン)'],
-        [K.ONE, `let currentPieceType = 'ISOBUTANE';`, `let currentPieceType = 'BONE';`],
-        [K.ONE, `? s.currentPieceType : 'BUTANE'`, `? s.currentPieceType : 'BONE'`],
+        [K.ONE, K.OCNT_BASE, '// 骨は2マス: 回転で縦横の区別あり (2パターン)'],
+        [K.ONE, `let currentPieceType = 'STONE';`, `let currentPieceType = 'BONE';`],
+        [K.ONE, `? s.currentPieceType : 'STONE'`, `? s.currentPieceType : 'BONE'`],
         [K.ONE, K.BOARD_DECL, K.BOARD_DECL + `
         let skeletonDetail = { 1: 0, 2: 0 }; // 直近の終局で計上した骨格ボーナス`],
         // 終局スコアに骨格ボーナスを加算: 2石以上の連ごとに+2目
@@ -75,15 +75,15 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        [K.ONE, K.INFO_ALGO, `            骨格碁: 骨 (2連結石) を置く。連の骨格が領地に加算<br>
+        [K.ONE, K.INFO_BASE, `            骨格碁: 骨 (2連結石) を置く。連の骨格が領地に加算<br>
             PC: クリックで配置 / 回転=Rキー・回転ボタン<br>
             スマホ: 1タップ目プレビュー、2タップ目確定 (回転はボタン)`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は2マス連結した「骨」ピース (ドミノ)。回転ボタンで縦横を切り替える。',
             '終局時、石2個以上からなる連 (骨格) ごとに+2目が加算される。窒息領域は2マス未満。',
         ])],
         // ルール文: 着手は骨1個 (RCM_ALGO を自前で差し替える)
-        [K.ONE, K.RCM_ALGO, `        const RULES_COMMON = [
+        [K.ONE, K.RCM_BASE, `        const RULES_COMMON = [
             '黒 (先手) と白が交互に着手。自分の手番では空いている2連結した交点に「骨」(2石1組) を1個置くか、パスを選ぶ。',
             '同じ色で隣接した石は「連」としてつながり、呼吸を共有する。骨の2マスは常に同一の連。',
             '連に隣接する空点は「呼吸点」。呼吸点が0になった連は取られ、相手のアゲハマになる。',
@@ -104,8 +104,7 @@ module.exports = {
             turn = opponent;`],
         [K.ONE, `                startDeadStoneSelectionPhase();`,
 `                endGameByScore(); // 連続パスで即採点終局`],
-        // STONE_SPEC のうち分子定義系・ルール文 (上で自前差替済) を除く
-        ...K.STONE_SPEC.filter(e => ![K.MOLECULES_ALGO, K.OCNT_ALGO, `let currentPieceType = 'ISOBUTANE';`, `? s.currentPieceType : 'BUTANE'`, K.RCM_ALGO].includes(e[1])),
+        ...K.STONE_SPEC,
     ],
     test: `
         const I = (x, y) => y * BOARD_SIZE + x;

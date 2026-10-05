@@ -81,7 +81,7 @@ module.exports = {
 
             turn = opponent;`],
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は自分の石からちょうど3マス離れた環状帯の点のみ (初手は自由)。',
             '石は即座には連ならず、散布された点が後の着手で繋がり合う。',
         ])],

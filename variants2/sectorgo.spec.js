@@ -68,7 +68,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤面は天元を軸に8つの扇区。着手は現在の許可扇区内のみ (天元は常に可)。',
             '許可扇区は1手ごとに隣へ回転する。打ちたい点の扇が回ってくるのを待て。',
         ])],

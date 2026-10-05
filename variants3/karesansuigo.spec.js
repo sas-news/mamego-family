@@ -64,10 +64,10 @@ module.exports = {
 `                    <div class="flex justify-between"><span>砂紋:</span> <strong>黒 \${sandBonus(1)} / 白 \${sandBonus(2)}</strong></div>
                     <div class="my-1 border-b border-current/10"></div>`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            枯山碁: 一色だけに囲まれた空区域は「砂紋」— その色に区域の点と同数のボーナス<br>
+        [K.ONE, K.INFO_BASE, `            枯山碁: 一色だけに囲まれた空区域は「砂紋」— その色に区域の点と同数のボーナス<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '石は山、空点は砂。一方の色の石だけに接する空区域は「砂紋」となり、区域の点ごとに+1目のボーナス。',
             '単色で描いた大きな砂紋ほど価値が高い — 混色の荒れた区域には価値がない。',
         ])],

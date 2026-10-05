@@ -85,10 +85,10 @@ module.exports = {
             }`),
         [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_MIST('rgba(150, 195, 255, 0.06)')],
         ...K.EVENT_CHIP_SPEC(`'潮解まで ' + ((P('melt_interval') || 8) - (history.length % (P('melt_interval') || 8))) + ' 手'`),
-        [K.ONE, K.INFO_ALGO, `            塩碁: 潮溜まりの石は8手ごとに溶けて消える (アゲハマにもならない)<br>
+        [K.ONE, K.INFO_BASE, `            塩碁: 潮溜まりの石は8手ごとに溶けて消える (アゲハマにもならない)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '石は塩の結晶。下2行と潮溜まりの湿気区域の石は8手ごとに溶けて消える。',
             '溶けた石はアゲハマにもならない — 海に還るだけ。',
             '湿気区域は捨て石の宝庫。固めるなら乾いた内陸へ。',

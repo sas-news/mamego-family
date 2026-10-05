@@ -41,10 +41,10 @@ module.exports = {
                 if (getNeighbors(i0).some(n => board[n] === player)) return false;
             }`],
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            飛石碁: 自分の石に隣接する点には打てない。石は全て離れた飛石になる<br>
+        [K.ONE, K.INFO_BASE, `            飛石碁: 自分の石に隣接する点には打てない。石は全て離れた飛石になる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の石に上下左右で隣接する点には着手できない — あなたの石は全て孤立した「飛石」。',
             '連を組めないので呼吸の共有もない。相手の石の隣には打てる — 飛石を飛んで攻め合え。',
         ])],

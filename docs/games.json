@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-04",
+ "generated": "2026-10-05",
  "count": 1000,
  "games": [
   {
@@ -5995,7 +5995,7 @@
    "kind": "weather",
    "icon": "monsoongo",
    "wave": "wave3",
-   "added": "2026-10-04"
+   "added": "2026-10-05"
   },
   {
    "slug": "moonphasego",

@@ -115,10 +115,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`'狐まで ' + (Math.max(1, P('fox_interval') || 7) - (st.pcnt[turn] || 0) % Math.max(1, P('fox_interval') || 7)) + '手 / 盤上の狐 ' + st.fox.filter(i => board[i] !== 0).length`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            狐化碁: 各側7手目の着手は狐石。取られても化けて逃げて相手のアゲハマにならない (持ち主に+1)<br>
+        [K.ONE, K.INFO_BASE, `            狐化碁: 各側7手目の着手は狐石。取られても化けて逃げて相手のアゲハマにならない (持ち主に+1)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '各プレイヤーの7手ごとの着手は「狐石」になる (橙の耳マーク)。',
             '狐を含む連が取られても、狐は化けて逃げる — 相手のアゲハマにならず持ち主に+1目が返る。',
         ])],

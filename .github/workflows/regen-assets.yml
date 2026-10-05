@@ -6,7 +6,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/algo.html'
+      - 'tools/base.html'
       - 'gen_*.js'
       - 'variants2/**'
       - 'variants3/**'

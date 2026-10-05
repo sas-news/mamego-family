@@ -96,7 +96,7 @@ module.exports = {
                 }
             }`),
         ...K.EVENT_CHIP_SPEC(`'制圧 黒:' + controlledZones(1) + ' 白:' + controlledZones(2)`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤は太線で区切られた9区域。自分の石が相手より2個以上多い区域を「制圧」したことになる。',
             '5区域以上を制圧した時点で即勝ち。制圧数はヘッダのチップで確認できる。',
         ])],

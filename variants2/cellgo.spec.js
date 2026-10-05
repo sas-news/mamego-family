@@ -32,7 +32,7 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手は7連のハニカム細胞 (角欠け3x3) ピースのみ (向き=⟳ボタン・Rキー・右クリック・ホイール)。','ピースが入らない7マス未満の連結空領域は窒息領域。'])],
+        [K.ONE, K.RV_BASE, K.rv(['着手は7連のハニカム細胞 (角欠け3x3) ピースのみ (向き=⟳ボタン・Rキー・右クリック・ホイール)。','ピースが入らない7マス未満の連結空領域は窒息領域。'])],
         // === FX: ハニカム細胞駒 ===
         [K.ONE, `        let obstaclePainter = null;`, `        let obstaclePainter = null;
 

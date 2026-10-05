@@ -66,7 +66,7 @@ module.exports = {
             if (history.length >= Math.max(1, P('ply_cap') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の連が盤の上端と下端の両方に到達 (縦断) した側が即勝ち。',
             '黒白とも縦方向に繋ぐ。縦断できなければ通常の地取り勝負。',
             '140手を超えた時点で即座に地数判定する。',

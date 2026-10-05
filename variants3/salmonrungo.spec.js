@@ -110,10 +110,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'遡上まで ' + ((P('run_interval') || 6) - (history.length % (P('run_interval') || 6))) + ' 手 / 産卵 黒' + (st.spawned ? st.spawned[1] : 0) + ' 白' + (st.spawned ? st.spawned[2] : 0)`),
-        [K.ONE, K.INFO_ALGO, `            鮭遡碁: 中央の川の石は6手ごとに上流へ。源流に着くと産卵+2目<br>
+        [K.ONE, K.INFO_BASE, `            鮭遡碁: 中央の川の石は6手ごとに上流へ。源流に着くと産卵+2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤中央は「川」。川の石は6手ごとに上流 (左) へ1つ進み、源流に辿り着くと産卵して盤を去り+2目。',
             '川の石も普通に取り合える。遡らせて稼ぐか、相手の鮭を獲るか。',
         ])],

@@ -57,10 +57,10 @@ module.exports = {
                 ctx.strokeRect(cx - cellSize * 0.32, cy - cellSize * 0.32, cellSize * 0.64, cellSize * 0.64);
                 ctx.restore();
             }`),
-        [K.ONE, K.INFO_ALGO, `            袋碁: 取った敵石は袋に。5個まで得点、溢れた分は重荷で-1目ずつ<br>
+        [K.ONE, K.INFO_BASE, `            袋碁: 取った敵石は袋に。5個まで得点、溢れた分は重荷で-1目ずつ<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '取った敵石は袋に詰める。袋の容量は5個まで。',
             '5個までのアゲハマは通常得点。溢れた分は1つ-1目の重荷になる。',
             '取りすぎると袋が破れる — 大きな連だけ狙い、小石は放置も手。',

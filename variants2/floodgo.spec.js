@@ -63,7 +63,7 @@ module.exports = {
                 }
             }`),
         ...K.EVENT_CHIP_SPEC(`'水位 ' + Math.floor(history.length / Math.max(1, P('flood_interval') || 2)) + ' 段'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の下から2手ごとに水位が1段上がる。水没域には打てず、そこの石は沈んでアゲハマに。',
             '高みを目指して打ち進め。全部が沈む前に決着を。',
         ])],

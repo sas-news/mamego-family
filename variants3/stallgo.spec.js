@@ -96,10 +96,10 @@ module.exports = {
 ${CAP}
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`(() => { let b = 0, w = 0; getStarPoints(BOARD_SIZE).forEach(sp => { const v = board[sp.y * BOARD_SIZE + sp.x]; if (v === 1) b++; else if (v === 2) w++; }); return '屋台 黒' + b + ' / 白' + w; })()`),
-        [K.ONE, K.INFO_ALGO, `            夜店碁: 星の点が夜店の屋台。屋台を出し、隣に客(自石)を集めて得点<br>
+        [K.ONE, K.INFO_BASE, `            夜店碁: 星の点が夜店の屋台。屋台を出し、隣に客(自石)を集めて得点<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '星の点は夜店の「屋台」。自分の石で占めると終局時に+2目。',
             '屋台に隣接する自分の石は「客」— 1つにつきさらに+1目。',
             '屋台は両者の共通目標。相手に取られた屋台は相手の得点になる。',

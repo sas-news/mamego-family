@@ -98,10 +98,10 @@ module.exports = {
                     <div class="flex justify-between"><span>白の養分:</span> <strong>\${st.bonus[2]}目</strong></div>`],
         ...K.EVENT_CHIP_SPEC(`'養分 +' + st.bonus[turn] + '目'`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            光合成碁: 中央の日当たり区域の石が1手ごとに養分+1目<br>
+        [K.ONE, K.INFO_BASE, `            光合成碁: 中央の日当たり区域の石が1手ごとに養分+1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤中央は日当たりのよい圃場。そこに葉(石)がある限り、自分の着手ごとに養分+1目ずつ溜まる。',
             '日陰(外側2列)の石は養分を作らない。中央を守りつつ敵の葉を刈り取れ。',
             '打ち切り: 150手を超えると自動終局・採点される。',

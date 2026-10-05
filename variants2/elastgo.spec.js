@@ -42,7 +42,7 @@ module.exports = {
                 const _allow = (ORIENTATIONS[currentPieceType] || []).map(s => _norm(s.map(([x, y]) => ({ x, y }))));
                 if (!_allow.includes(_cur)) return false;
             }`],
-        [K.ONE, K.RV_ALGO, K.rv(['着手は伸縮ピース: 1・2・3連の長さを ⟳ボタン・Rキー・右クリック・ホイールで選ぶ。','短くして隙間に置くか、伸ばして一気に地を取るか。'])],
+        [K.ONE, K.RV_BASE, K.rv(['着手は伸縮ピース: 1・2・3連の長さを ⟳ボタン・Rキー・右クリック・ホイールで選ぶ。','短くして隙間に置くか、伸ばして一気に地を取るか。'])],
         // 伸縮ピース: 連結セル間にバネ (コイル) を描く
         [K.ONE, `                    if (isDead) drawDeadMarker(cx, cy, r);
                 }

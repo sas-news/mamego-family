@@ -113,10 +113,10 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`(function(){ const q = pieces.filter(pc => pc.schro).length; return q > 0 ? '量子石 ' + q + '個' : '量子まで ' + ((P('quantum_interval') || 3) - st.pcnt[turn] % (P('quantum_interval') || 3)) + '手'; })()`),
-        [K.ONE, K.INFO_ALGO, `            量子碁: 3手ごとの石は白黒の重ね合わせ。敵石が隣接すると観測され色が確定する<br>
+        [K.ONE, K.INFO_BASE, `            量子碁: 3手ごとの石は白黒の重ね合わせ。敵石が隣接すると観測され色が確定する<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '各プレイヤーの3・6・9…手目の着手は「量子石」— 白黒の輪を持つ重ね合わせの石。',
             '敵石が直交隣に置かれると観測され、量子石は自分色か敵色かに確定する。',
             '確定で敵色になれば自分の布石が相手の石に化ける。量子石同士の連鎖にも注意。',

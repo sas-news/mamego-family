@@ -81,10 +81,10 @@ module.exports = {
         ...GAME_OVER,
         ...SCORE_END,
         ...K.EVENT_CHIP_SPEC(`'交食まで ' + ((P('eclipse_interval') || 15) - (history.length % (P('eclipse_interval') || 15))) + '手'`),
-        [K.ONE, K.INFO_ALGO, `                        交食碁: 15の倍数の手は交食。その着手で取った石は通常のアゲハマに加えて1つにつき+1点。<br>
+        [K.ONE, K.INFO_BASE, `                        交食碁: 15の倍数の手は交食。その着手で取った石は通常のアゲハマに加えて1つにつき+1点。<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '15・30・45…と15の倍数の手は「交食」。その手の取りは1石につき追加+1点。',
             '交食の手に合わせて相手の連を仕留めると大きい。',
             '取り・コウ・パス終局は通常通り。満局近くで強制採点。',

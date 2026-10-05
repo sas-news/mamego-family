@@ -83,7 +83,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤面は天元を軸に12の時刻区域。着手は現在の時刻区域内のみ (天元は常に可)。',
             '区域は1手ごとに時計回りに1時間進む。12時方向から針は回り始める。',
         ])],

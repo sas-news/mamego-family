@@ -90,10 +90,10 @@ module.exports = {
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
         ...K.EVENT_CHIP_SPEC(`'相似点 +' + ((st.bonus && st.bonus[turn]) || 0) + '目'`),
-        [K.ONE, K.INFO_ALGO, `            フラクタル碁: 自己相似パターンの点 (▲) に置くと +1目<br>
+        [K.ONE, K.INFO_BASE, `            フラクタル碁: 自己相似パターンの点 (▲) に置くと +1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '交点座標 (x+1, y+1) のビットANDが0になる点は自己相似な「フラクタル点」。',
             'フラクタル点に置くと +1目。パターンは盤面全体にフラクタル状に繰り返される。',
         ])],

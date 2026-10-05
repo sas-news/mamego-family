@@ -116,10 +116,10 @@ module.exports = {
             }`),
         ...K.EVENT_CHIP_SPEC(`'噴火まで ' + (Math.max(1, P('erupt_interval') || 20) - (st.ply % Math.max(1, P('erupt_interval') || 20))) + '手'`),
         [K.ONE, K.FX_BOOT, K.FX_BOOT + K.AMBIENT_MIST('249,115,22')],
-        [K.ONE, K.INFO_ALGO, `            火砕碁: 中央の火山灰帯は火砕流の通路。20手ごとの噴火で通路上の石は全て焼かれる<br>
+        [K.ONE, K.INFO_BASE, `            火砕碁: 中央の火山灰帯は火砕流の通路。20手ごとの噴火で通路上の石は全て焼かれる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の中央を縦に走る暗い帯は火砕流の予告線 — 20手ごとに噴火が起きる。',
             '噴火で通路上の石は色に関わらず全て焼かれ、相手のアゲハマになる。',
             '通路を跨ぐ連は噴火で寸断される。噴火のタイミングはチップで読める。',

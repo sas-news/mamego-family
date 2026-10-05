@@ -102,10 +102,10 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
-        [K.ONE, K.INFO_ALGO, `            歩兵碁: 敵陣2列で成駒 +1目。成駒は取られても1手延命<br>
+        [K.ONE, K.INFO_BASE, `            歩兵碁: 敵陣2列で成駒 +1目。成駒は取られても1手延命<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '敵陣2列 (黒は下・白は上) に歩を進めると「成」って +1目。',
             '成駒は取られても成りが剥がれて盤に残る — 次の手で助ければ生き残る、金将のような粘り。',
         ])],

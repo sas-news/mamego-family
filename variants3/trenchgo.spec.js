@@ -22,10 +22,10 @@ module.exports = {
         [K.ONE, K.COVERED_ANCHOR, K.texDraw(K.PAINT_RIFT('rgba(80,140,200,0.35)'))],
         // 海溝を死に石選択から除外
         ...K.WALL_GUARD_SPEC,
-        [K.ONE, K.INFO_ALGO, `            海溝碁: 盤の中央を深い海溝が縦断。両側は直接近傍しない<br>
+        [K.ONE, K.INFO_BASE, `            海溝碁: 盤の中央を深い海溝が縦断。両側は直接近傍しない<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '盤の中央1列は深い「海溝」。着手もできず、呼吸点にもならない。',
             '海溝を挟んだ左右の石は直接近傍しない — 盤が東西に分断された戦いになる。',
         ])],

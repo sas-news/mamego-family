@@ -59,7 +59,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'拡大まで ' + (BOARD_SIZE >= (P('expand_max') || 19) ? '上限' : ((P('expand_interval') || 5) - history.length % (P('expand_interval') || 5)) + ' 手')`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '5手ごとに盤が外周へ1マスずつ拡大する (上限19路)。既存の石は1マス内側に残る。',
             '新しい辺境が生まれ続ける。終盤ほど広い盤での大きな戦いになる。',
         ])],

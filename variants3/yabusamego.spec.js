@@ -119,10 +119,10 @@ function onVariantParam(p) { if (p.key === 'target_dist') rebuildTargets(); }
             turn = opponent;`],
         ...K.EVENT_CHIP_SPEC(`'的 ' + Object.keys(st.hit || {}).length + '/' + TARGETS.length`),
         ...GAME_OVER,
-        [K.ONE, K.INFO_ALGO, `            流鏑碁: 着手した石の行・列を馬が走り、一直線上に見える的を射抜く。的ごと+1目 (各1回)<br>
+        [K.ONE, K.INFO_BASE, `            流鏑碁: 着手した石の行・列を馬が走り、一直線上に見える的を射抜く。的ごと+1目 (各1回)<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手した瞬間、騎手がその石の行と列の4方向へ駆け抜ける。途中に石がなければ一直線上の的に命中して+1目。',
             '各的は1回のみ。的の上に石があっても射られる (命中は的を消費)。',
             '行列を空けておく射線管理が鍵。的までの道に石を置いて遮るのも手。',

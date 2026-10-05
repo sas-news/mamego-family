@@ -55,7 +55,7 @@ module.exports = {
             if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '置いた石は中央へ向かう長軸方向に最大5マス滑る。',
             '敵石に衝突するとその敵石を破壊してその場に止まる。味方の前では手前で停止。',
             '140手を超えた時点で即座に地数判定する。',

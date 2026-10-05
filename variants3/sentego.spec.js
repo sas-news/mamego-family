@@ -90,10 +90,10 @@ module.exports = {
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
         ...K.EVENT_CHIP_SPEC(`st.sente ? (st.sente === 1 ? '先手権:黒' : '先手権:白') : ''`),
-        [K.ONE, K.INFO_ALGO, `            先手碁: アタリで先手権を獲得、先手権の着手は +2目<br>
+        [K.ONE, K.INFO_BASE, `            先手碁: アタリで先手権を獲得、先手権の着手は +2目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '相手の連をアタリにした側が「先手権」を握る。',
             '先手権を持って打つ次の一手は +2目 — 主導権を握り続けるほど得する。',
         ])],

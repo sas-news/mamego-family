@@ -60,7 +60,7 @@ module.exports = {
                 ctx.fillRect(width - padding - t / 2, padding, t, bw);
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '自分の石の連が盤の対辺同士 (上↔下 または 左↔右) を結んだ時点で即勝ち。',
             '取り・地取りの通常ルールもそのまま有効。繋げる側と切る側の競走。',
         ])],

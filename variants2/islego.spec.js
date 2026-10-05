@@ -43,7 +43,7 @@ module.exports = {
                 }
                 ctx.restore();
             }`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '上下2条の海で分かれた3つの島。島同士は中央の1マス橋でのみ接続。',
             '橋を押さえるか各島を制するか、兵力配分が問われる。',
         ])],

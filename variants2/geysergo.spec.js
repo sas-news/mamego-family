@@ -74,7 +74,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.EVENT_CHIP_SPEC(`'噴火まで ' + ((P('erupt_interval') || 5) - history.length % (P('erupt_interval') || 5)) + ' 手'`),
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '四つの星は間欠泉: 5手ごとに一斉噴火して、噴き口上の石を吹き飛ばす。',
             '吹き飛んだ石は相手のアゲハマになる。噴き口を使うのは噴火直後が安全。',
         ])],

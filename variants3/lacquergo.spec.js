@@ -98,10 +98,10 @@ module.exports = {
                 ctx.restore();
             });`),
         ...K.EVENT_CHIP_SPEC(`'艶出石 ' + Object.keys(st.coat).filter(k => lacqArmored(+k)).length + '個'`),
-        [K.ONE, K.INFO_ALGO, `            漆器碁: 6手ごとに塗りが重なり、3重で取れなくなる<br>
+        [K.ONE, K.INFO_BASE, `            漆器碁: 6手ごとに塗りが重なり、3重で取れなくなる<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '石は6手ごとに漆を一塗りされる (金の輪が増える)。',
             '3重に塗り上がった石は「艶出」となり二度と取られない — 両者同じ速さ。',
             '若い石のうちに取るか、塗り上がるまで逃げ切るか。',

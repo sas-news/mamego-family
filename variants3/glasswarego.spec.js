@@ -107,10 +107,10 @@ module.exports = {
                 ctx.restore();
             });`),
         ...K.EVENT_CHIP_SPEC(`Object.keys(st.clear).length + ' 透明'`),
-        [K.ONE, K.INFO_ALGO, `            硝子碁: 硝子の石は8手の間「透明」。曇ると確定する<br>
+        [K.ONE, K.INFO_BASE, `            硝子碁: 硝子の石は8手の間「透明」。曇ると確定する<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着いたばかりの石は8手の間「透明」(白い輪郭)。',
             '透明な石は取れない — その代わり、隣の敵連にも「空点」に見えて呼吸を与えてしまう。',
             '8手経つと曇って色が確定。透明の間だけ自殺点にも置ける。',

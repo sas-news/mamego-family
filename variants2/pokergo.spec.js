@@ -45,10 +45,10 @@ module.exports = {
         [K.ONE, `<div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>`,
 `<div class="flex justify-between font-bold border-t pt-1"><span>白合計:</span> <span>\${whiteTotal}</span></div>
                     <div class="flex justify-between"><span>ポーカー役:</span> <strong>黒+\${pbonus[1]} / 白+\${pbonus[2]}</strong></div>`],
-        [K.ONE, K.INFO_ALGO, `            扑克碁: 行の並びでポーカー役を作り終局時に加算勝負<br>
+        [K.ONE, K.INFO_BASE, `            扑克碁: 行の並びでポーカー役を作り終局時に加算勝負<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '終局時、各行の自分色の並びがポーカーの役になる (最も強い役だけ加算)。',
             'ワンペア+2/ツーペア+4/スリーカード+6/フルハウス+10/フォーカード+12/ファイブカード+20目。',
             '横一線に並べる強欲さと、地を確保する堅実さのバランスが問われる。',

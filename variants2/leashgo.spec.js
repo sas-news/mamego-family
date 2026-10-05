@@ -77,7 +77,7 @@ module.exports = {
                 }
             }`),
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '着手は盤上に残っている最も古い自分の石から3マス以内のみ。',
             'アンカーが取られると、次に古い石に繋留が移る。進出は常にアンカー次第。',
         ])],

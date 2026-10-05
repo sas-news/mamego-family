@@ -57,7 +57,7 @@ module.exports = {
                 ctx.restore();
             }`),
         ...K.LEGAL_DOTS_SPEC,
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '直近2手 (自分・相手問わず) と同じ行・列には着手できない。',
             '打たれた筋は次の2手の間冷めるまで封鎖される。盤を広く使わされる碁。',
         ])],

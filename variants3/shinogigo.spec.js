@@ -93,10 +93,10 @@ module.exports = {
             const whiteTotal = territory.white + captures[2] + komi;`,
 `            const blackTotal = territory.black + captures[1] + ((st.bonus && st.bonus[1]) || 0);
             const whiteTotal = territory.white + captures[2] + komi + ((st.bonus && st.bonus[2]) || 0);`],
-        [K.ONE, K.INFO_ALGO, `            シノギ碁: アタリの連を放置して手番を回すと +1目<br>
+        [K.ONE, K.INFO_BASE, `            シノギ碁: アタリの連を放置して手番を回すと +1目<br>
             PC: クリックで配置<br>
             スマホ: 1タップ目プレビュー、2タップ目確定`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '呼吸点1に追い込まれた連をあえて救出せず、自分の手番を回しきると「シノギ」 +1目。',
             '救出すれば安全だが得点はなし — 危険に手を付けるか、我慢して稼ぐかの駆け引き。連ごとに1回。',
         ])],

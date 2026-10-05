@@ -57,7 +57,7 @@ module.exports = {
             if (history.length >= (P('cap_moves') || 140)) { endGameByScore(); return; }
 
             turn = opponent;`],
-        [K.ONE, K.RV_ALGO, K.rv([
+        [K.ONE, K.RV_BASE, K.rv([
             '敵石を取ると爆発し、取られた石の8近傍にある敵石も連鎖して取られる (最大2波)。',
             '斜め繋がりの敵石塊は連鎖に巻き込まれやすい。自分の石は巻き込まれない。',
             '140手を超えた時点で即座に地数判定する。',
