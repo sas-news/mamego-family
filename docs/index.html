@@ -178,6 +178,10 @@
                 class="sort-btn rounded-lg border border-[#cbb07a] bg-white/80 px-2.5 py-1.5 font-bold hover:bg-white transition-all flex items-center gap-1">
                 <span class="text-[#16a34a]">✦</span>新着順
             </button>
+            <button id="sortRandBtn" type="button" title="ランダムな順番 (もう一度押すと元に戻る)"
+                class="sort-btn rounded-lg border border-[#cbb07a] bg-white/80 px-2.5 py-1.5 font-bold hover:bg-white transition-all flex items-center gap-1">
+                <span class="text-[#8b5cf6]">⇄</span>ランダム順
+            </button>
             <span id="rankNote" class="opacity-50 ml-auto hidden sm:block"></span>
         </div>
 
@@ -1354,9 +1358,9 @@
                 (!terms.length || terms.every(term => t._hay.includes(term) || subseqHit(term, t._hay))));
             // 絞り込みなしの通常表示だけ先頭INITIAL_SHOW件に制限 (検索/★フィルタ時は全件)
             const limited = !showAll && !hasQuery && !favOnly && hits.length > INITIAL_SHOW;
-            tiles.forEach(t => { t.style.display = 'none'; });
-            hits.forEach((t, i) => { t.style.display = (limited && i >= INITIAL_SHOW) ? 'none' : ''; });
-            const shown = limited ? INITIAL_SHOW : hits.length;
+            tiles.forEach(t => { t.style.display = 'none'; t._hit = false; });
+            hits.forEach((t, i) => { t._hit = true; t.style.display = (limited && i >= INITIAL_SHOW) ? 'none' : ''; });
+            // ルーレットは hits 全件から抽選 (limit中の非表示タイルも対象) するため件数表示は表示件数ではなくヒット数
             noResultsEl.textContent = (favOnly && !favs.size)
                 ? 'お気に入りはまだありません — 各タイルの ★ で登録できます'
                 : '該当する囲碁がありません';
@@ -1365,7 +1369,7 @@
             moreBtn.textContent = `もっとみる (残り${hits.length - INITIAL_SHOW}種)`;
             moreBtn.classList.toggle('hidden', !limited);
             gameCountEl.textContent = favOnly ? `★${hits.length}件 / 全${GAMES.length}種`
-                : ((hasQuery || limited) ? `${shown}件 / 全${GAMES.length}種` : `全${GAMES.length}種`);
+                : (hasQuery ? `${hits.length}件 / 全${GAMES.length}種` : `全${GAMES.length}種`);
         }
         moreBtn.addEventListener('click', () => { showAll = true; applyGameFilter(searchInput.value); });
         searchInput.addEventListener('input', e => applyGameFilter(e.target.value));
@@ -1440,6 +1444,7 @@
         // ---- 並び替え (人気順 = 全ユーザーの★+対局を夜間集計 / 新着順 = 追加日) ----
         const sortPopBtn = document.getElementById('sortPopBtn');
         const sortNewBtn = document.getElementById('sortNewBtn');
+        const sortRandBtn = document.getElementById('sortRandBtn');
         const rankNote = document.getElementById('rankNote');
         const hasRank = Object.keys(RANK).length > 0;
         document.getElementById('popInfo').textContent = hasRank ? '' : ' (集計前)';
@@ -1456,6 +1461,11 @@
             } else if (sortMode === 'new') {
                 const added = t => (GAME_META[t._game.file] || {}).added || '';
                 arr.sort((a, b) => String(added(b)).localeCompare(String(added(a))) || a._idx - b._idx);
+            } else if (sortMode === 'rand') {
+                for (let i = arr.length - 1; i > 0; i--) { // Fisher-Yates
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
             } else {
                 arr.sort((a, b) => a._idx - b._idx);
             }
@@ -1470,13 +1480,16 @@
             });
             sortPopBtn.classList.toggle('sort-on', sortMode === 'pop');
             sortNewBtn.classList.toggle('sort-on', sortMode === 'new');
+            sortRandBtn.classList.toggle('sort-on', sortMode === 'rand');
             rankNote.textContent = sortMode === 'pop'
                 ? (RANK_DATE ? `集計日: ${RANK_DATE}` : '★集計は毎日1回・反映まで最大1日')
                 : sortMode === 'new' ? '追加日が新しい順'
+                : sortMode === 'rand' ? 'シャッフルした順 (再押下で元に戻る)'
                 : '人気順は全ユーザーの★を毎日集計';
         }
         sortPopBtn.addEventListener('click', () => { sortMode = sortMode === 'pop' ? '' : 'pop'; applySort(); applyGameFilter(searchInput.value); });
         sortNewBtn.addEventListener('click', () => { sortMode = sortMode === 'new' ? '' : 'new'; applySort(); applyGameFilter(searchInput.value); });
+        sortRandBtn.addEventListener('click', () => { sortMode = sortMode === 'rand' ? '' : 'rand'; applySort(); applyGameFilter(searchInput.value); });
         applySort();
         applyGameFilter('');
 
@@ -1579,8 +1592,8 @@
 
         function spin() {
             if (spinning) return;
-            // 検索で絞り込まれているタイル (=表示中) の中からだけ選ぶ
-            const pool = tiles.filter(t => t.style.display !== 'none');
+            // フィルタにヒットした全タイルから選ぶ (「もっとみる」未展開の非表示タイルも対象)
+            const pool = tiles.filter(t => t._hit);
             if (!pool.length) {
                 gameCountEl.classList.add('search-shake');
                 setTimeout(() => gameCountEl.classList.remove('search-shake'), 450);
@@ -1633,6 +1646,8 @@
                     roulOverlay.classList.add('hidden');
                     roulOverlay.classList.remove('flex');
                     grid.classList.remove('spinning');
+                    // 「もっとみる」未展開のタイルが当たったら全展開してから見せる
+                    if (winnerT.style.display === 'none') { showAll = true; applyGameFilter(searchInput.value); }
                     winnerT.classList.add('winner');
                     winnerT.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     confettiBurst(winnerT);
