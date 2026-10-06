@@ -16,7 +16,7 @@ catch (e) {
     console.error('node-canvas がありません: npm install を実行してください');
     process.exit(1);
 }
-const { drawIcon } = require('../icon-draw.js');
+const { drawIcon } = require('../docs/icon-draw.js');
 
 // ---- フォント探索 (環境差を吸収) ----
 const FONT_CANDIDATES = [
