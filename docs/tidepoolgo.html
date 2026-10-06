@@ -15,7 +15,7 @@
     <meta property="og:image" content="https://sas-news.github.io/mamego-family/og/tidepoolgo.png">
     <meta property="og:locale" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="mamego-build" content="25b74dc5">
+    <meta name="mamego-build" content="abb9e962">
     <!-- /MAMEGO:META -->
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -210,6 +210,28 @@
         変則碁シリーズ · <a href="index.html" class="underline">全ゲーム一覧</a> · <a href="https://github.com/sas-news/mamego-family" class="underline" target="_blank" rel="noopener">GitHub</a> · <a href="#" id="mgFootBug" class="underline">バグ報告</a>
     </footer>
     <!-- /MAMEGO:FOOT -->
+
+    <!-- 【初回モード選択モーダル】 -->
+    <div id="firstVisitModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[70] hidden">
+        <div class="bg-white text-neutral-900 p-5 sm:p-6 max-w-md w-full rounded-2xl shadow-2xl flex flex-col gap-4 border border-neutral-200 max-h-[90vh] overflow-y-auto">
+            <div class="border-b pb-3 border-neutral-200">
+                <h2 class="text-xl font-bold tracking-wide">このゲームのルール</h2>
+            </div>
+            <div id="firstVisitRules" class="text-xs sm:text-sm text-neutral-700 flex flex-col gap-2 leading-relaxed"></div>
+            <div class="flex flex-col gap-2 pt-1">
+                <button id="btnPlayAi" class="w-full py-3 bg-neutral-900 hover:bg-neutral-800 text-white text-sm font-bold rounded-xl transition-colors">
+                    ひとりで遊ぶ (AI対戦)
+                </button>
+                <button id="btnPlayLocal" class="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-sm font-bold rounded-xl transition-colors">
+                    ふたりで遊ぶ (この画面を交代)
+                </button>
+                <button id="btnPlayOnline" class="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-sm font-bold rounded-xl transition-colors">
+                    オンラインで対戦
+                </button>
+            </div>
+            <p class="text-[10px] text-neutral-500 text-center leading-relaxed">対戦モードはあとから設定 (歯車) でも変更できます</p>
+        </div>
+    </div>
 
     <!-- 【ルールモーダル】 -->
     <div id="rulesModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] hidden">
@@ -757,6 +779,11 @@
                     soundEnabled: soundManager.enabled
                 }));
             } catch (e) { /* sessionStorage が使えない環境では保存しない */ }
+
+            // 対戦モードの選択はタブを跨いで維持する (localStorage)
+            try {
+                localStorage.setItem(STORAGE_KEY + '-mode', JSON.stringify({ gameMode, aiPlayer }));
+            } catch (e) { /* 保存できない環境では無視 */ }
         }
 
         function loadState() {
@@ -2624,6 +2651,45 @@
             settingsModal.classList.add('hidden');
         });
 
+        // ---- 初回訪問時: ルール提示 + 対戦モード選択 ----
+        const SEEN_KEY = STORAGE_KEY + '-seen';
+        const MODE_KEY = STORAGE_KEY + '-mode';
+        const firstVisitModal = document.getElementById('firstVisitModal');
+        const markSeen = () => { try { localStorage.setItem(SEEN_KEY, '1'); } catch (e) {} };
+        const closeFirstVisit = (mode) => {
+            gameMode = mode;
+            if (mode === 'ai') aiPlayer = 2; // ひとり遊びはまず「あなた=黒 (先手)」で始める
+            syncSettingsUI();
+            saveState();
+            firstVisitModal.classList.add('hidden');
+        };
+        function showFirstVisitPicker() {
+            const body = document.getElementById('firstVisitRules');
+            body.innerHTML = '';
+            RULES_VARIANT.forEach(r => {
+                const p = document.createElement('p');
+                p.textContent = '・' + r;
+                body.appendChild(p);
+            });
+            firstVisitModal.classList.remove('hidden');
+        }
+        document.getElementById('btnPlayAi').addEventListener('click', () => {
+            soundManager.playClick();
+            markSeen();
+            closeFirstVisit('ai');
+        });
+        document.getElementById('btnPlayLocal').addEventListener('click', () => {
+            soundManager.playClick();
+            markSeen();
+            closeFirstVisit('local');
+        });
+        document.getElementById('btnPlayOnline').addEventListener('click', () => {
+            soundManager.playClick();
+            markSeen();
+            closeFirstVisit('online');
+            settingsModal.classList.remove('hidden'); // 部屋の作成/参加は設定内で行う
+        });
+
         // ---- 碁石図鑑 ----
         // MOLECULES を化学式ごとにグループ化し、球棒モデルのミニ図付きで一覧表示する
         function buildCatalog() {
@@ -2881,13 +2947,27 @@
             }
             if (!restored) {
                 resetGame(); // ネクストモードの供給キュー初期化など
+
+                // 初回訪問ならルールと対戦モード選択を提示。2回目以降は前回のモードを復元
+                let seen = false, savedMode = null;
+                try {
+                    seen = !!localStorage.getItem(SEEN_KEY);
+                    savedMode = JSON.parse(localStorage.getItem(MODE_KEY) || 'null');
+                } catch (e) {}
+                if (!seen) {
+                    showFirstVisitPicker();
+                } else if (savedMode && ['local', 'ai'].includes(savedMode.gameMode)) {
+                    gameMode = savedMode.gameMode;
+                    aiPlayer = savedMode.aiPlayer === 1 ? 1 : 2;
+                    syncSettingsUI();
+                }
             }
 
             resizeCanvas();
             updateUI();
 
-            // AIの手番の途中でリロードされた場合は思考を再開
-            if (restored && !gameOver && gameMode === 'ai' && turn === aiPlayer) {
+            // AIの手番で開始/再開される局面なら思考を開始 (対局途中のリロード or AIが先手の新規対局)
+            if (!gameOver && gameMode === 'ai' && turn === aiPlayer) {
                 triggerAiMove();
             }
         };
