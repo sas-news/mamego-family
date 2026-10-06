@@ -16,6 +16,10 @@ permissions:
 jobs:
   ranking:
     runs-on: ubuntu-latest
+    env:
+      # if: では secrets を直接参照できないため job env に移してから判定する
+      GOATCOUNTER_CODE: ${{ vars.GOATCOUNTER_CODE }}
+      GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,18 +30,15 @@ jobs:
           node-version: '20'
 
       - name: Build ranking
-        if: vars.GOATCOUNTER_CODE != '' && secrets.GOATCOUNTER_TOKEN != ''
-        env:
-          GOATCOUNTER_CODE: ${{ vars.GOATCOUNTER_CODE }}
-          GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
+        if: env.GOATCOUNTER_CODE != '' && env.GOATCOUNTER_TOKEN != ''
         run: node tools/build-ranking.js
 
       - name: Skip notice
-        if: vars.GOATCOUNTER_CODE == '' || secrets.GOATCOUNTER_TOKEN == ''
+        if: env.GOATCOUNTER_CODE == '' || env.GOATCOUNTER_TOKEN == ''
         run: echo "GOATCOUNTER_CODE / GOATCOUNTER_TOKEN 未設定のため集計スキップ (設定後に自動で動きます)"
 
       - name: Commit ranking.js
-        if: vars.GOATCOUNTER_CODE != '' && secrets.GOATCOUNTER_TOKEN != ''
+        if: env.GOATCOUNTER_CODE != '' && env.GOATCOUNTER_TOKEN != ''
         run: |
           if git diff --quiet docs/ranking.js docs/ranking.json 2>/dev/null; then
             echo "no change"

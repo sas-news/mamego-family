@@ -80,7 +80,7 @@ async function main() {
     }
     const data = { generated: new Date().toISOString().slice(0, 10), since: SINCE.slice(0, 10), games };
 
-    fs.writeFileSync(path.join(ROOT, 'ranking.json'), JSON.stringify(data, null, 1) + '\n');
+    fs.writeFileSync(path.join(ROOT, 'docs', 'ranking.json'), JSON.stringify(data, null, 1) + '\n');
     fs.writeFileSync(path.join(ROOT, 'docs', 'ranking.js'),
         `// 自動生成: nightly-ranking workflow (${data.generated}) — 直接編集しないこと\n` +
         `window.MAMEGO_RANKING = ${JSON.stringify(data)};\n`);
