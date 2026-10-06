@@ -15,7 +15,7 @@
     <meta property="og:image" content="https://sas-news.github.io/mamego-family/og/index.png">
     <meta property="og:locale" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="mamego-build" content="25b74dc5">
+    <meta name="mamego-build" content="abb9e962">
     <!-- /MAMEGO:META -->
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -145,6 +145,28 @@
             <h1 class="text-3xl sm:text-4xl font-extrabold tracking-wider">変則碁シリーズ</h1>
             <p class="text-sm opacity-70">碁のルールに「つながったピース」を持ち込んだ派生ゲーム一覧</p>
         </header>
+
+        <!-- 今日の囲碁 -->
+        <section class="w-full bg-white/70 rounded-2xl border border-[#cbb07a] p-3.5 flex flex-col gap-2">
+            <p class="text-[11px] opacity-70 leading-relaxed">1000種類あるので、作者も全部は把握していません。毎日1個だけ紹介します。</p>
+            <div class="flex items-center gap-2">
+                <button id="dailyPrevBtn" type="button" title="前の日の囲碁" aria-label="前の日の囲碁"
+                    class="shrink-0 w-9 h-9 rounded-lg border border-[#cbb07a] bg-white/80 font-bold hover:bg-white transition-all">←</button>
+                <a id="dailyLink" href="#" class="group flex-1 min-w-0 bg-white/70 hover:bg-white rounded-xl border border-[#cbb07a] transition-all p-3 flex items-center gap-3 hover:shadow-sm">
+                    <canvas id="dailyIcon" width="56" height="56" class="shrink-0 rounded-lg bg-[#e8c88b] w-12 h-12"></canvas>
+                    <div class="flex-1 min-w-0">
+                        <div id="dailyLabel" class="text-[10px] font-bold text-[#a8842f] tracking-widest"></div>
+                        <div class="flex items-baseline gap-2 min-w-0">
+                            <span id="dailyName" class="font-extrabold text-sm truncate"></span>
+                            <span id="dailyJp" class="text-xs opacity-70 truncate"></span>
+                        </div>
+                        <p id="dailyDesc" class="text-[11px] opacity-70 leading-snug line-clamp-2"></p>
+                    </div>
+                </a>
+                <button id="dailyNextBtn" type="button" title="次の日の囲碁" aria-label="次の日の囲碁"
+                    class="shrink-0 w-9 h-9 rounded-lg border border-[#cbb07a] bg-white/80 font-bold hover:bg-white transition-all disabled:opacity-30">→</button>
+            </div>
+        </section>
 
         <!-- おまかせルーレット -->
         <button id="spinBtn" class="roulette-btn w-full sm:w-auto text-[#fff7ed] rounded-2xl px-8 py-3.5 transition-all flex items-center justify-center gap-3 mx-auto">
@@ -598,7 +620,7 @@
             { file: 'ziggo.html', name: 'ZIGGO', jp: '之字碁', desc: 'S字・Z字4連ピースだけを置く碁。ジグザグの連。', kind: 'stone', icon: 'ziggo' },
             { file: 'zipgo.html', name: 'ZIPGO', jp: '縞封碁', desc: '奇数手は前の手の列、偶数手は行になぞられて指される縞模様の碁。', kind: 'zip' },
             { file: 'zonego.html', name: 'ZONEGO', jp: '区域碁', desc: '盤は9区域。自分の石が相手より2個以上多い区域を「制圧」。5区域制圧で即勝ち。', kind: 'zone' },
-                                                                                                                                                                                                                                                                                    // ==== WAVE3 GAMES BEGIN ====
+                                                                                                                                                                                                                                                                                                // ==== WAVE3 GAMES BEGIN ====
             { file: 'abyssgo.html', name: 'ABYSSGO', jp: '海底碁', desc: '深海の海嶺。熱水噴出孔の温もりの届く点 (チェビシェフ2以内) だけが呼吸点。', kind: 'stone', icon: 'abyssgo' },
             { file: 'accelgo.html', name: 'ACCELGO', jp: '加速碁', desc: '自分の番で石を置き続けると3連続ごとに+1手の連打ボーナス。パスでリセット。', kind: 'stone', icon: 'accelgo' },
             { file: 'afterimagego.html', name: 'AFTERIMAGEGO', jp: '残響碁', desc: '着手・消滅した場所に残響が残る。自分の残響の上に置くと共鳴石になり、終局時+1目。', kind: 'stone', icon: 'afterimagego' },
@@ -1664,6 +1686,38 @@
         document.getElementById('closeBtn').addEventListener('click', hideResult);
         document.getElementById('resultBackdrop').addEventListener('click', hideResult);
         document.addEventListener('keydown', e => { if (e.key === 'Escape') hideResult(); });
+
+        // ---- 今日の囲碁 (日付で確定する1個。←→で日付を遡れる) ----
+        const dailyPrevBtn = document.getElementById('dailyPrevBtn');
+        const dailyNextBtn = document.getElementById('dailyNextBtn');
+        const dailyLabel = document.getElementById('dailyLabel');
+        const dailyName = document.getElementById('dailyName');
+        const dailyJp = document.getElementById('dailyJp');
+        const dailyDesc = document.getElementById('dailyDesc');
+        const dailyLink = document.getElementById('dailyLink');
+        const dailyIconCv = document.getElementById('dailyIcon');
+        let dailyOffset = 0; // 0=今日, -1=昨日…
+        function renderDaily() {
+            const d = new Date();
+            d.setDate(d.getDate() + dailyOffset);
+            const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+            let h = 0;
+            for (const ch of key) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+            const g = GAMES[h % GAMES.length];
+            dailyLabel.textContent = dailyOffset === 0
+                ? '今日の囲碁'
+                : `${d.getMonth() + 1}月${d.getDate()}日の囲碁`;
+            dailyName.textContent = g.name;
+            dailyJp.textContent = g.jp;
+            dailyDesc.textContent = g.desc;
+            dailyLink.href = g.file;
+            dailyIconCv.getContext('2d').clearRect(0, 0, 56, 56);
+            drawIcon(dailyIconCv.getContext('2d'), g.icon || g.kind, 56);
+            dailyNextBtn.disabled = dailyOffset >= 0;
+        }
+        dailyPrevBtn.addEventListener('click', () => { dailyOffset--; renderDaily(); });
+        dailyNextBtn.addEventListener('click', () => { if (dailyOffset < 0) { dailyOffset++; renderDaily(); } });
+        renderDaily();
 
         // ---- 一番上に戻る ----
         const backToTop = document.getElementById('backToTop');
