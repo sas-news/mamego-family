@@ -54,7 +54,7 @@ module.exports = {
                     pushes.forEach(([si, ti]) => {
                         board[ti] = board[si];
                         board[si] = 0;
-                        fxSlide(si, ti, board[ti] === 1 ? 'rgba(30,41,59,0.9)' : 'rgba(255,255,255,0.9)', 300);
+                        fxSlide(si, ti, 300);
                     });
                     if (pushes.length) cleanUpPieces();
                     fxBurst(c * BOARD_SIZE + c, '#fde047', 18);
