@@ -147,25 +147,30 @@
         </header>
 
         <!-- 今日の囲碁 -->
-        <section class="w-full bg-white/70 rounded-2xl border border-[#cbb07a] p-3.5 flex flex-col gap-2">
-            <p class="text-[11px] opacity-70 leading-relaxed">1000種類あるので、作者も全部は把握していません。毎日1個だけ紹介します。</p>
-            <div class="flex items-center gap-2">
-                <button id="dailyPrevBtn" type="button" title="前の日の囲碁" aria-label="前の日の囲碁"
-                    class="shrink-0 w-9 h-9 rounded-lg border border-[#cbb07a] bg-white/80 font-bold hover:bg-white transition-all">←</button>
-                <a id="dailyLink" href="#" class="group flex-1 min-w-0 bg-white/70 hover:bg-white rounded-xl border border-[#cbb07a] transition-all p-3 flex items-center gap-3 hover:shadow-sm">
-                    <canvas id="dailyIcon" width="56" height="56" class="shrink-0 rounded-lg bg-[#e8c88b] w-12 h-12"></canvas>
-                    <div class="flex-1 min-w-0">
-                        <div id="dailyLabel" class="text-[10px] font-bold text-[#a8842f] tracking-widest"></div>
-                        <div class="flex items-baseline gap-2 min-w-0">
-                            <span id="dailyName" class="font-extrabold text-sm truncate"></span>
-                            <span id="dailyJp" class="text-xs opacity-70 truncate"></span>
-                        </div>
-                        <p id="dailyDesc" class="text-[11px] opacity-70 leading-snug line-clamp-2"></p>
-                    </div>
-                </a>
-                <button id="dailyNextBtn" type="button" title="次の日の囲碁" aria-label="次の日の囲碁"
-                    class="shrink-0 w-9 h-9 rounded-lg border border-[#cbb07a] bg-white/80 font-bold hover:bg-white transition-all disabled:opacity-30">→</button>
+        <section class="w-full bg-white/70 rounded-2xl border border-[#cbb07a] px-3.5 py-3">
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <div class="flex items-baseline gap-2 min-w-0">
+                    <span id="dailyLabel" class="text-xs font-extrabold text-[#a8842f] tracking-widest shrink-0"></span>
+                    <span class="text-[10px] opacity-50 truncate">全1000種、作者も全部は把握していません</span>
+                </div>
+                <div class="flex gap-1.5 shrink-0">
+                    <button id="dailyPrevBtn" type="button" title="前の日の囲碁" aria-label="前の日の囲碁"
+                        class="w-7 h-7 rounded-lg border border-[#cbb07a] bg-white/80 text-xs font-bold hover:bg-white transition-all">←</button>
+                    <button id="dailyNextBtn" type="button" title="次の日の囲碁" aria-label="次の日の囲碁"
+                        class="w-7 h-7 rounded-lg border border-[#cbb07a] bg-white/80 text-xs font-bold hover:bg-white transition-all disabled:opacity-30">→</button>
+                </div>
             </div>
+            <a id="dailyLink" href="#" class="group -m-1 p-1 rounded-xl flex items-center gap-3 hover:bg-white/80 transition-all">
+                <canvas id="dailyIcon" width="56" height="56" class="shrink-0 rounded-lg bg-[#e8c88b] w-12 h-12"></canvas>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-baseline gap-2 min-w-0">
+                        <span id="dailyName" class="font-extrabold text-sm truncate"></span>
+                        <span id="dailyJp" class="text-xs opacity-70 truncate"></span>
+                    </div>
+                    <p id="dailyDesc" class="text-[11px] opacity-70 leading-snug line-clamp-2"></p>
+                </div>
+                <span class="text-lg opacity-30 group-hover:opacity-70 group-hover:translate-x-1 transition-all shrink-0">▶</span>
+            </a>
         </section>
 
         <!-- おまかせルーレット -->
@@ -620,7 +625,7 @@
             { file: 'ziggo.html', name: 'ZIGGO', jp: '之字碁', desc: 'S字・Z字4連ピースだけを置く碁。ジグザグの連。', kind: 'stone', icon: 'ziggo' },
             { file: 'zipgo.html', name: 'ZIPGO', jp: '縞封碁', desc: '奇数手は前の手の列、偶数手は行になぞられて指される縞模様の碁。', kind: 'zip' },
             { file: 'zonego.html', name: 'ZONEGO', jp: '区域碁', desc: '盤は9区域。自分の石が相手より2個以上多い区域を「制圧」。5区域制圧で即勝ち。', kind: 'zone' },
-                                                                                                                                                                                                                                                                                                            // ==== WAVE3 GAMES BEGIN ====
+                                                                                                                                                                                                                                                                                                                        // ==== WAVE3 GAMES BEGIN ====
             { file: 'abyssgo.html', name: 'ABYSSGO', jp: '海底碁', desc: '深海の海嶺。熱水噴出孔の温もりの届く点 (チェビシェフ2以内) だけが呼吸点。', kind: 'stone', icon: 'abyssgo' },
             { file: 'accelgo.html', name: 'ACCELGO', jp: '加速碁', desc: '自分の番で石を置き続けると3連続ごとに+1手の連打ボーナス。パスでリセット。', kind: 'stone', icon: 'accelgo' },
             { file: 'afterimagego.html', name: 'AFTERIMAGEGO', jp: '残響碁', desc: '着手・消滅した場所に残響が残る。自分の残響の上に置くと共鳴石になり、終局時+1目。', kind: 'stone', icon: 'afterimagego' },
@@ -1697,13 +1702,31 @@
         const dailyLink = document.getElementById('dailyLink');
         const dailyIconCv = document.getElementById('dailyIcon');
         let dailyOffset = 0; // 0=今日, -1=昨日…
+        // 固定シードの疑似乱数 (mulberry32) で全ゲームをシャッフルした順を1日1個ずつ
+        // めくる。全員が同じ順を見て、約1000日かけてかぶりなしで1周する
+        function dailyRnd(seed) {
+            return function () {
+                seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+                let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+                t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+                return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            };
+        }
+        const DAILY_ORDER = (() => {
+            const order = GAMES.map((_, i) => i);
+            const rnd = dailyRnd(0x5EED);
+            for (let i = order.length - 1; i > 0; i--) {
+                const j = Math.floor(rnd() * (i + 1));
+                const tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+            }
+            return order;
+        })();
         function renderDaily() {
             const d = new Date();
             d.setDate(d.getDate() + dailyOffset);
-            const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-            let h = 0;
-            for (const ch of key) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-            const g = GAMES[h % GAMES.length];
+            const dayNum = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+            const n = DAILY_ORDER.length;
+            const g = GAMES[DAILY_ORDER[((dayNum % n) + n) % n]];
             dailyLabel.textContent = dailyOffset === 0
                 ? '今日の囲碁'
                 : `${d.getMonth() + 1}月${d.getDate()}日の囲碁`;
