@@ -68,7 +68,7 @@ module.exports = {
                     board[ci] = 0; // 木綿ごと飛び去る
                     pieces = pieces.filter(p => p.idx !== ci && p.idx !== tgt);
                     captures[player]++;
-                    fxSlide(tgt, ci, player, 400, null);
+                    fxSlide(tgt, ci, 400, opponent === 1 ? currentTheme.p1Fill : currentTheme.p2Fill);
                     fxBurst(ci, '#e2e8f0', 14, 2.0);
                     fxText(ci, '一反!', '#f8fafc', 1100);
                 }

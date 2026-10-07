@@ -1053,10 +1053,10 @@
         const fxGrid = (i) => [i % BOARD_SIZE, Math.floor(i / BOARD_SIZE)];
 
         function fxAdd(p) { p.t0 = fxNow(); fxList.push(p); if (fxList.length > 400) fxList.splice(0, fxList.length - 400); }
-        function fxSlide(fromIdx, toIdx, dur = 340) {
+        function fxSlide(fromIdx, toIdx, dur = 340, color = null) {
             const a = fxGrid(fromIdx), b = fxGrid(toIdx);
             if (a[0] === b[0] && a[1] === b[1]) return;
-            fxAdd({ kind: 'slide', x1: a[0], y1: a[1], x2: b[0], y2: b[1], dur });
+            fxAdd({ kind: 'slide', x1: a[0], y1: a[1], x2: b[0], y2: b[1], dur, color });
         }
         function fxBurst(idx, color = '#f97316', n = 14, speed = 1.6) {
             const [x, y] = fxGrid(idx);
@@ -1173,7 +1173,7 @@
                     const gx = padding + (p.x1 + (p.x2 - p.x1) * e) * cellSize;
                     const gy = padding + (p.y1 + (p.y2 - p.y1) * e) * cellSize;
                     const val = board[p.y2 * BOARD_SIZE + p.x2];
-                    const fill = val === 1 ? currentTheme.p1Fill : val === 2 ? currentTheme.p2Fill : 'rgba(148,163,184,0.9)';
+                    const fill = p.color || (val === 1 ? currentTheme.p1Fill : val === 2 ? currentTheme.p2Fill : 'rgba(148,163,184,0.9)');
                     const R = cellSize * 0.42;
                     // 移動先の石本体は着地まで薄く、ゴーストが滑る
                     ctx.globalAlpha = 0.9;
@@ -1297,14 +1297,11 @@
             // 直前に配置したピースのハイライト(緑系)
             drawLastMove(padding, cellSize);
 
-            // プレビュー描画
-            if (!gameOver && previewPos && isMyTurn()) {
-                drawPreview(padding, cellSize);
-            }
-
             // 画面揺れの transform を戻し、エフェクトを最前面に描画
             if (fxN0 < fxShakeUntil) ctx.restore();
             // 静的層スナップショット (揺れ中は歪むので撮らない): エフェクトフレームの貼り付け元
+            // ※プレビュー等の一時オーバーレイは静止画に含めない。含めるとゴーストが
+            //   静止画に焼き付き「置いた場所に石が残る/戻る」表示バグの元になる
             if (fxN0 >= fxShakeUntil) {
                 if (!fxStaticCv) { fxStaticCv = document.createElement('canvas'); fxStaticCtx = fxStaticCv.getContext('2d'); }
                 // バッキングストア解像度で複写する (CSSpxではない。ずれると貼り戻し時に拡大表示される)
@@ -1313,6 +1310,11 @@
                 fxStaticW = width;
             }
             fxBoardDiff(); // 差分検知で取り/反転/壁変化を自動演出
+
+            // プレビュー描画 (一時オーバーレイ: 静止画には含めず、エフェクト再生中も毎フレーム描く)
+            if (!gameOver && previewPos && isMyTurn()) {
+                drawPreview(padding, cellSize);
+            }
             drawFx(fxNow(), padding, cellSize);
 
             // エフェクトが生きている間は描画を続ける (常時オーバーレイ含む)
@@ -1331,6 +1333,10 @@
             // デバイスpxのスナップショットをCSSpx領域へ縮小貼り付け (ctxのdpr変換込みで等倍になる)
             try {
                 ctx.drawImage(fxStaticCv, 0, 0, width, width);
+                // 静止画に含めない一時オーバーレイはここで毎フレーム描き直す
+                if (!gameOver && previewPos && isMyTurn()) {
+                    drawPreview(padding, cellSize);
+                }
                 drawFx(now, padding, cellSize);
             } catch (e) {
                 // 静的層が壊れていた場合は全面描画にフォールバック (ループを殺さない)
@@ -1892,6 +1898,8 @@
         }
 
         function executeMove(move, player) {
+            // 着手でプレビューは無効化 (確定前のゴーストが残らないよう必ずここで消す)
+            previewPos = null;
             // 1手戻る用に着手前の状態を退避
             history.push({
                 board: [...board],
@@ -2207,6 +2215,7 @@
 
             prevBoard = null; // パスでコウ制限は解除
             consecutivePasses++;
+            previewPos = null; // 手番交代で旧プレビューは無効
             if (consecutivePasses >= 2) {
                 startDeadStoneSelectionPhase();
                 if (gameMode === 'online' && onlineRoomId) {
