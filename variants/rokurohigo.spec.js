@@ -38,6 +38,7 @@ module.exports = {
                 nb[x * BOARD_SIZE + (BOARD_SIZE - 1 - y)] = board[y * BOARD_SIZE + x];
             }
             for (let i = 0; i < board.length; i++) board[i] = nb[i];
+            if (prevBoard) { const pb = prevBoard.slice(); for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) { pb[x * BOARD_SIZE + (BOARD_SIZE - 1 - y)] = prevBoard[y * BOARD_SIZE + x]; } prevBoard = pb; }
             pieces.forEach(pc => pc.cells.forEach(p => { const nx = BOARD_SIZE - 1 - p.y, ny = p.x; p.x = nx; p.y = ny; }));
             if (lastMove) lastMove.cells.forEach(p => { const nx = BOARD_SIZE - 1 - p.y, ny = p.x; p.x = nx; p.y = ny; });
             cleanUpPieces();

@@ -15,7 +15,7 @@
     <meta property="og:image" content="https://sas-news.github.io/mamego-family/og/stickygo.png">
     <meta property="og:locale" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="mamego-build" content="69974a8c">
+    <meta name="mamego-build" content="45f07496">
     <!-- /MAMEGO:META -->
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -1305,6 +1305,11 @@
                 if (fxStaticCv.width !== canvas.width || fxStaticCv.height !== canvas.height) { fxStaticCv.width = canvas.width; fxStaticCv.height = canvas.height; }
                 fxStaticCtx.drawImage(canvas, 0, 0);
                 fxStaticW = width;
+            } else {
+                // 揺れ中は撮影しない → 旧静止画を失効させる
+                // (失効させないと揺れ終了後のfxFrameが着手前の静止画を貼り続け
+                //   「石が元の位置に戻ったように見える」表示バグになる)
+                fxStaticW = -1;
             }
             fxBoardDiff(); // 差分検知で取り/反転/壁変化を自動演出
 
